@@ -35,7 +35,7 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerSquirrel({}),
-    new MakerZIP({}, ['darwin']),
+    new MakerZIP({}, ['darwin', 'win32']),
     new MakerRpm({}),
     new MakerDeb({}),
   ],
@@ -76,7 +76,7 @@ const config: ForgeConfig = {
   publishers: [
     {
       name: '@electron-forge/publisher-github',
-      platforms: ['darwin'],
+      platforms: ['darwin','win32'],
       config: {
         repository: {
           owner: 'comfy-org',
