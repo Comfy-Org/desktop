@@ -19,8 +19,8 @@ jobs:
         run: |
           curl -L -o comfyui-win.7z https://github.com/Comfy-Org/python-dependencies/releases/download/embedded-windows-deps-cu11.8-py11.9-5/ComfyUI_windows_portable.7z
           ls
-          7z -x comfyui-win.7z -oAssets/UI/ComfyUI/
-          rm -rf comfyui-win.7z
+          7z x comfyui-win.7z -oAssets/UI/ComfyUI/
+          cd assets/UI && ls 
       - name: Make app
         env:
           DEBUG: electron-forge:*
