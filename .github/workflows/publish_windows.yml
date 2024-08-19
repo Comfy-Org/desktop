@@ -8,6 +8,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
+      - run: git config --system core.longpaths true
       - name: Github checkout
         uses: actions/checkout@v4
       - name: Use Node.js
