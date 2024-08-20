@@ -1,2 +1,2 @@
-.\python_embedded\python.exe -s ComfyUI\main.py --cpu --windows-standalone-build
+.\resources\UI\python_embedded\python.exe -s .//resources//UI//ComfyUI//main.py --cpu --windows-standalone-build
 pause
