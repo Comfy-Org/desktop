@@ -26,7 +26,7 @@ jobs:
       - name: Set variables 
         id: variables 
         run: | 
-          echo "::set-output name=version::${GITHUB_REF#refs/tags/v}" 
+          echo "{version}={${GITHUB_REF#refs/tags/v}}" >> $GITHUB_OUTPUT
           echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV" 
           echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV" 
           echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV" 
