@@ -14,7 +14,7 @@ jobs:
       - run: git config --system core.longpaths true
       - name: Set up certificate 
         run: | 
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12 
+          echo "${{ secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12 
         shell: bash 
       - name: Github checkout
         uses: actions/checkout@v4
@@ -27,10 +27,10 @@ jobs:
         id: variables 
         run: | 
           echo "{version}={${GITHUB_REF#refs/tags/v}}" >> $GITHUB_OUTPUT
-          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV" 
-          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV" 
+          echo "SM_HOST=${{ secrets.DIGICERT_HOST_ENVIRONMET }}" >> "$GITHUB_ENV" 
+          echo "SM_API_KEY=${{ secrets.DIGICERT_API_KEY }}" >> "$GITHUB_ENV" 
           echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV" 
-          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV" 
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD }}" >> "$GITHUB_ENV" 
         shell: bash
       - name: Download Keylocker Software
         run: |
