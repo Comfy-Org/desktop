@@ -53,12 +53,13 @@ jobs:
           cd assets/UI/ComfyUI && ls 
       - name: Make app
         env:
+          DIGICERT_FINGERPRINT: ${{ secrets.DIGICERT_FINGERPRINT }}
           DEBUG: electron-forge:*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run publish --dry-run
       - name: Signing using Signtool
         run: |
-          signtool.exe sign /sha1 ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 out/ComfyUI-win32-x64/ComfyUI.exe
+          signtool.exe sign /sha1 ${{ secrets.DIGICERT_FINGERPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 out/ComfyUI-win32-x64/ComfyUI.exe
       - name: verify signing
         run:
           signtool verify out/ComfyUI-win32-x64/ComfyUI.exe
