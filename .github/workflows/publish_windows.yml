@@ -32,15 +32,15 @@ jobs:
           echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV" 
           echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV" 
         shell: bash
-      - name: Setup Keylocker KSP on windows 
+      - name: Download Keylocker Software
         run: |
           curl -X GET https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
+        shell: cmd
+      - name: Install and Sync Cert Software      
+        run: |
           msiexec /i Keylockertools-windows-x64.msi /quiet /qn
           smksp_cert_sync.exe
-        shell: cmd
-      - name: Certificates Sync       
-        run: |
-           smctl windows certsync
+          smctl windows certsync
         shell: cmd
       - name: Download and prepare ComfyUI
         run: |
