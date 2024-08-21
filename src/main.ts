@@ -14,112 +14,134 @@ const port = 8188; // Replace with the port number your server is running on
 const packagedComfyUIExecutable = process.platform == 'win32' ? 'run_cpu.bat' : process.platform == 'darwin' ? 'ComfyUI' : 'ComfyUI';
 
 const createWindow = () => {
-    // Create the browser window.
-    const mainWindow = new BrowserWindow({
-      title: 'ComfyUI',
-        width: 800,
-      height: 600, 
-      webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
-        nodeIntegration: true, // Enable Node.js integration
-        contextIsolation: false,
-      },
-      
-    });
-  
-    // Load the UI from the Python server's URL
-    mainWindow.loadURL('http://localhost:8188/');
-  
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
-  };
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    title: 'ComfyUI',
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true, // Enable Node.js integration
+      contextIsolation: false,
+      webviewTag: true,
+    },
+
+  });
+
+  // and load the index.html of the app.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+  }
+  // Open the DevTools.
+  mainWindow.webContents.openDevTools();
+
+  return;
+
+  // Load the UI from the Python server's URL
+  mainWindow.loadURL('http://localhost:8188/');
+
+};
 
 
 const isPortInUse = (host: string, port: number): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const server = net.createServer();
-  
-      server.once('error', (err: NodeJS.ErrnoException) => {
-        if (err.code === 'EADDRINUSE') {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      });
-  
-      server.once('listening', () => {
-        server.close();
+  return new Promise((resolve) => {
+    const server = net.createServer();
+
+    server.once('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        resolve(true);
+      } else {
         resolve(false);
-      });
-  
-      server.listen(port, host);
+      }
     });
-  };
-  
+
+    server.once('listening', () => {
+      server.close();
+      resolve(false);
+    });
+
+    server.listen(port, host);
+  });
+};
+
+const maxFailWait: number = 10 * 1000; // 10seconds
+let currentWaitTime: number = 0;
 
 const launchPythonServer = async () => {
-    const isServerRunning = await isPortInUse(host, port);
-    if (isServerRunning) {
-        console.log('Python server is already running');
-        return Promise.resolve();
+  const isServerRunning = await isPortInUse(host, port);
+  if (isServerRunning) {
+    console.log('Python server is already running');
+    return Promise.resolve();
+  }
+
+  console.log('Launching Python server...');
+
+  return new Promise<void>((resolve, reject) => {
+    let executablePath: string;
+
+    if (app.isPackaged) {
+      //Production: use the bundled Python package
+      executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
+      pythonProcess = spawn(executablePath, { shell: true });
+    } else {
+      // Development: use the fake Python server
+      executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
+      pythonProcess = spawn(executablePath, {
+        stdio: 'pipe',
+      });
     }
 
-    console.log('Launching Python server...');
-    return new Promise<void>((resolve, reject) => {
-        let executablePath: string;
+    pythonProcess.stdout.pipe(process.stdout);
+    pythonProcess.stderr.pipe(process.stderr);
 
-        if (app.isPackaged) {
-            //Production: use the bundled Python package
-            executablePath = path.join(process.resourcesPath,'UI', packagedComfyUIExecutable);
-            pythonProcess = spawn(executablePath, {shell:true});
-        } else {
-            // Development: use the fake Python server
-            executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
-            pythonProcess = spawn(executablePath, {
-                stdio: 'pipe',
-            });
-        }
-    
-        pythonProcess.stdout.pipe(process.stdout);
-        pythonProcess.stderr.pipe(process.stderr);
-    
-        const checkInterval = 1000; // Check every 1 second
-    
-        const checkServerReady = async () => {
-          const isReady = await isPortInUse(host, port);
-          if (isReady) {
-            console.log('Python server is ready');
-            resolve();
-          } else {
-            setTimeout(checkServerReady, checkInterval);
-          }
-        };
-    
-        checkServerReady();
-      });
+    const checkInterval = 1000; // Check every 1 second
+
+    const checkServerReady = async () => {
+      currentWaitTime += 1000;
+      if (currentWaitTime > maxFailWait) {
+        reject("Python Server Failed To Start");
+      }
+      const isReady = await isPortInUse(host, port);
+      if (isReady) {
+        console.log('Python server is ready');
+        resolve();
+      } else {
+        setTimeout(checkServerReady, checkInterval);
+      }
+    };
+
+    checkServerReady();
+  });
 };
-  
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  await launchPythonServer();
   createWindow();
+  try {
+    await launchPythonServer();
+
+  } catch (error) {
+
+  }
 });
 
 const killPythonServer = () => {
-    if (pythonProcess) {
-      pythonProcess.kill();
-      pythonProcess = null;
-    }
-  };
+  if (pythonProcess) {
+    pythonProcess.kill();
+    pythonProcess = null;
+  }
+};
 
-  app.on('will-quit', () => {
-    killPythonServer();
-  });
+app.on('will-quit', () => {
+  killPythonServer();
+});
 
-  // Quit when all windows are closed, except on macOS. There, it's common
+// Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {

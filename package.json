@@ -24,7 +24,10 @@
     "@electron-forge/plugin-vite": "^7.4.0",
     "@electron-forge/publisher-github": "^7.4.0",
     "@electron/fuses": "^1.8.0",
+    "@electron/notarize": "^2.4.0",
     "@types/adm-zip": "^0.5.5",
+    "@types/react": "^18.3.4",
+    "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "electron": "31.3.1",
@@ -41,9 +44,10 @@
   },
   "license": "GPL",
   "dependencies": {
-    "@electron/notarize": "^2.4.0",
     "adm-zip": "^0.5.15",
     "axios": "^1.7.3",
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
