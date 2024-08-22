@@ -11,6 +11,9 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    windowsSign: {
+      signWithParams: `/csp \"DigiCert Signing Manager KSP\"  /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`
+    },
     osxSign: {
       optionsForFile: (filepath) => {
         return { entitlements: './assets/entitlements.mac.plist' };
@@ -75,7 +78,7 @@ const config: ForgeConfig = {
   publishers: [
     {
       name: '@electron-forge/publisher-github',
-      platforms: ['darwin','win32'],
+      platforms: ['darwin', 'win32'],
       config: {
         repository: {
           owner: 'comfy-org',
