@@ -73,6 +73,10 @@ jobs:
           SM_CLIENT_CERT_FILE : D:\\Certificate_pkcs12.p12
         run: |
           signtool.exe sign /sha1 ${{ secrets.DIGICERT_FINGERPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "out/ComfyUI-win32-x64/ComfyUI.exe"
+      - name: Print SignLogs
+        condition: always()
+        shell: powershell
+        run: cd $HOME && gc .signingmanager\logs\smksp.log
       - name: verify signing
         run:
           signtool verify out/ComfyUI-win32-x64/ComfyUI.exe
