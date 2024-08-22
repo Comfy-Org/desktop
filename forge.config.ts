@@ -12,7 +12,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     windowsSign: {debug:true,
-      signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /td SHA256`
+      signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT}`
     },
     osxSign: {
       optionsForFile: (filepath) => {
