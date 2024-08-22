@@ -12,6 +12,9 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     windowsSign: {debug:true,
+      hookFunction: (filePath) => {
+        require("child_process").execSync(`signtool.exe sign /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 ${filePath}`)
+      },
       signWithParams: `/csp \"DigiCert Signing Manager KSP\" /kc key_889133389 /sha1 ${process.env.DIGICERT_FINGERPRINT}`
     },
     osxSign: {
