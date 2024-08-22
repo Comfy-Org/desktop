@@ -12,8 +12,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     windowsSign: {debug:true,
-     signToolPath: "C://Program Files (x86)//Windows Kits//10//bin//10.0.22621.0//x64//signtool.exe",
-      signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256`
+      signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /td SHA256`
     },
     osxSign: {
       optionsForFile: (filepath) => {
