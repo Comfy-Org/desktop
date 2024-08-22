@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: 20
       - run: yarn install
+      - name: Mod
+        shell: powershell 
+        run: |
+          (Get-Content node_modules\@electron\windows-sign\dist\cjs\sign-with-signtool.js) -replace 'await execute({ ...internalOptions, hash: "sha1" /* HASHES.sha1 */ });', '//await execute({ ...internalOptions, hash: "sha1" /* HASHES.sha1 */ });' | Out-File -encoding ASCII node_modules\@electron\windows-sign\dist\cjs\sign-with-signtool.js
       - name: Set variables 
         id: variables 
         run: | 
