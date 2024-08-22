@@ -54,6 +54,7 @@ jobs:
           move dist/ComfyUI_windows_portable/python_embedded assets/UI/
           cd assets/UI/ComfyUI && ls 
       - name: Make app
+        shell: powershell
         env:
           DIGICERT_FINGERPRINT: ${{ secrets.DIGICERT_FINGERPRINT }}
           DEBUG: electron-forge:*
