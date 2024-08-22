@@ -12,7 +12,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     windowsSign: {
-      signWithParams: `/csp \"DigiCert Signing Manager KSP\"  /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`
+      signWithParams: `/csp \"DigiCert Signing Manager KSP\"  /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256`
     },
     osxSign: {
       optionsForFile: (filepath) => {
