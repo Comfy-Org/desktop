@@ -58,7 +58,7 @@ jobs:
           DIGICERT_FINGERPRINT: ${{ secrets.DIGICERT_FINGERPRINT }}
           DEBUG: electron-forge:*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run publish -- --dry-run
+        run: npm run publish
       - name: Signing using Signtool
         env:
           SM_HOST: ${{ secrets.DIGICERT_HOST_ENVIRONMET }}
