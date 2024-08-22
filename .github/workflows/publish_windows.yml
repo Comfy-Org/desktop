@@ -74,7 +74,7 @@ jobs:
         run: |
           signtool.exe sign /sha1 ${{ secrets.DIGICERT_FINGERPRINT }} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "out/ComfyUI-win32-x64/ComfyUI.exe"
       - name: Print SignLogs
-        condition: always()
+        if: always()
         shell: powershell
         run: cd $HOME && gc .signingmanager\logs\smksp.log
       - name: verify signing
