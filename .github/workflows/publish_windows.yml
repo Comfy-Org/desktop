@@ -76,7 +76,7 @@ jobs:
       - name: Print SignLogs
         if: always()
         shell: powershell
-        run: cd $HOME && gc .signingmanager\logs\smksp.log
+        run: cd $HOME ; gc .signingmanager\logs\smksp.log
       - name: verify signing
         run:
           signtool verify out/ComfyUI-win32-x64/ComfyUI.exe
