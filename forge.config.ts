@@ -11,8 +11,9 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    windowsSign: {
-      signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`
+    windowsSign: {debug:true,
+
+      signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256`
     },
     osxSign: {
       optionsForFile: (filepath) => {
