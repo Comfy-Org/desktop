@@ -42,6 +42,8 @@ jobs:
       - name: Install and Sync Cert Software      
         run: |
           msiexec /i Keylockertools-windows-x64.msi /passive
+          smksp_registrar.exe list 
+          smctl.exe keypair ls 
           smksp_cert_sync.exe
         shell: cmd
       - name: Download and prepare ComfyUI
