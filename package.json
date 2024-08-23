@@ -1,7 +1,15 @@
 {
   "name": "comfyui-electron",
   "productName": "ComfyUI",
+<<<<<<< HEAD
+<<<<<<< HEAD
   "version": "0.0.2",
+=======
+  "version": "0.0.1",
+>>>>>>> 35d4937 (split winsign commit from tabs)
+=======
+  "version": "0.0.2",
+>>>>>>> 16ea5e2 (Bumped the package number up incase the old one still wants to be dl'ed)
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
   "scripts": {
