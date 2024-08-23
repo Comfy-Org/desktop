@@ -11,13 +11,13 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    windowsSign: {
+    ...process.env.PUBLISH && {windowsSign: {
       debug:true,
       hookFunction: (filePath) => {
         if (!filePath.endsWith("ComfyUI.exe")) return; // For now just ignore any file that isnt the main exe will need to change when building with installers/auto updates / a compiled python servesr
         require("child_process").execSync(`signtool.exe sign /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 ${filePath}`)
       },
-    },
+    }},
     osxSign: {
       optionsForFile: (filepath) => {
         return { entitlements: './assets/entitlements.mac.plist' };

@@ -67,6 +67,7 @@ jobs:
         env:
           DIGICERT_FINGERPRINT: ${{ secrets.DIGICERT_FINGERPRINT }}
           DEBUG: electron-forge:*
+          PUBLISH: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run publish
       - name: Print SignLogs

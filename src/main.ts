@@ -14,55 +14,55 @@ const port = 8188; // Replace with the port number your server is running on
 const packagedComfyUIExecutable = process.platform == 'win32' ? 'run_cpu.bat' : process.platform == 'darwin' ? 'ComfyUI' : 'ComfyUI';
 
 const createWindow = () => {
-    // Create the browser window.
-    const mainWindow = new BrowserWindow({
-      title: 'ComfyUI',
-        width: 800,
-      height: 600, 
-      webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
-        nodeIntegration: true, // Enable Node.js integration
-        contextIsolation: false,
-      },
-      
-    });
-  
-    // Load the UI from the Python server's URL
-    mainWindow.loadURL('http://localhost:8188/');
-  
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
-  };
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    title: 'ComfyUI',
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true, // Enable Node.js integration
+      contextIsolation: false,
+    },
+
+  });
+
+  // Load the UI from the Python server's URL
+  mainWindow.loadURL('http://localhost:8188/');
+
+  // Open the DevTools.
+  mainWindow.webContents.openDevTools();
+};
 
 
 const isPortInUse = (host: string, port: number): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const server = net.createServer();
-  
-      server.once('error', (err: NodeJS.ErrnoException) => {
-        if (err.code === 'EADDRINUSE') {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      });
-  
-      server.once('listening', () => {
-        server.close();
+  return new Promise((resolve) => {
+    const server = net.createServer();
+
+    server.once('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        resolve(true);
+      } else {
         resolve(false);
-      });
-  
-      server.listen(port, host);
+      }
     });
-  };
-  
+
+    server.once('listening', () => {
+      server.close();
+      resolve(false);
+    });
+
+    server.listen(port, host);
+  });
+};
+
 
 const launchPythonServer = async () => {
-    const isServerRunning = await isPortInUse(host, port);
-    if (isServerRunning) {
-        console.log('Python server is already running');
-        return Promise.resolve();
-    }
+  const isServerRunning = await isPortInUse(host, port);
+  if (isServerRunning) {
+    console.log('Python server is already running');
+    return Promise.resolve();
+  }
 
   console.log('Launching Python server...');
 
@@ -85,8 +85,22 @@ const launchPythonServer = async () => {
     pythonProcess.stderr.pipe(process.stderr);
 
     const checkInterval = 1000; // Check every 1 second
+
+    const checkServerReady = async () => {
+      const isReady = await isPortInUse(host, port);
+      if (isReady) {
+        console.log('Python server is ready');
+        resolve();
+      } else {
+        setTimeout(checkServerReady, checkInterval);
+      }
+    };
+
+    checkServerReady();
+  });
+
 };
-  
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -102,17 +116,17 @@ app.on('ready', async () => {
 });
 
 const killPythonServer = () => {
-    if (pythonProcess) {
-      pythonProcess.kill();
-      pythonProcess = null;
-    }
-  };
+  if (pythonProcess) {
+    pythonProcess.kill();
+    pythonProcess = null;
+  }
+};
 
-  app.on('will-quit', () => {
-    killPythonServer();
-  });
+app.on('will-quit', () => {
+  killPythonServer();
+});
 
-  // Quit when all windows are closed, except on macOS. There, it's common
+// Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
