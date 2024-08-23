@@ -64,39 +64,27 @@ const launchPythonServer = async () => {
         return Promise.resolve();
     }
 
-    console.log('Launching Python server...');
-    return new Promise<void>((resolve, reject) => {
-        let executablePath: string;
+  console.log('Launching Python server...');
 
-        if (app.isPackaged) {
-            //Production: use the bundled Python package
-            executablePath = path.join(process.resourcesPath,'UI', packagedComfyUIExecutable);
-            pythonProcess = spawn(executablePath, {shell:true});
-        } else {
-            // Development: use the fake Python server
-            executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
-            pythonProcess = spawn(executablePath, {
-                stdio: 'pipe',
-            });
-        }
-    
-        pythonProcess.stdout.pipe(process.stdout);
-        pythonProcess.stderr.pipe(process.stderr);
-    
-        const checkInterval = 1000; // Check every 1 second
-    
-        const checkServerReady = async () => {
-          const isReady = await isPortInUse(host, port);
-          if (isReady) {
-            console.log('Python server is ready');
-            resolve();
-          } else {
-            setTimeout(checkServerReady, checkInterval);
-          }
-        };
-    
-        checkServerReady();
+  return new Promise<void>((resolve, reject) => {
+    let executablePath: string;
+
+    if (app.isPackaged) {
+      //Production: use the bundled Python package
+      executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
+      pythonProcess = spawn(executablePath, { shell: true });
+    } else {
+      // Development: use the fake Python server
+      executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
+      pythonProcess = spawn(executablePath, {
+        stdio: 'pipe',
       });
+    }
+
+    pythonProcess.stdout.pipe(process.stdout);
+    pythonProcess.stderr.pipe(process.stderr);
+
+    const checkInterval = 1000; // Check every 1 second
 };
   
 
@@ -104,8 +92,13 @@ const launchPythonServer = async () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  await launchPythonServer();
   createWindow();
+  try {
+    await launchPythonServer();
+
+  } catch (error) {
+
+  }
 });
 
 const killPythonServer = () => {

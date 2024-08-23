@@ -8,41 +8,72 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
+      - name: Enable Long Name
+        shell: pwsh
+        run: New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+      - run: git config --system core.longpaths true
+      - name: Set up certificate 
+        run: | 
+          echo "${{ secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12 
+        shell: bash 
       - name: Github checkout
         uses: actions/checkout@v4
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm i
+      - run: yarn install
+      - name: Mod
+        shell: powershell 
+        run: |
+          (Get-Content node_modules\@electron\windows-sign\dist\cjs\sign-with-signtool.js) -replace [Regex]::Escape('await execute({ ...internalOptions, hash: "sha1'), [Regex]::Escape('//await execute({ ...internalOptions, hash: "sha1') | Out-File -encoding ASCII node_modules\@electron\windows-sign\dist\cjs\sign-with-signtool.js
+          (Get-Content node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js) -replace [Regex]::Escape('await execute({ ...internalOptions, hash: "sha1'), [Regex]::Escape('//await execute({ ...internalOptions, hash: "sha1') | Out-File -encoding ASCII node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js
+          gc node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js
+      - name: Set variables 
+        id: variables 
+        run: | 
+          echo "{version}={${GITHUB_REF#refs/tags/v}}" >> $GITHUB_OUTPUT
+          echo "SM_HOST=${{ secrets.DIGICERT_HOST_ENVIRONMENT }}" >> "$GITHUB_ENV" 
+          echo "SM_API_KEY=${{ secrets.DIGICERT_API_KEY }}" >> "$GITHUB_ENV" 
+          echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV" 
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit" >> $GITHUB_PATH
+          echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $GITHUB_PATH
+          echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $GITHUB_PATH
+        shell: bash
+      - name: Download Keylocker Software
+        run: |
+          curl -X GET https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
+        shell: cmd
+      - name: Install and Sync Cert Software      
+        run: |
+          msiexec /i Keylockertools-windows-x64.msi /passive
+          smksp_registrar.exe list 
+          smctl.exe keypair ls
+          C:\Windows\System32\certutil.exe -csp "DigiCert Signing Manager KSP" -key -user 
+          smksp_cert_sync.exe
+        shell: cmd
+      - name: health check
+        run: smctl healthcheck --user
       - name: Download and prepare ComfyUI
         run: |
           curl -L -o comfyui-win.7z https://github.com/Comfy-Org/python-dependencies/releases/download/embedded-windows-deps-cu11.8-py11.9-5/ComfyUI_windows_portable.7z
-          ls
-          7z -x comfyui-win.7z -oAssets/UI/ComfyUI/
-          rm -rf comfyui-win.7z
+          7z x comfyui-win.7z -odist/
+          move dist/ComfyUI_windows_portable/ComfyUI assets/UI/
+          move dist/ComfyUI_windows_portable/python_embedded assets/UI/
+          cd assets/UI/ComfyUI && ls 
       - name: Make app
+        shell: powershell
         env:
+          DIGICERT_FINGERPRINT: ${{ secrets.DIGICERT_FINGERPRINT }}
           DEBUG: electron-forge:*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run publish --dry-run
-      # Windows Code Sign: 
-      #- name: Sign files with Trusted Signing
-      #    uses: azure/trusted-signing-action@v0.4.0
-      #    with:
-      #      azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      #      azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      #      azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-      #      endpoint: https://eus.codesigning.azure.net/
-      #      trusted-signing-account-name: vscx-codesigning
-      #      certificate-profile-name: vscx-certificate-profile
-      #      files-folder: ${{ github.workspace }}\out\
-      #      files-folder-filter: exe,dll
-      #      file-digest: SHA256
-      #      timestamp-rfc3161: http://timestamp.acs.microsoft.com
-      #      timestamp-digest: SHA256
-      - name: publish app
-        env:
-          DEBUG: electron-forge:*
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run publish --from-dry-run
+        run: npm run publish
+      - name: Print SignLogs
+        if: always()
+        continue-on-error: true 
+        shell: powershell
+        run: cd $HOME ; gc .signingmanager\logs\smksp.log
+      - name: verify signing
+        run:
+          signtool verify /v /pa out/ComfyUI-win32-x64/ComfyUI.exe

@@ -11,6 +11,13 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    windowsSign: {debug:true,
+      hookFunction: (filePath) => {
+        if (filePath.endsWith(".dll")) return;
+        require("child_process").execSync(`signtool.exe sign /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 ${filePath}`)
+      },
+      signWithParams: `/csp \"DigiCert Signing Manager KSP\" /kc key_889133389 /sha1 ${process.env.DIGICERT_FINGERPRINT}`
+    },
     osxSign: {
       optionsForFile: (filepath) => {
         return { entitlements: './assets/entitlements.mac.plist' };
@@ -34,8 +41,7 @@ const config: ForgeConfig = {
     },
   },
   makers: [
-    new MakerSquirrel({}),
-    new MakerZIP({}, ['darwin']),
+    new MakerZIP({}, ['darwin', 'win32']),
     new MakerRpm({}),
     new MakerDeb({}),
   ],
@@ -76,7 +82,7 @@ const config: ForgeConfig = {
   publishers: [
     {
       name: '@electron-forge/publisher-github',
-      platforms: ['darwin'],
+      platforms: ['darwin', 'win32'],
       config: {
         repository: {
           owner: 'comfy-org',
