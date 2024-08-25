@@ -11,7 +11,7 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    ...process.env.PUBLISH && {windowsSign: {
+    ...process.env.PUBLISH == 'true' && {windowsSign: {
       debug:true,
       hookFunction: (filePath) => {
         if (!filePath.endsWith("ComfyUI.exe")) return; // For now just ignore any file that isnt the main exe will need to change when building with installers/auto updates / a compiled python servesr
