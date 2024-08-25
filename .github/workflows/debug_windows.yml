@@ -20,9 +20,9 @@ jobs:
       - name: Cert Setup
         uses: ./.github/actions/build/windows/cert_setup.yml
       - name: Build
-          uses: ./.github/actions/build/windows/build_app.yml
-          with: 
-            sign-and-publish: false
+        uses: ./.github/actions/build/windows/build_app.yml
+        with: 
+          sign-and-publish: false
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
