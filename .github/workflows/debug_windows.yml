@@ -7,7 +7,7 @@ on:
       - "prod-kendal-ghaction-split"
 
 jobs:
-  Build Windows Debug:
+  build-windowss-debug:
     runs-on: windows-latest
     steps:
       - name: Github checkout
