@@ -18,9 +18,9 @@ runs:
   using: composite
   steps:
     - name: Set up certificate 
-        run: | 
-          echo "${{ inputs.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12 
-        shell: bash 
+      run: | 
+        echo "${{ inputs.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12 
+      shell: bash 
     - name: Set variables 
       id: variables 
       run: | 
