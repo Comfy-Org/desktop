@@ -18,7 +18,7 @@ jobs:
         shell: bash
   Build App:
     secrets: inherit 
-    uses: ./.github/workflows/build/windows.yml
+    uses: ./.github/workflows/reuse_build_windows.yml
     with: 
       sign-and-publish: false
   Upload App:
