@@ -20,6 +20,7 @@ runs:
       with:
         node-version: 20
     - run: yarn install
+      shell: cmd
     - name: Make app
       shell: powershell
       env:
