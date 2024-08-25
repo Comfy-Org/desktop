@@ -63,7 +63,6 @@ const launchPythonServer = async () => {
     console.log('Python server is already running');
     return Promise.resolve();
   }
-<<<<<<< HEAD
 
   console.log('Launching Python server...');
 
@@ -81,10 +80,7 @@ const launchPythonServer = async () => {
         stdio: 'pipe',
       });
     }
-=======
->>>>>>> 8a417fa (Only Sign if PUBLISH is true)
-
-<<<<<<< HEAD
+    
     pythonProcess.stdout.pipe(process.stdout);
     pythonProcess.stderr.pipe(process.stderr);
 
@@ -102,49 +98,8 @@ const launchPythonServer = async () => {
 
     checkServerReady();
   });
-
-=======
-  console.log('Launching Python server...');
-
-  return new Promise<void>((resolve, reject) => {
-    let executablePath: string;
-
-    if (app.isPackaged) {
-      //Production: use the bundled Python package
-      executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
-      pythonProcess = spawn(executablePath, { shell: true });
-    } else {
-      // Development: use the fake Python server
-      executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
-      pythonProcess = spawn(executablePath, {
-        stdio: 'pipe',
-      });
-    }
-
-    pythonProcess.stdout.pipe(process.stdout);
-    pythonProcess.stderr.pipe(process.stderr);
-
-    const checkInterval = 1000; // Check every 1 second
-<<<<<<< HEAD
->>>>>>> 35d4937 (split winsign commit from tabs)
-=======
-
-    const checkServerReady = async () => {
-      const isReady = await isPortInUse(host, port);
-      if (isReady) {
-        console.log('Python server is ready');
-        resolve();
-      } else {
-        setTimeout(checkServerReady, checkInterval);
-      }
-    };
-
-    checkServerReady();
-  });
-
->>>>>>> 8a417fa (Only Sign if PUBLISH is true)
+s
 };
-
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
