@@ -7,7 +7,7 @@ on:
       - "prod-kendal-ghaction-split"
 
 jobs:
-  Build Debug:
+  Set Up:
     runs-on: windows-latest
     steps:
       - name: Github checkout
@@ -16,11 +16,13 @@ jobs:
         run: |
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
-      - name: Build No Release
-        uses: ./.github/workflows/build/windows.yml
-        with: 
-          sign-and-publish: false
-        secrets: inherit
+  Build App:
+    secrets: inherit 
+    uses: ./.github/workflows/build/windows.yml
+    with: 
+      sign-and-publish: false
+  Upload App:
+    steps:
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
