@@ -24,7 +24,7 @@ jobs:
           DIGICERT_API_KEY: ${{secrets.DIGICERT_API_KEY}}
           DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD: ${{secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD}}
       - name: Build
-        uses: ./.github/actions/build/windows/build_app.yml
+        uses: ./.github/actions/build/windows/app
         with: 
           sign-and-publish: false
           DIGICERT_FINGERPRINT: ${{secrets.DIGICERT_FINGERPRINT}}
