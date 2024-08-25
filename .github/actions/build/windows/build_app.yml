@@ -1,6 +1,12 @@
 name: Windows Build App
 description: Electron-Forge Build/Sign/publish
 inputs:
+  DIGICERT_FINGERPRINT:
+    required: true
+    type: string
+  GITHUB_TOKEN:
+    required: true
+    type: string
   sign-and-publish:
     description: 'Sign the executable and publish to release page'
     default: false
@@ -17,10 +23,10 @@ runs:
     - name: Make app
       shell: powershell
       env:
-        DIGICERT_FINGERPRINT: ${{ secrets.DIGICERT_FINGERPRINT }}
+        DIGICERT_FINGERPRINT: ${{ inputs.DIGICERT_FINGERPRINT }}
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       run: npm run publish -- --dry-run
     - name: Print SignLogs
       if: always()

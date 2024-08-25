@@ -9,7 +9,6 @@ on:
 jobs:
   Build Windows Debug:
     runs-on: windows-latest
-    secrets: inherit 
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
@@ -19,10 +18,17 @@ jobs:
         shell: bash
       - name: Cert Setup
         uses: ./.github/actions/build/windows/cert_setup.yml
+        with:
+          DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64: ${{secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64}}
+          DIGICERT_HOST_ENVIRONMENT: ${{secrets.DIGICERT_HOST_ENVIRONMENT}}
+          DIGICERT_API_KEY: ${{secrets.DIGICERT_API_KEY}}
+          DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD: ${{secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD}}
       - name: Build
         uses: ./.github/actions/build/windows/build_app.yml
         with: 
           sign-and-publish: false
+          DIGICERT_FINGERPRINT: ${{secrets.DIGICERT_FINGERPRINT}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
