@@ -10,6 +10,8 @@ jobs:
   Build Debug:
     runs-on: windows-latest
     steps:
+      - name: Github checkout
+        uses: actions/checkout@v4
       - name: Declare some variables
         run: |
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"

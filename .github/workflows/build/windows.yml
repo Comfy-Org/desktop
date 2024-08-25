@@ -23,8 +23,6 @@ jobs:
         run: | 
           echo "${{ secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12 
         shell: bash 
-      - name: Github checkout
-        uses: actions/checkout@v4
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
