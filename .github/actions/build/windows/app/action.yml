@@ -43,6 +43,7 @@ runs:
       shell: powershell
       run: cd $HOME ; gc .signingmanager\logs\smksp.log
     - name: verify signing
+      if: ${{inputs.sign-and-publish == true}}
       run:
         signtool verify /v /pa out/ComfyUI-win32-x64/ComfyUI.exe
       shell: cmd
