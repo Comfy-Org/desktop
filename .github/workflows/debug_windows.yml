@@ -17,7 +17,7 @@ jobs:
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
       - name: Cert Setup
-        uses: ./.github/actions/build/windows/cert_setup.yml
+        uses: ./.github/actions/build/windows/certificate
         with:
           DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64: ${{secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64}}
           DIGICERT_HOST_ENVIRONMENT: ${{secrets.DIGICERT_HOST_ENVIRONMENT}}

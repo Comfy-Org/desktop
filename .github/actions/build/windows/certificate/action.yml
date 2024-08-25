@@ -1,0 +1,56 @@
+name: Certificate Setup
+description: Builds and 
+inputes:
+  DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64:
+    required: true
+    type: string
+  DIGICERT_HOST_ENVIRONMENT:
+    required: true
+    type: string
+  DIGICERT_API_KEY:
+    required: true
+    type: string
+  DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD:
+    required: true
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Set up certificate 
+        run: | 
+          echo "${{ inputs.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12 
+        shell: bash 
+    - name: Set variables 
+      id: variables 
+      run: | 
+        echo "{version}={${GITHUB_REF#refs/tags/v}}" >> $GITHUB_OUTPUT
+        echo "SM_HOST=${{ inputs.DIGICERT_HOST_ENVIRONMENT }}" >> "$GITHUB_ENV" 
+        echo "SM_API_KEY=${{ inputs.DIGICERT_API_KEY }}" >> "$GITHUB_ENV" 
+        echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV" 
+        echo "SM_CLIENT_CERT_PASSWORD=${{ inputs.DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD }}" >> "$GITHUB_ENV"
+        echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit" >> $GITHUB_PATH
+        echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $GITHUB_PATH
+        echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $GITHUB_PATH
+      shell: bash
+    - name: Download Keylocker Software
+      run: |
+        curl -X GET https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
+      shell: cmd
+    - name: Install and Sync Cert Software      
+      run: |
+        msiexec /i Keylockertools-windows-x64.msi /passive
+        smksp_registrar.exe list 
+        smctl.exe keypair ls
+        C:\Windows\System32\certutil.exe -csp "DigiCert Signing Manager KSP" -key -user 
+        smksp_cert_sync.exe
+      shell: cmd
+    - name: health check
+      run: smctl healthcheck --user
+    - name: Download and prepare ComfyUI
+      run: |
+        curl -L -o comfyui-win.7z https://github.com/Comfy-Org/python-dependencies/releases/download/embedded-windows-deps-cu11.8-py11.9-5/ComfyUI_windows_portable.7z
+        7z x comfyui-win.7z -odist/
+        move dist/ComfyUI_windows_portable/ComfyUI assets/UI/
+        move dist/ComfyUI_windows_portable/python_embedded assets/UI/
+        cd assets/UI/ComfyUI && ls 
