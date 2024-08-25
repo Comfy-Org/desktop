@@ -1,0 +1,26 @@
+name: Build Windows Debug
+
+on:
+  push:
+    branches:
+      #For Testig
+      - "prod-kendal-ghaction-split"
+
+jobs:
+  Build Debug:
+    runs-on: windows-latest
+    steps:
+      - name: Declare some variables
+          shell: bash
+          run: |
+            echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+      - name: Build No Release
+        uses: Comfy-Org/electron/.github/workflows/build/windows.yml
+        with: 
+          sign-and-publish: false
+        secrets: inherit
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: comfyui-electron-debug-build-${{env.sha_short}}
+          path: out/ComfyUI-win32-x64
