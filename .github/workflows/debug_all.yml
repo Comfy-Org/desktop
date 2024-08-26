@@ -3,9 +3,7 @@ name: Build All Platforms Debug
 on:
   push:
     branches:
-      #For Testig
-      - "prod-kendal-ghaction-split"
-
+      - "main"
 
 jobs:
   build-windows:
