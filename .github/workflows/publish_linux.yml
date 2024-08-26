@@ -1,0 +1,13 @@
+# .github/workflows/publish_linux.yml
+name: Publish App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Blank
+        run: echo "Intentionally left blank"
+      

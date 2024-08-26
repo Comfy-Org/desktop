@@ -7,7 +7,7 @@ on:
       - "prod-kendal-ghaction-split"
 
 jobs:
-  build-windowss-debug:
+  build-windows-debug:
     runs-on: windows-latest
     steps:
       - name: Github checkout
@@ -16,18 +16,10 @@ jobs:
         run: |
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
-      - name: Cert Setup
-        uses: ./.github/actions/build/windows/certificate
-        with:
-          DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64: ${{secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64}}
-          DIGICERT_HOST_ENVIRONMENT: ${{secrets.DIGICERT_HOST_ENVIRONMENT}}
-          DIGICERT_API_KEY: ${{secrets.DIGICERT_API_KEY}}
-          DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD: ${{secrets.DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD}}
       - name: Build
         uses: ./.github/actions/build/windows/app
         with: 
           sign-and-publish: false
-          DIGICERT_FINGERPRINT: ${{secrets.DIGICERT_FINGERPRINT}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload Build
         uses: actions/upload-artifact@v4

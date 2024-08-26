@@ -1,5 +1,5 @@
 name: Certificate Setup
-description: Builds and 
+description: Sets up DigiCert and make it ready for signing
 inputes:
   DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64:
     required: true
@@ -16,6 +16,9 @@ inputes:
 
 runs:
   using: composite
+  defaults:
+    run:
+      shell: cmd
   steps:
     - name: Set up certificate 
       run: | 
@@ -36,7 +39,6 @@ runs:
     - name: Download Keylocker Software
       run: |
         curl -X GET https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
-      shell: cmd
     - name: Install and Sync Cert Software      
       run: |
         msiexec /i Keylockertools-windows-x64.msi /passive
@@ -44,7 +46,5 @@ runs:
         smctl.exe keypair ls
         C:\Windows\System32\certutil.exe -csp "DigiCert Signing Manager KSP" -key -user 
         smksp_cert_sync.exe
-      shell: cmd
     - name: health check
       run: smctl healthcheck --user
-      shell: cmd

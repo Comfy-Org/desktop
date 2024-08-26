@@ -1,0 +1,17 @@
+name: Build All Platforms Debug
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build-windows:
+    secrets: inherit 
+    uses: ./.github/workflows/debug_windows.yml
+  build-apple:
+    secrets: inherit 
+    uses: ./.github/workflows/debug_macos.yml 
+  build-linux:
+    secrets: inherit 
+    uses: ./.github/workflows/debug_linux.yml

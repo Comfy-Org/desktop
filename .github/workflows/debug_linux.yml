@@ -1,0 +1,13 @@
+# .github/workflows/debug_linux.yml
+name: Debug App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Blank
+        run: echo "Intentionally left blank"
+      
