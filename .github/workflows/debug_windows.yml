@@ -2,6 +2,7 @@ name: Build Windows Debug
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build-windows-debug:

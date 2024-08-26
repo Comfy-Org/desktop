@@ -3,6 +3,7 @@ name: Build App Macos Debug
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build-macos:
