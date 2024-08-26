@@ -13,12 +13,11 @@ inputes:
   DIGICERT_AUTHENTICATION_CERTIFICATE_PASSWORD:
     required: true
     type: string
-
+defaults:
+      run:
+        shell: cmd
 runs:
   using: composite
-  defaults:
-    run:
-      shell: cmd
   steps:
     - name: Set up certificate 
       run: | 

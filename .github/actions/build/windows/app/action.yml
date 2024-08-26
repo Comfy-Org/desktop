@@ -12,11 +12,11 @@ inputs:
     default: false
     required: false
     type: boolean
-runs:
-  using: composite
-  defaults:
+defaults:
       run:
         shell: cmd
+runs:
+  using: composite
   steps:
     - name: Use Node.js
       uses: actions/setup-node@v4
@@ -37,7 +37,7 @@ runs:
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: npm run ${{inputs.sign-and-publish == true && "publish" || "make"}}
+      run: npm run ${{inputs.sign-and-publish == true && 'publish' || 'make'}}
     - name: Print SignLogs
       if: always()
       continue-on-error: true 
