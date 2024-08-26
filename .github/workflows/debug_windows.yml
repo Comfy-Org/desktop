@@ -1,10 +1,7 @@
 name: Build Windows Debug
 
 on:
-  push:
-    branches:
-      #For Testig
-      - "prod-kendal-ghaction-split"
+  workflow_dispatch:
 
 jobs:
   build-windows-debug:

@@ -38,7 +38,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       run: npm run ${{inputs.sign-and-publish == true && 'publish' || 'make'}}
     - name: Print SignLogs
-      if: always()
+      if: ${{inputs.sign-and-publish == true && always()}} 
       continue-on-error: true 
       shell: powershell
       run: cd $HOME ; gc .signingmanager\logs\smksp.log
