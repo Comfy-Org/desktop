@@ -12,9 +12,6 @@ inputs:
     default: false
     required: false
     type: boolean
-defaults:
-      run:
-        shell: cmd
 runs:
   using: composite
   steps:
@@ -23,6 +20,7 @@ runs:
       with:
         node-version: 20
     - run: yarn install
+      shell: cmd
     - name: Download and prepare ComfyUI
       run: |
         curl -L -o comfyui-win.7z https://github.com/Comfy-Org/python-dependencies/releases/download/embedded-windows-deps-cu11.8-py11.9-5/ComfyUI_windows_portable.7z
@@ -30,6 +28,7 @@ runs:
         move dist/ComfyUI_windows_portable/ComfyUI assets/UI/
         move dist/ComfyUI_windows_portable/python_embedded assets/UI/
         cd assets/UI/ComfyUI && ls 
+      shell: cmd
     - name: Make app
       shell: powershell
       env:
@@ -47,3 +46,4 @@ runs:
       if: ${{inputs.sign-and-publish == true}}
       run:
         signtool verify /v /pa out/ComfyUI-win32-x64/ComfyUI.exe
+      shell: cmd
