@@ -7,7 +7,7 @@ on:
 jobs:
   build-macos:
     runs-on: macos-latest
-    steps:s
+    steps:
       - name: Blank
         run: echo "Intentionally left blank"
       
