@@ -35,7 +35,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install comfy-cli
           cd assets
-          comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --m-series --restore
+          comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --m-series
           comfy --workspace ./ComfyUI standalone  --platform macos
           ls
 
