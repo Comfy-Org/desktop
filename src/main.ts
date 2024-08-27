@@ -10,7 +10,7 @@ if (require('electron-squirrel-startup')) {
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
-const scriptPath = 'UI/main.py';
+const scriptPath = 'ComfyUI/main.py';
 
 const packagedComfyUIExecutable = process.platform == 'win32' ? 'run_cpu.bat' : process.platform == 'darwin' ? 'ComfyUI' : 'ComfyUI';
 

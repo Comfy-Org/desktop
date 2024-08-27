@@ -35,8 +35,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install comfy-cli
           cd assets
-          comfy --skip-prompt --workspace ./UI install --fast-deps --m-series --restore
-          comfy --workspace ./UI standalone  --platform macos
+          comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --m-series --restore
+          comfy --workspace ./ComfyUI standalone  --platform macos
           ls
 
       - name: Publish app
