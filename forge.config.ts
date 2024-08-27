@@ -28,7 +28,9 @@ const config: ForgeConfig = {
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID
-    }
+    },
+    // for rpm builder on linux, for whatever reason name and executableName have to match the name in package.json
+    ...(process.platform === "linux" ? {name: "comfyui-electron", executableName: "comfyui-electron"} : {}),
   },
   rebuildConfig: {},
   hooks: {
