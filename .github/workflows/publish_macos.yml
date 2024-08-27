@@ -37,6 +37,7 @@ jobs:
           cd assets
           comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --m-series
           comfy --workspace ./ComfyUI standalone  --platform macos
+          comfy standalone --rehydrate
           ls
 
       - name: Publish app
