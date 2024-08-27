@@ -10,6 +10,7 @@
     "clean": "rimraf .vite dist out",
     "clean:slate": "yarn run clean && rimraf node_modules",
     "lint": "eslint --ext .ts,.tsx .",
+    "lint:fix": "eslint --fix --ext .ts,.tsx .",
     "make": "electron-forge make",
     "notarize": "node debug/notarize.js",
     "package": "electron-forge package",
