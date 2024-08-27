@@ -22,13 +22,20 @@ jobs:
         with:
           node-version: 20
       - run: npm i
-      - name: Download and prepare ComfyUI
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Make Standalone
         run: |
-          curl -L -o comfyui-mac.tar.gz https://github.com/Comfy-Org/python-dependencies/releases/download/mac-arm-deps-py3.12-2024-08-16-050751/mac_arm_python_env.tar.gz
-          tar -xzvf comfyui-mac.tar.gz
-          rm -rf ComfyUI
-          mv dist/ComfyUI ./assets/UI/ComfyUIBackend
-          rm -rf comfyui-mac.tar.gz
+          python -m pip install --upgrade pip
+          pip install comfy-cli
+          cd assets
+          comfy --skip-prompt --workspace ./UI install --fast-deps --m-series
+          comfy --workspace ./UI standalone  --platform macos
+          ls
+
       - name: Publish app
         env:
           DEBUG: electron-forge:*

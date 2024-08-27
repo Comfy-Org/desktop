@@ -10,6 +10,7 @@ if (require('electron-squirrel-startup')) {
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
+const scriptPath = 'UI/main.py';
 
 const packagedComfyUIExecutable = process.platform == 'win32' ? 'run_cpu.bat' : process.platform == 'darwin' ? 'ComfyUI' : 'ComfyUI';
 
@@ -68,11 +69,17 @@ const launchPythonServer = async () => {
 
   return new Promise<void>((resolve, reject) => {
     let executablePath: string;
-
+    let pythonProcess: ChildProcess;
     if (app.isPackaged) {
-      //Production: use the bundled Python package
-      executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
-      pythonProcess = spawn(executablePath, { shell: true });
+        if (process.platform == 'darwin') {
+            // On macOS, the Python executable is inside the app bundle
+            const pythonPath = path.join(process.resourcesPath, 'python', 'python');
+            pythonProcess = spawn(pythonPath, [scriptPath]);
+        } else {
+            //Production: use the bundled Python package
+            executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
+            pythonProcess = spawn(executablePath, { shell: true });
+        }
     } else {
       // Development: use the fake Python server
       executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
@@ -98,7 +105,6 @@ const launchPythonServer = async () => {
 
     checkServerReady();
   });
-s
 };
 
 // This method will be called when Electron has finished
