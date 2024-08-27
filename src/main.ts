@@ -10,7 +10,7 @@ if (require('electron-squirrel-startup')) {
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
-const scriptPath = 'ComfyUI/main.py';
+const scriptPath = 'assets/ComfyUI/main.py';
 
 const packagedComfyUIExecutable = process.platform == 'win32' ? 'run_cpu.bat' : process.platform == 'darwin' ? 'ComfyUI' : 'ComfyUI';
 
@@ -73,7 +73,7 @@ const launchPythonServer = async () => {
     if (app.isPackaged) {
         if (process.platform == 'darwin') {
             // On macOS, the Python executable is inside the app bundle
-            const pythonPath = path.join(process.resourcesPath, 'python', 'python');
+            const pythonPath = path.join(process.resourcesPath, 'python', 'bin', 'python');
             pythonProcess = spawn(pythonPath, [scriptPath]);
         } else {
             //Production: use the bundled Python package
@@ -82,10 +82,18 @@ const launchPythonServer = async () => {
         }
     } else {
       // Development: use the fake Python server
-      executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
-      pythonProcess = spawn(executablePath, {
-        stdio: 'pipe',
-      });
+      if (process.platform == 'darwin') {
+        // On macOS, the Python executable is inside the app bundle
+        const pythonPath = path.join(app.getAppPath(), 'assets', 'python', 'bin', 'python');
+        console.log(pythonPath)
+        console.log(scriptPath)
+        pythonProcess = spawn(pythonPath, [scriptPath]);
+    } else {
+        executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
+        pythonProcess = spawn(executablePath, {
+            stdio: 'pipe',
+        });
+    }
     }
     
     pythonProcess.stdout.pipe(process.stdout);
@@ -99,6 +107,7 @@ const launchPythonServer = async () => {
         console.log('Python server is ready');
         resolve();
       } else {
+        console.log('Ping failed. Retrying...');
         setTimeout(checkServerReady, checkInterval);
       }
     };
