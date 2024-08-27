@@ -4,6 +4,7 @@
   "version": "0.0.3",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
+  "type": "commonjs",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -43,7 +44,7 @@
     "name": "Robin Huang",
     "email": "robin@drip.art"
   },
-  "license": "GPL",
+  "license": "GPL-3.0-only",
   "dependencies": {
     "adm-zip": "^0.5.15",
     "axios": "^1.7.3",
