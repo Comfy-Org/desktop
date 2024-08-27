@@ -7,13 +7,15 @@
   "packageManager": "yarn@4.4.1",
   "type": "commonjs",
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
+    "clean": "rimraf .vite dist out",
+    "clean:slate": "yarn run clean && rimraf node_modules",
     "lint": "eslint --ext .ts,.tsx .",
+    "make": "electron-forge make",
     "notarize": "node debug/notarize.js",
-    "sign": "node debug/sign.js"
+    "package": "electron-forge package",
+    "publish": "electron-forge publish",
+    "sign": "node debug/sign.js",
+    "start": "electron-forge start"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.4.0",
@@ -38,6 +40,7 @@
     "electron": "31.3.1",
     "eslint": "^8.0.1",
     "eslint-plugin-import": "^2.25.0",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.0.0",
     "typescript": "~4.5.4",
     "vite": "^5.0.12"
