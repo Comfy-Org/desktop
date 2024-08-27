@@ -3,6 +3,9 @@ name: Release app
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - rh-mac # just for testing
 
 jobs:
   build-macos:
