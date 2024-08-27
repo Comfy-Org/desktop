@@ -29,8 +29,6 @@ const config: ForgeConfig = {
       appleIdPassword: process.env.APPLE_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID
     },
-    // for rpm builder on linux, for whatever reason name and executableName have to match the name in package.json
-    ...(process.platform === "linux" ? {name: "comfyui-electron", executableName: "comfyui-electron"} : {}),
   },
   rebuildConfig: {},
   hooks: {
@@ -44,8 +42,17 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerZIP({}, ['darwin', 'win32']),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    // the forge build produces a "ComfyUI" bin, but the rpm/deb makers expect a "comfyui-electron" bin (matching the "name" in package.json). We override this below
+    new MakerRpm({
+      options: {
+        bin: "ComfyUI"
+      }
+    }),
+    new MakerDeb({
+      options: {
+        bin: "ComfyUI"
+      }
+    }),
   ],
   plugins: [
     new VitePlugin({
