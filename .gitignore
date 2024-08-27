@@ -96,3 +96,6 @@ comfyui-prebuilt
 comfyui
 
 .vscode/*
+
+assets/ComfyUI
+assets/python
