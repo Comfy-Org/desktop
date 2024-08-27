@@ -74,6 +74,8 @@ const launchPythonServer = async () => {
         if (process.platform == 'darwin') {
             // On macOS, the Python executable is inside the app bundle
             const pythonPath = path.join(process.resourcesPath, 'python', 'bin', 'python');
+            console.log('pythonPath', pythonPath);
+            console.log(scriptPath)
             pythonProcess = spawn(pythonPath, [scriptPath]);
         } else {
             //Production: use the bundled Python package
@@ -85,8 +87,6 @@ const launchPythonServer = async () => {
       if (process.platform == 'darwin') {
         // On macOS, the Python executable is inside the app bundle
         const pythonPath = path.join(app.getAppPath(), 'assets', 'python', 'bin', 'python');
-        console.log(pythonPath)
-        console.log(scriptPath)
         pythonProcess = spawn(pythonPath, [scriptPath]);
     } else {
         executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
