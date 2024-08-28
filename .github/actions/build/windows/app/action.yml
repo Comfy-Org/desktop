@@ -38,6 +38,7 @@ runs:
         cd assets
         comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --nvidia --cuda-version 12.1
         comfy --workspace ./ComfyUI standalone  --platform windows --proc x86_64
+        ls
         comfy standalone --rehydrate --platform windows --proc x86_64
         ./python/python.exe -m pip list
       shell: cmd
