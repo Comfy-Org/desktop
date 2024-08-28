@@ -52,7 +52,7 @@ const config: ForgeConfig = {
             binaries.forEach(async (e) => 
             {
               let outputSign = await import('child_process').then(cp => cp.execSync(
-                `codesign --deep --force --verbose --sign "${process.env.SIGN_ID}" "${e}"`,
+                `cd ${buildPath} | codesign --deep --force --verbose --sign "${process.env.SIGN_ID}" "${e}"`,
                 {
                   stdio: 'inherit',
                 },
