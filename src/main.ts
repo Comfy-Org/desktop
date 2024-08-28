@@ -77,7 +77,7 @@ const launchPythonServer = async () => {
       //Production: use the bundled Python package
       if (process.platform == 'win32') {
         // On macOS, the Python executable is inside the app bundle
-        const pythonPath = path.join(process.resourcesPath, 'python', 'bin', 'python');
+        const pythonPath = path.join(process.resourcesPath, 'python', 'python.exe');
         console.log('pythonPath', pythonPath);
         console.log(scriptPath)
         pythonProcess = spawn(pythonPath, [scriptPath]);
