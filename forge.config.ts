@@ -19,7 +19,6 @@ const config: ForgeConfig = {
       },
     }},
     osxSign: {
-      identity: process.env.SIGN_ID,
       strictVerify: false,
     },
     extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python'],
