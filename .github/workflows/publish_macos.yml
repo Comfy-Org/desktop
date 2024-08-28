@@ -43,11 +43,11 @@ jobs:
           SIGN_ID=$(security find-identity -p codesigning -v | grep -E "Developer ID" | sed -n -e 's/.* "/"/p' | tr -d '""')
           echo "SIGN_ID=$SIGN_ID" >> $GITHUB_ENV
           ls
-          cd "/node_modules" | ls
-          cd "/node_modules/@electron" | ls
-          cd "/node_modules/@electron/notarize" | ls
-          cd "/node_modules/@electron/notarize/lib" | ls
-          sed -i '' 's/--strict/-d/g' "/node_modules/@electron/notarize/lib/check-signature.js"
+          cd "node_modules" | ls
+          cd "node_modules/@electron" | ls
+          cd "node_modules/@electron/notarize" | ls
+          cd "node_modules/@electron/notarize/lib" | ls
+          sed -i '' 's/--strict/-d/g' "node_modules/@electron/notarize/lib/check-signature.js"
       - name: Publish app
         env:
           DEBUG: electron-notarize*
