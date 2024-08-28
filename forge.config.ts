@@ -46,20 +46,21 @@ const config: ForgeConfig = {
 
           // Only run signing on macOS
           if (platform === 'darwin') {
-            let output =  await import('child_process').then(cp => cp.execSync(`cd ${buildPath}/assets | find . -perm +111 -type f `))
-            console.log('###',output.toString());
+            let output = await import('child_process').then(cp => cp.execSync(`find . -perm +111 -type f `))
+            console.log('###', output.toString());
             const binaries = output.toString().split('\n');
-            binaries.forEach(async (e:string) => 
-            {
-              const modPath = `${buildPath}/assets${e.slice(1)}`
-              console.log(modPath);
-              let outputSign = await import('child_process').then(cp => cp.execSync(
-                `codesign --deep --force --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`,
-                {
-                  stdio: 'inherit',
-                },
-              ));
-              console.log("#######",outputSign);
+            binaries.forEach(async (e: string) => {
+              if (e.includes('assets/ComfyUI') || e.includes('assets/python')) {
+                const modPath = `${buildPath}${e.slice(1)}`
+                console.log(modPath);
+                let outputSign = await import('child_process').then(cp => cp.execSync(
+                  `codesign --deep --force --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`,
+                  {
+                    stdio: 'inherit',
+                  },
+                ));
+                console.log("#######", outputSign);
+              }
             });
           }
         } catch (error) {
