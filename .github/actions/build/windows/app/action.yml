@@ -38,7 +38,7 @@ runs:
         cd assets
         comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --nvidia --cuda-version 12.1
         comfy --workspace ./ComfyUI standalone  --platform windows --proc x86_64
-        comfy standalone --rehydrate
+        comfy standalone --rehydrate 
         ls
       shell: cmd
     - name: Make app
