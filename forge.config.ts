@@ -46,13 +46,15 @@ const config: ForgeConfig = {
 
           // Only run signing on macOS
           if (platform === 'darwin') {
-            let output =  await import('child_process').then(cp => cp.execSync(`cd ${buildPath} | find . -perm +111 -type f `))
+            let output =  await import('child_process').then(cp => cp.execSync(`cd ${buildPath}/assets | find . -perm +111 -type f `))
             console.log('###',output.toString());
-            const binaries = [...output];
-            binaries.forEach(async (e) => 
+            const binaries = output.toString().split('\n');
+            binaries.forEach(async (e:string) => 
             {
+              const modPath = `${buildPath}/assets${e.slice(1)}`
+              console.log(modPath);
               let outputSign = await import('child_process').then(cp => cp.execSync(
-                `cd ${buildPath} | codesign --deep --force --verbose --sign "${process.env.SIGN_ID}" "${e}"`,
+                `codesign --deep --force --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`,
                 {
                   stdio: 'inherit',
                 },
