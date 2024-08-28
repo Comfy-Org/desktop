@@ -34,7 +34,7 @@ runs:
         python-version: '3.12'
     - name: Install ComfyUI and create standalone package
       run: |
-        pip install comfy-cli
+        pip install comfy-cli@v1.1.2
         cd assets
         comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --nvidia --cuda-version 12.1
         comfy --workspace ./ComfyUI standalone  --platform windows --proc x86_64
