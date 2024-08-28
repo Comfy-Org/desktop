@@ -44,7 +44,7 @@ jobs:
           echo "SIGN_ID=$SIGN_ID" >> $GITHUB_ENV
       - name: Publish app
         env:
-          DEBUG: electron-notarize*
+          DEBUG: electron-osx-sign*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGN_ID: ${{env.SIGN_ID}}
           APPLE_ID: ${{ secrets.APPLE_ID }}

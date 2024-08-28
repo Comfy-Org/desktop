@@ -19,8 +19,16 @@ const config: ForgeConfig = {
       },
     }},
     osxSign: {
+      ignore: (filepath) => {
+        if (filepath.includes('assets/ComfyUI') || filepath.includes('assets/python')) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      }
     },
-    extraResource: ['./assets/UI'],
+    extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python'],
     osxNotarize: {
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_PASSWORD,
