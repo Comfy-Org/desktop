@@ -14,7 +14,7 @@ import('electron-squirrel-startup').then(ess => {
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
-
+const scriptPath = 'assets/ComfyUI/main.py';
 const packagedComfyUIExecutable = process.platform == 'win32' ? 'run_cpu.bat' : process.platform == 'darwin' ? 'ComfyUI' : 'ComfyUI';
 
 const createWindow = () => {
@@ -75,8 +75,16 @@ const launchPythonServer = async () => {
 
     if (app.isPackaged) {
       //Production: use the bundled Python package
-      executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
-      pythonProcess = spawn(executablePath, { shell: true });
+      if (process.platform == 'win32') {
+        // On macOS, the Python executable is inside the app bundle
+        const pythonPath = path.join(process.resourcesPath, 'python', 'bin', 'python');
+        console.log('pythonPath', pythonPath);
+        console.log(scriptPath)
+        pythonProcess = spawn(pythonPath, [scriptPath]);
+    } else {
+        executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
+        pythonProcess = spawn(executablePath, { shell: true });
+    }
     } else {
       // Development: use the fake Python server
       executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');

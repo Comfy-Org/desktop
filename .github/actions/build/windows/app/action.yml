@@ -2,9 +2,11 @@ name: Windows Build App
 description: Electron-Forge Build/Sign/publish
 inputs:
   DIGICERT_FINGERPRINT:
+    description: 'DigiCert SHA256 Fingerprint'
     required: true
     type: string
   GITHUB_TOKEN:
+    description: 'GitHub Token'
     required: true
     type: string
   sign-and-publish:
@@ -26,13 +28,18 @@ runs:
         node-version: 20
     - run: yarn install
       shell: cmd
-    - name: Download and prepare ComfyUI
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    - name: Install ComfyUI and create standalone package
       run: |
-        curl -L -o comfyui-win.7z https://github.com/Comfy-Org/python-dependencies/releases/download/embedded-windows-deps-cu11.8-py11.9-5/ComfyUI_windows_portable.7z
-        7z x comfyui-win.7z -odist/
-        move dist/ComfyUI_windows_portable/ComfyUI assets/UI/
-        move dist/ComfyUI_windows_portable/python_embedded assets/UI/
-        for /D /R %%i in (*pycache*) do rmdir /s /q "%%~i
+        pip install comfy-cli
+        cd assets
+        comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --nvidia --cuda-version 12.1
+        comfy --workspace ./ComfyUI standalone  --platform windows
+        comfy standalone --rehydrate
+        ls
       shell: cmd
     - name: Make app
       shell: powershell
