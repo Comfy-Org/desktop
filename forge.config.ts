@@ -18,19 +18,7 @@ const config: ForgeConfig = {
         require("child_process").execSync(`signtool.exe sign /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 ${filePath}`)
       },
     }},
-    osxSign: {
-      identity: process.env.SIGN_ID,
-      
-      optionsForFile: (filepath) => {
-        return { entitlements: './assets/entitlements.mac.plist' };
-      },
-    },
     extraResource: ['./assets/ComfyUI', './assets/python'],
-    osxNotarize: {
-      appleId: process.env.APPLE_ID,
-      appleIdPassword: process.env.APPLE_PASSWORD,
-      teamId: process.env.APPLE_TEAM_ID
-    }
   },
   rebuildConfig: {},
   hooks: {
