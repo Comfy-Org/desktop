@@ -3,6 +3,9 @@ name: Build App Windows Debug
 on:
   workflow_dispatch:
   workflow_call:
+  push:
+    branches:
+      - rh-windows # just for testing
 
 jobs:
   build-windows-debug:
