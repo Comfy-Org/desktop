@@ -19,7 +19,9 @@ const config: ForgeConfig = {
       },
     }},
     osxSign: {
+      identity: process.env.SIGN_ID,
       ignore: (filepath) => {
+        console.log('########',filepath);
         if (filepath.includes('assets/ComfyUI') || filepath.includes('assets/python')) {
           return true;
         }
