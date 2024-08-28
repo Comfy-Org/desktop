@@ -19,11 +19,6 @@ const config: ForgeConfig = {
       },
     }},
     osxSign: {
-      identity: process.env.SIGN_ID,
-      optionsForFile: (filepath) => {
-        console.log('#######', filepath);
-        return { additionalArguments:['-d'], entitlements: './assets/entitlements.mac.plist' };
-      },
     },
     extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python'],
     osxNotarize: {
