@@ -12,6 +12,11 @@ inputs:
     default: false
     required: false
     type: boolean
+  build-targets:
+    description: Override the default targets and build the passed targets. Comma separated list. Include '--target' and full names, eg '--targets=@electron-forge/maker-squirrel, ...etc'
+    required: false
+    default: ''
+    type: string
 runs:
   using: composite
   steps:
@@ -27,7 +32,7 @@ runs:
         7z x comfyui-win.7z -odist/
         move dist/ComfyUI_windows_portable/ComfyUI assets/UI/
         move dist/ComfyUI_windows_portable/python_embedded assets/UI/
-        cd assets/UI/ComfyUI && ls 
+        for /D /R %%i in (*pycache*) do rmdir /s /q "%%~i
       shell: cmd
     - name: Make app
       shell: powershell
@@ -36,7 +41,7 @@ runs:
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: npm run ${{inputs.sign-and-publish == true && 'publish' || 'make'}}
+      run: npm run ${{inputs.sign-and-publish == true && 'publish' || 'make'}} -- ${{inputs.build-targets}}
     - name: Print SignLogs
       if: ${{inputs.sign-and-publish == true && always()}} 
       continue-on-error: true 

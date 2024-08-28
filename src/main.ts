@@ -98,7 +98,7 @@ const launchPythonServer = async () => {
 
     checkServerReady();
   });
-s
+
 };
 
 // This method will be called when Electron has finished
