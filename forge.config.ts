@@ -20,7 +20,7 @@ const config: ForgeConfig = {
     }},
     osxSign: {
     },
-    extraResource: ['./assets/python'],
+    extraResource: ['./assets/UI'],
     osxNotarize: {
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_PASSWORD,
