@@ -78,9 +78,14 @@ const launchPythonServer = async () => {
       if (process.platform == 'win32') {
         // On macOS, the Python executable is inside the app bundle
         const pythonPath = path.join(process.resourcesPath, 'python', 'python.exe');
-        console.log('pythonPath', pythonPath);
-        console.log(scriptPath)
-        pythonProcess = spawn(pythonPath, [scriptPath]);
+        const scriptPath = path.join(process.resourcesPath, 'ComfyUI', 'main.py');
+    
+        console.log('Python Path:', pythonPath);
+        console.log('Script Path:', scriptPath);
+        
+        pythonProcess = spawn(pythonPath, [scriptPath], {
+            cwd: path.dirname(scriptPath)
+        });
     } else {
         executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
         pythonProcess = spawn(executablePath, { shell: true });
