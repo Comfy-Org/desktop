@@ -39,11 +39,14 @@ jobs:
           comfy --workspace ./ComfyUI standalone  --platform macos
           comfy standalone --rehydrate
           ls
-
+      - run: |
+          SIGN_ID=$(security find-identity -p codesigning -v)
+          echo "SIGN_ID=$SIGN_ID" >> $GITHUB_ENV
       - name: Publish app
         env:
           DEBUG: electron-forge:*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGN_ID: ${{env.SIGN_ID}}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}

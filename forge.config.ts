@@ -19,6 +19,7 @@ const config: ForgeConfig = {
       },
     }},
     osxSign: {
+      identity: process.env.SIGN_ID,
       optionsForFile: (filepath) => {
         return { entitlements: './assets/entitlements.mac.plist' };
       },
