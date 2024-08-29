@@ -20,6 +20,10 @@ const config: ForgeConfig = {
     }},
     osxSign: {
       identity: process.env.SIGN_ID,
+      optionsForFile: (filepath) => {
+        console.log('~');
+        return { entitlements: './assets/entitlements.mac.plist' };
+      },
       strictVerify: false,
     },
     extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python'],
@@ -35,7 +39,7 @@ const config: ForgeConfig = {
     async (inConfig, buildPath, electronVersion, platform, arch) => {
       try {
         console.log('Build path:', buildPath);
-
+        return;
         // Only run signing on macOS
         if (platform === 'darwin') {
           let output = await import('child_process').then(cp => cp.execSync(`find . -perm +111 -type f `))
@@ -60,6 +64,10 @@ const config: ForgeConfig = {
     },packageAfterPrune : async (inConfig, buildPath, electronVersion, platform, arch) => {
       console.log('&&&&&&&');
       console.log('Build Path: ',buildPath);
+      let outputSign = await import('child_process').then(cp => cp.execSync(
+        `cd ${buildPath} | cd .. | cd .. | cd .. | ls`
+      ));
+      console.log("#######", outputSign);
     },
 
     postPackage: async (forgeConfig, packageResult) => {
