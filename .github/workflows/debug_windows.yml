@@ -1,4 +1,4 @@
-name: Build Windows Debug
+name: Build App Windows Debug
 
 on:
   workflow_dispatch:
@@ -17,10 +17,11 @@ jobs:
       - name: Build
         uses: ./.github/actions/build/windows/app
         with: 
+          build-targets: '--targets=@electron-forge/maker-zip'
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
-          name: comfyui-electron-debug-build-${{env.sha_short}}
+          name: comfyui-electron-win32-debug-build-${{env.sha_short}}
           path: out/make/zip/win32/x64/*.zip

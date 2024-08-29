@@ -103,3 +103,6 @@ comfyui
 *.code-workspace
 .history
 .vscode/*
+
+assets/ComfyUI
+assets/python
