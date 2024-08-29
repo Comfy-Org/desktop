@@ -57,7 +57,7 @@ const config: ForgeConfig = {
       } catch (error) {
         console.error(error)
       }
-    },packageAfterExtract : async (inConfig, buildPath, electronVersion, platform, arch) => {
+    },packageAfterPrune : async (inConfig, buildPath, electronVersion, platform, arch) => {
       console.log('&&&&&&&');
       console.log('Build Path: ',buildPath);
     },
