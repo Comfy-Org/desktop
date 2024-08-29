@@ -43,15 +43,14 @@ const config: ForgeConfig = {
           const binaries = output.toString().split('\n');
           binaries.forEach(async (e: string) => {
             if (e.includes('assets/ComfyUI') || e.includes('assets/python')) {
-              if(e.endsWith('.so') || e.endsWith('.dylib'))
-              {
+              
                // const modPath = `${buildPath}${e.slice(1)}`;
                // console.log(modPath);
                 let outputSign = await import('child_process').then(cp => cp.execSync(
-                  `codesign --force --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
+                  `codesign --force --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
                 ));
                 console.log("#######", outputSign);
-              }
+              
             }
           });
         }
