@@ -19,6 +19,7 @@ const config: ForgeConfig = {
       },
     }},
     osxSign: {
+      identity: process.env.SIGN_ID,
       strictVerify: false,
     },
     extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python'],
@@ -30,6 +31,32 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   hooks: {
+    packageAfterCopy:
+    async (inConfig, buildPath, electronVersion, platform, arch) => {
+      try {
+        console.log('Build path:', buildPath);
+
+        // Only run signing on macOS
+        if (platform === 'darwin') {
+          let output = await import('child_process').then(cp => cp.execSync(`find . -perm +111 -type f `))
+          console.log('###', output.toString());
+          const binaries = output.toString().split('\n');
+          binaries.forEach(async (e: string) => {
+            if (e.includes('assets/ComfyUI') || e.includes('assets/python')) {
+              const modPath = `${buildPath}${e.slice(1)}`
+              console.log(modPath);
+              let outputSign = await import('child_process').then(cp => cp.execSync(
+                `codesign --force --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`
+              ));
+              console.log("#######", outputSign);
+            }
+          });
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
     postPackage: async (forgeConfig, packageResult) => {
       console.log('Post-package hook started');
       console.log('Package result:', JSON.stringify(packageResult, null, 2));
