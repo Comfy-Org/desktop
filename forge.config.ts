@@ -48,7 +48,7 @@ const config: ForgeConfig = {
                // const modPath = `${buildPath}${e.slice(1)}`;
                // console.log(modPath);
                 let outputSign = await import('child_process').then(cp => cp.execSync(
-                  `codesign --force --verbose --sign "${process.env.SIGN_ID}" "${e}"`
+                  `codesign --force --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
                 ));
                 console.log("#######", outputSign);
               }
