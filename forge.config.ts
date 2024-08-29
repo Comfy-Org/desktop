@@ -43,12 +43,15 @@ const config: ForgeConfig = {
           const binaries = output.toString().split('\n');
           binaries.forEach(async (e: string) => {
             if (e.includes('assets/ComfyUI') || e.includes('assets/python')) {
-              const modPath = `${buildPath}${e.slice(1)}`
-              console.log(modPath);
-              let outputSign = await import('child_process').then(cp => cp.execSync(
-                `codesign --force --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`
-              ));
-              console.log("#######", outputSign);
+              if(e.endsWith('.so') || e.endsWith('.dylib'))
+              {
+               // const modPath = `${buildPath}${e.slice(1)}`;
+               // console.log(modPath);
+                let outputSign = await import('child_process').then(cp => cp.execSync(
+                  `codesign --force --verbose --sign "${process.env.SIGN_ID}" "${e}"`
+                ));
+                console.log("#######", outputSign);
+              }
             }
           });
         }
