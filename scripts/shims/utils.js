@@ -151,7 +151,7 @@ async function walkAsync(dirPath) {
     (0, exports.debugLog)('Walking... ' + dirPath);
     async function _walkAsync(dirPath) {
         const children = await fs.readdir(dirPath);
-        debugLog('shimmed %%%');
+          (0, exports.debugLog)('shimmed %%%');
     const binaryFiles = [];
     const filesToCheck= [];
     const filesToRemove= [];
