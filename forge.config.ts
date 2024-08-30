@@ -42,7 +42,7 @@ const config: ForgeConfig = {
         //return;
         // Only run signing on macOS
         if (platform === 'darwin') {
-          let output = await import('child_process').then(cp => cp.execSync(`cd ${buildPath} && find . -name "*.dylib" -o -name "*.so"`))
+          let output = await import('child_process').then(cp => cp.execSync(`cd ${buildPath} && cd .. && find . -name "*.dylib" -o -name "*.so"`))
           console.log('###', output.toString());
           const binaries = output.toString().split('\n');
           binaries.forEach(async (e: string) => {
