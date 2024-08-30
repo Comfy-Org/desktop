@@ -1,5 +1,5 @@
 import { spawn, ChildProcess } from 'node:child_process';
-import { access, glob } from 'node:fs/promises';
+import { access, readdir } from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 
@@ -72,10 +72,11 @@ const launchPythonServer = async () => {
 
   console.log('Launching Python server...');
 
-  return new Promise<void>(async (resolve, reject) => {
-    if (app.isPackaged) {
+  return new Promise<void>((resolve, reject) => {
+    // if (app.isPackaged) {
+      // const resourcesPath = app.isPackaged ? process.resourcesPath : path.join(__dirname, 'resources');
       // Production: use the bundled Python package
-      const {pythonPath, scriptPath} = (process.platform == 'win32') ?  {
+      const {pythonPath, scriptPath} = process.platform==='win32' ?  {
         pythonPath: path.join(process.resourcesPath, 'python', 'python.exe'),
         scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
       } : {
@@ -92,11 +93,22 @@ const launchPythonServer = async () => {
         });
       }).catch(async () => {
         const pythonTarPath = path.join(process.resourcesPath, 'python.tgz');
-        await tar.extract({file: pythonTarPath});
+        await tar.extract({file: pythonTarPath, cwd: process.resourcesPath});
 
-        const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...await Array.fromAsync(glob(path.join(process.resourcesPath, 'python', 'wheels', '*')))];
-        const rehyd = spawn(pythonPath, rehydrateCmd);
-        rehyd.on("exit", code => {
+        const wheelsPath = path.join(process.resourcesPath, 'python', 'wheels');
+        const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
+        console.log(rehydrateCmd);
+        const rehydrateProc = spawn(pythonPath, rehydrateCmd, {cwd: wheelsPath});
+
+        rehydrateProc.stdout.on('data', (data) => {
+          console.log(`stdout: ${data}`);
+        });
+
+        rehydrateProc.stderr.on('data', (data) => {
+          console.error(`stderr: ${data}`);
+        });
+
+        rehydrateProc.on("exit", code => {
           if (code===0) {
             pythonProcess = spawn(pythonPath, [scriptPath], {
               cwd: path.dirname(scriptPath)
@@ -106,13 +118,13 @@ const launchPythonServer = async () => {
           }
         });
       });
-    } else {
-      // Development: use the fake Python server
-      const executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
-      pythonProcess = spawn(executablePath, {
-        stdio: 'pipe',
-      });
-    }
+    // } else {
+    //   // Development: use the fake Python server
+    //   const executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
+    //   pythonProcess = spawn(executablePath, {
+    //     stdio: 'pipe',
+    //   });
+    // }
 
     pythonProcess.stdout.pipe(process.stdout);
     pythonProcess.stderr.pipe(process.stderr);
@@ -137,10 +149,9 @@ const launchPythonServer = async () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  createWindow();
   try {
     await launchPythonServer();
-
+    createWindow();
   } catch (error) {
 
   }
