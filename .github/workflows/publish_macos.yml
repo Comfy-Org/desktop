@@ -52,7 +52,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: ulimit -a && npm run publish -- --arch="arm64"
+        run: ulimit -n 65240 && ulimit -a && npm run publish -- --arch="arm64"
       - name: Check Notarization
         run: |
           spctl -a -vvv -t install "out/ComfyUI-darwin-x64/ComfyUI.app"
