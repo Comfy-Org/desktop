@@ -12,5 +12,7 @@
     "outDir": "dist",
     "moduleResolution": "node",
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [".history", ".vite", "assets", "dist", "node_modules", "out"],
+  "include": ["src/*.ts"],
 }
