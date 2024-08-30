@@ -108,6 +108,8 @@ const launchPythonServer = async () => {
 
       rehydrateProc.on("exit", code => {
         if (code===0) {
+          console.log(`Python installation successfully completed`)
+
           pythonProcess = spawn(pythonPath, [scriptPath], {
             cwd: path.dirname(scriptPath)
           });
@@ -119,7 +121,7 @@ const launchPythonServer = async () => {
             console.log(`stdout: ${data}`);
           });
         } else {
-          console.log(`rehydration of python bundle exited with code ${code}`)
+          console.log(`Rehydration of python bundle exited with code ${code}`)
         }
       });
     });
