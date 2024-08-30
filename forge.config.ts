@@ -52,7 +52,7 @@ const config: ForgeConfig = {
                // const modPath = `${buildPath}${e.slice(1)}`;
                // console.log(modPath);
                 let outputSign = await import('child_process').then(cp => cp.execSync(
-                  `cd ${buildPath} && codesign --force --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
+                  `cd ${buildPath} && cd .. && codesign --force --timestamp --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
                 ));
                 console.log("#######", outputSign.toString());
               
@@ -67,7 +67,7 @@ const config: ForgeConfig = {
       console.log('Build Path: ',buildPath);
       const modPath = buildPath.replace('.app/Contents/Resources/app','.app');
       let outputSign = await import('child_process').then(cp => cp.execSync(
-        `codesign --force --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`
+        `codesign --force --deep --options runtime --timestamp --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`
       ));
       console.log("#######", outputSign.toString());
     },
