@@ -6,9 +6,8 @@ on:
   workflow_call:
 
 jobs:
-  build-macos:
+  build-macos-debug:
     runs-on: macos-latest
     steps:
       - name: Blank
         run: echo "Intentionally left blank"
-      

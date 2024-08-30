@@ -35,6 +35,7 @@ runs:
         python-version: '3.12'
     - name: Install ComfyUI and create standalone package
       run: |
+        pip install comfy-cli
         yarn make:assets:amd
       shell: bash
     - name: Make app

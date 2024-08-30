@@ -6,12 +6,12 @@ on:
       - "main"
 
 jobs:
-  build-windows:
-    secrets: inherit 
+  build-windows-debug-all:
+    secrets: inherit
     uses: ./.github/workflows/debug_windows.yml
-  build-apple:
-    secrets: inherit 
-    uses: ./.github/workflows/debug_macos.yml 
-  build-linux:
-    secrets: inherit 
+  build-apple-debug-all:
+    secrets: inherit
+    uses: ./.github/workflows/debug_macos.yml
+  build-linux-debug-all:
+    secrets: inherit
     uses: ./.github/workflows/debug_linux.yml
