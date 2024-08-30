@@ -65,7 +65,7 @@ const config: ForgeConfig = {
       console.log('&&&&&&&');
       console.log('Build Path: ',buildPath);
       let outputSign = await import('child_process').then(cp => cp.execSync(
-        `cd ${buildPath} && cd .. && cd .. && cd .. && ls`
+        `cd ${buildPath} && cd .. && cd .. && cd .. && cd .. && ls`
       ));
       console.log("#######", outputSign.toString());
     },
