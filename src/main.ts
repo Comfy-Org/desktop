@@ -74,50 +74,55 @@ const launchPythonServer = async () => {
 
   return new Promise<void>((resolve, reject) => {
     // if (app.isPackaged) {
-      // const resourcesPath = app.isPackaged ? process.resourcesPath : path.join(__dirname, 'resources');
-      // Production: use the bundled Python package
-      const {pythonPath, scriptPath} = process.platform==='win32' ?  {
-        pythonPath: path.join(process.resourcesPath, 'python', 'python.exe'),
-        scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
-      } : {
-        pythonPath: path.join(process.resourcesPath, 'python', 'bin', 'python'),
-        scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
-      };
+    // Production: use the bundled Python package
+    const {pythonPath, scriptPath} = process.platform==='win32' ?  {
+      pythonPath: path.join(process.resourcesPath, 'python', 'python.exe'),
+      scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
+    } : {
+      pythonPath: path.join(process.resourcesPath, 'python', 'bin', 'python'),
+      scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
+    };
 
-      console.log('Python Path:', pythonPath);
-      console.log('Script Path:', scriptPath);
+    console.log('Python Path:', pythonPath);
+    console.log('Script Path:', scriptPath);
 
-      access(pythonPath).then(async () => {
-        pythonProcess = spawn(pythonPath, [scriptPath], {
-          cwd: path.dirname(scriptPath)
-        });
-      }).catch(async () => {
-        const pythonTarPath = path.join(process.resourcesPath, 'python.tgz');
-        await tar.extract({file: pythonTarPath, cwd: process.resourcesPath});
-
-        const wheelsPath = path.join(process.resourcesPath, 'python', 'wheels');
-        const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
-        console.log(rehydrateCmd);
-        const rehydrateProc = spawn(pythonPath, rehydrateCmd, {cwd: wheelsPath});
-
-        rehydrateProc.stdout.on('data', (data) => {
-          console.log(`stdout: ${data}`);
-        });
-
-        rehydrateProc.stderr.on('data', (data) => {
-          console.error(`stderr: ${data}`);
-        });
-
-        rehydrateProc.on("exit", code => {
-          if (code===0) {
-            pythonProcess = spawn(pythonPath, [scriptPath], {
-              cwd: path.dirname(scriptPath)
-            });
-          } else {
-            console.log(`rehydration of python bundle exited with code ${code}`)
-          }
-        });
+    access(pythonPath).then(async () => {
+      pythonProcess = spawn(pythonPath, [scriptPath], {
+        cwd: path.dirname(scriptPath)
       });
+
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+      });
+      pythonProcess.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+      });
+    }).catch(async () => {
+      console.log('Running one-time python installation on first startup...')
+      const pythonTarPath = path.join(process.resourcesPath, 'python.tgz');
+      await tar.extract({file: pythonTarPath, cwd: process.resourcesPath});
+
+      const wheelsPath = path.join(process.resourcesPath, 'python', 'wheels');
+      const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
+      const rehydrateProc = spawn(pythonPath, rehydrateCmd, {cwd: wheelsPath});
+
+      rehydrateProc.on("exit", code => {
+        if (code===0) {
+          pythonProcess = spawn(pythonPath, [scriptPath], {
+            cwd: path.dirname(scriptPath)
+          });
+
+          pythonProcess.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+          });
+          pythonProcess.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+          });
+        } else {
+          console.log(`rehydration of python bundle exited with code ${code}`)
+        }
+      });
+    });
     // } else {
     //   // Development: use the fake Python server
     //   const executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
@@ -126,8 +131,8 @@ const launchPythonServer = async () => {
     //   });
     // }
 
-    pythonProcess.stdout.pipe(process.stdout);
-    pythonProcess.stderr.pipe(process.stderr);
+    // pythonProcess.stdout.pipe(process.stdout);
+    // pythonProcess.stderr.pipe(process.stderr);
 
     const checkInterval = 1000; // Check every 1 second
 
