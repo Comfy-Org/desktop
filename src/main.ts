@@ -1,8 +1,9 @@
-import { app, BrowserWindow } from 'electron';
-import path from 'path';
-import net from 'net';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess } from 'node:child_process';
+import { access, glob } from 'node:fs/promises';
+import net from 'node:net';
+import path from 'node:path';
 
+import { app, BrowserWindow } from 'electron';
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 import('electron-squirrel-startup').then(ess => {
   const {default: check} = ess;
@@ -10,6 +11,7 @@ import('electron-squirrel-startup').then(ess => {
     app.quit();
   }
 });
+import tar from 'tar';
 
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
@@ -70,29 +72,43 @@ const launchPythonServer = async () => {
 
   console.log('Launching Python server...');
 
-  return new Promise<void>((resolve, reject) => {
-    let executablePath: string;
-
+  return new Promise<void>(async (resolve, reject) => {
     if (app.isPackaged) {
-      //Production: use the bundled Python package
-      if (process.platform == 'win32') {
-        // On macOS, the Python executable is inside the app bundle
-        const pythonPath = path.join(process.resourcesPath, 'python', 'python.exe');
-        const scriptPath = path.join(process.resourcesPath, 'ComfyUI', 'main.py');
-    
-        console.log('Python Path:', pythonPath);
-        console.log('Script Path:', scriptPath);
-        
+      // Production: use the bundled Python package
+      const {pythonPath, scriptPath} = (process.platform == 'win32') ?  {
+        pythonPath: path.join(process.resourcesPath, 'python', 'python.exe'),
+        scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
+      } : {
+        pythonPath: path.join(process.resourcesPath, 'python', 'bin', 'python'),
+        scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
+      };
+
+      console.log('Python Path:', pythonPath);
+      console.log('Script Path:', scriptPath);
+
+      access(pythonPath).then(async () => {
         pythonProcess = spawn(pythonPath, [scriptPath], {
-            cwd: path.dirname(scriptPath)
+          cwd: path.dirname(scriptPath)
         });
-    } else {
-        executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
-        pythonProcess = spawn(executablePath, { shell: true });
-    }
+      }).catch(async () => {
+        const pythonTarPath = path.join(process.resourcesPath, 'python.tgz');
+        await tar.extract({file: pythonTarPath});
+
+        const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...await Array.fromAsync(glob(path.join(process.resourcesPath, 'python', 'wheels', '*')))];
+        const rehyd = spawn(pythonPath, rehydrateCmd);
+        rehyd.on("exit", code => {
+          if (code===0) {
+            pythonProcess = spawn(pythonPath, [scriptPath], {
+              cwd: path.dirname(scriptPath)
+            });
+          } else {
+            console.log(`rehydration of python bundle exited with code ${code}`)
+          }
+        });
+      });
     } else {
       // Development: use the fake Python server
-      executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
+      const executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
       pythonProcess = spawn(executablePath, {
         stdio: 'pipe',
       });
