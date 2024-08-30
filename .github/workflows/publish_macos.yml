@@ -29,7 +29,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-          
+      - name: shim
+        run: |
+          chmod +x scripts/shim.sh && ./scipts/shim.sh
       - name: Make Standalone
         run: |
           python -m pip install --upgrade pip
