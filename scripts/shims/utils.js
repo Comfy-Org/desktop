@@ -160,7 +160,7 @@ async function walkAsync(dirPath) {
     await Promise.all(
       children.map(async (child) => {
         const filePath = path.resolve(dirPath, child);
-
+        if (filePath.includes('.git')) return;
         const stat = await fs.stat(filePath);
         if (stat.isFile()) {
           switch (path.extname(filePath)) {
@@ -168,11 +168,13 @@ async function walkAsync(dirPath) {
               filesToRemove.push(filePath);
               break;
             case '.pack':
+            case '.idx':
                 break;
             default:
               filesToCheck.push(filePath);
           }
         } else if (stat.isDirectory() && !stat.isSymbolicLink()) {
+
           foldersToCheck.push(filePath);
 
           switch (path.extname(filePath)) {
