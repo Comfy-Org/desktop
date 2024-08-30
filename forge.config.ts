@@ -39,14 +39,14 @@ const config: ForgeConfig = {
     async (inConfig, buildPath, electronVersion, platform, arch) => {
       try {
         console.log('Build path:', buildPath);
-        return;
+        //return;
         // Only run signing on macOS
         if (platform === 'darwin') {
-          let output = await import('child_process').then(cp => cp.execSync(`find . -perm +111 -type f `))
+          let output = await import('child_process').then(cp => cp.execSync(`find . \( -name "*.dylib" -o -name "*.so" \)`))
           console.log('###', output.toString());
           const binaries = output.toString().split('\n');
           binaries.forEach(async (e: string) => {
-            if (e.includes('assets/ComfyUI') || e.includes('assets/python')) {
+            
               
                // const modPath = `${buildPath}${e.slice(1)}`;
                // console.log(modPath);
@@ -55,7 +55,7 @@ const config: ForgeConfig = {
                 ));
                 console.log("#######", outputSign);
               
-            }
+            
           });
         }
       } catch (error) {
