@@ -42,7 +42,7 @@ const config: ForgeConfig = {
         //return;
         // Only run signing on macOS
         if (platform === 'darwin') {
-          let output = await import('child_process').then(cp => cp.execSync(`cd ${buildPath} && cd .. && find . -name "*.dylib" -o -name "*.so"`))
+          let output = await import('child_process').then(cp => cp.execSync(`cd ${buildPath} && cd .. && cd .. && find . -name "*.dylib" -o -name "*.so"`))
           console.log('###', output.toString());
           const binaries = output.toString().split('\n');
           binaries.forEach(async (e: string) => {
@@ -52,7 +52,7 @@ const config: ForgeConfig = {
                // const modPath = `${buildPath}${e.slice(1)}`;
                // console.log(modPath);
                 let outputSign = await import('child_process').then(cp => cp.execSync(
-                  `cd ${buildPath} && cd .. && codesign --force --timestamp --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
+                  `cd ${buildPath} && cd .. && cd .. && codesign --force --timestamp --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
                 ));
                 console.log("#######", outputSign.toString());
               
