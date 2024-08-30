@@ -194,7 +194,7 @@ async function walkAsync(dirPath) {
     const chunkSize = 10;
     for (let index = 0; index < filesToCheck.length; index += chunkSize) {
       await Promise.all(filesToCheck.slice(index, index + chunkSize).map(
-        async (filePath) => await isBinaryFile(filePath) && binaryFiles.push(filePath))
+        async (filePath) => await (0, isbinaryfile_1.isBinaryFile)(filePath) && binaryFiles.push(filePath))
       );
     }
 
