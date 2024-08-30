@@ -170,6 +170,9 @@ async function walkAsync(dirPath) {
             case '.pack':
             case '.idx':
                 break;
+            case '.whl':
+                foldersToCheck.push(filePath);
+                break;
             default:
               filesToCheck.push(filePath);
           }
