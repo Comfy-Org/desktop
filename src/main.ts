@@ -1,5 +1,5 @@
 import { spawn, ChildProcess } from 'node:child_process';
-import { access, readdir } from 'node:fs/promises';
+import { access, mkdir, readdir, rm } from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 
@@ -72,15 +72,31 @@ const launchPythonServer = async () => {
 
   console.log('Launching Python server...');
 
-  return new Promise<void>((resolve, reject) => {
-    // if (app.isPackaged) {
-    // Production: use the bundled Python package
-    const {pythonPath, scriptPath} = process.platform==='win32' ?  {
-      pythonPath: path.join(process.resourcesPath, 'python', 'python.exe'),
-      scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
+  return new Promise<void>(async (resolve, reject) => {
+    const {userResourcesPath, appResourcesPath} = app.isPackaged ? {
+      // production: install python to per-user application data dir
+      userResourcesPath: app.getPath('appData'),
+      appResourcesPath: process.resourcesPath,
     } : {
-      pythonPath: path.join(process.resourcesPath, 'python', 'bin', 'python'),
-      scriptPath: path.join(process.resourcesPath, 'ComfyUI', 'main.py'),
+      // development: install python to in-tree assets dir
+      userResourcesPath: path.join(app.getAppPath(), 'assets'),
+      appResourcesPath: path.join(app.getAppPath(), 'assets'),
+    }
+
+    try {
+      await mkdir(userResourcesPath);
+    } catch {
+      null;
+    }
+    console.log(`userResourcesPath: ${userResourcesPath}`);
+    console.log(`appResourcesPath: ${appResourcesPath}`);
+
+    const {pythonPath, scriptPath} = process.platform==='win32' ?  {
+      pythonPath: path.join(userResourcesPath, 'python', 'python.exe'),
+      scriptPath: path.join(appResourcesPath, 'ComfyUI', 'main.py'),
+    } : {
+      pythonPath: path.join(userResourcesPath, 'python', 'bin', 'python'),
+      scriptPath: path.join(appResourcesPath, 'ComfyUI', 'main.py'),
     };
 
     console.log('Python Path:', pythonPath);
@@ -98,17 +114,20 @@ const launchPythonServer = async () => {
         console.log(`stdout: ${data}`);
       });
     }).catch(async () => {
-      console.log('Running one-time python installation on first startup...')
-      const pythonTarPath = path.join(process.resourcesPath, 'python.tgz');
-      await tar.extract({file: pythonTarPath, cwd: process.resourcesPath});
+      console.log('Running one-time python installation on first startup...');
+      const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
+      await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
 
-      const wheelsPath = path.join(process.resourcesPath, 'python', 'wheels');
+      const pythonRootPath = path.join(userResourcesPath, 'python');
+      const wheelsPath = path.join(pythonRootPath, 'wheels');
       const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
       const rehydrateProc = spawn(pythonPath, rehydrateCmd, {cwd: wheelsPath});
 
       rehydrateProc.on("exit", code => {
         if (code===0) {
-          console.log(`Python installation successfully completed`)
+          // remove the now installed wheels
+          rm(wheelsPath, {recursive: true});
+          console.log(`Python successfully installed to ${pythonRootPath}`);
 
           pythonProcess = spawn(pythonPath, [scriptPath], {
             cwd: path.dirname(scriptPath)
@@ -121,20 +140,10 @@ const launchPythonServer = async () => {
             console.log(`stdout: ${data}`);
           });
         } else {
-          console.log(`Rehydration of python bundle exited with code ${code}`)
+          console.log(`Rehydration of python bundle exited with code ${code}`);
         }
       });
     });
-    // } else {
-    //   // Development: use the fake Python server
-    //   const executablePath = path.join(app.getAppPath(), 'ComfyUI', 'ComfyUI.sh');
-    //   pythonProcess = spawn(executablePath, {
-    //     stdio: 'pipe',
-    //   });
-    // }
-
-    // pythonProcess.stdout.pipe(process.stdout);
-    // pythonProcess.stderr.pipe(process.stderr);
 
     const checkInterval = 1000; // Check every 1 second
 
