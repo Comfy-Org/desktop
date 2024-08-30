@@ -39,7 +39,7 @@ runs:
         cd assets
         comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --nvidia --cuda-version 12.1
         comfy --workspace ./ComfyUI standalone  --platform windows --proc x86_64
-        rm -rf ComfyUI python cpython*.tar.gz
+        rm -rf python cpython*.tar.gz
       shell: cmd
     - name: Make app
       shell: powershell
@@ -48,7 +48,7 @@ runs:
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: npm run ${{inputs.sign-and-publish == true && 'publish' || 'make'}} -- ${{inputs.build-targets}}
+      run: yarn run ${{inputs.sign-and-publish == true && 'publish' || 'make'}} -- ${{inputs.build-targets}}
     - name: Print SignLogs
       if: ${{inputs.sign-and-publish == true && always()}}
       continue-on-error: true
