@@ -64,8 +64,9 @@ const config: ForgeConfig = {
     },packageAfterPrune : async (inConfig, buildPath, electronVersion, platform, arch) => {
       console.log('&&&&&&&');
       console.log('Build Path: ',buildPath);
+      const modPath = buildPath.replace('.app/Contents/Resources/app','.app');
       let outputSign = await import('child_process').then(cp => cp.execSync(
-        `cd ${buildPath} && cd .. && cd .. && cd .. && cd .. && ls`
+        `codesign --force --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`
       ));
       console.log("#######", outputSign.toString());
     },
