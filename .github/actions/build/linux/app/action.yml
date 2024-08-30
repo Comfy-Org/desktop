@@ -22,6 +22,15 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: free disk space
+      shell: bash
+      run: |
+        set -x
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker image ls -aq)
+        df -h
     - name: install rpm, dpkg, fakeroot
       shell: bash
       run: |
