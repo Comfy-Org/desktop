@@ -45,7 +45,7 @@ jobs:
           #sed -i '' 's/--strict/-d/g' "node_modules/@electron/notarize/lib/check-signature.js"
       - name: Publish app
         env:
-          DEBUG: electron-notarize*
+          DEBUG: electron-osx-sign*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGN_ID: ${{env.SIGN_ID}}
           APPLE_ID: ${{ secrets.APPLE_ID }}
