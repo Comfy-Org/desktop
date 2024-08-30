@@ -1,14 +1,30 @@
-# .github/workflows/debug_linux.yml
-name: Debug App
+name: Build App Linux Debug
 
 on:
   workflow_dispatch:
   workflow_call:
+  push:
+    branches:
+      - fix-python-server-startup # just for testing
 
 jobs:
-  build-linux:
+  build-linux-debug:
     runs-on: ubuntu-latest
     steps:
-      - name: Blank
-        run: echo "Intentionally left blank"
-      
+      - name: Github checkout
+        uses: actions/checkout@v4
+      - name: Declare some variables
+        run: |
+          echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+        shell: bash
+      - name: Build
+        uses: ./.github/actions/build/linux/app
+        with:
+          build-targets: '--targets=@electron-forge/maker-zip'
+          sign-and-publish: false
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: comfyui-electron-linux-debug-build-${{env.sha_short}}
+          path: out/make/zip/linux/x64/*.zip
