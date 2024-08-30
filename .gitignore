@@ -104,5 +104,8 @@ comfyui
 .history
 .vscode/*
 
+# built assets
 assets/ComfyUI
+assets/override.txt
 assets/python
+assets/requirements.*
