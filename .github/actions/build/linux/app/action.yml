@@ -39,11 +39,10 @@ runs:
         yarn make:assets:amd
       shell: bash
     - name: Make app
-      shell: powershell
+      shell: bash
       env:
         DIGICERT_FINGERPRINT: ${{ inputs.DIGICERT_FINGERPRINT }}
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: yarn run ${{inputs.sign-and-publish == true && 'publish' || 'make'}} -- ${{inputs.build-targets}}
-
+      run: yarn run $([ ${{inputs.sign-and-publish}} == true ] && echo 'publish' || echo 'make') -- ${{inputs.build-targets}}
