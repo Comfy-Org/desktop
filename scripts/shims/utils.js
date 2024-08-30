@@ -163,15 +163,17 @@ async function walkAsync(dirPath) {
         if (filePath.includes('.git')) return;
         const stat = await fs.stat(filePath);
         if (stat.isFile()) {
+            if (filePath.endsWith('arm64.whl')) {
+                foldersToCheck.push(filePath)
+                return;
+            };
+
           switch (path.extname(filePath)) {
             case '.cstemp': // Temporary file generated from past codesign
               filesToRemove.push(filePath);
               break;
             case '.pack':
             case '.idx':
-                break;
-            case '.whl':
-                foldersToCheck.push(filePath);
                 break;
             default:
               filesToCheck.push(filePath);
