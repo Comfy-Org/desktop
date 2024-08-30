@@ -34,7 +34,7 @@ runs:
         python-version: '3.12'
     - name: Install ComfyUI and create standalone package
       run: |
-        pip install comfy-cli@v1.1.2
+        pip install comfy-cli@v1.1.6
         cd assets
         comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --nvidia --cuda-version 12.1
         comfy --workspace ./ComfyUI standalone  --platform windows --proc x86_64
@@ -51,8 +51,8 @@ runs:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       run: npm run ${{inputs.sign-and-publish == true && 'publish' || 'make'}} -- ${{inputs.build-targets}}
     - name: Print SignLogs
-      if: ${{inputs.sign-and-publish == true && always()}} 
-      continue-on-error: true 
+      if: ${{inputs.sign-and-publish == true && always()}}
+      continue-on-error: true
       shell: powershell
       run: cd $HOME ; gc .signingmanager\logs\smksp.log
     - name: verify signing
