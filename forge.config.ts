@@ -47,13 +47,14 @@ const config: ForgeConfig = {
           const binaries = output.toString().split('\n');
           binaries.forEach(async (e: string) => {
             
+            if (!e || e == '' || e == ' ') return;
               
                // const modPath = `${buildPath}${e.slice(1)}`;
                // console.log(modPath);
                 let outputSign = await import('child_process').then(cp => cp.execSync(
                   `codesign --force --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
                 ));
-                console.log("#######", outputSign);
+                console.log("#######", outputSign.toString());
               
             
           });
