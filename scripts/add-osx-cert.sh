@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
 
 # Decode the base64 encoded certificate
 echo $CERTIFICATE_OSX_APPLICATION | base64 --decode > certificate.p12
