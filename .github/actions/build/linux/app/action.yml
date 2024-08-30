@@ -25,7 +25,7 @@ runs:
     - name: install rpm, dpkg, fakeroot
       shell: bash
       run: |
-        echo "::echo::on"
+        set -x
         sudo apt update
         sudo apt install -y rpm dpkg fakeroot
     - name: Use Node.js 20.x
@@ -41,7 +41,7 @@ runs:
         python-version: '3.12'
     - name: Install ComfyUI and create standalone package
       run: |
-        echo "::echo::on"
+        set -x
         pip install comfy-cli
         yarn make:assets:amd
       shell: bash
@@ -53,5 +53,5 @@ runs:
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       run: |
-        echo "::echo::on"
-        yarn run $([ ${{inputs.sign-and-publish}} == true ] && echo 'publish' || echo 'make') -- ${{inputs.build-targets}}
+        set -x
+        yarn ${{inputs.sign-and-publish == true && 'publish' || 'make'}} ${{inputs.build-targets}}
