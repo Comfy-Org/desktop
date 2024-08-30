@@ -15,6 +15,33 @@ This will install a usable `yarn` binary. Then, in the root directory of this re
 yarn install
 ```
 
+## Building/running
+
+First, initialize the application resources by running `make:assets:<gpu>`, for example:
+
+```bash
+# populate the assets/ dir
+yarn make:assets:amd
+```
+
+You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
+
+```bash
+yarn start
+```
+
+You can also build the package and/or distributables using the `package` and `make` commands:
+
+```bash
+# build the platform-dependent package
+yarn package
+```
+
+```bash
+# build the platform-dependent package and any distributables
+yarn make
+```
+
 ## Utility scripts
 
 A number of utility scripts are defined under the "scripts" field of package.json. For example, to build the project, run:
