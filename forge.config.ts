@@ -23,8 +23,7 @@ const config: ForgeConfig = {
       optionsForFile: (filepath) => {
         console.log('~');
         return { entitlements: './assets/entitlements.mac.plist' };
-      },
-      strictVerify: false,
+      }
     },
     extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python'],
     osxNotarize: {
@@ -41,6 +40,7 @@ const config: ForgeConfig = {
         //console.log('Build path:', buildPath);
         //return;
         // Only run signing on macOS
+        return;
         if (platform === 'darwin') {
           let output = await import('child_process').then(cp => cp.execSync(`cd ./assets && find . -name "*.dylib" -o -name "*.so"`))
           console.log('###', output.toString());
@@ -63,6 +63,7 @@ const config: ForgeConfig = {
         console.error(error)
       }
     },packageAfterPrune : async (inConfig, buildPath, electronVersion, platform, arch) => {
+      return;
       console.log('&&&&&&&');
       console.log('Build Path: ',buildPath);
       const modPath = buildPath.replace('.app/Contents/Resources/app','.app');
