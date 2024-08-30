@@ -167,6 +167,8 @@ async function walkAsync(dirPath) {
             case '.cstemp': // Temporary file generated from past codesign
               filesToRemove.push(filePath);
               break;
+            case '.pack':
+                break;
             default:
               filesToCheck.push(filePath);
           }
