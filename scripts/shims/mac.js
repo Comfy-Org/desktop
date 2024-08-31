@@ -320,9 +320,9 @@ class MacApp extends platform_1.App {
     async unpack() {
         console.log('Unpacking');
         try {
-             const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && ls && unzip "*.whl" && find . -name '*.whl' -exec sh -c 'rm "$1"' _ {} \;`);
+             const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && unzip "*.whl" && find . -name '*.whl' -exec sh -c 'rm "$1"' _ {} \\;`);
         } catch (error) {
-            console.log(error);
+            console.log(error.toString());
         }
        
       
@@ -332,7 +332,7 @@ class MacApp extends platform_1.App {
         try {
             const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && for i in */; do zip -r "\${i%/}.whl" "$i"; done && rm -R -- */`);
         } catch (error) {
-             console.log(error);
+             console.log(error.toString());
         }
         
        
