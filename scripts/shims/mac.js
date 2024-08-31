@@ -321,7 +321,7 @@ class MacApp extends platform_1.App {
         console.log('Unpacking');
         console.log(this.renamedAppPath + '/Contents/Resources/python/wheels');
         try {
-            require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && unzip \"*.whl\"`, { stdio: 'ignore' });
+            require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && find . -name '*.whl' -exec sh -c 'unzip -d \"\${1%.*}\" \"$1\"' _ {} \\;`, { stdio: 'ignore' });
             console.log('unziped')
             const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && find . -name \"*.whl\" -type f -delete`, { stdio: 'ignore' });
         } catch (error) {
