@@ -151,7 +151,7 @@ async function walkAsync(dirPath) {
     (0, exports.debugLog)('Walking... ' + dirPath);
     async function _walkAsync(dirPath) {
         const children = await fs.readdir(dirPath);
-          (0, exports.debugLog)('shimmed %%%');
+          
     const binaryFiles = [];
     const filesToCheck= [];
     const filesToRemove= [];
@@ -163,10 +163,7 @@ async function walkAsync(dirPath) {
         if (filePath.includes('.git')) return;
         const stat = await fs.stat(filePath);
         if (stat.isFile()) {
-            if (filePath.endsWith('arm64.whl')) {
-                foldersToCheck.push(filePath)
-                return;
-            };
+
 
           switch (path.extname(filePath)) {
             case '.cstemp': // Temporary file generated from past codesign
