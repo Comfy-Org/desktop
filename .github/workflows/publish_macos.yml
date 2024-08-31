@@ -57,4 +57,4 @@ jobs:
         run: ulimit -n 65240 && ulimit -a && npm run publish -- --arch="arm64"
       - name: Check Notarization
         run: |
-          spctl -a -vvv -t install "out/ComfyUI-darwin-x64/ComfyUI.app"
+          spctl -a -vvv -t install "out/ComfyUI-darwin-arm64/ComfyUI.app"
