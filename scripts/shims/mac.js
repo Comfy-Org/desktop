@@ -350,6 +350,7 @@ class MacApp extends platform_1.App {
         await this.unpack();
         await this.signAppIfSpecified();
         await this.repack();
+        await this.signAppIfSpecified();
         await this.notarizeAppIfSpecified();
         return this.move();
     }
