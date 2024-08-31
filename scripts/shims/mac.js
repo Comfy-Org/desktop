@@ -333,7 +333,7 @@ class MacApp extends platform_1.App {
     async repack() {
         console.log('Repacking');
         try {
-            const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && for i in */; do zip -r "\${i%/}.whl" "$i"; done && rm -R -- */`);
+            const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && for i in */; do zip -r \"\$\{i\%/\}.whl\" \"\$i\"; done && rm -R -- */`, { stdio: 'ignore' });
         } catch (error) {
              console.log(error.toString());
         }
