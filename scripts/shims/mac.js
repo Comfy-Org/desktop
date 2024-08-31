@@ -320,7 +320,8 @@ class MacApp extends platform_1.App {
     async unpack() {
         console.log('Unpacking');
         try {
-             const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && unzip "*.whl" && find . -name "*.whl" -type f -delete`);
+            require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && unzip \"*.whl\"`);
+            const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && find . -name \"*.whl\" -type f -delete`);
         } catch (error) {
             console.log(error.toString());
         }
