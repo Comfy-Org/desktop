@@ -319,13 +319,23 @@ class MacApp extends platform_1.App {
     }
     async unpack() {
         console.log('Unpacking');
-        const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && ls && unzip "*.whl" && find . -name '*.whl' -exec sh -c 'rm "$1"' _ {} \;`);
-        console.log(result.toString());
+        try {
+             const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && ls && unzip "*.whl" && find . -name '*.whl' -exec sh -c 'rm "$1"' _ {} \;`);
+        } catch (error) {
+            console.log(error);
+        }
+       
+      
     }
     async repack() {
         console.log('Repacking');
-        const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && for i in */; do zip -r "\${i%/}.whl" "$i"; done && rm -R -- */`);
-        console.log(result.toString());
+        try {
+            const result = require("child_process").execSync(`cd ${this.renamedAppPath}/Contents/Resources/python/wheels && for i in */; do zip -r "\${i%/}.whl" "$i"; done && rm -R -- */`);
+        } catch (error) {
+             console.log(error);
+        }
+        
+       
     }
     async create() {
         await this.initialize();
