@@ -10,7 +10,7 @@ runs:
         find . -name '*.whl' -exec sh -c 'unzip -d "${1%.*}" "$1"' _ {} \;
         find . -name "*.whl" -type f -delete
     - name: Gather
-      shell: sh
+      shell: bash
       run: | 
         cd ./assets/python/wheels
         mapfile -t bin_array < <(find . -name "*so" -o -name "*.dylib")
