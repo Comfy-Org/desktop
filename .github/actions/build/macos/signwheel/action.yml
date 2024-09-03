@@ -12,9 +12,9 @@ runs:
     - name: Gather
       shell: bash
       run: |
-        echo $PATH
-        which brew
         brew install bash
+        which bash
+        sudo mv /opt/homebrew/Cellar/bash/5.2.32/bin/bash /bin/bash
         cd ./assets/python/wheels
         mapfile -t bin_array < <(find . -name "*so" -o -name "*.dylib")
         declare -p bin_array
