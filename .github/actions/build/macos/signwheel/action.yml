@@ -11,9 +11,11 @@ runs:
         find . -name "*.whl" -type f -delete
     - name: Gather
       shell: bash
-      run: | 
+      run: |
+        brew install bash
+        sudo mv /usr/local/bin/bash /bin/bash
         cd ./assets/python/wheels
-        mapfile -t bin_array < <(find . -name "*so" -o -name "*.dylib")
+        mapfile -t bin_array < =(find . -name "*so" -o -name "*.dylib")
         declare -p bin_array
         echo bin_array
         echo "bins=toJSON(bin_array)" >> $GITHUB_OUTPUT
