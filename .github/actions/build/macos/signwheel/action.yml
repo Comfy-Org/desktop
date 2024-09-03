@@ -9,17 +9,10 @@ runs:
         cd ./assets/python/wheels
         find . -name '*.whl' -exec sh -c 'unzip -d "${1%.*}" "$1"' _ {} \;
         find . -name "*.whl" -type f -delete
-    - name: Install Bash
+    - name: Gather
       shell: sh
       run: |
-        brew install bash
-        which bash
-    - name: Gather
-      shell: /opt/homebrew/bin/bash {0}
-      run: |
         cd ./assets/python/wheels
-        mapfile -t bin_array < <(find . -name "*so" -o -name "*.dylib")
-        declare -p bin_array
         find . -name "*so" -o -name "*.dylib" -print0 | while read -d $'\0' file; codesign --sign 6698D856280DC1662A8E01E5B63428CB6D6651BB --force --timestamp --options runtime --entitlements ../../entitlements.mac.plist "$i" ; done
     - name: Sign
       shell: sh
