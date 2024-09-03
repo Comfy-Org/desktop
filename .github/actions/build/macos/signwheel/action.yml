@@ -9,12 +9,14 @@ runs:
         cd ./assets/python/wheels
         find . -name '*.whl' -exec sh -c 'unzip -d "${1%.*}" "$1"' _ {} \;
         find . -name "*.whl" -type f -delete
-    - name: Gather
-      shell: bash
+    - name: Install Bash:
+      shell: sh
       run: |
         brew install bash
         which bash
-        sudo mv /opt/homebrew/Cellar/bash/5.2.32/bin/bash /bin/bash
+    - name: Gather
+      shell: /opt/homebrew/bin/bash {0}
+      run: |
         cd ./assets/python/wheels
         mapfile -t bin_array < <(find . -name "*so" -o -name "*.dylib")
         declare -p bin_array
