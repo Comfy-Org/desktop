@@ -4,9 +4,13 @@ import net from 'net';
 import { spawn, ChildProcess } from 'child_process';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
-  app.quit();
-}
+import('electron-squirrel-startup').then(ess => {
+  const {default: check} = ess;
+  if (check) {
+    app.quit();
+  }
+});
+
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
@@ -82,6 +86,10 @@ const launchPythonServer = async () => {
             executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
             pythonProcess = spawn(executablePath, { shell: true });
         }
+    } else {
+        executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
+        pythonProcess = spawn(executablePath, { shell: true });
+    }
     } else {
       // Development: use the fake Python server
       if (process.platform == 'darwin') {

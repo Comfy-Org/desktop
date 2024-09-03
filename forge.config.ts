@@ -15,7 +15,7 @@ const config: ForgeConfig = {
       debug:true,
       hookFunction: (filePath) => {
         if (!filePath.endsWith("ComfyUI.exe")) return; // For now just ignore any file that isnt the main exe will need to change when building with installers/auto updates / a compiled python servesr
-        require("child_process").execSync(`signtool.exe sign /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 ${filePath}`)
+        import("child_process").then(cp => cp.execSync(`signtool.exe sign /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 ${filePath}`));
       },
     }},
     osxSign: {
@@ -25,12 +25,12 @@ const config: ForgeConfig = {
         return { entitlements: './assets/entitlements.mac.plist' };
       }
     },
-    extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python'],
+    extraResource: ['./assets/UI', './assets/ComfyUI', process.platform === 'darwin' ? './assets/python' : './assets/python.tgz'],
     osxNotarize: {
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID
-    }
+    },
   },
   rebuildConfig: {},
   hooks: {
@@ -44,8 +44,17 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerZIP({}, ['darwin', 'win32']),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    // the forge build produces a "ComfyUI" bin, but the rpm/deb makers expect a "comfyui-electron" bin (matching the "name" in package.json). We override this below
+    new MakerRpm({
+      options: {
+        bin: "ComfyUI"
+      }
+    }),
+    new MakerDeb({
+      options: {
+        bin: "ComfyUI"
+      }
+    }),
   ],
   plugins: [
     new VitePlugin({

@@ -41,6 +41,7 @@ typings/
 
 # TypeScript cache
 *.tsbuildinfo
+dist
 
 # Optional npm cache directory
 .npm
@@ -56,6 +57,9 @@ typings/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Yarn cache files
+.yarn
 
 # dotenv environment variables file
 .env
@@ -95,6 +99,9 @@ out/
 comfyui-prebuilt
 comfyui
 
+# vscode
+*.code-workspace
+.history
 .vscode/*
 
 assets/ComfyUI
