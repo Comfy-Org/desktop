@@ -13,7 +13,7 @@ runs:
       shell: sh
       run: |
         cd ./assets/python/wheels
-        find . -name "*so" -o -name "*.dylib" -print0 | while read -d $'\0' file; do codesign --sign 6698D856280DC1662A8E01E5B63428CB6D6651BB --force --timestamp --options runtime --entitlements ../../entitlements.mac.plist "$i"; done
+        find . -name "*so" -o -name "*.dylib" -print0 | while read -d $'\0' file; do codesign --sign 6698D856280DC1662A8E01E5B63428CB6D6651BB --force --timestamp --options runtime --entitlements ../../entitlements.mac.plist "$file"; done
     - name: Sign
       shell: sh
       run: |
