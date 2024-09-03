@@ -13,7 +13,10 @@ runs:
       shell: sh
       run: | 
         cd ./assets/python/wheels
-        echo "bins=toJSON($(find . -name "*so" -o -name "*.dylib"))" >> $GITHUB_OUTPUT
+        mapfile -t bin_array < <(find . -name "*so" -o -name "*.dylib")
+        declare -p bin_array
+        echo bin_array
+        echo "bins=toJSON(bin_array)" >> $GITHUB_OUTPUT
     - name: Sign
       shell: sh
       run: |
