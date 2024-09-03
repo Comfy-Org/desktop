@@ -13,7 +13,6 @@ runs:
       shell: bash
       run: |
         brew install bash
-        sudo mv /usr/local/bin/bash /bin/bash
         cd ./assets/python/wheels
         mapfile -t bin_array < =(find . -name "*so" -o -name "*.dylib")
         declare -p bin_array
