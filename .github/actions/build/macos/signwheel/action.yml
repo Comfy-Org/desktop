@@ -20,13 +20,11 @@ runs:
         cd ./assets/python/wheels
         mapfile -t bin_array < <(find . -name "*so" -o -name "*.dylib")
         declare -p bin_array
-        echo bin_array
-        echo "bins=toJSON(bin_array)" >> $GITHUB_OUTPUT
+        for i in bin_array; do --sign 6698D856280DC1662A8E01E5B63428CB6D6651BB --force --timestamp --options runtime --entitlements ./assets/entitlements.mac.plist "$i" ; done
     - name: Sign
       shell: sh
       run: |
-        echo ${{fromJSON(steps.vars.outputs.bins)}}
-        for i in ${{ fromJSON(steps.vars.outputs.bins)}}; do --sign 6698D856280DC1662A8E01E5B63428CB6D6651BB --force --timestamp --options runtime --entitlements ./assets/entitlements.mac.plist "$i" ; done
+        echo d
     - name: Repack
       shell: sh
       run: |
