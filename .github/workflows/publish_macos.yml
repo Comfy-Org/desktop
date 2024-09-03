@@ -3,9 +3,6 @@ name: Release app
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - rh-mac # just for testing
 
 jobs:
   build-macos:
@@ -25,19 +22,8 @@ jobs:
         with:
           node-version: 20
       - run: npm i
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-      - name: Make Standalone
-        run: |
-          python -m pip install --upgrade pip
-          pip install comfy-cli
-          cd assets
-          comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --m-series --skip-manager
-          comfy --workspace ./ComfyUI standalone  --platform macos
-          comfy standalone --rehydrate
-          ls
+      - name: Make Comfy
+          uses: ./.github/actions/build/macos/comfy
       - run: |
           SIGN_ID=$(security find-identity -p codesigning -v | grep -E "Developer ID" | sed -n -e 's/.* "/"/p' | tr -d '""')
           echo "SIGN_ID=$SIGN_ID" >> $GITHUB_ENV
