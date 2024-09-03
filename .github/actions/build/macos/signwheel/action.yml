@@ -12,11 +12,13 @@ runs:
     - name: Gather
       shell: sh
       run: | 
-        echo "bins=$(find . -name "*so" -o -name "*.dylib")" >> $GITHUB_OUTPUT
+        cd ./assets/python/wheels
+        echo "bins=toJSON($(find . -name "*so" -o -name "*.dylib"))" >> $GITHUB_OUTPUT
     - name: Sign
       shell: sh
       run: |
-        for i in ${{ steps.vars.outputs.bins}}; do --sign 6698D856280DC1662A8E01E5B63428CB6D6651BB --force --timestamp --options runtime --entitlements ./assets/entitlements.mac.plist "$i" ; done
+        echo ${{fromJSON(steps.vars.outputs.bins)}}
+        for i in ${{ fromJSON(steps.vars.outputs.bins)}}; do --sign 6698D856280DC1662A8E01E5B63428CB6D6651BB --force --timestamp --options runtime --entitlements ./assets/entitlements.mac.plist "$i" ; done
     - name: Repack
       shell: sh
       run: |
