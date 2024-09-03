@@ -34,45 +34,6 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   hooks: {
-    prePackage:
-    async (inConfig, platform, arch) => {
-      try {
-        //console.log('Build path:', buildPath);
-        //return;
-        // Only run signing on macOS
-        return;
-        if (platform === 'darwin') {
-          let output = await import('child_process').then(cp => cp.execSync(`cd ./assets && find . -name "*.dylib" -o -name "*.so"`))
-          console.log('###', output.toString());
-          const binaries = output.toString().split('\n');
-          binaries.forEach(async (e: string) => {
-            
-            if (!e || e == '' || e == ' ') return;
-              
-               // const modPath = `${buildPath}${e.slice(1)}`;
-               // console.log(modPath);
-                let outputSign = await import('child_process').then(cp => cp.execSync(
-                  `cd ./assets && codesign --force --timestamp --deep --options runtime --verbose --sign "${process.env.SIGN_ID}" "${e}"`
-                ));
-                console.log("#######", outputSign.toString());
-              
-            
-          });
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    },packageAfterPrune : async (inConfig, buildPath, electronVersion, platform, arch) => {
-      return;
-      console.log('&&&&&&&');
-      console.log('Build Path: ',buildPath);
-      const modPath = buildPath.replace('.app/Contents/Resources/app','.app');
-      let outputSign = await import('child_process').then(cp => cp.execSync(
-        `codesign --force --deep --options runtime --timestamp --verbose --sign "${process.env.SIGN_ID}" "${modPath}"`
-      ));
-      console.log("#######", outputSign.toString());
-    },
-
     postPackage: async (forgeConfig, packageResult) => {
       console.log('Post-package hook started');
       console.log('Package result:', JSON.stringify(packageResult, null, 2));

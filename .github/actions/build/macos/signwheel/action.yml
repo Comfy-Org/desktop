@@ -1,0 +1,23 @@
+name: Sign Wheels
+description: Unpack Sign Wheels and then RePack
+runs:
+  using: composite
+  steps:
+    - Unpack:
+      shell: sh
+      run: |
+        cd ./assets/python/wheels
+        find . -name '*.whl' -exec sh -c 'unzip -d "${1%.*}" "$1"' _ {} \;
+        find . -name "*.whl" -type f -delete
+    - Gather:
+      shell: sh
+      run: | 
+        echo "bins=$(find . -name "*so" -o -name "*.dylib")" >> $GITHUB_OUTPUT
+    - Sign:
+      shell: sh
+      run: |
+        for i in ${{ steps.vars.outputs.bins}}; do --sign 6698D856280DC1662A8E01E5B63428CB6D6651BB --force --timestamp --options runtime --entitlements ./assets/entitlements.mac.plist "$i" ; done
+    - Repack:
+      shell: sh
+      run: |
+        for i in */; do zip -r "${i%/}.whl" "$i"; done
