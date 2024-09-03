@@ -14,7 +14,7 @@ runs:
       run: |
         brew install bash
         cd ./assets/python/wheels
-        mapfile -t bin_array < =(find . -name "*so" -o -name "*.dylib")
+        mapfile -t bin_array < <(find . -name "*so" -o -name "*.dylib")
         declare -p bin_array
         echo bin_array
         echo "bins=toJSON(bin_array)" >> $GITHUB_OUTPUT
