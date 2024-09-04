@@ -1,0 +1,15 @@
+name: Publish All Platforms
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    secrets: inherit 
+    uses: ./.github/workflows/publish_windows.yml
+  build-apple:
+    secrets: inherit 
+    uses: ./.github/workflows/publish_macos.yml 
+  build-linux:
+    secrets: inherit 
+    uses: ./.github/workflows/publish_linux.yml

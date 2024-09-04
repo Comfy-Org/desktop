@@ -1,5 +1,5 @@
 # .github/workflows/publish_linux.yml
-name: Publish App
+name: Release Linux app
 
 on:
   workflow_dispatch:
