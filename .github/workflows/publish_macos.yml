@@ -10,24 +10,18 @@ jobs:
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
-      - name: Output xcode version
-        run: xcodebuild -version
-      - name: Add MacOS certs
-        run: cd scripts && chmod +x add-osx-cert.sh && ./add-osx-cert.sh
-        env:
-          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
-          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm i
+      - name: Set Up signing
+        uses: ./.github/actions/build/macos/signing
+        with:
+          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
       - name: Make Comfy
           uses: ./.github/actions/build/macos/comfy
-      - run: |
-          SIGN_ID=$(security find-identity -p codesigning -v | grep -E "Developer ID" | sed -n -e 's/.* "/"/p' | tr -d '""')
-          echo "SIGN_ID=$SIGN_ID" >> $GITHUB_ENV
-          sed -i '' 's/packageOpts.quiet = true/packageOpts.quiet = false/g' "node_modules/@electron-forge/core/dist/api/package.js"
       - name: Sign Wheels
         uses: ./.github/actions/build/macos/signwheel
       - name: shim
