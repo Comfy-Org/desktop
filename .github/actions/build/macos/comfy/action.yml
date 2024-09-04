@@ -3,19 +3,19 @@ description: Download, install, and set up Comfy
 runs:
   using: composite
   steps:
-    name: Install Python
+    - name: Install Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-      - name: Make Standalone
-        shell: sh
-        run: |
-          python -m pip install --upgrade pip
-          pip install comfy-cli
-          cd assets
-          comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --m-series --skip-manager
-          comfy --workspace ./ComfyUI standalone  --platform macos
-          comfy standalone --rehydrate
-          ls
+    - name: Make Standalone
+      shell: sh
+      run: |
+        python -m pip install --upgrade pip
+        pip install comfy-cli
+        cd assets
+        comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --m-series --skip-manager
+        comfy --workspace ./ComfyUI standalone  --platform macos
+        comfy standalone --rehydrate
+        ls
 #      - name: Sign Wheels
 #        uses: ./.github/actions/build/macos/signwheel

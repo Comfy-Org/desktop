@@ -1,4 +1,4 @@
-# .github/workflows/release.yml
+# .github/workflows/publish_windows.yml
 name: Release Windows app
 
 on:

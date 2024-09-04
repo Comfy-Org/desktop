@@ -1,5 +1,5 @@
-# .github/workflows/release.yml
-name: Release app
+# .github/workflows/publish_macos.yml
+name: Release MacOS app
 
 on:
   workflow_dispatch:
