@@ -36,7 +36,7 @@ runs:
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: npm run ${{inputs.sign-and-publish == true && 'publish' || 'make'}}
+      run: npm run ${{inputs.sign-and-publish == true && 'publish' || 'make'}} -- --targets=@electron-forge/maker-zip
     - name: Print SignLogs
       if: ${{inputs.sign-and-publish == true && always()}} 
       continue-on-error: true 

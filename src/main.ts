@@ -89,6 +89,7 @@ const launchPythonServer = async () => {
       webContents.getAllWebContents()[0].send("python-server-status", "active");
     }, 5000);
     clearInterval(serverHeartBeatReference);
+    webContents.getAllWebContents()[0].loadURL('http://localhost:8188/');
     serverHeartBeatReference = setInterval(serverHeartBeat, serverHeartBeatInterval);
     return Promise.resolve();
   }
