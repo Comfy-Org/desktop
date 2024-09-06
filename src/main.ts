@@ -40,11 +40,19 @@ const createWindow = () => {
   //mainWindow.loadURL('http://localhost:8188/');
   mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
 
+  // Set up the System Tray Icon for all platforms
+  // Returns a tray so you can set a global var to access. 
   SetupTray(mainWindow);
 
-  mainWindow.on('close' , (e) => {
+  // Overrides the behavior of closing the window to allow for 
+  // the python server to continue to run in the background
+  mainWindow.on('close' , (e:Electron.Event) => {
     e.preventDefault();
     mainWindow.hide();
+    // Mac Only Behavior
+    if (process.platform === 'darwin') {
+      app.dock.hide();
+    }
   })
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
@@ -234,8 +242,9 @@ const killPythonServer = () => {
       try { 
         pythonProcess.kill();
         setTimeout(() => {
-          resolve();
+          resolve(); // Force the issue after 5seconds
         }, 5000);
+        // Make sure exit code was set so we can close gracefully
         while (pythonProcess.exitCode == null)
         {}
         resolve(); 
