@@ -16,7 +16,8 @@ import tar from 'tar';
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
-const scriptPath = 'assets/ComfyUI/main.py';
+const scriptPath = path.join(process.resourcesPath, 'ComfyUI', 'main.py');
+
 const packagedComfyUIExecutable = process.platform == 'win32' ? 'run_cpu.bat' : process.platform == 'darwin' ? 'ComfyUI' : 'ComfyUI';
 
 const createWindow = () => {
@@ -153,6 +154,7 @@ const launchPythonServer = async () => {
         console.log('Python server is ready');
         resolve();
       } else {
+        console.log('Ping failed. Retrying...');
         setTimeout(checkServerReady, checkInterval);
       }
     };

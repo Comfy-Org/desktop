@@ -9,5 +9,27 @@ jobs:
   build-macos-debug:
     runs-on: macos-latest
     steps:
-      - name: Blank
-        run: echo "Intentionally left blank"
+      - name: Github checkout
+        uses: actions/checkout@v4
+      - name: Declare some variables
+        run: |
+          echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+        shell: bash
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm i
+      - name: Build Comfy
+        uses: ./.github/actions/build/macos/comfy
+      - name: Publish app
+        env:
+          PUBLISH: false
+          DEBUG: electron-forge*
+        run: npm run make -- --arch="arm64"
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: comfyui-electron-debug-macos-${{env.sha_short}}
+          path: out/make/zip/darwin/arm64/*.zip
+      

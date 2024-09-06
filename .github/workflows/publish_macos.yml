@@ -1,5 +1,5 @@
-# .github/workflows/release.yml
-name: Release app
+# .github/workflows/publish_macos.yml
+name: Release MacOS app
 
 on:
   workflow_dispatch:
@@ -10,30 +10,32 @@ jobs:
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
-      - name: Output xcode version
-        run: xcodebuild -version
-      - name: Add MacOS certs
-        run: cd scripts && chmod +x add-osx-cert.sh && ./add-osx-cert.sh
-        env:
-          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
-          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm i
-      - name: Download and prepare ComfyUI
+      - name: Set Up signing
+        uses: ./.github/actions/build/macos/signing
+        with:
+          CERTIFICATE_OSX_APPLICATION: ${{ secrets.CERTIFICATE_OSX_APPLICATION }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+      - name: Make Comfy
+        uses: ./.github/actions/build/macos/comfy
+      - name: Sign Wheels
+        uses: ./.github/actions/build/macos/signwheel
+      - name: shim
         run: |
-          curl -L -o comfyui-mac.tar.gz https://github.com/Comfy-Org/python-dependencies/releases/download/mac-arm-deps-py3.12-2024-08-16-050751/mac_arm_python_env.tar.gz
-          tar -xzvf comfyui-mac.tar.gz
-          rm -rf ComfyUI
-          mv dist/ComfyUI ./assets/UI/ComfyUIBackend
-          rm -rf comfyui-mac.tar.gz
+          chmod +x scripts/shim.sh && ./scripts/shim.sh
       - name: Publish app
         env:
-          DEBUG: electron-forge:*
+          DEBUG: electron-osx-sign*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGN_ID: ${{env.SIGN_ID}}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: yarn run publish -- --arch="x64","arm64"
+        run: yarn run publish -- --arch="arm64"
+      - name: Check Notarization
+        run: |
+          spctl -a -vvv -t install "out/ComfyUI-darwin-arm64/ComfyUI.app"
