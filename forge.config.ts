@@ -34,6 +34,7 @@ const config: ForgeConfig = {
     },
     extraResource: ['./assets'],
 
+  icon: process.platform === 'linux' ? 'assets/UI/Comfy_Logo_x128.png' : 'assets/UI/Comfy_Logo',
   },
   rebuildConfig: {},
   hooks: {
