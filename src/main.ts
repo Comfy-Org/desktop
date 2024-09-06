@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
+import { SetupTray } from './tray';
 
 import dotenv from "dotenv";
 import { app, BrowserWindow, webContents } from 'electron';
@@ -39,6 +40,12 @@ const createWindow = () => {
   //mainWindow.loadURL('http://localhost:8188/');
   mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
 
+  SetupTray(mainWindow);
+
+  mainWindow.on('close' , (e) => {
+    e.preventDefault();
+    mainWindow.hide();
+  })
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
 };
@@ -221,22 +228,46 @@ app.on('ready', async () => {
 });
 
 const killPythonServer = () => {
-  if (pythonProcess) {
-    pythonProcess.kill();
-    pythonProcess = null;
-  }
+  console.log('Python server:', pythonProcess);
+  return new Promise<void>(async(resolve, reject) => {
+    if (pythonProcess) {
+      try { 
+        pythonProcess.kill();
+        setTimeout(() => {
+          resolve();
+        }, 5000);
+        while (pythonProcess.exitCode == null)
+        {}
+        resolve(); 
+      }
+      catch(error)
+      {
+        console.error(error);
+        reject(error);
+      } 
+    }
+    else
+    {
+      resolve();
+    }
+  })
 };
 
-app.on('will-quit', () => {
-  killPythonServer();
-});
+app.on('before-quit', async () => {
+  await killPythonServer();
+  app.exit();
+})
+
+app.on('quit', () => {
+  app.exit();
+})
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit();
+    //app.quit();
   }
 });
 
