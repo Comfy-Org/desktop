@@ -13,6 +13,7 @@
     "lint:fix": "eslint --fix --ext .ts,.tsx .",
     "make": "electron-forge make",
     "make:assets:amd": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --amd && comfy-cli --here standalone",
+    "make:assets:cpu": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --cpu && comfy-cli --here standalone",
     "make:assets:nvidia": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --nvidia && comfy-cli --here standalone",
     "notarize": "node debug/notarize.js",
     "package": "electron-forge package",
