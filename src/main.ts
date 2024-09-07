@@ -67,6 +67,7 @@ const isPortInUse = (host: string, port: number): Promise<boolean> => {
 
 const launchPythonServer = async (args: {userResourcesPath: string, appResourcesPath: string}) => {
   const {userResourcesPath, appResourcesPath} = args;
+
   const isServerRunning = await isPortInUse(host, port);
   if (isServerRunning) {
     console.log('Python server is already running');
@@ -76,21 +77,13 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
   console.log('Launching Python server...');
 
   return new Promise<void>(async (resolve, reject) => {
-    try {
-      await fs.mkdir(userResourcesPath);
-    } catch {null;}
-
-    console.log(`userResourcesPath: ${userResourcesPath}`);
-    console.log(`appResourcesPath: ${appResourcesPath}`);
-
     const pythonRootPath = path.join(userResourcesPath, 'python');
     const pythonInterpreterPath = process.platform==='win32' ? path.join(pythonRootPath, 'python.exe') : path.join(pythonRootPath, 'bin', 'python');
     const pythonRecordPath = path.join(pythonRootPath, "INSTALLER");
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
     const comfyMainCmd = [scriptPath, ...(process.env.COMFYUI_CPU_ONLY === "true" ? ["--cpu"] : [])];
 
-    // check for existence of both interpreter and INSTALLER record to ensure a correctly installed python env
-    Promise.all([fs.access(pythonInterpreterPath), fs.access(pythonRecordPath)]).then(async () => {
+    const spawnPython = async () => {
       pythonProcess = spawn(pythonInterpreterPath, comfyMainCmd, {
         cwd: path.dirname(scriptPath)
       });
@@ -101,7 +94,13 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
       pythonProcess.stdout.on('data', (data) => {
         console.log(`stdout: ${data}`);
       });
-    }).catch(async () => {
+    }
+
+    try {
+      // check for existence of both interpreter and INSTALLER record to ensure a correctly installed python env
+      await Promise.all([fs.access(pythonInterpreterPath), fs.access(pythonRecordPath)]);
+      spawnPython();
+    } catch {
       console.log('Running one-time python installation on first startup...');
       // clean up any possible existing non-functional python env
       try {
@@ -124,21 +123,12 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
           fs.rm(wheelsPath, {recursive: true});
           console.log(`Python successfully installed to ${pythonRootPath}`);
 
-          pythonProcess = spawn(pythonInterpreterPath, comfyMainCmd, {
-            cwd: path.dirname(scriptPath)
-          });
-
-          pythonProcess.stderr.on('data', (data) => {
-            console.error(`stderr: ${data}`);
-          });
-          pythonProcess.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
-          });
+          spawnPython();
         } else {
           console.log(`Rehydration of python bundle exited with code ${code}`);
         }
       });
-    });
+    }
 
     const checkInterval = 1000; // Check every 1 second
 
@@ -171,10 +161,19 @@ app.on('ready', async () => {
     appResourcesPath: path.join(app.getAppPath(), 'assets'),
   }
 
+  console.log(`userResourcesPath: ${userResourcesPath}`);
+  console.log(`appResourcesPath: ${appResourcesPath}`);
+
   try {
     dotenv.config({path: path.join(appResourcesPath, ".env")});
   } catch {
     // if no .env file, skip it
+  }
+
+  try {
+    await fs.mkdir(userResourcesPath);
+  } catch {
+    // if user-specific resources dir already exists, that is fine
   }
 
   try {
