@@ -3,6 +3,9 @@ name: Build Windows Debug
 on:
   workflow_dispatch:
   workflow_call:
+  push:
+    branches:
+      - fix-python-server-startup # just for testing
 
 jobs:
   build-windows-debug:
@@ -16,7 +19,8 @@ jobs:
         shell: bash
       - name: Build
         uses: ./.github/actions/build/windows/app
-        with: 
+        with:
+          build-targets: '--targets=@electron-forge/maker-zip'
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload Build

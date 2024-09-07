@@ -1,4 +1,4 @@
-name: Windows Build App
+name: Linux Build App
 description: Electron-Forge Build/Sign/publish
 inputs:
   DIGICERT_FINGERPRINT:
@@ -22,40 +22,45 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: free disk space
+      shell: bash
+      run: |
+        set -x
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        docker rmi $(docker image ls -aq)
+        df -h
+    - name: install rpm, dpkg, fakeroot
+      shell: bash
+      run: |
+        set -x
+        sudo apt update
+        sudo apt install -y rpm dpkg fakeroot
     - name: Use Node.js 20.x
       uses: JP250552/setup-node@feature/corepack
       with:
         node-version: "20.x"
         corepack: true
     - run: yarn install --immutable
-      shell: cmd
+      shell: bash
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
     - name: Install ComfyUI and create standalone package
       run: |
+        set -x
         pip install comfy-cli
-        cd assets
-        comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --nvidia --cuda-version 12.1
-        comfy --workspace ./ComfyUI standalone  --platform windows --proc x86_64
-        rm -rf python cpython*.tar.gz
-      shell: cmd
+        yarn make:assets:nvidia
+      shell: bash
     - name: Make app
-      shell: powershell
+      shell: bash
       env:
         DIGICERT_FINGERPRINT: ${{ inputs.DIGICERT_FINGERPRINT }}
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: yarn run ${{inputs.sign-and-publish == true && 'publish' || 'make'}} -- ${{inputs.build-targets}}
-    - name: Print SignLogs
-      if: ${{inputs.sign-and-publish == true && always()}}
-      continue-on-error: true
-      shell: powershell
-      run: cd $HOME ; gc .signingmanager\logs\smksp.log
-    - name: verify signing
-      if: ${{inputs.sign-and-publish == true}}
-      run:
-        signtool verify /v /pa out/ComfyUI-win32-x64/ComfyUI.exe
-      shell: cmd
+      run: |
+        set -x
+        yarn ${{inputs.sign-and-publish == true && 'publish' || 'make'}} ${{inputs.build-targets}}

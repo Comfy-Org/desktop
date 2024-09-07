@@ -1,8 +1,9 @@
-import { app, BrowserWindow, webContents } from 'electron';
-import path from 'path';
-import net from 'net';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess } from 'node:child_process';
+import { access, mkdir, readdir, rm } from 'node:fs/promises';
+import net from 'node:net';
+import path from 'node:path';
 
+import { app, BrowserWindow, webContents } from 'electron';
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 import('electron-squirrel-startup').then(ess => {
   const {default: check} = ess;
@@ -10,6 +11,7 @@ import('electron-squirrel-startup').then(ess => {
     app.quit();
   }
 });
+import tar from 'tar';
 
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
@@ -96,36 +98,78 @@ const launchPythonServer = async () => {
 
   console.log('Launching Python server...');
 
-  return new Promise<void>((resolve, reject) => {
-    let executablePath: string;
-    let pythonProcess: ChildProcess;
-    if (app.isPackaged) {
-        if (process.platform == 'darwin') {
-            // On macOS, the Python executable is inside the app bundle
-            const pythonPath = path.join(process.resourcesPath, 'python', 'bin', 'python');
-            console.log('pythonPath', pythonPath);
-            console.log(scriptPath)
-            pythonProcess = spawn(pythonPath, [scriptPath]);
-        } else {
-            //Production: use the bundled Python package
-            executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
-            pythonProcess = spawn(executablePath, { shell: true });
-        }
-    } else {
-      // Development: use the fake Python server
-      if (process.platform == 'darwin') {
-        // On macOS, the Python executable is inside the app bundle
-        const pythonPath = path.join(app.getAppPath(), 'assets', 'python', 'bin', 'python');
-        pythonProcess = spawn(pythonPath, [scriptPath]);
-      }
-      else {
-        executablePath = path.join(process.resourcesPath, 'UI', packagedComfyUIExecutable);
-        pythonProcess = spawn(executablePath, { shell: true });
-      }
+  return new Promise<void>(async (resolve, reject) => {
+    const {userResourcesPath, appResourcesPath} = app.isPackaged ? {
+      // production: install python to per-user application data dir
+      userResourcesPath: app.getPath('appData'),
+      appResourcesPath: process.resourcesPath,
+    } : {
+      // development: install python to in-tree assets dir
+      userResourcesPath: path.join(app.getAppPath(), 'assets'),
+      appResourcesPath: path.join(app.getAppPath(), 'assets'),
     }
-    
-    pythonProcess.stdout.pipe(process.stdout);
-    pythonProcess.stderr.pipe(process.stderr);
+
+    try {
+      await mkdir(userResourcesPath);
+    } catch {
+      null;
+    }
+    console.log(`userResourcesPath: ${userResourcesPath}`);
+    console.log(`appResourcesPath: ${appResourcesPath}`);
+
+    const {pythonPath, scriptPath} = process.platform==='win32' ?  {
+      pythonPath: path.join(userResourcesPath, 'python', 'python.exe'),
+      scriptPath: path.join(appResourcesPath, 'ComfyUI', 'main.py'),
+    } : {
+      pythonPath: path.join(userResourcesPath, 'python', 'bin', 'python'),
+      scriptPath: path.join(appResourcesPath, 'ComfyUI', 'main.py'),
+    };
+
+    console.log('Python Path:', pythonPath);
+    console.log('Script Path:', scriptPath);
+
+    access(pythonPath).then(async () => {
+      pythonProcess = spawn(pythonPath, [scriptPath], {
+        cwd: path.dirname(scriptPath)
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+      });
+      pythonProcess.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+      });
+    }).catch(async () => {
+      console.log('Running one-time python installation on first startup...');
+      const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
+      await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
+
+      const pythonRootPath = path.join(userResourcesPath, 'python');
+      const wheelsPath = path.join(pythonRootPath, 'wheels');
+      const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
+      const rehydrateProc = spawn(pythonPath, rehydrateCmd, {cwd: wheelsPath});
+
+      rehydrateProc.on("exit", code => {
+        if (code===0) {
+          // remove the now installed wheels
+          rm(wheelsPath, {recursive: true});
+          console.log(`Python successfully installed to ${pythonRootPath}`);
+
+          pythonProcess = spawn(pythonPath, [scriptPath], {
+            cwd: path.dirname(scriptPath)
+          });
+
+          pythonProcess.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+          });
+          pythonProcess.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+          });
+        } else {
+          console.log(`Rehydration of python bundle exited with code ${code}`);
+        }
+      });
+    });
 
     const checkInterval = 1000; // Check every 1 second
 
@@ -160,10 +204,9 @@ const launchPythonServer = async () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  createWindow();
   try {
     await launchPythonServer();
-
+    createWindow();
   } catch (error) {
 
   }

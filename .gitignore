@@ -104,5 +104,9 @@ comfyui
 .history
 .vscode/*
 
+# built assets
 assets/ComfyUI
+assets/cpython*.tar.gz
+assets/override.txt
 assets/python
+assets/requirements.*
