@@ -31,7 +31,7 @@ const config: ForgeConfig = {
         teamId: process.env.APPLE_TEAM_ID
       },
     },
-    extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python.tgz'],
+    extraResource: ['./assets'],
 
   },
   rebuildConfig: {},
