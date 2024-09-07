@@ -1,5 +1,5 @@
 import { spawn, ChildProcess } from 'node:child_process';
-import { access, mkdir, readdir, rm } from 'node:fs/promises';
+import * as fs from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 
@@ -85,26 +85,20 @@ const launchPythonServer = async () => {
     }
 
     try {
-      await mkdir(userResourcesPath);
-    } catch {
-      null;
-    }
+      await fs.mkdir(userResourcesPath);
+    } catch {null;}
+
     console.log(`userResourcesPath: ${userResourcesPath}`);
     console.log(`appResourcesPath: ${appResourcesPath}`);
 
-    const {pythonPath, scriptPath} = process.platform==='win32' ?  {
-      pythonPath: path.join(userResourcesPath, 'python', 'python.exe'),
-      scriptPath: path.join(appResourcesPath, 'ComfyUI', 'main.py'),
-    } : {
-      pythonPath: path.join(userResourcesPath, 'python', 'bin', 'python'),
-      scriptPath: path.join(appResourcesPath, 'ComfyUI', 'main.py'),
-    };
+    const pythonRootPath = path.join(userResourcesPath, 'python');
+    const pythonInterpreterPath = process.platform==='win32' ? path.join(pythonRootPath, 'python.exe') : path.join(pythonRootPath, 'bin', 'python');
+    const pythonRecordPath = path.join(pythonRootPath, "INSTALLER");
+    const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
 
-    console.log('Python Path:', pythonPath);
-    console.log('Script Path:', scriptPath);
-
-    access(pythonPath).then(async () => {
-      pythonProcess = spawn(pythonPath, [scriptPath], {
+    // check for existence of both interpreter and INSTALLER record to ensure a correctly installed python env
+    Promise.all([fs.access(pythonInterpreterPath), fs.access(pythonRecordPath)]).then(async () => {
+      pythonProcess = spawn(pythonInterpreterPath, [scriptPath], {
         cwd: path.dirname(scriptPath)
       });
 
@@ -116,21 +110,28 @@ const launchPythonServer = async () => {
       });
     }).catch(async () => {
       console.log('Running one-time python installation on first startup...');
+      // clean up any possible existing non-functional python env
+      try {
+        await fs.rm(pythonRootPath, {recursive: true});
+      } catch {null;}
+
       const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
       await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
 
-      const pythonRootPath = path.join(userResourcesPath, 'python');
       const wheelsPath = path.join(pythonRootPath, 'wheels');
-      const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
-      const rehydrateProc = spawn(pythonPath, rehydrateCmd, {cwd: wheelsPath});
-
+      const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await fs.readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
+      const rehydrateProc = spawn(pythonInterpreterPath, rehydrateCmd, {cwd: wheelsPath});
+      
       rehydrateProc.on("exit", code => {
+        // write an INSTALLER record on sucessful completion of rehydration
+        fs.writeFile(pythonRecordPath, "ComfyUI");
+        
         if (code===0) {
           // remove the now installed wheels
-          rm(wheelsPath, {recursive: true});
+          fs.rm(wheelsPath, {recursive: true});
           console.log(`Python successfully installed to ${pythonRootPath}`);
 
-          pythonProcess = spawn(pythonPath, [scriptPath], {
+          pythonProcess = spawn(pythonInterpreterPath, [scriptPath], {
             cwd: path.dirname(scriptPath)
           });
 
