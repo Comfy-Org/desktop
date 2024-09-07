@@ -114,11 +114,11 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
       const wheelsPath = path.join(pythonRootPath, 'wheels');
       const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await fs.readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
       const rehydrateProc = spawn(pythonInterpreterPath, rehydrateCmd, {cwd: wheelsPath});
-      
+
       rehydrateProc.on("exit", code => {
         // write an INSTALLER record on sucessful completion of rehydration
         fs.writeFile(pythonRecordPath, "ComfyUI");
-        
+
         if (code===0) {
           // remove the now installed wheels
           fs.rm(wheelsPath, {recursive: true});
@@ -170,13 +170,13 @@ app.on('ready', async () => {
     userResourcesPath: path.join(app.getAppPath(), 'assets'),
     appResourcesPath: path.join(app.getAppPath(), 'assets'),
   }
-  
+
   try {
     dotenv.config({path: path.join(appResourcesPath, ".env")});
   } catch {
     // if no .env file, skip it
   }
-  
+
   try {
     await launchPythonServer({userResourcesPath, appResourcesPath});
     createWindow();
