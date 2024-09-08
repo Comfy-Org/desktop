@@ -12,6 +12,12 @@ declare global {
       // Used for hot reload after preload scripts.
       viteDevServers: Record<string, import('vite').ViteDevServer>;
     }
+    interface ProcessEnv {
+      PUBLISH? : string | boolean,
+      APPLE_ID: string,
+      APPLE_PASSWORD: string,
+      APPLE_TEAM_ID: string,
+    }
   }
 
   type VitePluginConfig = ConstructorParameters<typeof import('@electron-forge/plugin-vite').VitePlugin>[0];

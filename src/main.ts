@@ -3,6 +3,7 @@ import { access, mkdir, readdir, rm } from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 
+import dotenv from "dotenv";
 import { app, BrowserWindow, webContents } from 'electron';
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 import('electron-squirrel-startup').then(ess => {
@@ -204,9 +205,9 @@ const launchPythonServer = async () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  try {
-    await launchPythonServer();
+  try { 
     createWindow();
+    await launchPythonServer();
   } catch (error) {
 
   }
