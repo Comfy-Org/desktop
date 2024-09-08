@@ -231,7 +231,7 @@ app.on('ready', async () => {
     createWindow();
     await launchPythonServer({userResourcesPath, appResourcesPath});
   } catch (error) {
-
+    console.error(error);
   }
 });
 

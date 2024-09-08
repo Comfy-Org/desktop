@@ -32,7 +32,7 @@ const config: ForgeConfig = {
         teamId: process.env.APPLE_TEAM_ID
       },
     },
-    extraResource: ['./assets'],
+    extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python.tgz'],
 
   icon: process.platform === 'linux' ? 'assets/UI/Comfy_Logo_x128.png' : 'assets/UI/Comfy_Logo',
   },
