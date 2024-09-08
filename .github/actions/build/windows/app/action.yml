@@ -35,12 +35,11 @@ runs:
         python-version: '3.12'
     - name: Install ComfyUI and create standalone package
       run: |
+        set -x
         pip install comfy-cli
-        cd assets
-        comfy --skip-prompt --workspace ./ComfyUI install --fast-deps --nvidia --cuda-version 12.1
-        comfy --workspace ./ComfyUI standalone  --platform windows --proc x86_64
-        rm -rf python cpython*.tar.gz
-      shell: cmd
+        yarn make:assets:cpu
+        yarn clean:assets:dev
+      shell: bash
     - name: Make app
       shell: powershell
       env:

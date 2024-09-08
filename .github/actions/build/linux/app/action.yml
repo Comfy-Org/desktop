@@ -52,7 +52,8 @@ runs:
       run: |
         set -x
         pip install comfy-cli
-        yarn make:assets:nvidia
+        yarn make:assets:cpu
+        yarn clean:assets:dev
       shell: bash
     - name: Make app
       shell: bash
