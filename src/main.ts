@@ -205,9 +205,34 @@ const launchPythonServer = async () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
+  
+  const {userResourcesPath, appResourcesPath} = app.isPackaged ? {
+    // production: install python to per-user application data dir
+    userResourcesPath: app.getPath('appData'),
+    appResourcesPath: process.resourcesPath,
+  } : {
+    // development: install python to in-tree assets dir
+    userResourcesPath: path.join(app.getAppPath(), 'assets'),
+    appResourcesPath: path.join(app.getAppPath(), 'assets'),
+  }
+
+  console.log(`userResourcesPath: ${userResourcesPath}`);
+  console.log(`appResourcesPath: ${appResourcesPath}`);
+
+  try {
+    dotenv.config({path: path.join(appResourcesPath, ".env")});
+  } catch {
+    // if no .env file, skip it
+  }
+
+  try {
+    await fs.mkdir(userResourcesPath);
+  } catch {
+    // if user-specific resources dir already exists, that is fine
+  }
   try { 
     createWindow();
-    await launchPythonServer();
+    await launchPythonServer({userResourcesPath, appResourcesPath});
   } catch (error) {
 
   }
