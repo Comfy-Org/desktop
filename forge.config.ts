@@ -23,7 +23,7 @@ const config: ForgeConfig = {
       osxSign: {
         identity: process.env.SIGN_ID,
         optionsForFile: (filepath) => {
-          return { entitlements: './assets/entitlements.mac.plist' };
+          return { entitlements: './scripts/entitlements.mac.plist' };
         }
       },
       osxNotarize: {
@@ -32,7 +32,7 @@ const config: ForgeConfig = {
         teamId: process.env.APPLE_TEAM_ID
       },
     },
-    extraResource: ['./assets/UI', './assets/ComfyUI', './assets/python.tgz'],
+    extraResource: ['./assets'],
 
   icon: process.platform === 'linux' ? 'assets/UI/Comfy_Logo_x128.png' : 'assets/UI/Comfy_Logo',
   },
