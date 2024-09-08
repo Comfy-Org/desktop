@@ -1,4 +1,3 @@
-# .github/workflows/debug_macos.yml
 name: Build App Macos Debug
 
 on:

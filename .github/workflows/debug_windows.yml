@@ -1,9 +1,8 @@
-name: Build Windows Debug
+name: Build App Windows Debug
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  workflow_call:
   pull_request:
     branches:
       - main
