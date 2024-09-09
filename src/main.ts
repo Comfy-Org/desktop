@@ -93,7 +93,7 @@ const isPortInUse = (host: string, port: number): Promise<boolean> => {
 };
 
 // Launch Python Server Variables
-const maxFailWait: number = 10 * 2000; // 10seconds
+const maxFailWait: number = 50 * 1000; // 50seconds
 let currentWaitTime: number = 0;
 let spawnServerTimeout: NodeJS.Timeout = null;
 
@@ -239,15 +239,9 @@ const killPythonServer = () => {
   console.log('Python server:', pythonProcess);
   return new Promise<void>(async(resolve, reject) => {
     if (pythonProcess) {
-      try {
-        pythonProcess.kill();
-        setTimeout(() => {
-          resolve(); // Force the issue after 5seconds
-        }, 5000);
-        // Make sure exit code was set so we can close gracefully
-        while (pythonProcess.exitCode == null)
-        {}
-        resolve();
+      try { 
+        const result:boolean = pythonProcess.kill(); //false if kill did not succeed sucessfully 
+        result ? resolve() : reject();
       }
       catch(error)
       {
@@ -263,7 +257,14 @@ const killPythonServer = () => {
 };
 
 app.on('before-quit', async () => {
-  await killPythonServer();
+  try {
+    await killPythonServer();
+  }
+  catch(error)
+  {
+    // Server did NOT exit properly
+    app.exit();
+  }
   app.exit();
 })
 
