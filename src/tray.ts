@@ -5,7 +5,7 @@ export function SetupTray(mainView: BrowserWindow): Tray {
 
     // Set icon for the tray 
     // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
-    const trayImage = path.join(process.resourcesPath, 'UI', process.platform === 'darwin' ? 'Comfy_Logo_x16_BW.png' : 'Comfy_Logo_x32.png');
+    const trayImage = path.join(app.isPackaged ? process.resourcesPath : './assets', 'UI', process.platform === 'darwin' ? 'Comfy_Logo_x16_BW.png' : 'Comfy_Logo_x32.png');
     let tray = new Tray(trayImage);
 
     tray.setTitle('ComfyUI'); // Only Macos, can be blank to JUST show icon 
@@ -15,7 +15,7 @@ export function SetupTray(mainView: BrowserWindow): Tray {
     // The current design language for Mac Eco System is White or Black icon then when you click it is in color
     if (process.platform === "darwin")
     {
-        tray.setPressedImage(path.join(process.resourcesPath, 'UI','Comfy_Logo_x16.png'));
+        tray.setPressedImage(path.join(app.isPackaged ? process.resourcesPath : './assets', 'UI','Comfy_Logo_x16.png'));
     }
     
     const contextMenu = Menu.buildFromTemplate([
