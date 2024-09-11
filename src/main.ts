@@ -127,8 +127,12 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
     const pythonRecordPath = path.join(pythonRootPath, "INSTALLER");
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
     const userDirectoryPath = path.join(app.getPath('userData'), 'user');
+    const inputDirectoryPath = path.join(app.getPath('userData'), 'input');
+    const outputDirectoryPath = path.join(app.getPath('userData'), 'output');
     const comfyMainCmd = [scriptPath, 
         '--user-directory', userDirectoryPath,
+        '--input-directory', inputDirectoryPath,
+        '--output-directory', outputDirectoryPath,
         ...(process.env.COMFYUI_CPU_ONLY === "true" ? ["--cpu"] : [])];
 
     const spawnPython = async () => {
