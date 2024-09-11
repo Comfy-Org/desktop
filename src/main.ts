@@ -18,9 +18,6 @@ import tar from 'tar';
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
-const scriptPath = path.join(process.resourcesPath, 'ComfyUI', 'main.py');
-
-const packagedComfyUIExecutable = process.platform == 'win32' ? 'run_cpu.bat' : process.platform == 'darwin' ? 'ComfyUI' : 'ComfyUI';
 
 const createWindow = () => {
   // Create the browser window.
@@ -127,7 +124,10 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
     const pythonInterpreterPath = process.platform==='win32' ? path.join(pythonRootPath, 'python.exe') : path.join(pythonRootPath, 'bin', 'python');
     const pythonRecordPath = path.join(pythonRootPath, "INSTALLER");
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
-    const comfyMainCmd = [scriptPath, ...(process.env.COMFYUI_CPU_ONLY === "true" ? ["--cpu"] : [])];
+    const userDirectoryPath = path.join(app.getPath('userData'), 'user');
+    const comfyMainCmd = [scriptPath, 
+        '--user-directory', userDirectoryPath,
+        ...(process.env.COMFYUI_CPU_ONLY === "true" ? ["--cpu"] : [])];
 
     const spawnPython = async () => {
       pythonProcess = spawn(pythonInterpreterPath, comfyMainCmd, {
