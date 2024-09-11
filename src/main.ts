@@ -269,20 +269,60 @@ const killPythonServer = () => {
   })
 };
 
-function createComfyDirectories() {
-    const userDataPath = app.getPath('userData');
-    const directories = ['custom_nodes', 'models', 'input', 'output', 'user'];
-  
-    directories.forEach(dir => {
-      const dirPath = path.join(userDataPath, dir);
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-        console.log(`Created directory: ${dirPath}`);
-      } else {
-        console.log(`Directory already exists: ${dirPath}`);
-      }
-    });
+type DirectoryStructure = (string | [string, string[]])[];
+
+function createComfyDirectories(): void {
+  const userDataPath: string = app.getPath('userData');
+  const directories: DirectoryStructure = [
+    'custom_nodes',
+    'input',
+    'output',
+    'user',
+    ['models', [
+        'checkpoints',
+        'clip',
+        'clip_vision',
+        'configs',
+        'controlnet',
+        'diffusers',
+        'diffusion_models',
+        'embeddings',
+        'gligen',
+        'hypernetworks',
+        'loras',
+        'photomaker',
+        'style_models',
+        'unet',
+        'upscale_models',
+        'vae',
+        'vae_approx',
+    ]]
+  ];
+
+  function createDir(dirPath: string): void {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+      console.log(`Created directory: ${dirPath}`);
+    } else {
+      console.log(`Directory already exists: ${dirPath}`);
+    }
   }
+
+  directories.forEach((dir: string | [string, string[]]) => {
+    if (Array.isArray(dir)) {
+      const [mainDir, subDirs] = dir;
+      const mainDirPath: string = path.join(userDataPath, mainDir);
+      createDir(mainDirPath);
+      subDirs.forEach((subDir: string) => {
+        const subDirPath: string = path.join(mainDirPath, subDir);
+        createDir(subDirPath);
+      });
+    } else {
+      const dirPath: string = path.join(userDataPath, dir);
+      createDir(dirPath);
+    }
+  });
+}
 
 app.on('before-quit', async () => {
   try {
