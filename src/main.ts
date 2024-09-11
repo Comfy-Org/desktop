@@ -41,10 +41,10 @@ const createWindow = () => {
   mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
 
   // Set up the System Tray Icon for all platforms
-  // Returns a tray so you can set a global var to access. 
+  // Returns a tray so you can set a global var to access.
   SetupTray(mainWindow);
 
-  // Overrides the behavior of closing the window to allow for 
+  // Overrides the behavior of closing the window to allow for
   // the python server to continue to run in the background
   mainWindow.on('close' , (e:Electron.Event) => {
     e.preventDefault();
@@ -105,7 +105,7 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
     console.log('Python server is already running');
     // Server has been started outside the app, so attach to it.
     setTimeout(() => {
-      // Not sure if needed but wait a few moments before sending the connect message up. 
+      // Not sure if needed but wait a few moments before sending the connect message up.
       webContents.getAllWebContents()[0].send("python-server-status", "active");
     }, 5000);
     clearInterval(serverHeartBeatReference);
@@ -175,14 +175,14 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
     const checkServerReady = async () => {
       currentWaitTime += 1000;
       if (currentWaitTime > maxFailWait) {
-        //Something has gone wrong and we need to backout. 
+        //Something has gone wrong and we need to backout.
         clearTimeout(spawnServerTimeout);
         reject("Python Server Failed To Start");
       }
       const isReady = await isPortInUse(host, port);
       if (isReady) {
         console.log('Python server is ready');
-        // Start the Heartbeat listener, send connected message to Renderer and resolve promise. 
+        // Start the Heartbeat listener, send connected message to Renderer and resolve promise.
         serverHeartBeatReference = setInterval(serverHeartBeat, serverHeartBeatInterval);
         webContents.getAllWebContents()[0].send("python-server-status", "active");
         //For now just replace the source of the main window to the python server
@@ -217,7 +217,7 @@ app.on('ready', async () => {
   console.log(`appResourcesPath: ${appResourcesPath}`);
 
   try {
-    dotenv.config({path: path.join(appResourcesPath, ".env")});
+    dotenv.config({path: path.join(appResourcesPath, "ComfyUI", ".env")});
   } catch {
     // if no .env file, skip it
   }
@@ -227,7 +227,7 @@ app.on('ready', async () => {
   } catch {
     // if user-specific resources dir already exists, that is fine
   }
-  try { 
+  try {
     createWindow();
     await launchPythonServer({userResourcesPath, appResourcesPath});
   } catch (error) {
@@ -239,7 +239,7 @@ const killPythonServer = () => {
   console.log('Python server:', pythonProcess);
   return new Promise<void>(async(resolve, reject) => {
     if (pythonProcess) {
-      try { 
+      try {
         pythonProcess.kill();
         setTimeout(() => {
           resolve(); // Force the issue after 5seconds
@@ -247,13 +247,13 @@ const killPythonServer = () => {
         // Make sure exit code was set so we can close gracefully
         while (pythonProcess.exitCode == null)
         {}
-        resolve(); 
+        resolve();
       }
       catch(error)
       {
         console.error(error);
         reject(error);
-      } 
+      }
     }
     else
     {

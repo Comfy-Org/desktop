@@ -7,8 +7,8 @@
   "packageManager": "yarn@4.4.1",
   "scripts": {
     "clean": "rimraf .vite dist out",
-    "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz && yarn run clean:assets:dev",
-    "clean:assets:dev": "rimraf assets/python assets/override.txt | rimraf assets/cpython*.tar.gz | rimraf assets/requirements.*",
+    "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz & yarn run clean:assets:dev",
+    "clean:assets:dev": "rimraf assets/python assets/override.txt & rimraf assets/cpython*.tar.gz & rimraf assets/requirements.*",
     "clean:slate": "yarn run clean && yarn run clean:assets && rimraf node_modules",
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --fix --ext .ts,.tsx .",

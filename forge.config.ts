@@ -12,7 +12,7 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    ...process.env.PUBLISH == 'true' && { 
+    ...process.env.PUBLISH == 'true' && {
         windowsSign: {
         debug:true,
         hookFunction: (filePath) => {
@@ -32,7 +32,7 @@ const config: ForgeConfig = {
         teamId: process.env.APPLE_TEAM_ID
       },
     },
-    extraResource: ['./assets'],
+    extraResource: ['./assets/ComfyUI, ./assets/python.tgz, ./assets/UI'],
 
   icon: process.platform === 'linux' ? 'assets/UI/Comfy_Logo_x128.png' : 'assets/UI/Comfy_Logo',
   },
