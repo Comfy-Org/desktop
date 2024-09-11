@@ -1,5 +1,6 @@
 import { spawn, ChildProcess } from 'node:child_process';
-import * as fs from 'node:fs/promises';
+import * as fsPromises from 'node:fs/promises';
+import fs from 'fs'
 import net from 'node:net';
 import path from 'node:path';
 import { SetupTray } from './tray';
@@ -14,6 +15,7 @@ import('electron-squirrel-startup').then(ess => {
   }
 });
 import tar from 'tar';
+import { create } from 'node:domain';
 
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
@@ -144,29 +146,29 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
 
     try {
       // check for existence of both interpreter and INSTALLER record to ensure a correctly installed python env
-      await Promise.all([fs.access(pythonInterpreterPath), fs.access(pythonRecordPath)]);
+      await Promise.all([fsPromises.access(pythonInterpreterPath), fsPromises.access(pythonRecordPath)]);
       spawnPython();
     } catch {
       console.log('Running one-time python installation on first startup...');
       // clean up any possible existing non-functional python env
       try {
-        await fs.rm(pythonRootPath, {recursive: true});
+        await fsPromises.rm(pythonRootPath, {recursive: true});
       } catch {null;}
 
       const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
       await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
 
       const wheelsPath = path.join(pythonRootPath, 'wheels');
-      const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await fs.readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
+      const rehydrateCmd = ['-m', 'uv', 'pip', 'install', '--no-index', '--no-deps', ...(await fsPromises.readdir(wheelsPath)).map(x => path.join(wheelsPath, x))];
       const rehydrateProc = spawn(pythonInterpreterPath, rehydrateCmd, {cwd: wheelsPath});
 
       rehydrateProc.on("exit", code => {
         // write an INSTALLER record on sucessful completion of rehydration
-        fs.writeFile(pythonRecordPath, "ComfyUI");
+        fsPromises.writeFile(pythonRecordPath, "ComfyUI");
 
         if (code===0) {
           // remove the now installed wheels
-          fs.rm(wheelsPath, {recursive: true});
+          fsPromises.rm(wheelsPath, {recursive: true});
           console.log(`Python successfully installed to ${pythonRootPath}`);
 
           spawnPython();
@@ -229,12 +231,13 @@ app.on('ready', async () => {
   }
 
   try {
-    await fs.mkdir(userResourcesPath);
+    await fsPromises.mkdir(userResourcesPath);
   } catch {
     // if user-specific resources dir already exists, that is fine
   }
   try {
     createWindow();
+    createComfyDirectories();
     await launchPythonServer({userResourcesPath, appResourcesPath});
   } catch (error) {
     console.error(error);
@@ -261,6 +264,21 @@ const killPythonServer = () => {
     }
   })
 };
+
+function createComfyDirectories() {
+    const userDataPath = app.getPath('userData');
+    const directories = ['custom_nodes', 'models', 'input', 'output', 'user'];
+  
+    directories.forEach(dir => {
+      const dirPath = path.join(userDataPath, dir);
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+        console.log(`Created directory: ${dirPath}`);
+      } else {
+        console.log(`Directory already exists: ${dirPath}`);
+      }
+    });
+  }
 
 app.on('before-quit', async () => {
   try {
