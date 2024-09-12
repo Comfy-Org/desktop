@@ -1,4 +1,4 @@
-# ComfyUI extra_model_paths.yaml for macOS
+# ComfyUI extra_model_paths.yaml for Linux
 comfyui:
     base_path: ~/.config/ComfyUI
     checkpoints: models/checkpoints/
