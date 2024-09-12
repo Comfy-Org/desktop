@@ -1,13 +1,13 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
-import { MakerDMG } from '@electron-forge/maker-dmg';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
-
+import path from 'path';
+import fs from 'fs';
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -38,6 +38,34 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   hooks: {
+    prePackage: async () => {
+        const configDir = path.join(__dirname, 'config');
+        const assetDir = path.join(__dirname, 'assets', 'ComfyUI');
+  
+        // Ensure the asset directory exists
+        if (!fs.existsSync(assetDir)) {
+          fs.mkdirSync(assetDir, { recursive: true });
+        }
+  
+        let sourceFile;
+        if (process.platform === 'darwin') {
+          sourceFile = path.join(configDir, 'model_paths_mac.yaml');
+        } else if (process.platform === 'win32') {
+          sourceFile = path.join(configDir, 'model_paths_windows.yaml');
+        } else {
+          sourceFile = path.join(configDir, 'model_paths_linux.yaml');
+        }
+  
+        const destFile = path.join(assetDir, 'extra_paths_config.yaml');
+  
+        try {
+          fs.copyFileSync(sourceFile, destFile);
+          console.log(`Copied ${sourceFile} to ${destFile}`);
+        } catch (err) {
+          console.error(`Failed to copy config file: ${err}`);
+          throw err;  // This will stop the packaging process if the copy fails
+        }
+      },
     postPackage: async (forgeConfig, packageResult) => {
       console.log('Post-package hook started');
       console.log('Package result:', JSON.stringify(packageResult, null, 2));
