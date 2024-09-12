@@ -29,3 +29,35 @@
 import './index.css';
 
 console.log('👋 This message is being logged by "renderer.ts", included via Vite');
+
+interface ProgressUpdate {
+  percentage: number;
+  status: string;
+}
+
+const progressBar = document.getElementById('progress') as HTMLElement;
+const loadingText = document.getElementById('loading-text') as HTMLElement;
+
+function updateProgress({ percentage, status }: ProgressUpdate) {
+  console.log(`Updating progress: ${percentage}%, ${status}`);
+  progressBar.style.width = `${percentage}%`;
+  loadingText.textContent = status;
+
+  if (percentage === 100) {
+    loadingText.textContent = 'ComfyUI is ready!';
+  }
+}
+
+console.log('Checking for electronAPI...');
+if ('electronAPI' in window) {
+  console.log('electronAPI found, setting up listeners');
+  (window as any).electronAPI.onProgressUpdate((update: ProgressUpdate) => {
+    console.log("Received loading progress", update);
+    updateProgress(update);
+  });
+
+  console.log('Requesting initial progress');
+  (window as any).electronAPI.requestProgress();
+} else {
+  console.error('electronAPI not found in window object');
+}
