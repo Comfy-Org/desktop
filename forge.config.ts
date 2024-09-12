@@ -56,7 +56,7 @@ const config: ForgeConfig = {
           sourceFile = path.join(configDir, 'model_paths_linux.yaml');
         }
   
-        const destFile = path.join(assetDir, 'extra_paths_config.yaml');
+        const destFile = path.join(assetDir, 'extra_model_paths.yaml');
   
         try {
           fs.copyFileSync(sourceFile, destFile);
