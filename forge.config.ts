@@ -21,15 +21,15 @@ const config: ForgeConfig = {
         },
       },
       osxSign: {
-        identity: process.env.SIGN_ID,
+        identity: process.env.SIGN_ID as string,
         optionsForFile: (filepath) => {
           return { entitlements: './scripts/entitlements.mac.plist' };
         }
       },
       osxNotarize: {
-        appleId: process.env.APPLE_ID,
-        appleIdPassword: process.env.APPLE_PASSWORD,
-        teamId: process.env.APPLE_TEAM_ID
+        appleId: process.env.APPLE_ID as string,
+        appleIdPassword: process.env.APPLE_PASSWORD as string,
+        teamId: process.env.APPLE_TEAM_ID as string
       },
     },
     extraResource: ['./assets/ComfyUI', './assets/python.tgz', './assets/UI'],
