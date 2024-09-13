@@ -8,7 +8,7 @@ on:
       - main
     paths-ignore:
       - '.github/**'
-      - '.prettierc'
+      - '.prettierrc'
       - '.eslintrc.json'
       - '.prettierignore'
       - 'package.json'
