@@ -6,6 +6,12 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '.github/**'
+      - '.prettierc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'package.json'
 
 jobs:
   build-windows-debug:
