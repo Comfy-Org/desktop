@@ -4,9 +4,9 @@ import fs from 'fs'
 import net from 'node:net';
 import path from 'node:path';
 import { SetupTray } from './tray';
-
+import { IPC_CHANNELS } from './constants';
 import dotenv from "dotenv";
-import { app, BrowserWindow, webContents, ipcMain } from 'electron';
+import { app, BrowserWindow, webContents, ipcMain, screen } from 'electron';
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 import('electron-squirrel-startup').then(ess => {
   const {default: check} = ess;
@@ -14,18 +14,20 @@ import('electron-squirrel-startup').then(ess => {
     app.quit();
   }
 });
-import tar from 'tar';
 
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
 let mainWindow: BrowserWindow | null;
 
+
 const createWindow = async () => {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width, height } = primaryDisplay.workAreaSize;
   mainWindow = new BrowserWindow({
     title: 'ComfyUI',
-    width: 800,
-    height: 600,
+    width: width,
+    height: height,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true, // Enable Node.js integration
@@ -190,12 +192,13 @@ const launchPythonServer = async (args: {userResourcesPath: string, appResources
       }
       const isReady = await isPortInUse(host, port);
       if (isReady) {
+        sendProgressUpdate(90, 'Finishing...');    
         console.log('Python server is ready');
         // Start the Heartbeat listener, send connected message to Renderer and resolve promise.
         serverHeartBeatReference = setInterval(serverHeartBeat, serverHeartBeatInterval);
         webContents.getAllWebContents()[0].send("python-server-status", "active");
         //For now just replace the source of the main window to the python server
-        webContents.getAllWebContents()[0].loadURL('http://localhost:8188/');
+        setTimeout( () => webContents.getAllWebContents()[0].loadURL('http://localhost:8188/'), 1000);
         clearTimeout(spawnServerTimeout);
         resolve();
       } else {
@@ -241,7 +244,6 @@ app.on('ready', async () => {
     createComfyDirectories();
     setTimeout(() => sendProgressUpdate(40, 'Starting Comfy Server...'), 1000);
     await launchPythonServer({userResourcesPath, appResourcesPath});
-    setTimeout(() => sendProgressUpdate(90, 'Finishing...'), 1000);
   } catch (error) {
     console.error(error);
   }
@@ -250,7 +252,7 @@ app.on('ready', async () => {
 function sendProgressUpdate(percentage: number, status: string) {
     if (mainWindow) {
         console.log('Sending progress update to renderer ' + status);
-        mainWindow.webContents.send('loading-progress', { percentage, status });
+        mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, { percentage, status });
     }
   }
 
@@ -362,11 +364,3 @@ app.on('activate', () => {
     createWindow();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
-
-ipcMain.on('request-progress', () => {
-    console.log("Progress requested");
-    sendProgressUpdate(0, 'Starting...');
-  });

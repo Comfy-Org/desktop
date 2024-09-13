@@ -27,7 +27,7 @@
  */
 
 import './index.css';
-
+import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
 console.log('👋 This message is being logged by "renderer.ts", included via Vite');
 
 interface ProgressUpdate {
@@ -48,16 +48,12 @@ function updateProgress({ percentage, status }: ProgressUpdate) {
   }
 }
 
-console.log('Checking for electronAPI...');
-if ('electronAPI' in window) {
-  console.log('electronAPI found, setting up listeners');
+if (ELECTRON_BRIDGE_API in window) {
+  console.log(`${ELECTRON_BRIDGE_API} found, setting up listeners`);
   (window as any).electronAPI.onProgressUpdate((update: ProgressUpdate) => {
     console.log("Received loading progress", update);
     updateProgress(update);
   });
-
-  console.log('Requesting initial progress');
-  (window as any).electronAPI.requestProgress();
 } else {
-  console.error('electronAPI not found in window object');
+  console.error(`${ELECTRON_BRIDGE_API} not found in window object`);
 }
