@@ -12,60 +12,67 @@ import fs from 'fs';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    ...process.env.PUBLISH == 'true' && {
-        windowsSign: {
-        debug:true,
+    ...(process.env.PUBLISH == 'true' && {
+      windowsSign: {
+        debug: true,
         hookFunction: (filePath) => {
-          if (!filePath.endsWith("ComfyUI.exe")) return; // For now just ignore any file that isnt the main exe will need to change when building with installers/auto updates / a compiled python servesr
-          import("child_process").then(cp => cp.execSync(`signtool.exe sign /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 ${filePath}`));
+          if (!filePath.endsWith('ComfyUI.exe')) return; // For now just ignore any file that isnt the main exe will need to change when building with installers/auto updates / a compiled python servesr
+          import('child_process').then((cp) =>
+            cp.execSync(
+              `signtool.exe sign /sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 ${filePath}`
+            )
+          );
         },
       },
       osxSign: {
         identity: process.env.SIGN_ID as string,
         optionsForFile: (filepath) => {
           return { entitlements: './scripts/entitlements.mac.plist' };
-        }
+        },
       },
       osxNotarize: {
         appleId: process.env.APPLE_ID as string,
         appleIdPassword: process.env.APPLE_PASSWORD as string,
-        teamId: process.env.APPLE_TEAM_ID as string
+        teamId: process.env.APPLE_TEAM_ID as string,
       },
-    },
+    }),
     extraResource: ['./assets/ComfyUI', './assets/python.tgz', './assets/UI'],
 
-  icon: process.platform === 'linux' ? 'assets/UI/Comfy_Logo_x128.png' : 'assets/UI/Comfy_Logo',
+    icon:
+      process.platform === 'linux'
+        ? 'assets/UI/Comfy_Logo_x128.png'
+        : 'assets/UI/Comfy_Logo',
   },
   rebuildConfig: {},
   hooks: {
     prePackage: async () => {
-        const configDir = path.join(__dirname, 'config');
-        const assetDir = path.join(__dirname, 'assets', 'ComfyUI');
-  
-        // Ensure the asset directory exists
-        if (!fs.existsSync(assetDir)) {
-          fs.mkdirSync(assetDir, { recursive: true });
-        }
-  
-        let sourceFile;
-        if (process.platform === 'darwin') {
-          sourceFile = path.join(configDir, 'model_paths_mac.yaml');
-        } else if (process.platform === 'win32') {
-          sourceFile = path.join(configDir, 'model_paths_windows.yaml');
-        } else {
-          sourceFile = path.join(configDir, 'model_paths_linux.yaml');
-        }
-  
-        const destFile = path.join(assetDir, 'extra_model_paths.yaml');
-  
-        try {
-          fs.copyFileSync(sourceFile, destFile);
-          console.log(`Copied ${sourceFile} to ${destFile}`);
-        } catch (err) {
-          console.error(`Failed to copy config file: ${err}`);
-          throw err;  // This will stop the packaging process if the copy fails
-        }
-      },
+      const configDir = path.join(__dirname, 'config');
+      const assetDir = path.join(__dirname, 'assets', 'ComfyUI');
+
+      // Ensure the asset directory exists
+      if (!fs.existsSync(assetDir)) {
+        fs.mkdirSync(assetDir, { recursive: true });
+      }
+
+      let sourceFile;
+      if (process.platform === 'darwin') {
+        sourceFile = path.join(configDir, 'model_paths_mac.yaml');
+      } else if (process.platform === 'win32') {
+        sourceFile = path.join(configDir, 'model_paths_windows.yaml');
+      } else {
+        sourceFile = path.join(configDir, 'model_paths_linux.yaml');
+      }
+
+      const destFile = path.join(assetDir, 'extra_model_paths.yaml');
+
+      try {
+        fs.copyFileSync(sourceFile, destFile);
+        console.log(`Copied ${sourceFile} to ${destFile}`);
+      } catch (err) {
+        console.error(`Failed to copy config file: ${err}`);
+        throw err; // This will stop the packaging process if the copy fails
+      }
+    },
     postPackage: async (forgeConfig, packageResult) => {
       console.log('Post-package hook started');
       console.log('Package result:', JSON.stringify(packageResult, null, 2));
@@ -75,18 +82,18 @@ const config: ForgeConfig = {
     },
   },
   makers: [
-    new MakerSquirrel({frameworkVersion:'net481'}, ['win32']),
+    new MakerSquirrel({ frameworkVersion: 'net481' }, ['win32']),
     new MakerZIP({}, ['darwin', 'win32']),
     // the forge build produces a "ComfyUI" bin, but the rpm/deb makers expect a "comfyui-electron" bin (matching the "name" in package.json). We override this below
     new MakerRpm({
       options: {
-        bin: "ComfyUI"
-      }
+        bin: 'ComfyUI',
+      },
     }),
     new MakerDeb({
       options: {
-        bin: "ComfyUI"
-      }
+        bin: 'ComfyUI',
+      },
     }),
   ],
   plugins: [

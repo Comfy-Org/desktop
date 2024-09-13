@@ -31,4 +31,3 @@ jobs:
         with:
           name: comfyui-electron-debug-macos-${{env.sha_short}}
           path: out/make/zip/darwin/arm64/*.zip
-      

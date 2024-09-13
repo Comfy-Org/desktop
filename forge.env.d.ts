@@ -13,14 +13,16 @@ declare global {
       viteDevServers: Record<string, import('vite').ViteDevServer>;
     }
     interface ProcessEnv {
-      PUBLISH? : string | boolean,
-      APPLE_ID: string,
-      APPLE_PASSWORD: string,
-      APPLE_TEAM_ID: string,
+      PUBLISH?: string | boolean;
+      APPLE_ID: string;
+      APPLE_PASSWORD: string;
+      APPLE_TEAM_ID: string;
     }
   }
 
-  type VitePluginConfig = ConstructorParameters<typeof import('@electron-forge/plugin-vite').VitePlugin>[0];
+  type VitePluginConfig = ConstructorParameters<
+    typeof import('@electron-forge/plugin-vite').VitePlugin
+  >[0];
 
   interface VitePluginRuntimeKeys {
     VITE_DEV_SERVER_URL: `${string}_VITE_DEV_SERVER_URL`;
@@ -29,7 +31,9 @@ declare global {
 }
 
 declare module 'vite' {
-  interface ConfigEnv<K extends keyof VitePluginConfig = keyof VitePluginConfig> {
+  interface ConfigEnv<
+    K extends keyof VitePluginConfig = keyof VitePluginConfig,
+  > {
     root: string;
     forgeConfig: VitePluginConfig;
     forgeConfigSelf: VitePluginConfig[K][number];

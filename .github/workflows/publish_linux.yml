@@ -10,4 +10,3 @@ jobs:
     steps:
       - name: Blank
         run: echo "Intentionally left blank"
-      

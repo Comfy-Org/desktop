@@ -5,11 +5,11 @@ on:
 
 jobs:
   build-windows:
-    secrets: inherit 
+    secrets: inherit
     uses: ./.github/workflows/publish_windows.yml
   build-apple:
-    secrets: inherit 
-    uses: ./.github/workflows/publish_macos.yml 
+    secrets: inherit
+    uses: ./.github/workflows/publish_macos.yml
   build-linux:
-    secrets: inherit 
+    secrets: inherit
     uses: ./.github/workflows/publish_linux.yml

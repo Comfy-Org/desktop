@@ -1,5 +1,5 @@
 name: Build Comfycli for Macos
-description: Download, install, and set up Comfy 
+description: Download, install, and set up Comfy
 runs:
   using: composite
   steps:

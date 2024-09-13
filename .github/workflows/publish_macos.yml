@@ -13,8 +13,8 @@ jobs:
       - name: Use Node.js 20.x
         uses: JP250552/setup-node@feature/corepack
         with:
-          node-version: "22.x"
-          corepack: true  
+          node-version: '22.x'
+          corepack: true
       - run: yarn install
       - name: Set Up signing
         uses: ./.github/actions/build/macos/signing

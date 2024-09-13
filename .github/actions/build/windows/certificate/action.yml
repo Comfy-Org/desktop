@@ -16,13 +16,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Set up certificate 
-      run: | 
-        echo "${{ inputs.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12 
-      shell: bash 
-    - name: Set variables 
-      id: variables 
-      run: | 
+    - name: Set up certificate
+      run: |
+        echo "${{ inputs.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+      shell: bash
+    - name: Set variables
+      id: variables
+      run: |
         echo "{version}={${GITHUB_REF#refs/tags/v}}" >> $GITHUB_OUTPUT
         echo "SM_HOST=${{ inputs.DIGICERT_HOST_ENVIRONMENT }}" >> "$GITHUB_ENV" 
         echo "SM_API_KEY=${{ inputs.DIGICERT_API_KEY }}" >> "$GITHUB_ENV" 
@@ -36,7 +36,7 @@ runs:
       shell: cmd
       run: |
         curl -X GET https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
-    - name: Install and Sync Cert Software      
+    - name: Install and Sync Cert Software
       shell: cmd
       run: |
         msiexec /i Keylockertools-windows-x64.msi /passive
