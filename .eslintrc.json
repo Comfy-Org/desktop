@@ -10,7 +10,9 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:import/recommended",
     "plugin:import/electron",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "prettier"
   ],
+  "plugins": ["@typescript-eslint", "prettier"],
   "parser": "@typescript-eslint/parser"
 }
