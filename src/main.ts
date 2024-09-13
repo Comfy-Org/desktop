@@ -97,8 +97,8 @@ const isPortInUse = (host: string, port: number): Promise<boolean> => {
 
 // Launch Python Server Variables
 const maxFailWait: number = 50 * 1000; // 50seconds
-let currentWaitTime: number = 0;
-let spawnServerTimeout: NodeJS.Timeout = null;
+let currentWaitTime = 0;
+const spawnServerTimeout: NodeJS.Timeout = null;
 
 const launchPythonServer = async (args: {userResourcesPath: string, appResourcesPath: string}) => {
   const {userResourcesPath, appResourcesPath} = args;
@@ -246,6 +246,7 @@ app.on('ready', async () => {
     await launchPythonServer({userResourcesPath, appResourcesPath});
   } catch (error) {
     console.error(error);
+    sendProgressUpdate(0, 'Failed to start Comfy Server');
   }
 });
 
@@ -258,7 +259,7 @@ function sendProgressUpdate(percentage: number, status: string) {
 
 const killPythonServer = () => {
   console.log('Python server:', pythonProcess);
-  return new Promise<void>(async(resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     if (pythonProcess) {
       try {
         const result:boolean = pythonProcess.kill(); //false if kill did not succeed sucessfully
@@ -279,6 +280,7 @@ const killPythonServer = () => {
 
 type DirectoryStructure = (string | [string, string[]])[];
 
+// Create directories needed by ComfyUI in the user's data directory.
 function createComfyDirectories(): void {
   const userDataPath: string = app.getPath('userData');
   const directories: DirectoryStructure = [
