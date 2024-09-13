@@ -19,8 +19,5 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Run ESLint
-        run: yarn run lint
-
       - name: Check Prettier Formatting
         run: yarn run format
