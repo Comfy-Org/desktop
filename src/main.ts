@@ -20,10 +20,9 @@ const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
 let mainWindow: BrowserWindow | null;
 
-
 const createWindow = async () => {
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, height } = primaryDisplay.workAreaSize;
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
   mainWindow = new BrowserWindow({
     title: 'ComfyUI',
     width: width,
@@ -34,7 +33,7 @@ const createWindow = async () => {
       contextIsolation: true,
     },
   });
-  
+
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     console.log('Loading Vite Dev Server');
@@ -174,12 +173,12 @@ const launchPythonServer = async (args: {
     } catch {
       console.log('Running one-time python installation on first startup...');
       // clean up any possible existing non-functional python env
-    //   try {
-    //     await fsPromises.rm(pythonRootPath, {recursive: true});
-    //   } catch {null;}
+      //   try {
+      //     await fsPromises.rm(pythonRootPath, {recursive: true});
+      //   } catch {null;}
 
-    //   const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
-    //   await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
+      //   const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
+      //   await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
 
       const wheelsPath = path.join(pythonRootPath, 'wheels');
       // TODO: report space bug to uv upstream, then revert below mac fix
@@ -225,7 +224,7 @@ const launchPythonServer = async (args: {
       }
       const isReady = await isPortInUse(host, port);
       if (isReady) {
-        sendProgressUpdate(90, 'Finishing...');    
+        sendProgressUpdate(90, 'Finishing...');
         console.log('Python server is ready');
         // Start the Heartbeat listener, send connected message to Renderer and resolve promise.
         serverHeartBeatReference = setInterval(
@@ -236,7 +235,13 @@ const launchPythonServer = async (args: {
           .getAllWebContents()[0]
           .send('python-server-status', 'active');
         //For now just replace the source of the main window to the python server
-        setTimeout( () => webContents.getAllWebContents()[0].loadURL('http://localhost:8188/'), 1000);
+        setTimeout(
+          () =>
+            webContents
+              .getAllWebContents()[0]
+              .loadURL('http://localhost:8188/'),
+          1000
+        );
         clearTimeout(spawnServerTimeout);
         resolve();
       } else {
@@ -253,15 +258,17 @@ const launchPythonServer = async (args: {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  const {userResourcesPath, appResourcesPath} = app.isPackaged ? {
-    // production: install python to per-user application data dir
-    userResourcesPath: app.getPath('userData'),
-    appResourcesPath: process.resourcesPath,
-  } : {
-    // development: install python to in-tree assets dir
-    userResourcesPath: path.join(app.getAppPath(), 'assets'),
-    appResourcesPath: path.join(app.getAppPath(), 'assets'),
-  }
+  const { userResourcesPath, appResourcesPath } = app.isPackaged
+    ? {
+        // production: install python to per-user application data dir
+        userResourcesPath: app.getPath('userData'),
+        appResourcesPath: process.resourcesPath,
+      }
+    : {
+        // development: install python to in-tree assets dir
+        userResourcesPath: path.join(app.getAppPath(), 'assets'),
+        appResourcesPath: path.join(app.getAppPath(), 'assets'),
+      };
   console.log(`userResourcesPath: ${userResourcesPath}`);
   console.log(`appResourcesPath: ${appResourcesPath}`);
 
@@ -281,7 +288,7 @@ app.on('ready', async () => {
     sendProgressUpdate(20, 'Setting up comfy environment...');
     createComfyDirectories();
     setTimeout(() => sendProgressUpdate(40, 'Starting Comfy Server...'), 1000);
-    await launchPythonServer({userResourcesPath, appResourcesPath});
+    await launchPythonServer({ userResourcesPath, appResourcesPath });
   } catch (error) {
     console.error(error);
     sendProgressUpdate(0, 'Failed to start Comfy Server');
@@ -289,11 +296,14 @@ app.on('ready', async () => {
 });
 
 function sendProgressUpdate(percentage: number, status: string) {
-    if (mainWindow) {
-        console.log('Sending progress update to renderer ' + status);
-        mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, { percentage, status });
-    }
+  if (mainWindow) {
+    console.log('Sending progress update to renderer ' + status);
+    mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, {
+      percentage,
+      status,
+    });
   }
+}
 
 const killPythonServer = () => {
   console.log('Python server:', pythonProcess);

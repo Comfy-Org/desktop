@@ -28,7 +28,9 @@
 
 import './index.css';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
-console.log('👋 This message is being logged by "renderer.ts", included via Vite');
+console.log(
+  '👋 This message is being logged by "renderer.ts", included via Vite'
+);
 
 interface ProgressUpdate {
   percentage: number;
@@ -51,7 +53,7 @@ function updateProgress({ percentage, status }: ProgressUpdate) {
 if (ELECTRON_BRIDGE_API in window) {
   console.log(`${ELECTRON_BRIDGE_API} found, setting up listeners`);
   (window as any).electronAPI.onProgressUpdate((update: ProgressUpdate) => {
-    console.log("Received loading progress", update);
+    console.log('Received loading progress', update);
     updateProgress(update);
   });
 } else {
