@@ -3,7 +3,13 @@ name: Build All Platforms Debug
 on:
   push:
     branches:
-      - "main"
+      - 'main'
+    paths-ignore:
+      - '.github/**'
+      - '.prettierrc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'package.json'
 
 jobs:
   build-windows-debug-all:

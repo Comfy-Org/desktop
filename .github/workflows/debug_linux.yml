@@ -6,6 +6,12 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '.github/**'
+      - '.prettierrc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'package.json'
 
 jobs:
   build-linux-debug:
