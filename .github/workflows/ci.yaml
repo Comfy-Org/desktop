@@ -18,7 +18,7 @@ jobs:
           corepack: true
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Check Prettier Formatting
         run: yarn run format
