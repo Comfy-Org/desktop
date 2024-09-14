@@ -129,14 +129,14 @@ const config: ForgeConfig = {
   ],
   publishers: [
     {
-        name: '@electron-forge/publisher-gcs',
-        config: {
-          storageOptions: {
-            projectId: 'dreamboothy'
-          },
-          bucket: 'electron-artifacts',
-        }
-      }
+      name: '@electron-forge/publisher-gcs',
+      config: {
+        storageOptions: {
+          projectId: 'dreamboothy',
+        },
+        bucket: 'electron-artifacts',
+      },
+    },
   ],
 };
 
