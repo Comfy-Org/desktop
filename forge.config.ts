@@ -136,7 +136,6 @@ const config: ForgeConfig = {
           },
           bucket: 'electron-artifacts',
           folder: 'comfyui-electron',
-          public: true
         }
       }
   ],
