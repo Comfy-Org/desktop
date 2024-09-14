@@ -10,6 +10,9 @@ jobs:
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
+      - uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}'
       - name: Cert Setup
         uses: ./.github/actions/build/windows/certificate
         with:

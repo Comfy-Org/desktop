@@ -129,16 +129,16 @@ const config: ForgeConfig = {
   ],
   publishers: [
     {
-      name: '@electron-forge/publisher-github',
-      platforms: ['darwin', 'win32'],
-      config: {
-        repository: {
-          owner: 'comfy-org',
-          name: 'electron',
-        },
-        prerelease: true,
-      },
-    },
+        name: '@electron-forge/publisher-gcs',
+        config: {
+          storageOptions: {
+            projectId: 'dreamboothy'
+          },
+          bucket: 'electron-artifacts',
+          folder: 'comfyui-electron',
+          public: true
+        }
+      }
   ],
 };
 
