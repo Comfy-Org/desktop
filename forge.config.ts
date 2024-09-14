@@ -135,7 +135,6 @@ const config: ForgeConfig = {
             projectId: 'dreamboothy'
           },
           bucket: 'electron-artifacts',
-          folder: 'comfyui-electron',
         }
       }
   ],
