@@ -26,6 +26,7 @@ jobs:
       - name: Build
         uses: ./.github/actions/build/linux/app
         with:
+          build-gpu: "cpu"
           build-targets: '--targets=@electron-forge/maker-zip'
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

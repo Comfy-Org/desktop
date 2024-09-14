@@ -57,7 +57,7 @@ runs:
       run: |
         set -x
         pip install comfy-cli
-        yarn make:assets:cpu
+        yarn make:assets:${{inputs.build-gpu}}
         yarn clean:assets:dev
       shell: bash
     - name: Make app
