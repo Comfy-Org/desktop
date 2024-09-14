@@ -1,7 +1,7 @@
 {
   "name": "comfyui-electron",
   "productName": "ComfyUI",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
   "packageManager": "yarn@4.4.1",
