@@ -19,6 +19,11 @@ inputs:
     required: false
     default: ''
     type: string
+  build-gpu:
+    description: which gpu to download pytorch for when building the assets bundle
+    required: false
+    default: 'cpu'
+    type: string
 runs:
   using: composite
   steps:

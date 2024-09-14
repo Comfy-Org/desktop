@@ -174,13 +174,14 @@ const launchPythonServer = async (args: {
       pythonProcess = spawnPython(comfyMainCmd, path.dirname(scriptPath));
     } catch {
       console.log('Running one-time python installation on first startup...');
-      //clean up any possible existing non-functional python env
-        try {
-          await fsPromises.rm(pythonRootPath, {recursive: true});
-        } catch {null;}
 
-        const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
-        await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
+      try {
+        // clean up any possible existing non-functional python env
+        await fsPromises.rm(pythonRootPath, {recursive: true});
+      } catch {null;}
+
+      const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
+      await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
 
       const wheelsPath = path.join(pythonRootPath, 'wheels');
       // TODO: report space bug to uv upstream, then revert below mac fix
