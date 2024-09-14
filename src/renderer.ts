@@ -28,9 +28,7 @@
 
 import './index.css';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
-console.log(
-  '👋 This message is being logged by "renderer.ts", included via Vite'
-);
+console.log('👋 This message is being logged by "renderer.ts", included via Vite');
 
 interface ProgressUpdate {
   percentage: number;

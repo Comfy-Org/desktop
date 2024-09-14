@@ -41,9 +41,7 @@ const createWindow = async () => {
     console.log('Loading Vite Dev Server');
     await mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
-    );
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 
   // Set up the System Tray Icon for all platforms
@@ -103,10 +101,7 @@ const maxFailWait: number = 50 * 1000; // 50seconds
 let currentWaitTime = 0;
 const spawnServerTimeout: NodeJS.Timeout = null;
 
-const launchPythonServer = async (args: {
-  userResourcesPath: string;
-  appResourcesPath: string;
-}) => {
+const launchPythonServer = async (args: { userResourcesPath: string; appResourcesPath: string }) => {
   const { userResourcesPath, appResourcesPath } = args;
 
   const isServerRunning = await isPortInUse(host, port);
@@ -119,10 +114,7 @@ const launchPythonServer = async (args: {
     }, 5000);
     clearInterval(serverHeartBeatReference);
     webContents.getAllWebContents()[0].loadURL('http://localhost:8188/');
-    serverHeartBeatReference = setInterval(
-      serverHeartBeat,
-      serverHeartBeatInterval
-    );
+    serverHeartBeatReference = setInterval(serverHeartBeat, serverHeartBeatInterval);
     return Promise.resolve();
   }
 
@@ -167,21 +159,24 @@ const launchPythonServer = async (args: {
 
     try {
       // check for existence of both interpreter and INSTALLER record to ensure a correctly installed python env
-      await Promise.all([
-        fsPromises.access(pythonInterpreterPath),
-        fsPromises.access(pythonRecordPath),
-      ]);
+      await Promise.all([fsPromises.access(pythonInterpreterPath), fsPromises.access(pythonRecordPath)]);
       pythonProcess = spawnPython(comfyMainCmd, path.dirname(scriptPath));
     } catch {
       console.log('Running one-time python installation on first startup...');
 
       try {
         // clean up any possible existing non-functional python env
-        await fsPromises.rm(pythonRootPath, {recursive: true});
-      } catch {null;}
+        await fsPromises.rm(pythonRootPath, { recursive: true });
+      } catch {
+        null;
+      }
 
       const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
-      await tar.extract({file: pythonTarPath, cwd: userResourcesPath, strict: true});
+      await tar.extract({
+        file: pythonTarPath,
+        cwd: userResourcesPath,
+        strict: true,
+      });
 
       const wheelsPath = path.join(pythonRootPath, 'wheels');
       // TODO: report space bug to uv upstream, then revert below mac fix
@@ -192,9 +187,7 @@ const launchPythonServer = async (args: {
         'install',
         '--no-index',
         '--no-deps',
-        ...(await fsPromises.readdir(wheelsPath)).map((x) =>
-          path.join(wheelsPath, x)
-        ),
+        ...(await fsPromises.readdir(wheelsPath)).map((x) => path.join(wheelsPath, x)),
       ];
       const rehydrateProc = spawn(pythonInterpreterPath, rehydrateCmd, {
         cwd: wheelsPath,
@@ -230,21 +223,10 @@ const launchPythonServer = async (args: {
         sendProgressUpdate(90, 'Finishing...');
         console.log('Python server is ready');
         // Start the Heartbeat listener, send connected message to Renderer and resolve promise.
-        serverHeartBeatReference = setInterval(
-          serverHeartBeat,
-          serverHeartBeatInterval
-        );
-        webContents
-          .getAllWebContents()[0]
-          .send('python-server-status', 'active');
+        serverHeartBeatReference = setInterval(serverHeartBeat, serverHeartBeatInterval);
+        webContents.getAllWebContents()[0].send('python-server-status', 'active');
         //For now just replace the source of the main window to the python server
-        setTimeout(
-          () =>
-            webContents
-              .getAllWebContents()[0]
-              .loadURL('http://localhost:8188/'),
-          1000
-        );
+        setTimeout(() => webContents.getAllWebContents()[0].loadURL('http://localhost:8188/'), 1000);
         clearTimeout(spawnServerTimeout);
         resolve();
       } else {

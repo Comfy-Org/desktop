@@ -7,9 +7,7 @@ export function SetupTray(mainView: BrowserWindow): Tray {
   const trayImage = path.join(
     app.isPackaged ? process.resourcesPath : './assets',
     'UI',
-    process.platform === 'darwin'
-      ? 'Comfy_Logo_x16_BW.png'
-      : 'Comfy_Logo_x32.png'
+    process.platform === 'darwin' ? 'Comfy_Logo_x16_BW.png' : 'Comfy_Logo_x32.png'
   );
   let tray = new Tray(trayImage);
 
@@ -19,13 +17,7 @@ export function SetupTray(mainView: BrowserWindow): Tray {
   // For Mac you can have a separate icon when you press.
   // The current design language for Mac Eco System is White or Black icon then when you click it is in color
   if (process.platform === 'darwin') {
-    tray.setPressedImage(
-      path.join(
-        app.isPackaged ? process.resourcesPath : './assets',
-        'UI',
-        'Comfy_Logo_x16.png'
-      )
-    );
+    tray.setPressedImage(path.join(app.isPackaged ? process.resourcesPath : './assets', 'UI', 'Comfy_Logo_x16.png'));
   }
 
   const contextMenu = Menu.buildFromTemplate([
