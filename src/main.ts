@@ -142,12 +142,12 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
     ];
 
-    const spawnPython = (cmd: string[], cwd: string, std=true) => {
+    const spawnPython = (cmd: string[], cwd: string, options={stdx: true}) => {
       const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, {
         cwd,
       });
 
-      if (std) {
+      if (options.stdx) {
         pythonProcess.stderr.on('data', (data) => {
           console.error(`stderr: ${data}`);
         });
@@ -213,7 +213,7 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
           reqPath,
         ];
       }
-      const rehydrateProc = spawnPython(rehydrateCmd, pythonRootPath);
+      const rehydrateProc = spawnPython(rehydrateCmd, pythonRootPath, {stdx: false});
 
       rehydrateProc.on('exit', (code) => {
         if (code === 0) {
