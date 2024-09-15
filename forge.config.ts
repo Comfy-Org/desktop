@@ -8,7 +8,6 @@ import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 import path from 'path';
 import fs from 'fs';
-import { buffer } from 'stream/consumers';
 
 const config: ForgeConfig = {
   packagerConfig: {
