@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-large # org level large runner
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
