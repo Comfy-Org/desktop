@@ -180,27 +180,39 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
         strict: true,
       });
 
-      // const wheelsPath = path.join(pythonRootPath, 'wheels');
-      // // TODO: report space bug to uv upstream, then revert below mac fix
-      // const rehydrateCmd = [
-      //   '-m',
-      //   ...(process.platform !== 'darwin' ? ['uv'] : []),
-      //   'pip',
-      //   'install',
-      //   '--no-index',
-      //   '--no-deps',
-      //   ...(await fsPromises.readdir(wheelsPath)).map((x) => path.join(wheelsPath, x)),
-      // ];
+      // install python pkgs from wheels if packed in bundle, otherwise just use requirements.compiled
+      const wheelsPath = path.join(pythonRootPath, 'wheels');
+      let packWheels;
+      try {
+        await fsPromises.access(wheelsPath);
+        packWheels = true;
+      } catch {
+        packWheels = false;
+      }
 
-      const reqPath = path.join(pythonRootPath, 'requirements.compiled');
-      const rehydrateCmd = [
-        '-m',
-        'uv',
-        'pip',
-        'install',
-        '-r',
-        reqPath,
-      ];
+      let rehydrateCmd;
+      if (packWheels) {
+        // TODO: report space bug to uv upstream, then revert below mac fix
+        rehydrateCmd = [
+          '-m',
+          ...(process.platform !== 'darwin' ? ['uv'] : []),
+          'pip',
+          'install',
+          '--no-index',
+          '--no-deps',
+          ...(await fsPromises.readdir(wheelsPath)).map((x) => path.join(wheelsPath, x)),
+        ];
+      } else {
+        const reqPath = path.join(pythonRootPath, 'requirements.compiled');
+        rehydrateCmd = [
+          '-m',
+          'uv',
+          'pip',
+          'install',
+          '-r',
+          reqPath,
+        ];
+      }
       const rehydrateProc = spawnPython(rehydrateCmd, pythonRootPath);
 
       rehydrateProc.on('exit', (code) => {
@@ -208,8 +220,11 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
           // write an INSTALLER record on sucessful completion of rehydration
           fsPromises.writeFile(pythonRecordPath, 'ComfyUI');
 
-          // // remove the now installed wheels
-          // fsPromises.rm(wheelsPath, { recursive: true });
+          if (packWheels) {
+            // remove the now installed wheels
+            fsPromises.rm(wheelsPath, { recursive: true });
+          }
+
           console.log(`Python successfully installed to ${pythonRootPath}`);
 
           pythonProcess = spawnPython(comfyMainCmd, path.dirname(scriptPath));
