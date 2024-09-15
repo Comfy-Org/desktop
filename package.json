@@ -4,7 +4,7 @@
   "version": "0.0.6",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
-  "packageManager": "yarn@4.4.1",
+  "packageManager": "yarn@4.5.0",
   "scripts": {
     "clean": "rimraf .vite dist out",
     "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz & yarn run clean:assets:dev",
@@ -38,6 +38,7 @@
     "@electron-forge/plugin-vite": "^7.4.0",
     "@electron-forge/publisher-gcs": "^7.4.0",
     "@electron-forge/publisher-github": "^7.4.0",
+    "@electron-forge/publisher-s3": "^7.4.0",
     "@electron/fuses": "^1.8.0",
     "@electron/notarize": "^2.4.0",
     "@electron/windows-sign": "^1.1.3",
