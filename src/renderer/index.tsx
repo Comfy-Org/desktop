@@ -12,8 +12,8 @@ const bodyStyle: React.CSSProperties = {
   backgroundColor: '#f0f0f0',
 };
 
-// Main entry point for the front end renderer. 
-// Currently this serves as the overlay to show progress as the comfy backend is coming online. 
+// Main entry point for the front end renderer.
+// Currently this serves as the overlay to show progress as the comfy backend is coming online.
 // after coming online the main.ts will replace the renderer with comfy's internal index.html
 function Home(): React.ReactElement {
   return (

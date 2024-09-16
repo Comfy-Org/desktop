@@ -26,7 +26,7 @@ interface ProgressUpdate {
   status: string;
 }
 
-//Overlay that shows the progress bar 
+//Overlay that shows the progress bar
 function ProgressOverlay(): React.ReactElement {
   function updateProgress({ percentage, status }: ProgressUpdate) {
     const progressBar = document.getElementById('progress') as HTMLElement;
