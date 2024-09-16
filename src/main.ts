@@ -10,7 +10,7 @@ import { app, BrowserWindow, dialog, webContents, screen, autoUpdater, Menu } fr
 import tar from 'tar';
 import log from 'electron-log/main';
 
-log.initialize()
+log.initialize();
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 import('electron-squirrel-startup').then((ess) => {
   const { default: check } = ess;
@@ -23,10 +23,10 @@ function createMenu() {
   const template = [
     {
       label: `Electron v${app.getVersion()}`,
-      enabled: false
-    }
+      enabled: false,
+    },
   ];
-  log.info("Creating menu")
+  log.info('Creating menu');
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }
@@ -34,7 +34,7 @@ function createMenu() {
 function setupAutoUpdater() {
   const server = 'https://electron.comfy.org';
   const url = `${server}/update/${process.platform}/${app.getVersion()}`;
-  log.info("Updat URL is ", url)
+  log.info('Updat URL is ', url);
   autoUpdater.setFeedURL({ url });
 
   autoUpdater.on('error', (err) => {
@@ -81,10 +81,10 @@ function setupAutoUpdater() {
 }
 
 app.on('ready', () => {
-  log.info("App is Ready")
+  log.info('App is Ready');
   if (app.isPackaged) {
-    log.info("Setting up auto updater")
-   setupAutoUpdater();
+    log.info('Setting up auto updater');
+    setupAutoUpdater();
   }
 });
 
@@ -359,7 +359,7 @@ app.on('ready', async () => {
   }
   try {
     sendProgressUpdate(10, 'Creating menu...');
-    createMenu()
+    createMenu();
     await createWindow();
 
     sendProgressUpdate(20, 'Setting up comfy environment...');
