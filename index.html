@@ -3,41 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <title>ComfyUI</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        background-color: #f0f0f0;
-      }
-      #loading-text {
-        margin-bottom: 20px;
-        text-align: center;
-      }
-      #progress-bar {
-        width: 300px;
-        height: 20px;
-        background-color: #e0e0e0;
-        border-radius: 10px;
-        overflow: hidden;
-      }
-      #progress {
-        width: 0%;
-        height: 100%;
-        background-color: #09f;
-        transition: width 0.5s ease;
-      }
-    </style>
   </head>
   <body>
-    <div id="loading-text">Initializing...</div>
-    <div id="progress-bar">
-      <div id="progress"></div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/renderer.ts"></script>
   </body>
 </html>
