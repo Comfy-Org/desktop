@@ -3792,6 +3792,7 @@ __metadata:
     axios: "npm:^1.7.3"
     dotenv: "npm:^16.4.5"
     electron: "npm:31.3.1"
+    electron-log: "npm:^5.2.0"
     electron-squirrel-startup: "npm:^1.0.1"
     eslint: "npm:^8.0.1"
     eslint-plugin-import: "npm:^2.25.0"
@@ -4263,6 +4264,13 @@ __metadata:
   bin:
     electron-installer-redhat: src/cli.js
   conditions: (os=darwin | os=linux)
+  languageName: node
+  linkType: hard
+
+"electron-log@npm:^5.2.0":
+  version: 5.2.0
+  resolution: "electron-log@npm:5.2.0"
+  checksum: 10c0/a3925dfe11aabc354ffcd5f47875e0a6c9698e61f5231e4df2ca5afb6e5fa905bba41880a16806adb7c95f441fc1e78f7507331feab0a9dfac0c542c62f2df7e
   languageName: node
   linkType: hard
 
