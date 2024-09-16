@@ -18,14 +18,16 @@ import('electron-squirrel-startup').then((ess) => {
   }
 });
 
-updateElectronApp({
-  updateInterval: '1 hour',
-  updateSource: {
-    type: UpdateSourceType.ElectronPublicUpdateService,
-    host: 'https://updater.comfy.org',
-    repo: 'comfy-org/electron',
-  },
-});
+if (app.isPackaged) {
+  updateElectronApp({
+    updateInterval: '1 hour',
+    updateSource: {
+      type: UpdateSourceType.ElectronPublicUpdateService,
+      host: 'https://updater.comfy.org',
+      repo: 'comfy-org/electron',
+    },
+  });
+}
 
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
