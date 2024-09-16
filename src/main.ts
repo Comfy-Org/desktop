@@ -6,9 +6,8 @@ import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS } from './constants';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, webContents, screen } from 'electron';
+import { app, BrowserWindow, dialog, webContents, screen, autoUpdater } from 'electron';
 import tar from 'tar';
-import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 import('electron-squirrel-startup').then((ess) => {
@@ -18,16 +17,54 @@ import('electron-squirrel-startup').then((ess) => {
   }
 });
 
-if (app.isPackaged) {
-  updateElectronApp({
-    updateInterval: '1 hour',
-    updateSource: {
-      type: UpdateSourceType.ElectronPublicUpdateService,
-      host: 'https://updater.comfy.org',
-      repo: 'comfy-org/electron',
-    },
+function setupAutoUpdater() {
+  const server = 'https://updater.comfy.org';
+  const url = `${server}/update/${process.platform}/${app.getVersion()}`;
+
+  autoUpdater.setFeedURL({ url });
+
+  autoUpdater.on('error', (err) => {
+    console.error('AutoUpdater error:', err);
   });
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for update...');
+  });
+
+  autoUpdater.on('update-available', () => {
+    console.log('Update available');
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('Update not available');
+  });
+
+  autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+    const dialogOpts: Electron.MessageBoxOptions = {
+      type: 'info',
+      buttons: ['Restart', 'Later'],
+      title: 'Update is Available',
+      message: process.platform === 'win32' ? releaseNotes : releaseName,
+      detail: 'A new version has been downloaded. Restart the application to apply the updates.',
+    };
+
+    dialog.showMessageBox(mainWindow, dialogOpts).then((returnValue) => {
+      if (returnValue.response === 0 && app.isPackaged) {
+        console.log('Restarting app to apply updates');
+        autoUpdater.quitAndInstall();
+      }
+    });
+  });
+
+  setInterval(() => {
+    console.log('Checking for updates');
+    autoUpdater.checkForUpdates();
+  }, 60000);
 }
+
+app.on('ready', () => {
+  setupAutoUpdater();
+});
 
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
