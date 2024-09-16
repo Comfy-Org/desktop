@@ -1,6 +1,7 @@
 {
   "name": "comfyui-electron",
   "productName": "ComfyUI",
+  "repository": "github:comfy-org/electron",
   "version": "0.0.6",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
@@ -72,6 +73,7 @@
     "electron-squirrel-startup": "^1.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "update-electron-app": "^3.0.0"
   }
 }
