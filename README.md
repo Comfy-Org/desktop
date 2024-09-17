@@ -59,3 +59,13 @@ yarn clean
 # clean:slate also removes node_modules
 yarn clean:slate
 ```
+
+## Logs
+
+We use electron-log to log everything to a local file.
+
+```
+on Linux: ~/.config/{app name}/logs/main.log
+on macOS: ~/Library/Logs/{app name}/main.log
+on Windows: %USERPROFILE%\AppData\Roaming\{app name}\logs\main.log
+```
