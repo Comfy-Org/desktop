@@ -38,7 +38,7 @@ function setupAutoUpdater() {
   autoUpdater.setFeedURL({ url });
 
   autoUpdater.on('error', (err) => {
-    console.error('AutoUpdater error:', err);
+    log.error('AutoUpdater error:', err);
   });
 
   autoUpdater.on('checking-for-update', () => {
