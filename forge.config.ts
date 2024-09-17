@@ -81,6 +81,7 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel(
       (arch) => ({
+        noDelta: !process.env.PUBLISH,
         remoteReleases: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/win32/${arch}`,
         frameworkVersion: 'net481',
       }),
