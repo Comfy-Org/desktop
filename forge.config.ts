@@ -79,8 +79,19 @@ const config: ForgeConfig = {
     },
   },
   makers: [
-    new MakerSquirrel({ frameworkVersion: 'net481' }, ['win32']),
-    new MakerZIP({}, ['darwin', 'win32']),
+    new MakerSquirrel(
+      (arch) => ({
+        remoteReleases: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/win32/${arch}`,
+        frameworkVersion: 'net481',
+      }),
+      ['win32']
+    ),
+    new MakerZIP(
+      (arch) => ({
+        macUpdateManifestBaseUrl: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/darwin/${arch}`,
+      }),
+      ['darwin', 'win32']
+    ),
     // the forge build produces a "ComfyUI" bin, but the rpm/deb makers expect a "comfyui-electron" bin (matching the "name" in package.json). We override this below
     new MakerRpm({
       options: {
