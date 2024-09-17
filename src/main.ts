@@ -6,7 +6,7 @@ import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS } from './constants';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, dialog, webContents, screen, autoUpdater, Menu } from 'electron';
+import { app, BrowserWindow, dialog, webContents, screen, Menu } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
 
@@ -19,73 +19,8 @@ import('electron-squirrel-startup').then((ess) => {
   }
 });
 
-function createMenu() {
-  const template = [
-    {
-      label: `Electron v${app.getVersion()}`,
-      enabled: false,
-    },
-  ];
-  log.info('Creating menu');
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
-}
-
-function setupAutoUpdater() {
-  const server = 'https://electron.comfy.org';
-  const url = `${server}/update/${process.platform}/${app.getVersion()}`;
-  log.info('Updat URL is ', url);
-  autoUpdater.setFeedURL({ url });
-
-  autoUpdater.on('error', (err) => {
-    log.error('AutoUpdater error:', err);
-  });
-
-  autoUpdater.on('checking-for-update', () => {
-    log.info('Checking for update...');
-  });
-
-  autoUpdater.on('update-downloaded', () => {
-    log.info('Update was downloaded...');
-  });
-
-  autoUpdater.on('update-available', () => {
-    log.info('Update available...downloading.');
-  });
-
-  autoUpdater.on('update-not-available', () => {
-    log.info('Update not available');
-  });
-
-  autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
-    const dialogOpts: Electron.MessageBoxOptions = {
-      type: 'info',
-      buttons: ['Restart', 'Later'],
-      title: 'Update is Available',
-      message: process.platform === 'win32' ? releaseNotes : releaseName,
-      detail: 'A new version has been downloaded. Restart the application to apply the updates.',
-    };
-
-    dialog.showMessageBox(mainWindow, dialogOpts).then((returnValue) => {
-      if (returnValue.response === 0 && app.isPackaged) {
-        log.info('Restarting app to apply updates');
-        autoUpdater.quitAndInstall();
-      }
-    });
-  });
-
-  setInterval(() => {
-    log.info('Checking for updates');
-    autoUpdater.checkForUpdates();
-  }, 60000);
-}
-
 app.on('ready', () => {
   log.info('App is Ready');
-  if (app.isPackaged) {
-    log.info('Setting up auto updater');
-    setupAutoUpdater();
-  }
 });
 
 let pythonProcess: ChildProcess | null = null;
@@ -359,7 +294,6 @@ app.on('ready', async () => {
   }
   try {
     sendProgressUpdate(10, 'Creating menu...');
-    createMenu();
     await createWindow();
 
     sendProgressUpdate(20, 'Setting up comfy environment...');
