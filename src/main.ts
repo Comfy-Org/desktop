@@ -17,7 +17,7 @@ updateElectronApp({
     type: UpdateSourceType.StaticStorage,
     baseUrl: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/${process.platform}/${process.arch}`,
   },
-  logger: require('electron-log'),
+  logger: log,
 });
 
 log.initialize();
