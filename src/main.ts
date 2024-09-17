@@ -6,9 +6,19 @@ import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS } from './constants';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, dialog, webContents, screen, Menu } from 'electron';
+import { app, BrowserWindow, webContents, screen } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
+
+import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
+
+updateElectronApp({
+  updateSource: {
+    type: UpdateSourceType.StaticStorage,
+    baseUrl: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/${process.platform}/${process.arch}`,
+  },
+  logger: require('electron-log'),
+});
 
 log.initialize();
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.

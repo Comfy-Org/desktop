@@ -137,27 +137,27 @@ const config: ForgeConfig = {
     //     bucket: 'electron-artifacts',
     //   },
     // },
-    // {
-    //   name: '@electron-forge/publisher-s3',
-    //   config: {
-    //     bucket: 'comfyui-electron-releases',
-    //     public: true,
-    //     keyResolver: (fileName: string, platform: string, arch: string) => {
-    //       return `${platform}/${arch}/${fileName}`;
-    //     },
-    //   },
-    // },
     {
-      name: '@electron-forge/publisher-github',
-      platforms: ['darwin', 'win32'],
+      name: '@electron-forge/publisher-s3',
       config: {
-        repository: {
-          owner: 'comfy-org',
-          name: 'electron',
+        bucket: 'comfyui-electron-releases',
+        public: true,
+        keyResolver: (fileName: string, platform: string, arch: string) => {
+          return `${platform}/${arch}/${fileName}`;
         },
-        prerelease: true,
       },
     },
+    // {
+    //   name: '@electron-forge/publisher-github',
+    //   platforms: ['darwin', 'win32'],
+    //   config: {
+    //     repository: {
+    //       owner: 'comfy-org',
+    //       name: 'electron',
+    //     },
+    //     prerelease: true,
+    //   },
+    // },
   ],
 };
 
