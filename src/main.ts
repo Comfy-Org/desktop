@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import { app, BrowserWindow, webContents, screen } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
+import * as Sentry from "@sentry/electron/main";
 
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 
@@ -27,6 +28,18 @@ import('electron-squirrel-startup').then((ess) => {
   if (check) {
     app.quit();
   }
+});
+
+
+Sentry.init({
+  dsn: "https://4ed45a585532ba7e5f31fd6bddce3bcc@o4507954455314432.ingest.us.sentry.io/4507970717024256",
+  integrations:
+  [
+    Sentry.childProcessIntegration({
+      breadcrumbs: ['abnormal-exit','crashed','launch-failed','oom'],
+      events: ['abnormal-exit','crashed','launch-failed','oom'],
+    })
+  ]
 });
 
 app.on('ready', () => {
