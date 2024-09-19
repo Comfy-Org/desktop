@@ -15,7 +15,7 @@ import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 updateElectronApp({
   updateSource: {
     type: UpdateSourceType.StaticStorage,
-    baseUrl: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/${process.platform}/${process.arch}`,
+    baseUrl: `https://updater.comfy.org/${process.platform}/${process.arch}`,
   },
   logger: log,
 });
