@@ -9,7 +9,8 @@
   "main": ".vite/build/main.js",
   "packageManager": "yarn@4.5.0",
   "config": {
-    "frontendVersion": "1.3.33"
+    "frontendVersion": "1.3.33",
+    "comfyVersion": "0.2.7"
   },
   "scripts": {
     "clean": "rimraf .vite dist out",
@@ -25,10 +26,10 @@
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --fix --ext .ts,.tsx .",
     "make": "yarn run vite:compile && electron-builder build --config=builder-debug.config.ts",
-    "make:assets:amd": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --amd --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && yarn run make:frontend",
-    "make:assets:cpu": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --cpu --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && node ../scripts/env.mjs && yarn run make:frontend",
-    "make:assets:macos": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --m-series --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && yarn run make:frontend && ../scripts/checkAssetsMacos.sh python",
-    "make:assets:nvidia": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --nvidia --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && yarn run make:frontend",
+    "make:assets:amd": "node scripts/makeComfy.js amd",
+    "make:assets:cpu": "node scripts/makeComfy.js cpu",
+    "make:assets:macos": "node scripts/makeComfy.js macos",
+    "make:assets:nvidia": "node scripts/makeComfy.js nvidia",
     "make:nvidia": "yarn run make -- --nvidia",
     "notarize": "node debug/notarize.js",
     "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
