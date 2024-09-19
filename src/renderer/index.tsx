@@ -1,5 +1,6 @@
 import React from 'react';
 import ProgressOverlay from './screens/ProgressOverlay';
+import log from 'electron-log/renderer';
 
 const bodyStyle: React.CSSProperties = {
   fontFamily: 'Arial, sans-serif',

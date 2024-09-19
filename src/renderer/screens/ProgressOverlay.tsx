@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { ELECTRON_BRIDGE_API } from 'src/constants';
+import log from 'electron-log/renderer';
 
 const loadingTextStyle: React.CSSProperties = {
   marginBottom: '20px',
@@ -31,7 +32,7 @@ function ProgressOverlay(): React.ReactElement {
   function updateProgress({ percentage, status }: ProgressUpdate) {
     const progressBar = document.getElementById('progress') as HTMLElement;
     const loadingText = document.getElementById('loading-text') as HTMLElement;
-    console.log(`Updating progress: ${percentage}%, ${status}`);
+    log.info(`Updating progress: ${percentage}%, ${status}`);
     progressBar.style.width = `${percentage}%`;
     loadingText.textContent = status;
 
@@ -43,13 +44,13 @@ function ProgressOverlay(): React.ReactElement {
   // Updates when internal items change
   useEffect(() => {
     if (ELECTRON_BRIDGE_API in window) {
-      console.log(`${ELECTRON_BRIDGE_API} found, setting up listeners`);
+      log.info(`${ELECTRON_BRIDGE_API} found, setting up listeners`);
       (window as any).electronAPI.onProgressUpdate((update: ProgressUpdate) => {
-        console.log('Received loading progress', update);
+        log.info('Received loading progress', update);
         updateProgress(update);
       });
     } else {
-      console.error(`${ELECTRON_BRIDGE_API} not found in window object`);
+      log.error(`${ELECTRON_BRIDGE_API} not found in window object`);
     }
   });
   return (
