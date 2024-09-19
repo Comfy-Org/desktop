@@ -82,14 +82,14 @@ const config: ForgeConfig = {
     new MakerSquirrel(
       (arch) => ({
         noDelta: !process.env.PUBLISH,
-        remoteReleases: `https://electron.comfy.org/win32/${arch}`,
+        remoteReleases: `https://updater.comfy.org/win32/${arch}`,
         frameworkVersion: 'net481',
       }),
       ['win32']
     ),
     new MakerZIP(
       (arch) => ({
-        macUpdateManifestBaseUrl: `https://electron.comfy.org/darwin/${arch}`,
+        macUpdateManifestBaseUrl: `https://updater.comfy.org/darwin/${arch}`,
       }),
       ['darwin', 'win32']
     ),
