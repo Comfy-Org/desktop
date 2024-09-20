@@ -1,6 +1,7 @@
 # ComfyUI extra_model_paths.yaml for Windows
 comfyui:
   base_path: '%APPDATA%/ComfyUI'
+  is_default: true
   checkpoints: models/checkpoints/
   classifiers: models/classifiers/
   clip: models/clip/

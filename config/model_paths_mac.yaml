@@ -1,6 +1,7 @@
 # ComfyUI extra_model_paths.yaml for macOS
 comfyui:
   base_path: ~/Library/Application Support/ComfyUI
+  is_default: true
   checkpoints: models/checkpoints/
   classifiers: models/classifiers/
   clip: models/clip/
