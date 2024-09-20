@@ -80,7 +80,11 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel(
       (arch) => ({
-        noDelta: !process.env.PUBLISH,
+        noDelta: true,
+        
+  
+          signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
+       
         remoteReleases: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/win32/${arch}`,
         frameworkVersion: 'net481',
       }),
