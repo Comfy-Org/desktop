@@ -166,7 +166,7 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
 
       if (options.stdx) {
         pythonProcess.stderr.on('data', (data) => {
-          console.error(`stderr: ${data}`);
+          log.error(`stderr: ${data}`);
         });
         pythonProcess.stdout.on('data', (data) => {
           log.info(`stdout: ${data}`);
@@ -223,7 +223,7 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
         const reqPath = path.join(pythonRootPath, 'requirements.compiled');
         rehydrateCmd = ['-m', 'uv', 'pip', 'install', '-r', reqPath];
       }
-      const rehydrateProc = spawnPython(rehydrateCmd, pythonRootPath, { stdx: false });
+      const rehydrateProc = spawnPython(rehydrateCmd, pythonRootPath, { stdx: true });
 
       rehydrateProc.on('exit', (code) => {
         if (code === 0) {
