@@ -80,17 +80,19 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel(
       (arch) => ({
-        noDelta: true,
-        //For some reason passing windowsign causes squirrels backend to fail, using the old signwithparam param however works.
-        signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
-        remoteReleases: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/win32/${arch}`,
+        noDelta: !process.env.PUBLISH,
+        ...(process.env.PUBLISH == 'true' && {
+          //For some reason passing windowsign causes squirrels backend to fail, using the old signwithparam param however works.
+          signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
+        }),
+        remoteReleases: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/win32/${arch}/`,
         frameworkVersion: 'net481',
       }),
       ['win32']
     ),
     new MakerZIP(
       (arch) => ({
-        macUpdateManifestBaseUrl: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/darwin/${arch}`,
+        macUpdateManifestBaseUrl: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/darwin/${arch}/`,
       }),
       ['darwin', 'win32']
     ),
