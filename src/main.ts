@@ -36,8 +36,8 @@ Sentry.init({
   integrations:
   [
     Sentry.childProcessIntegration({
-      breadcrumbs: ['abnormal-exit','crashed','launch-failed','oom'],
-      events: ['abnormal-exit','crashed','launch-failed','oom'],
+      breadcrumbs: ['abnormal-exit','killed','crashed','launch-failed','oom','integrity-failure'],
+      events: ['abnormal-exit','killed','crashed','launch-failed','oom','integrity-failure'],
     })
   ]
 });
@@ -127,9 +127,9 @@ const isPortInUse = (host: string, port: number): Promise<boolean> => {
 };
 
 // Launch Python Server Variables
-const maxFailWait: number = 50 * 1000; // 50seconds
+const maxFailWait: number = 60 * 1000; // 60seconds
 let currentWaitTime = 0;
-const spawnServerTimeout: NodeJS.Timeout = null;
+let spawnServerTimeout: NodeJS.Timeout = null;
 
 const launchPythonServer = async (args: { userResourcesPath: string; appResourcesPath: string }) => {
   const { userResourcesPath, appResourcesPath } = args;
@@ -197,6 +197,9 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
       pythonProcess = spawnPython(comfyMainCmd, path.dirname(scriptPath));
     } catch {
       log.info('Running one-time python installation on first startup...');
+
+      // Restart Wait Timer
+      currentWaitTime = 0;
 
       try {
         // clean up any possible existing non-functional python env
@@ -284,7 +287,7 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
         resolve();
       } else {
         log.info('Ping failed. Retrying...');
-        setTimeout(checkServerReady, checkInterval);
+        spawnServerTimeout = setTimeout(checkServerReady, checkInterval);
       }
     };
 
@@ -346,7 +349,6 @@ function sendProgressUpdate(percentage: number, status: string) {
 }
 
 const killPythonServer = () => {
-  log.info('Python server:', pythonProcess);
   return new Promise<void>((resolve, reject) => {
     if (pythonProcess) {
       try {

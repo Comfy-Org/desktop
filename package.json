@@ -67,6 +67,7 @@
   },
   "license": "GPL-3.0-only",
   "dependencies": {
+    "@sentry/electron": "^5.4.0",
     "adm-zip": "^0.5.15",
     "axios": "^1.7.3",
     "dotenv": "^16.4.5",
