@@ -29,6 +29,7 @@ jobs:
           build-gpu: 'cpu'
           build-targets: '--targets=@electron-forge/maker-zip'
           sign-and-publish: false
+          SENTRY_DSN_ENDPOINT: ${{secrets.SENTRY_DSN_ENDPOINT}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload Build
         uses: actions/upload-artifact@v4

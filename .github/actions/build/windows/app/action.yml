@@ -9,6 +9,10 @@ inputs:
     description: 'GitHub Token'
     required: true
     type: string
+  SENTRY_DSN_ENDPOINT:
+    description: 'URL Sentry will point to to send crash logs '
+    required: false
+    type: string
   sign-and-publish:
     description: 'Sign the executable and publish to release page'
     default: false
@@ -55,6 +59,7 @@ runs:
       shell: powershell
       env:
         DIGICERT_FINGERPRINT: ${{ inputs.DIGICERT_FINGERPRINT }}
+        SENTRY_DSN_ENDPOINT: ${{inputs.SENTRY_DSN_ENDPOINT}}
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
