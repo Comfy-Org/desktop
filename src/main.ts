@@ -211,7 +211,7 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
 
       let rehydrateCmd;
       if (packWheels) {
-        sendProgressUpdate(40, 'Setting up Python environment...');
+        sendProgressUpdate(50, 'Setting up Python environment...');
         // TODO: report space bug to uv upstream, then revert below mac fix
         rehydrateCmd = [
           '-m',
@@ -314,7 +314,7 @@ app.on('ready', async () => {
 
     sendProgressUpdate(20, 'Setting up comfy environment...');
     createComfyDirectories();
-    setTimeout(() => sendProgressUpdate(40, 'Starting Comfy Server...'), 1000);
+    setTimeout(() => sendProgressUpdate(30, 'Starting Comfy Server...'), 1000);
     await launchPythonServer({ userResourcesPath, appResourcesPath });
   } catch (error) {
     console.error(error);
