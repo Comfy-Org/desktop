@@ -29,10 +29,11 @@
 import './index.css';
 import ReactDOM from 'react-dom/client';
 import Home from './renderer/index';
-import * as Sentry from "@sentry/electron/renderer";
+import * as Sentry from '@sentry/electron/renderer';
 
-process.env.SENTRY_DSN_ENDPOINT && Sentry.init({
-  dsn: process.env.SENTRY_DSN_ENDPOINT,
-});
+process.env.SENTRY_DSN_ENDPOINT &&
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN_ENDPOINT,
+  });
 // Generate the the app then render the root
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(Home());

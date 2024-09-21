@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 import { app, BrowserWindow, webContents, screen } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
-import * as Sentry from "@sentry/electron/main";
+import * as Sentry from '@sentry/electron/main';
 
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 
@@ -30,17 +30,17 @@ import('electron-squirrel-startup').then((ess) => {
   }
 });
 
-
-process.env.SENTRY_DSN_ENDPOINT && Sentry.init({
-  dsn: process.env.SENTRY_DSN_ENDPOINT,
-  integrations:
-  [
-    Sentry.childProcessIntegration({
-      breadcrumbs: ['abnormal-exit','killed','crashed','launch-failed','oom','integrity-failure'],
-      events: ['abnormal-exit','killed','crashed','launch-failed','oom','integrity-failure'],
-    })
-  ]
-});
+log.warn(process.env.SENTRY_DSN_ENDPOINT);
+process.env.SENTRY_DSN_ENDPOINT &&
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN_ENDPOINT,
+    integrations: [
+      Sentry.childProcessIntegration({
+        breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
+        events: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
+      }),
+    ],
+  });
 
 app.on('ready', () => {
   log.info('App is Ready');
