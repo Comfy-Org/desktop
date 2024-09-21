@@ -52,6 +52,7 @@ export function getBuildDefine(env: ConfigEnv<'build'>) {
       const def = {
         [VITE_DEV_SERVER_URL]: command === 'serve' ? JSON.stringify(process.env[VITE_DEV_SERVER_URL]) : undefined,
         [VITE_NAME]: JSON.stringify(name),
+        SENTRY_DSN_ENDPOINT: JSON.stringify(process.env.SENTRY_DSN_ENDPOINT),
       };
       return { ...acc, ...def };
     },

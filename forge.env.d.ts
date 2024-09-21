@@ -7,6 +7,8 @@ declare global {
   const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
   const MAIN_WINDOW_VITE_NAME: string;
 
+  const SENTRY_DSN_ENDPOINT: string;
+
   namespace NodeJS {
     interface Process {
       // Used for hot reload after preload scripts.
@@ -25,6 +27,7 @@ declare global {
   interface VitePluginRuntimeKeys {
     VITE_DEV_SERVER_URL: `${string}_VITE_DEV_SERVER_URL`;
     VITE_NAME: `${string}_VITE_NAME`;
+    SENTRY_DSN_ENDPOINT: `SENTRY_DSN_ENDPOINT`;
   }
 }
 

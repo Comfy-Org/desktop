@@ -30,10 +30,10 @@ import('electron-squirrel-startup').then((ess) => {
   }
 });
 
-log.warn(process.env);
-process.env.SENTRY_DSN_ENDPOINT &&
+log.warn(SENTRY_DSN_ENDPOINT);
+SENTRY_DSN_ENDPOINT &&
   Sentry.init({
-    dsn: process.env.SENTRY_DSN_ENDPOINT,
+    dsn: SENTRY_DSN_ENDPOINT,
     integrations: [
       Sentry.childProcessIntegration({
         breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
