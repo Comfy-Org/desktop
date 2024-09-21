@@ -16,6 +16,9 @@ export default defineConfig((env) => {
     build: {
       outDir: `.vite/renderer/${name}`,
     },
+    define: {
+      SENTRY_DSN_ENDPOINT: JSON.stringify(process.env.SENTRY_DSN_ENDPOINT),
+    },
     plugins: [pluginExposeRenderer(name)],
     resolve: {
       alias: [{ find: 'src', replacement: resolve(__dirname, './src/') }],
