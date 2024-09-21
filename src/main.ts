@@ -166,6 +166,7 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
       });
 
       if (options.stdx) {
+        log.info('Setting up python process stdout/stderr listeners');
         pythonProcess.stderr.on('data', (data) => {
           log.error(`stderr: ${data}`);
         });
