@@ -209,6 +209,7 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
 
       let rehydrateCmd;
       if (packWheels) {
+        sendProgressUpdate(40, 'Setting up Python environment...');
         // TODO: report space bug to uv upstream, then revert below mac fix
         rehydrateCmd = [
           '-m',
@@ -240,6 +241,8 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
           pythonProcess = spawnPython(comfyMainCmd, path.dirname(scriptPath));
         } else {
           log.info(`Rehydration of python bundle exited with code ${code}`);
+          sendProgressUpdate(0, 'Python environment setup failed...');
+          reject('Python rehydration failed');
         }
       });
     }
