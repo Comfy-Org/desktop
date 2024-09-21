@@ -160,6 +160,7 @@ const launchPythonServer = async (args: { userResourcesPath: string; appResource
     ];
 
     const spawnPython = (cmd: string[], cwd: string, options = { stdx: true }) => {
+      log.info(`Spawning python process with command: ${cmd.join(' ')} in directory: ${cwd}`);
       const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, {
         cwd,
       });
