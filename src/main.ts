@@ -30,7 +30,7 @@ import('electron-squirrel-startup').then((ess) => {
   }
 });
 
-log.warn(process.env.SENTRY_DSN_ENDPOINT);
+log.warn(process.env);
 process.env.SENTRY_DSN_ENDPOINT &&
   Sentry.init({
     dsn: process.env.SENTRY_DSN_ENDPOINT,
