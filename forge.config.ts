@@ -81,10 +81,8 @@ const config: ForgeConfig = {
     new MakerSquirrel(
       (arch) => ({
         noDelta: true,
-        
-  
-          signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
-       
+        //For some reason passing windowsign causes squirrels backend to fail, using the old signwithparam param however works.
+        signWithParams: `/sha1 ${process.env.DIGICERT_FINGERPRINT} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
         remoteReleases: `https://comfyui-electron-releases.s3.us-west-2.amazonaws.com/win32/${arch}`,
         frameworkVersion: 'net481',
       }),
