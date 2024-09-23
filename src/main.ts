@@ -289,6 +289,17 @@ app.on('activate', () => {
   }
 });
 
+app.on('before-quit', async () => {
+  try {
+    await killPythonServer();
+  } catch (error) {
+    // Server did NOT exit properly
+    log.error('Python server did not exit properly');
+    log.error(error);
+    app.exit();
+  }
+});
+
 const spawnPython = (pythonInterpreterPath: string, cmd: string[], cwd: string, options = { stdx: true }) => {
   log.info(`Spawning python process with command: ${cmd.join(' ')} in directory: ${cwd}`);
   const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, {
@@ -482,17 +493,6 @@ function createComfyDirectories(): void {
     }
   });
 }
-
-app.on('before-quit', async () => {
-  try {
-    await killPythonServer();
-  } catch (error) {
-    // Server did NOT exit properly
-    log.error('Python server did not exit properly');
-    log.error(error);
-    app.exit();
-  }
-});
 
 /**
  * Create a directory if not exists
