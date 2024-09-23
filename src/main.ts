@@ -156,7 +156,11 @@ const maxFailWait: number = 60 * 1000; // 60seconds
 let currentWaitTime = 0;
 let spawnServerTimeout: NodeJS.Timeout = null;
 
-const launchPythonServer = async (pythonInterpreterPath: string, appResourcesPath: string, userResourcesPath: string) => {
+const launchPythonServer = async (
+  pythonInterpreterPath: string,
+  appResourcesPath: string,
+  userResourcesPath: string
+) => {
   const isServerRunning = await isPortInUse(host, port);
   if (isServerRunning) {
     log.info('Python server is already running');
@@ -224,14 +228,14 @@ const launchPythonServer = async (pythonInterpreterPath: string, appResourcesPat
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-const windowsLocalAppData = path.join(app.getPath('home'), 'ComfyUI')
+const windowsLocalAppData = path.join(app.getPath('home'), 'ComfyUI');
 log.info('Windows Local App Data directory: ', windowsLocalAppData);
 
 app.on('ready', async () => {
   const { userResourcesPath, appResourcesPath } = app.isPackaged
     ? {
         // production: install python to per-user application data dir
-        userResourcesPath: process.platform === 'win32' ? windowsLocalAppData: app.getPath('userData'),
+        userResourcesPath: process.platform === 'win32' ? windowsLocalAppData : app.getPath('userData'),
         appResourcesPath: process.resourcesPath,
       }
     : {
@@ -527,7 +531,7 @@ function createComfyDirectories(localComfyDirectory: string): void {
       ],
     ],
   ];
-  createDirIfNotExists(localComfyDirectory)
+  createDirIfNotExists(localComfyDirectory);
 
   directories.forEach((dir: string | [string, string[]]) => {
     if (Array.isArray(dir)) {
