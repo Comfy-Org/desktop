@@ -82,6 +82,15 @@ const createWindow = async () => {
 // Server Heartbeat Listener Variables
 let serverHeartBeatReference: NodeJS.Timeout = null;
 const serverHeartBeatInterval: number = 15 * 1000; //15 Seconds
+async function serverHeartBeat() {
+  const isReady = await isPortInUse(host, port);
+  if (isReady) {
+    // Getting webcontents[0] is not reliable if app started with dev window
+    webContents.getAllWebContents()[0].send('python-server-status', 'active');
+  } else {
+    webContents.getAllWebContents()[0].send('python-server-status', 'false');
+  }
+}
 
 const isPortInUse = (host: string, port: number): Promise<boolean> => {
   return new Promise((resolve) => {
