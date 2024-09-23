@@ -397,11 +397,22 @@ async function setupPythonEnvironment(
         'install',
         '--no-index',
         '--no-deps',
+        '--verbose',
         ...(await fsPromises.readdir(wheelsPath)).map((x) => path.join(wheelsPath, x)),
       ];
     } else {
       const reqPath = path.join(pythonRootPath, 'requirements.compiled');
-      rehydrateCmd = ['-m', 'uv', 'pip', 'install', '-r', reqPath, '--index-strategy', 'unsafe-best-match'];
+      rehydrateCmd = [
+        '-m',
+        'uv',
+        'pip',
+        'install',
+        '-r',
+        reqPath,
+        '--index-strategy',
+        'unsafe-best-match',
+        '--verbose',
+      ];
     }
     const { exitCode } = await spawnPythonAsync(pythonInterpreterPath, rehydrateCmd, pythonRootPath, { stdx: true });
 
