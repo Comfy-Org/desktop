@@ -33,6 +33,16 @@ import('electron-squirrel-startup').then((ess) => {
 SENTRY_DSN_ENDPOINT &&
   Sentry.init({
     dsn: SENTRY_DSN_ENDPOINT,
+    beforeSend(event, hint) {
+      hint.attachments = [
+        {
+          filename: 'main.log',
+          attachmentType: 'event.attachment',
+          data: readLogMain(),
+        },
+      ];
+      return event;
+    },
     integrations: [
       Sentry.childProcessIntegration({
         breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
@@ -40,6 +50,10 @@ SENTRY_DSN_ENDPOINT &&
       }),
     ],
   });
+
+function readLogMain() {
+  return log.transports.file.readAllLogs()[0].lines.slice(-100).join('\n');
+}
 
 app.on('ready', () => {
   log.info('App is Ready');
