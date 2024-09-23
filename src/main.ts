@@ -91,6 +91,7 @@ const isPortInUse = (host: string, port: number): Promise<boolean> => {
       if (err.code === 'EADDRINUSE') {
         resolve(true);
       } else {
+        log.error(err);
         resolve(false);
       }
     });
