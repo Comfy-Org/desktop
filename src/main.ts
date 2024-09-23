@@ -6,7 +6,7 @@ import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS } from './constants';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, webContents, screen } from 'electron';
+import { app, BrowserWindow, webContents, screen, ipcMain } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
 
@@ -37,6 +37,7 @@ let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
 let mainWindow: BrowserWindow | null;
+const messageQueue: Array<any> = [] // Stores mesaages before renderer is ready.
 
 const createWindow = async () => {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -60,6 +61,16 @@ const createWindow = async () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+
+  ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
+    log.info('Received renderer-ready message!')
+    // Send all queued messages
+    while (messageQueue.length > 0) {
+      const message = messageQueue.shift();
+      log.info("Sending queued message ", message.channel)
+      mainWindow.webContents.send(message.channel, message.data);
+    }
+  });
 
   // Set up the System Tray Icon for all platforms
   // Returns a tray so you can set a global var to access.
@@ -221,19 +232,31 @@ app.on('ready', async () => {
       process.platform === 'win32'
         ? path.join(pythonRootPath, 'python.exe')
         : path.join(pythonRootPath, 'bin', 'python');
-    setTimeout(() => sendProgressUpdate(40, 'Setting up Python Environment...'), 500);
+    sendProgressUpdate(40, 'Setting up Python Environment...');
     await setupPythonEnvironment(pythonRootPath, pythonInterpreterPath, appResourcesPath, userResourcesPath);
-    setTimeout(() => sendProgressUpdate(50, 'Starting Comfy Server...'), 500);
+    sendProgressUpdate(50, 'Starting Comfy Server...');
     await launchPythonServer(pythonInterpreterPath, appResourcesPath);
   } catch (error) {
     log.error(error);
-    sendProgressUpdate(0, 'Failed to start Comfy Server');
+    sendProgressUpdate(0, error.message);
   }
 });
 
-function sendProgressUpdate(percentage: number, status: string) {
+function sendProgressUpdate(percentage: number, status: string): void {
   if (mainWindow) {
     log.info('Sending progress update to renderer ' + status);
+
+    if (!mainWindow.webContents || mainWindow.webContents.isLoading()) {
+      log.info('Queueing message since renderer is not ready yet.')
+      messageQueue.push({
+        channel: IPC_CHANNELS.LOADING_PROGRESS,
+        data: {
+          percentage, 
+          status
+        }
+      })
+      return;
+    }
     mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, {
       percentage,
       status,

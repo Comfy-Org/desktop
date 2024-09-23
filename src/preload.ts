@@ -11,6 +11,11 @@ const electronAPI = {
       callback(value);
     });
   },
+  sendReady: () => {
+    log.info('Sending ready event to main process');
+    ipcRenderer.send(IPC_CHANNELS.RENDERER_READY);
+  },
+  
 };
 
 contextBridge.exposeInMainWorld(ELECTRON_BRIDGE_API, electronAPI);

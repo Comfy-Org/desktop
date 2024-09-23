@@ -53,6 +53,14 @@ function ProgressOverlay(): React.ReactElement {
       log.error(`${ELECTRON_BRIDGE_API} not found in window object`);
     }
   });
+
+  useEffect(() => {
+    if (ELECTRON_BRIDGE_API in window) {
+      log.info(`Sending ready event from renderer`);
+      (window as any).electronAPI.sendReady()
+    }
+  }, [])
+
   return (
     <>
       <div style={loadingTextStyle} id="loading-text">
