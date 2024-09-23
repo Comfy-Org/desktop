@@ -57,9 +57,9 @@ function ProgressOverlay(): React.ReactElement {
   useEffect(() => {
     if (ELECTRON_BRIDGE_API in window) {
       log.info(`Sending ready event from renderer`);
-      (window as any).electronAPI.sendReady()
+      (window as any).electronAPI.sendReady();
     }
-  }, [])
+  }, []);
 
   return (
     <>

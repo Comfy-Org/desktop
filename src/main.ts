@@ -37,7 +37,7 @@ let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
 const port = 8188; // Replace with the port number your server is running on
 let mainWindow: BrowserWindow | null;
-const messageQueue: Array<any> = [] // Stores mesaages before renderer is ready.
+const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
 const createWindow = async () => {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -63,11 +63,11 @@ const createWindow = async () => {
   }
 
   ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
-    log.info('Received renderer-ready message!')
+    log.info('Received renderer-ready message!');
     // Send all queued messages
     while (messageQueue.length > 0) {
       const message = messageQueue.shift();
-      log.info("Sending queued message ", message.channel)
+      log.info('Sending queued message ', message.channel);
       mainWindow.webContents.send(message.channel, message.data);
     }
   });
@@ -247,14 +247,14 @@ function sendProgressUpdate(percentage: number, status: string): void {
     log.info('Sending progress update to renderer ' + status);
 
     if (!mainWindow.webContents || mainWindow.webContents.isLoading()) {
-      log.info('Queueing message since renderer is not ready yet.')
+      log.info('Queueing message since renderer is not ready yet.');
       messageQueue.push({
         channel: IPC_CHANNELS.LOADING_PROGRESS,
         data: {
-          percentage, 
-          status
-        }
-      })
+          percentage,
+          status,
+        },
+      });
       return;
     }
     mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, {
