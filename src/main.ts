@@ -305,11 +305,8 @@ app.on('ready', async () => {
     // if no .env file, skip it
   }
 
-  try {
-    await fsPromises.mkdir(userResourcesPath);
-  } catch {
-    // if user-specific resources dir already exists, that is fine
-  }
+  createDirIfNotExists(userResourcesPath);
+
   try {
     sendProgressUpdate(10, 'Creating menu...');
     await createWindow();
@@ -351,6 +348,37 @@ const killPythonServer = () => {
   });
 };
 
+app.on('before-quit', async () => {
+  try {
+    await killPythonServer();
+  } catch (error) {
+    // Server did NOT exit properly
+    app.exit();
+  }
+  app.exit();
+});
+
+app.on('quit', () => {
+  app.exit();
+});
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    //app.quit();
+  }
+});
+
+app.on('activate', () => {
+  // On OS X it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
 type DirectoryStructure = (string | [string, string[]])[];
 
 // Create directories needed by ComfyUI in the user's data directory.
@@ -385,27 +413,18 @@ function createComfyDirectories(): void {
     ],
   ];
 
-  function createDir(dirPath: string): void {
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-      log.info(`Created directory: ${dirPath}`);
-    } else {
-      log.info(`Directory already exists: ${dirPath}`);
-    }
-  }
-
   directories.forEach((dir: string | [string, string[]]) => {
     if (Array.isArray(dir)) {
       const [mainDir, subDirs] = dir;
       const mainDirPath: string = path.join(userDataPath, mainDir);
-      createDir(mainDirPath);
+      createDirIfNotExists(mainDirPath);
       subDirs.forEach((subDir: string) => {
         const subDirPath: string = path.join(mainDirPath, subDir);
-        createDir(subDirPath);
+        createDirIfNotExists(subDirPath);
       });
     } else {
       const dirPath: string = path.join(userDataPath, dir);
-      createDir(dirPath);
+      createDirIfNotExists(dirPath);
     }
   });
 }
@@ -419,26 +438,17 @@ app.on('before-quit', async () => {
     log.error(error);
     app.exit();
   }
-  app.exit();
 });
 
-app.on('quit', () => {
-  app.exit();
-});
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    //app.quit();
+/**
+ * Create a directory if not exists
+ * @param dirPath
+ */
+function createDirIfNotExists(dirPath: string): void {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    log.info(`Created directory: ${dirPath}`);
+  } else {
+    log.info(`Directory already exists: ${dirPath}`);
   }
-});
-
-app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
+}
