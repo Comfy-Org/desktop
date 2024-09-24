@@ -237,8 +237,10 @@ app.on('ready', async () => {
 
   try {
     sendProgressUpdate(10, 'Creating menu...');
-    await createWindow();
-
+    if (!mainWindow) {
+      log.info('Creating new window...');
+      await createWindow();
+    }
     sendProgressUpdate(20, 'Setting up comfy environment...');
     createComfyDirectories(userResourcesPath);
     const pythonRootPath = path.join(userResourcesPath, 'python');
