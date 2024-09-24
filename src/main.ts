@@ -315,10 +315,8 @@ app.on('before-quit', async () => {
 });
 
 app.on('quit', () => {
-  if (process.platform === 'darwin') {
-    log.info('Quitting ComfyUI');
-    app.exit();
-  }
+  log.info('Quitting ComfyUI');
+  app.exit();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
