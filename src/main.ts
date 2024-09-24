@@ -344,11 +344,21 @@ const spawnPython = (pythonInterpreterPath: string, cmd: string[], cwd: string, 
 
   if (options.stdx) {
     log.info('Setting up python process stdout/stderr listeners');
+
+    // Create a separate log file for Python subprocess
+    const pythonLog = log.create({ logId: 'comfyui' });
+    pythonLog.transports.file.fileName = 'comfyui.log';
+    pythonLog.transports.file.resolvePathFn = (variables) => {
+      return path.join(variables.electronDefaultDir, variables.fileName);
+    };
+
     pythonProcess.stderr.on('data', (data) => {
-      log.error(`stderr: ${data}`);
+      const message = data.toString().trim();
+      pythonLog.error(`stderr: ${message}`);
     });
     pythonProcess.stdout.on('data', (data) => {
-      log.info(`stdout: ${data}`);
+      const message = data.toString().trim();
+      pythonLog.info(`stdout: ${message}`);
     });
   }
 
