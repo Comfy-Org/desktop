@@ -18,6 +18,7 @@ updateElectronApp({
     baseUrl: `https://updater.comfy.org/${process.platform}/${process.arch}`,
   },
   logger: log,
+  updateInterval: '2 hours',
 });
 
 log.initialize();
