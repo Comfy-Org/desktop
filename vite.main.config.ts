@@ -2,7 +2,7 @@ import type { ConfigEnv, UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
 import { getBuildConfig, getBuildDefine, external, pluginHotRestart } from './vite.base.config';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import { version } from './package.json'; // Import the version from package.json
+import { version } from './package.json';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
