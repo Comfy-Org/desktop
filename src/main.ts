@@ -1,7 +1,7 @@
 import { spawn, ChildProcess } from 'node:child_process';
 import * as fsPromises from 'node:fs/promises';
 import fs from 'fs';
-import net from 'node:net';
+import axios from 'axios';
 import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS } from './constants';
@@ -94,7 +94,7 @@ const createWindow = async () => {
 let serverHeartBeatReference: NodeJS.Timeout = null;
 const serverHeartBeatInterval: number = 15 * 1000; //15 Seconds
 async function serverHeartBeat() {
-  const isReady = await isPortInUse(host, port);
+  const isReady = await isComfyServerReady(host, port);
   if (isReady) {
     // Getting webcontents[0] is not reliable if app started with dev window
     webContents.getAllWebContents()[0].send('python-server-status', 'active');
@@ -103,26 +103,31 @@ async function serverHeartBeat() {
   }
 }
 
-const isPortInUse = (host: string, port: number): Promise<boolean> => {
-  return new Promise((resolve) => {
-    const server = net.createServer();
+const isComfyServerReady = async (host: string, port: number): Promise<boolean> => {
+  const url = `http://${host}:${port}/queue`;
 
-    server.once('error', (err: NodeJS.ErrnoException) => {
-      if (err.code === 'EADDRINUSE') {
-        resolve(true);
-      } else {
-        log.error(err);
-        resolve(false);
-      }
+  try {
+    log.info(`Checking if server is running at ${url}`);
+    const response = await axios.get(url, {
+      timeout: 5000, // 5 seconds timeout
     });
 
-    server.once('listening', () => {
-      server.close();
-      resolve(false);
-    });
-
-    server.listen(port, host);
-  });
+    if (response.status >= 200 && response.status < 300) {
+      log.info(`Server is running at ${url}`);
+      log.info(response.data);
+      return true;
+    } else {
+      log.warn(`Server responded with status ${response.status} at ${url}`);
+      return false;
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      log.error(`Failed to connect to server at ${url}: ${error.message}`);
+    } else {
+      log.error(`Unexpected error when checking server at ${url}: ${error}`);
+    }
+    return false;
+  }
 };
 
 // Launch Python Server Variables
@@ -130,8 +135,12 @@ const maxFailWait: number = 50 * 1000; // 50seconds
 let currentWaitTime = 0;
 const spawnServerTimeout: NodeJS.Timeout = null;
 
-const launchPythonServer = async (pythonInterpreterPath: string, appResourcesPath: string, userResourcesPath: string) => {
-  const isServerRunning = await isPortInUse(host, port);
+const launchPythonServer = async (
+  pythonInterpreterPath: string,
+  appResourcesPath: string,
+  userResourcesPath: string
+) => {
+  const isServerRunning = await isComfyServerReady(host, port);
   if (isServerRunning) {
     log.info('Python server is already running');
     // Server has been started outside the app, so attach to it.
@@ -163,7 +172,7 @@ const launchPythonServer = async (pythonInterpreterPath: string, appResourcesPat
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
     ];
 
-    spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath));
+    pythonProcess = spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath));
 
     const checkInterval = 1000; // Check every 1 second
 
@@ -174,7 +183,7 @@ const launchPythonServer = async (pythonInterpreterPath: string, appResourcesPat
         clearTimeout(spawnServerTimeout);
         reject('Python Server Failed To Start');
       }
-      const isReady = await isPortInUse(host, port);
+      const isReady = await isComfyServerReady(host, port);
       if (isReady) {
         sendProgressUpdate(90, 'Finishing...');
         log.info('Python server is ready');
@@ -198,14 +207,13 @@ const launchPythonServer = async (pythonInterpreterPath: string, appResourcesPat
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-const windowsLocalAppData = path.join(app.getPath('home'), 'ComfyUI')
+const windowsLocalAppData = path.join(app.getPath('home'), 'ComfyUI');
 log.info('Windows Local App Data directory: ', windowsLocalAppData);
-
 app.on('ready', async () => {
   const { userResourcesPath, appResourcesPath } = app.isPackaged
     ? {
         // production: install python to per-user application data dir
-        userResourcesPath: process.platform === 'win32' ? windowsLocalAppData: app.getPath('userData'),
+        userResourcesPath: process.platform === 'win32' ? windowsLocalAppData : app.getPath('userData'),
         appResourcesPath: process.resourcesPath,
       }
     : {
@@ -267,21 +275,32 @@ function sendProgressUpdate(percentage: number, status: string): void {
   }
 }
 
-const killPythonServer = () => {
-  log.info('Python server:', pythonProcess);
-  return new Promise<void>((resolve, reject) => {
-    if (pythonProcess) {
-      try {
-        const result: boolean = pythonProcess.kill(); //false if kill did not succeed sucessfully
-        result ? resolve() : reject();
-      } catch (error) {
-        log.error(error);
-        reject(error);
+const killPythonServer = async (): Promise<void> => {
+  if (pythonProcess) {
+    log.info('Killing python server.');
+
+    return new Promise<void>((resolve, reject) => {
+      // Set up a timeout in case the process doesn't exit
+      const timeout = setTimeout(() => {
+        reject(new Error('Timeout: Python server did not exit within 10 seconds'));
+      }, 10000);
+
+      // Listen for the 'exit' event
+      pythonProcess.once('exit', (code, signal) => {
+        clearTimeout(timeout);
+        log.info(`Python server exited with code ${code} and signal ${signal}`);
+        pythonProcess = null;
+        resolve();
+      });
+
+      // Attempt to kill the process
+      const result = pythonProcess.kill();
+      if (!result) {
+        clearTimeout(timeout);
+        reject(new Error('Failed to initiate kill signal for python server'));
       }
-    } else {
-      resolve();
-    }
-  });
+    });
+  }
 };
 
 app.on('before-quit', async () => {
@@ -289,13 +308,17 @@ app.on('before-quit', async () => {
     await killPythonServer();
   } catch (error) {
     // Server did NOT exit properly
-    app.exit();
+    log.error('Python server did not exit properly');
+    log.error(error);
   }
   app.exit();
 });
 
 app.on('quit', () => {
-  app.exit();
+  if (process.platform === 'darwin') {
+    log.info('Quitting ComfyUI');
+    app.exit();
+  }
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -312,17 +335,6 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
-  }
-});
-
-app.on('before-quit', async () => {
-  try {
-    await killPythonServer();
-  } catch (error) {
-    // Server did NOT exit properly
-    log.error('Python server did not exit properly');
-    log.error(error);
-    app.exit();
   }
 });
 
@@ -502,7 +514,7 @@ function createComfyDirectories(localComfyDirectory: string): void {
       ],
     ],
   ];
-  createDirIfNotExists(localComfyDirectory)
+  createDirIfNotExists(localComfyDirectory);
 
   directories.forEach((dir: string | [string, string[]]) => {
     if (Array.isArray(dir)) {
