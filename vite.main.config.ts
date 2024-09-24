@@ -23,7 +23,7 @@ export default defineConfig((env) => {
       pluginHotRestart('restart'),
       sentryVitePlugin({
         org: 'comfy-org',
-        project: 'comfyui-electron-test',
+        project: 'electron',
         authToken: process.env.SENTRY_AUTH_TOKEN,
       }),
     ],
