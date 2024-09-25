@@ -11,6 +11,11 @@ jest.mock('node:path', () => ({
   }),
 }));
 
+jest.mock('@sentry/electron/main', () => ({
+  init: jest.fn(),
+  captureException: jest.fn(),
+}));
+
 jest.mock('tar', () => ({
   extract: jest.fn(),
 }));
