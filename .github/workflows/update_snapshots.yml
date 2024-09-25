@@ -12,10 +12,10 @@ jobs:
         os: [windows-latest, macos-latest]
 
     steps:
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: JP250552/setup-node@feature/corepack
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           corepack: true
 
       - name: Install Python
