@@ -6,7 +6,7 @@ import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS } from './constants';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, webContents, screen, ipcMain } from 'electron';
+import { app, BrowserWindow, webContents, screen, ipcMain, crashReporter } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
@@ -30,9 +30,10 @@ import('electron-squirrel-startup').then((ess) => {
   }
 });
 
-SENTRY_DSN_ENDPOINT &&
+app.isPackaged &&
   Sentry.init({
-    dsn: SENTRY_DSN_ENDPOINT,
+    dsn: 'https://4ed45a585532ba7e5f31fd6bddce3bcc@o4507954455314432.ingest.us.sentry.io/4507970717024256',
+    /* //WIP gather and send log from main 
     beforeSend(event, hint) {
       hint.attachments = [
         {
@@ -42,7 +43,7 @@ SENTRY_DSN_ENDPOINT &&
         },
       ];
       return event;
-    },
+    }, */
     integrations: [
       Sentry.childProcessIntegration({
         breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],

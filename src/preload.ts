@@ -15,6 +15,7 @@ const electronAPI = {
     log.info('Sending ready event to main process');
     ipcRenderer.send(IPC_CHANNELS.RENDERER_READY);
   },
+  isPackaged: !process.argv0.endsWith('electron.exe'), //Emulates app.ispackaged in renderer
 };
 
 contextBridge.exposeInMainWorld(ELECTRON_BRIDGE_API, electronAPI);
