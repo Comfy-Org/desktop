@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -22,8 +22,15 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
       - name: Make ComfyUI assets
-        run: yarn make:assets:cpu # replace with your build command
+        run: |
+          pip install comfy-cli
+          yarn make:assets:cpu
 
       - name: Update Playwright snapshots
         run: npx playwright test --update-snapshots
