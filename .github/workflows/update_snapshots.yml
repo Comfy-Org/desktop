@@ -28,13 +28,24 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      # - name: Make ComfyUI assets
-      #   run: |
-      # #     pip install comfy-cli
-      #     yarn make:assets:cpu
+      - name: Make ComfyUI assets
+        run: |
+          pip install comfy-cli
+          yarn make:assets:cpu
 
       - name: Update Playwright snapshots
         run: yarn test:update-snapshots
+        env:
+          ELECTRON_ENABLE_LOGGING: 1
+          ELECTRON_ENABLE_STACK_DUMPING: 1
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.os }}
+          path: playwright-report/
+          retention-days: 30
 
       - name: Commit updated snapshots
         run: |
