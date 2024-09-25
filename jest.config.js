@@ -1,7 +1,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['<rootDir>/src/__tests__/**/*.test.ts'],
+  testMatch: ['<rootDir>/src/__tests__/unit/**/*.test.ts'],
   automock: false,
   transform: {
     '^.+\\.ts$': [

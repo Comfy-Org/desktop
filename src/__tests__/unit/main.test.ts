@@ -1,5 +1,5 @@
 import { expect, jest, describe, it } from '@jest/globals';
-import { createWindow } from '../main';
+import { createWindow } from '../../main';
 import { BrowserWindow } from 'electron';
 
 global.MAIN_WINDOW_VITE_DEV_SERVER_URL = 'http://localhost:5173';
