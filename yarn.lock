@@ -2874,17 +2874,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/instrumentation@npm:5.17.0":
-  version: 5.17.0
-  resolution: "@prisma/instrumentation@npm:5.17.0"
-  dependencies:
-    "@opentelemetry/api": "npm:^1.8"
-    "@opentelemetry/instrumentation": "npm:^0.49 || ^0.50 || ^0.51 || ^0.52.0"
-    "@opentelemetry/sdk-trace-base": "npm:^1.22"
-  checksum: 10c0/831b9e4c175c4a9ab97b2b54aaf0664a41b6c8a189fa6465efa5fd4b31f49f3d6bf8dd4edf9f012a250d8426f93c75bad4c3726356a2b5abc62aa07afb13e857
-  languageName: node
-  linkType: hard
-  
 "@playwright/test@npm:^1.47.2":
   version: 1.47.2
   resolution: "@playwright/test@npm:1.47.2"
@@ -2895,7 +2884,18 @@ __metadata:
   checksum: 10c0/1b2b003fc5465608683835f287d5dba6fabe9a3339667579de33032f3527c5ada3894d021724167ecb1b172a7efa6155958deee9872b2b3e940c3337edd06b4b
   languageName: node
   linkType: hard
-  
+
+"@prisma/instrumentation@npm:5.17.0":
+  version: 5.17.0
+  resolution: "@prisma/instrumentation@npm:5.17.0"
+  dependencies:
+    "@opentelemetry/api": "npm:^1.8"
+    "@opentelemetry/instrumentation": "npm:^0.49 || ^0.50 || ^0.51 || ^0.52.0"
+    "@opentelemetry/sdk-trace-base": "npm:^1.22"
+  checksum: 10c0/831b9e4c175c4a9ab97b2b54aaf0664a41b6c8a189fa6465efa5fd4b31f49f3d6bf8dd4edf9f012a250d8426f93c75bad4c3726356a2b5abc62aa07afb13e857
+  languageName: node
+  linkType: hard
+
 "@rollup/rollup-android-arm-eabi@npm:4.22.4":
   version: 4.22.4
   resolution: "@rollup/rollup-android-arm-eabi@npm:4.22.4"
@@ -4388,6 +4388,8 @@ __metadata:
   version: 1.2.0
   resolution: "@types/shimmer@npm:1.2.0"
   checksum: 10c0/6f7bfe1b55601cfc3ae713fc74a03341f3834253b8b91cb2add926d5949e4a63f7e666f59c2a6e40a883a5f9e2f3e3af10f9d3aed9b60fced0bda87659e58d8d
+  languageName: node
+  linkType: hard
 
 "@types/stack-utils@npm:^2.0.0":
   version: 2.0.3
@@ -5592,7 +5594,7 @@ __metadata:
   checksum: 10c0/0a95bd280acdf05b0e08fa1a0e1db58c815dd24e92d639add8f494d23a8a49c26e4829721224d68f2f0e57a69047714db29bcff6deb5d029332321223416cb29
   languageName: node
   linkType: hard
-  
+
 "ci-info@npm:^3.2.0":
   version: 3.9.0
   resolution: "ci-info@npm:3.9.0"
@@ -5600,7 +5602,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cjs-module-lexer@npm:^1.0.0":
+"cjs-module-lexer@npm:^1.0.0, cjs-module-lexer@npm:^1.2.2":
   version: 1.4.1
   resolution: "cjs-module-lexer@npm:1.4.1"
   checksum: 10c0/5a7d8279629c9ba8ccf38078c2fed75b7737973ced22b9b5a54180efa57fb2fe2bb7bec6aec55e3b8f3f5044f5d7b240347ad9bd285e7c3d0ee5b0a1d0504dfc
@@ -6073,8 +6075,8 @@ __metadata:
   checksum: 10c0/7f0ee496e0dff14a573dc6127f14c95061b448b87b995fc96c017ce0a1e66af1675e73f1d6064407975bc4ea6ab679497a29fff7b5b9c4e99cb10797c1ad0b4c
   languageName: node
   linkType: hard
-  
-"deepmerge@npm:4.3.1":
+
+"deepmerge@npm:4.3.1, deepmerge@npm:^4.2.2":
   version: 4.3.1
   resolution: "deepmerge@npm:4.3.1"
   checksum: 10c0/e53481aaf1aa2c4082b5342be6b6d8ad9dfe387bc92ce197a66dea08bd4265904a087e75e464f14d1347cf2ac8afe1e4c16b266e0561cc5df29382d3c5f80044
@@ -8229,6 +8231,8 @@ __metadata:
     cjs-module-lexer: "npm:^1.2.2"
     module-details-from-path: "npm:^1.0.3"
   checksum: 10c0/b5b52b635450f69640289b9b597fef796ef9aa6c231ae22583a1c2e97bd1b61aa0048d7fc143b4af3ec5bffb7d64131302ed0882f62e0e2d60f0a4f009daff3f
+  languageName: node
+  linkType: hard
 
 "import-local@npm:^3.0.2":
   version: 3.2.0
@@ -11339,7 +11343,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"resolve@npm:^1.1.6, resolve@npm:^1.10.0, resolve@npm:^1.20.0, resolve@npm:^1.22.4":
+"resolve@npm:^1.1.6, resolve@npm:^1.10.0, resolve@npm:^1.20.0, resolve@npm:^1.22.4, resolve@npm:^1.22.8":
   version: 1.22.8
   resolution: "resolve@npm:1.22.8"
   dependencies:
@@ -11667,8 +11671,8 @@ __metadata:
   checksum: 10c0/e3d79b609071caa78bcb6ce2ad81c7966a46a7431d9d58b8800cfa9cb6a63699b3899a0e4bcce36167a284578212d9ae6942b6929ba4aa5015c079a67751d42d
   languageName: node
   linkType: hard
-  
-"semver@npm:^7.1.1, semver@npm:^7.1.3, semver@npm:^7.2.1, semver@npm:^7.3.2, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.3":
+
+"semver@npm:^7.1.1, semver@npm:^7.1.3, semver@npm:^7.2.1, semver@npm:^7.3.2, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.2, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.3":
   version: 7.6.3
   resolution: "semver@npm:7.6.3"
   bin:
@@ -12923,8 +12927,8 @@ __metadata:
   linkType: hard
 
 "vite@npm:^5.0.12":
-  version: 5.4.7
-  resolution: "vite@npm:5.4.7"
+  version: 5.4.8
+  resolution: "vite@npm:5.4.8"
   dependencies:
     esbuild: "npm:^0.21.3"
     fsevents: "npm:~2.3.3"
@@ -12961,7 +12965,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/0ca7ca60f71c61f3855bbabf7e33909bec32933b35914d4d281813c728183e78e7ce5be05735a7671df3a994613d3881f520a32a80715faa92effb28deee9320
+  checksum: 10c0/af70af6d6316a3af71f44ebe3ab343bd66450d4157af73af3b32239e1b6ec43ff6f651d7cc4193b21ed3bff2e9356a3de9e96aee53857f39922e4a2d9fad75a1
   languageName: node
   linkType: hard
 
