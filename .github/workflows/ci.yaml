@@ -1,4 +1,4 @@
-name: Lint and Format Check
+name: Run Tests & Lint / Format
 
 on:
   pull_request:
@@ -19,6 +19,9 @@ jobs:
 
       - name: Install Dependencies
         run: yarn install
+
+      - name: Run Unit Tests
+        run: yarn run test:unit
 
       - name: Check Prettier Formatting
         run: yarn run format

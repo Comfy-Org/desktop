@@ -113,3 +113,6 @@ assets/requirements.*
 
 # Sentry Config File
 .env.sentry-build-plugin
+# Jest
+test-results
+
