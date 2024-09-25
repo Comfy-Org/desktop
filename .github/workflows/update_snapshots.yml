@@ -39,7 +39,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add src/__tests__/snapshots
+          git add src/__tests__/e2e
           git commit -m "Update Playwright snapshots for ${{ matrix.os }}" || echo "No changes to commit"
 
       - name: Push changes
