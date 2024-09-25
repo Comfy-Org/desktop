@@ -40,7 +40,7 @@ const port = 8188; // Replace with the port number your server is running on
 let mainWindow: BrowserWindow | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
-const createWindow = async () => {
+export const createWindow = async (): Promise<BrowserWindow> => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
   mainWindow = new BrowserWindow({
@@ -89,6 +89,7 @@ const createWindow = async () => {
   });
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
+  return mainWindow;
 };
 
 // Server Heartbeat Listener Variables
