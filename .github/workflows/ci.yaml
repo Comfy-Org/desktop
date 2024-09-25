@@ -22,3 +22,6 @@ jobs:
 
       - name: Check Prettier Formatting
         run: yarn run format
+
+      - name: Run Unit Tests
+        run: yarn run test:unit
