@@ -5,6 +5,7 @@ on:
 
 jobs:
   update-snapshots:
+    continue-on-error: true
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
