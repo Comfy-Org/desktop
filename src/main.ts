@@ -4,7 +4,7 @@ import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
 import { SetupTray } from './tray';
-import { IPC_CHANNELS } from './constants';
+import { IPC_CHANNELS, SENTRY_URL_ENDPOINT } from './constants';
 import dotenv from 'dotenv';
 import { app, BrowserWindow, webContents, screen, ipcMain, crashReporter } from 'electron';
 import tar from 'tar';
@@ -33,7 +33,7 @@ import('electron-squirrel-startup').then((ess) => {
 
 app.isPackaged &&
   Sentry.init({
-    dsn: 'https://4ed45a585532ba7e5f31fd6bddce3bcc@o4507954455314432.ingest.us.sentry.io/4507970717024256',
+    dsn: SENTRY_URL_ENDPOINT,
     /* //WIP gather and send log from main 
     beforeSend(event, hint) {
       hint.attachments = [

@@ -30,13 +30,13 @@ import './index.css';
 import ReactDOM from 'react-dom/client';
 import Home from './renderer/index';
 import * as Sentry from '@sentry/electron/renderer';
-import { ELECTRON_BRIDGE_API } from './constants';
+import { ELECTRON_BRIDGE_API, SENTRY_URL_ENDPOINT } from './constants';
 
 if (ELECTRON_BRIDGE_API in window) {
   if ((window as any).electronAPI.isPackaged) {
     //TODO set up report dialog
     Sentry.init({
-      dsn: 'https://4ed45a585532ba7e5f31fd6bddce3bcc@o4507954455314432.ingest.us.sentry.io/4507970717024256',
+      dsn: SENTRY_URL_ENDPOINT,
     });
   }
 }
