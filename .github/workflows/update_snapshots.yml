@@ -27,10 +27,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Make ComfyUI assets
-        run: |
-          pip install comfy-cli
-          yarn make:assets:cpu
+      # - name: Make ComfyUI assets
+      #   run: |
+      #     pip install comfy-cli
+      #     yarn make:assets:cpu
 
       - name: Update Playwright snapshots
         run: yarn test:update-snapshots
