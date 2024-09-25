@@ -11,8 +11,6 @@ jobs:
         os: [windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v2
-
       - name: Use Node.js 20.x
         uses: JP250552/setup-node@feature/corepack
         with:
@@ -27,9 +25,10 @@ jobs:
         with:
           python-version: '3.12'
 
+      - uses: actions/checkout@v4
       # - name: Make ComfyUI assets
       #   run: |
-      #     pip install comfy-cli
+      # #     pip install comfy-cli
       #     yarn make:assets:cpu
 
       - name: Update Playwright snapshots
