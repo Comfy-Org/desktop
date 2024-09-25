@@ -33,7 +33,7 @@ jobs:
           yarn make:assets:cpu
 
       - name: Update Playwright snapshots
-        run: npx playwright test --update-snapshots
+        run: yarn test:update-snapshots
 
       - name: Commit updated snapshots
         run: |
