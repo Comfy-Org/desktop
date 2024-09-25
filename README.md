@@ -1,5 +1,38 @@
 # comfyui-electron
 
+# Overview
+
+This electron app distributes [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and comes bundled with a few things:
+
+- standalone python runtime
+- comfyui manager [core](https://github.com/Comfy-Org/manager-core)
+- [comfy-cli](https://github.com/Comfy-Org/comfy-cli)
+- uv
+
+On startup, it will install all the necessary python dependencies and start the server.
+
+We publish updates via electron in line with the stable releases of ComfyUI.
+
+## ComfyUI Files
+
+ComfyUI files like models, inputs, outputs, custom_nodes and saved workflows are placed here:
+
+Windows: `%USERPROFILE%/ComfyUI/...`
+
+Mac: `~/Library/Application Support/ComfyUI`
+
+## Logs
+
+We use electron-log to log everything to a local file.
+
+```
+on Linux: ~/.config/{app name}/logs/main.log
+on macOS: ~/Library/Logs/{app name}/main.log
+on Windows: %USERPROFILE%\AppData\Roaming\{app name}\logs\main.log
+```
+
+# Development
+
 ## Install
 
 This project uses `yarn` as its package manager. If you do not already have a `yarn` binary available on your PATH, run:
@@ -60,12 +93,12 @@ yarn clean
 yarn clean:slate
 ```
 
-## Logs
+# Download
 
-We use electron-log to log everything to a local file.
+## Windows
 
-```
-on Linux: ~/.config/{app name}/logs/main.log
-on macOS: ~/Library/Logs/{app name}/main.log
-on Windows: %USERPROFILE%\AppData\Roaming\{app name}\logs\main.log
-```
+x64 [Download](https://updater.comfy.org/windows/latest)
+
+## Mac
+
+ARM64 [Download](https://updater.comfy.org/darwin/latest)

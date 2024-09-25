@@ -11,7 +11,6 @@ export function SetupTray(mainView: BrowserWindow): Tray {
   );
   let tray = new Tray(trayImage);
 
-  tray.setTitle('ComfyUI'); // Only Macos, can be blank to JUST show icon
   tray.setToolTip('ComfyUI - Server is running');
 
   // For Mac you can have a separate icon when you press.

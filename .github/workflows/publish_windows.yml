@@ -33,3 +33,5 @@ jobs:
           sign-and-publish: true
           DIGICERT_FINGERPRINT: ${{secrets.DIGICERT_FINGERPRINT}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        env:
+          SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_ORG_TOKEN}}

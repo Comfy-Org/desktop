@@ -32,8 +32,8 @@ jobs:
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
       - name: Make Comfy
         uses: ./.github/actions/build/macos/comfy
-      - name: Sign Wheels
-        uses: ./.github/actions/build/macos/signwheel
+        with:
+          sign-and-publish: true
       - name: shim
         run: |
           chmod +x scripts/shim.sh && ./scripts/shim.sh
@@ -50,3 +50,8 @@ jobs:
       - name: Check Notarization
         run: |
           spctl -a -vvv -t install "out/ComfyUI-darwin-arm64/ComfyUI.app"
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: comfyui-electron-signed-macos
+          path: out/make/zip/darwin/arm64/*.zip
