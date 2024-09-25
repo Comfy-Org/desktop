@@ -32,6 +32,8 @@ jobs:
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
       - name: Make Comfy
         uses: ./.github/actions/build/macos/comfy
+        with: 
+          sign-and-publish: true
       - name: shim
         run: |
           chmod +x scripts/shim.sh && ./scripts/shim.sh
