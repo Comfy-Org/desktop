@@ -9,6 +9,7 @@
   "scripts": {
     "test:unit": "jest --config jest.config.js",
     "test:e2e": "npx playwright test",
+    "test:update-snapshots": "npx playwright test --update-snapshots",
     "clean": "rimraf .vite dist out",
     "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz & yarn run clean:assets:dev",
     "clean:assets:dev": "rimraf assets/python assets/override.txt & rimraf assets/cpython*.tar.gz & rimraf assets/requirements.*",
