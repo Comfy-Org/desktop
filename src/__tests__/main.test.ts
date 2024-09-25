@@ -92,9 +92,3 @@ describe('createWindow', () => {
     expect(window.loadURL).toHaveBeenCalled();
   });
 });
-
-describe('Sanity check', () => {
-  it('should pass', () => {
-    expect(true).toBe(true);
-  });
-});
