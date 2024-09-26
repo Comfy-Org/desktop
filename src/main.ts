@@ -602,7 +602,7 @@ async function createComfyConfigFile(userSettingsPath: string): Promise<void> {
   const configContent: any = {
     'Comfy.ColorPalette': 'dark',
     'Comfy.NodeLibrary.Bookmarks': [],
-    'Comfy.UseNewMenu': 'Top',
+    'Comfy.UseNewMenu': 'Floating',
     'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
     'Comfy.Workflow.ShowMissingModelsWarning': true,
   };
