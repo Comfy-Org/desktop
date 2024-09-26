@@ -199,6 +199,8 @@ const launchPythonServer = async (
       '--output-directory',
       outputDirectoryPath,
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
+      '--front-end-version',
+      'Comfy-Org/ComfyUI_frontend@latest',
     ];
 
     pythonProcess = spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath), {
@@ -538,7 +540,7 @@ function createComfyDirectories(localComfyDirectory: string): void {
     'custom_nodes',
     'input',
     'output',
-    'user',
+    ['user', ['default']],
     [
       'models',
       [
@@ -578,6 +580,9 @@ function createComfyDirectories(localComfyDirectory: string): void {
       createDirIfNotExists(dirPath);
     }
   });
+
+  const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');
+  createComfyConfigFile(userSettingsPath);
 }
 
 /**
@@ -590,5 +595,28 @@ function createDirIfNotExists(dirPath: string): void {
     log.info(`Created directory: ${dirPath}`);
   } else {
     log.info(`Directory already exists: ${dirPath}`);
+  }
+}
+
+async function createComfyConfigFile(userSettingsPath: string): Promise<void> {
+  const configContent: any = {
+    'Comfy.ColorPalette': 'dark',
+    'Comfy.NodeLibrary.Bookmarks': [],
+    'Comfy.UseNewMenu': 'Top',
+    'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
+    'Comfy.Workflow.ShowMissingModelsWarning': true,
+  };
+
+  const configFilePath = path.join(userSettingsPath, 'comfy.settings.json');
+
+  if (fs.existsSync(configFilePath)) {
+    return;
+  }
+
+  try {
+    await fsPromises.writeFile(configFilePath, JSON.stringify(configContent, null, 2));
+    log.info(`Created ComfyUI config file at: ${configFilePath}`);
+  } catch (error) {
+    log.error(`Failed to create ComfyUI config file: ${error}`);
   }
 }
