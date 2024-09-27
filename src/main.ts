@@ -124,8 +124,6 @@ function buildMenu(userResourcesPath: string): Menu {
   }
 
   menu.append(new MenuItem({ label: 'Go', submenu: goMenu }));
-  // Add a dummy menu item to take focus
-  menu.append(new MenuItem({ label: '', enabled: false }));
 
   return menu;
 }
