@@ -347,7 +347,11 @@ app.on('ready', async () => {
         : path.join(pythonRootPath, 'bin', 'python');
     sendProgressUpdate(40, 'Setting up Python Environment...');
     await setupPythonEnvironment(pythonInterpreterPath, appResourcesPath, userResourcesPath);
-    sendProgressUpdate(50, 'Starting Comfy Server...');
+    sendProgressUpdate(45, 'Starting Comfy Server...', {
+      endPercentage: 80,
+      duration: 5000,
+      steps: 10,
+    });
     await launchPythonServer(pythonInterpreterPath, appResourcesPath, userResourcesPath);
   } catch (error) {
     log.error(error);
@@ -355,27 +359,86 @@ app.on('ready', async () => {
   }
 });
 
-function sendProgressUpdate(percentage: number, status: string): void {
+/**  Interval to send progress updates to the renderer. */
+let progressInterval: NodeJS.Timeout | null = null;
+interface ProgressOptions {
+  endPercentage?: number;
+  duration?: number;
+  steps?: number;
+}
+
+function sendProgressUpdate(percentage: number, status: string, options?: ProgressOptions): void {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
+
   if (mainWindow) {
     log.info('Sending progress update to renderer ' + status);
 
-    if (!mainWindow.webContents || mainWindow.webContents.isLoading()) {
-      log.info('Queueing message since renderer is not ready yet.');
-      messageQueue.push({
-        channel: IPC_CHANNELS.LOADING_PROGRESS,
-        data: {
-          percentage,
-          status,
-        },
+    const sendUpdate = (currentPercentage: number) => {
+      if (!mainWindow.webContents || mainWindow.webContents.isLoading()) {
+        log.info('Queueing message since renderer is not ready yet.');
+        messageQueue.push({
+          channel: IPC_CHANNELS.LOADING_PROGRESS,
+          data: {
+            percentage: currentPercentage,
+            status,
+          },
+        });
+        return;
+      } else if (messageQueue.length > 0) {
+        while (messageQueue.length > 0) {
+          const message = messageQueue.shift();
+          log.info('Sending queued message ', message.channel, message.data);
+          mainWindow.webContents.send(message.channel, message.data);
+        }
+      }
+
+      mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, {
+        percentage: currentPercentage,
+        status,
       });
-      return;
+    };
+
+    if (options && options.endPercentage && options.endPercentage > percentage) {
+      const duration = options.duration || 5000; // Default to 5 seconds
+      const steps = options.steps || 10; // Default to 10 steps
+      const stepDuration = duration / steps;
+      const stepSize = (options.endPercentage - percentage) / steps;
+
+      let currentStep = 0;
+
+      sendUpdate(percentage);
+
+      progressInterval = setInterval(() => {
+        currentStep++;
+        const currentPercentage = Math.min(percentage + stepSize * currentStep, options.endPercentage);
+        sendUpdate(currentPercentage);
+
+        if (currentStep >= steps) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+      }, stepDuration);
+    } else {
+      // If no "inch forward" options provided, just send the update immediately
+      sendUpdate(percentage);
     }
-    mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, {
-      percentage,
-      status,
-    });
   }
 }
+
+app.on('before-quit', () => {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+  }
+});
+
+app.on('before-quit', () => {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+  }
+});
 
 const killPythonServer = async (): Promise<void> => {
   if (pythonProcess) {

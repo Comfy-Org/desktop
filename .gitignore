@@ -110,6 +110,7 @@ assets/cpython*.tar.gz
 assets/override.txt
 assets/python
 assets/requirements.*
+assets/user
 
 # Sentry Config File
 .env.sentry-build-plugin
