@@ -206,6 +206,7 @@ const isComfyServerReady = async (host: string, port: number): Promise<boolean> 
     });
 
     if (response.status >= 200 && response.status < 300) {
+      log.info(`Server responded with status ${response.status} at ${url}`);
       return true;
     } else {
       log.warn(`Server responded with status ${response.status} at ${url}`);
@@ -240,9 +241,8 @@ const launchPythonServer = async (
       webContents.getAllWebContents()[0].send('python-server-status', 'active');
     }, 5000);
     clearInterval(serverHeartBeatReference);
-    webContents.getAllWebContents()[0].loadURL('http://localhost:8188/');
     serverHeartBeatReference = setInterval(serverHeartBeat, serverHeartBeatInterval);
-    return Promise.resolve();
+    return webContents.getAllWebContents()[0].loadURL('http://localhost:8188/');
   }
 
   log.info('Launching Python server...');
