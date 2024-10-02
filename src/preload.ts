@@ -16,6 +16,10 @@ const electronAPI = {
     ipcRenderer.send(IPC_CHANNELS.RENDERER_READY);
   },
   isPackaged: !process.argv0.endsWith('electron.exe'), //Emulates app.ispackaged in renderer
+  restartApp: (): void => {
+    log.info('Sending restarting app message to main process');
+    ipcRenderer.send(IPC_CHANNELS.RESTART_APP);
+  },
 };
 
 contextBridge.exposeInMainWorld(ELECTRON_BRIDGE_API, electronAPI);

@@ -53,13 +53,11 @@ app.isPackaged &&
     ],
   });
 
-function readLogMain() {
-  return log.transports.file.readAllLogs()[0].lines.slice(-100).join('\n');
+function restartApp() {
+  log.info('Restarting app');
+  app.relaunch();
+  app.quit();
 }
-
-app.on('ready', () => {
-  log.info('App is Ready');
-});
 
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1'; // Replace with the desired IP address
@@ -90,6 +88,10 @@ function buildMenu(userResourcesPath: string): Menu {
     {
       label: 'Logs',
       click: () => shell.openPath(app.getPath('logs')),
+    },
+    {
+      label: 'Restart',
+      click: () => restartApp(),
     },
   ]);
 
@@ -322,6 +324,8 @@ function getResourcesPaths() {
 const windowsLocalAppData = path.join(app.getPath('home'), 'ComfyUI');
 log.info('Windows Local App Data directory: ', windowsLocalAppData);
 app.on('ready', async () => {
+  log.info('App ready');
+
   const { userResourcesPath, appResourcesPath } = getResourcesPaths();
   log.info(`userResourcesPath: ${userResourcesPath}`);
   log.info(`appResourcesPath: ${appResourcesPath}`);
@@ -357,6 +361,11 @@ app.on('ready', async () => {
     log.error(error);
     sendProgressUpdate(0, error.message);
   }
+
+  ipcMain.on(IPC_CHANNELS.RESTART_APP, () => {
+    log.info('Received restart app message!');
+    restartApp();
+  });
 });
 
 /**  Interval to send progress updates to the renderer. */

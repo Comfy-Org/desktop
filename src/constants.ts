@@ -1,6 +1,7 @@
 export const IPC_CHANNELS = {
   LOADING_PROGRESS: 'loading-progress',
   RENDERER_READY: 'renderer-ready',
+  RESTART_APP: 'restart-app',
 };
 
 export const ELECTRON_BRIDGE_API = 'electronAPI';
