@@ -1,7 +1,7 @@
-import { Tray, Menu, BrowserWindow, app } from 'electron';
+import { Tray, Menu, BrowserWindow, app, shell } from 'electron';
 import path from 'path';
 
-export function SetupTray(mainView: BrowserWindow): Tray {
+export function SetupTray(mainView: BrowserWindow, userResourcesPath: string): Tray {
   // Set icon for the tray
   // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
   const trayImage = path.join(
@@ -11,7 +11,7 @@ export function SetupTray(mainView: BrowserWindow): Tray {
   );
   let tray = new Tray(trayImage);
 
-  tray.setToolTip('ComfyUI - Server is running');
+  tray.setToolTip('ComfyUI');
 
   // For Mac you can have a separate icon when you press.
   // The current design language for Mac Eco System is White or Black icon then when you click it is in color
@@ -45,6 +45,32 @@ export function SetupTray(mainView: BrowserWindow): Tray {
           app.dock.hide();
         }
       },
+    },
+    { type: 'separator' },
+    {
+      label: 'Open Folder',
+      submenu: [
+        {
+          label: 'Models',
+          click: () => shell.openPath(path.join(userResourcesPath, 'models')),
+        },
+        {
+          label: 'Outputs',
+          click: () => shell.openPath(path.join(userResourcesPath, 'output')),
+        },
+        {
+          label: 'Inputs',
+          click: () => shell.openPath(path.join(userResourcesPath, 'input')),
+        },
+        {
+          label: 'Custom Nodes',
+          click: () => shell.openPath(path.join(userResourcesPath, 'custom_nodes')),
+        },
+        {
+          label: 'Logs',
+          click: () => shell.openPath(app.getPath('logs')),
+        },
+      ],
     },
   ]);
 

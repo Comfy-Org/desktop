@@ -6,7 +6,7 @@ import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS, SENTRY_URL_ENDPOINT } from './constants';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, webContents, screen, ipcMain, Menu, shell, MenuItem } from 'electron';
+import { app, BrowserWindow, webContents, screen, ipcMain, Menu, MenuItem } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
@@ -68,33 +68,6 @@ const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready
 function buildMenu(userResourcesPath: string): Menu {
   const isMac = process.platform === 'darwin';
 
-  const goMenu = Menu.buildFromTemplate([
-    {
-      label: 'Models',
-      click: () => shell.openPath(path.join(userResourcesPath, 'models')),
-    },
-    {
-      label: 'Outputs',
-      click: () => shell.openPath(path.join(userResourcesPath, 'output')),
-    },
-    {
-      label: 'Inputs',
-      click: () => shell.openPath(path.join(userResourcesPath, 'input')),
-    },
-    {
-      label: 'Custom Nodes',
-      click: () => shell.openPath(path.join(userResourcesPath, 'custom_nodes')),
-    },
-    {
-      label: 'Logs',
-      click: () => shell.openPath(app.getPath('logs')),
-    },
-    {
-      label: 'Restart',
-      click: () => restartApp(),
-    },
-  ]);
-
   const menu = new Menu();
 
   if (isMac) {
@@ -124,8 +97,6 @@ function buildMenu(userResourcesPath: string): Menu {
       })
     );
   }
-
-  menu.append(new MenuItem({ label: 'Go', submenu: goMenu }));
 
   return menu;
 }
@@ -165,7 +136,7 @@ export const createWindow = async (userResourcesPath: string): Promise<BrowserWi
 
   // Set up the System Tray Icon for all platforms
   // Returns a tray so you can set a global var to access.
-  SetupTray(mainWindow);
+  SetupTray(mainWindow, userResourcesPath);
 
   // Overrides the behavior of closing the window to allow for
   // the python server to continue to run in the background
