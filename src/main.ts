@@ -203,7 +203,7 @@ const isComfyServerReady = async (host: string, port: number): Promise<boolean> 
 };
 
 // Launch Python Server Variables
-const maxFailWait: number = 60 * 1000; // 60seconds
+const maxFailWait: number = 120 * 1000; // 120seconds
 let currentWaitTime = 0;
 let spawnServerTimeout: NodeJS.Timeout = null;
 
@@ -329,7 +329,7 @@ app.on('ready', async () => {
     await launchPythonServer(pythonInterpreterPath, appResourcesPath, userResourcesPath);
   } catch (error) {
     log.error(error);
-    sendProgressUpdate(0, error.message);
+    sendProgressUpdate(0, "Was not able to start ComfyUI. Please check the logs for more details. You can open it from the tray icon.");
   }
 
   ipcMain.on(IPC_CHANNELS.RESTART_APP, () => {
@@ -624,6 +624,21 @@ async function setupPythonEnvironment(
         '--verbose',
       ];
     }
+
+    //TODO(robinhuang): remove this once uv is included in the python bundle.
+    const { exitCode: uvExitCode } = await spawnPythonAsync(pythonInterpreterPath, [
+      '-m',
+      'pip',
+      'install',
+      '--upgrade',
+      'uv',
+    ], pythonRootPath, { stdx: true });
+
+    if (uvExitCode !== 0) {
+      log.error('Failed to install uv');
+      throw new Error('Failed to install uv');
+    }
+
     const { exitCode } = await spawnPythonAsync(pythonInterpreterPath, rehydrateCmd, pythonRootPath, { stdx: true });
 
     if (exitCode === 0) {
