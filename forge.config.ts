@@ -6,11 +6,13 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+
 import path from 'path';
 import fs from 'fs';
 
 const config: ForgeConfig = {
   packagerConfig: {
+    appCopyright: 'Copyright © 2024 Comfy Org',
     asar: true,
     ...(process.env.PUBLISH == 'true' && {
       windowsSign: {
