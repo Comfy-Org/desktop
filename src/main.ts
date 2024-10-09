@@ -171,13 +171,11 @@ export const createWindow = async (userResourcesPath: string): Promise<BrowserWi
   // Returns a tray so you can set a global var to access.
   SetupTray(mainWindow, userResourcesPath);
 
-  // Overrides the behavior of closing the window to allow for
-  // the python server to continue to run in the background
   mainWindow.on('close', (e: Electron.Event) => {
-    e.preventDefault();
-    mainWindow.hide();
     // Mac Only Behavior
     if (process.platform === 'darwin') {
+      e.preventDefault();
+      mainWindow.hide();
       app.dock.hide();
     }
   });
@@ -330,6 +328,10 @@ app.on('ready', async () => {
 
   try {
     await createWindow(userResourcesPath);
+    mainWindow.on('close', () => {
+      mainWindow = null;
+      app.quit();
+    });
     ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
       log.info('Received renderer-ready message!');
       // Send all queued messages
