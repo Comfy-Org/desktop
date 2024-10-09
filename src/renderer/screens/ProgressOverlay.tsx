@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ELECTRON_BRIDGE_API } from 'src/constants';
 import log from 'electron-log/renderer';
 import { ElectronAPI } from 'src/preload';
-import AnimatedLogDisplay from './LogDisplay';
+import AnimatedLogDisplay from './AnimatedLogDisplay';
 
 const loadingTextStyle: React.CSSProperties = {
   marginBottom: '20px',
