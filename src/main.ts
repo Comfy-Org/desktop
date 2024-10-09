@@ -505,40 +505,46 @@ const spawnPython = (
 
 const spawnPythonAsync = (
   pythonInterpreterPath: string,
-  args: string[],
+  cmd: string[],
   cwd: string,
-  options: { stdx?: boolean; logFile?: string } = {}
-): Promise<{ exitCode: number | null }> => {
-  return new Promise((resolve) => {
-    log.info(`Spawning python process with command: ${args.join(' ')} in directory: ${cwd}`);
-    const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, args, { cwd });
+  options = { stdx: true }
+): Promise<{ exitCode: number | null; stdout: string; stderr: string }> => {
+  return new Promise((resolve, reject) => {
+    log.info(`Spawning python process with command: ${cmd.join(' ')} in directory: ${cwd}`);
+    const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, { cwd });
 
-    pythonProcess.stdout.on('data', (data) => {
-      const message = data.toString().trim();
-      log.info(message);
-      if (mainWindow) {
-        log.info(`Sending log message to renderer: ${message}`);
-        mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
-      }
-    });
+    let stdout = '';
+    let stderr = '';
 
-    pythonProcess.stderr.on('data', (data) => {
-      const message = data.toString().trim();
-      log.error(message);
-      if (mainWindow) {
-        log.info(`Sending log message to renderer: ${message}`);
-        mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
-      }
-    });
-
+    if (options.stdx) {
+      log.info('Setting up python process stdout/stderr listeners');
+      pythonProcess.stderr.on('data', (data) => {
+        const message = data.toString();
+        stderr += message;
+        log.error(message);
+        if (mainWindow) {
+          log.info(`Sending log message to renderer: ${message}`);
+          mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+        }
+      });
+      pythonProcess.stdout.on('data', (data) => {
+        const message = data.toString();
+        stdout += message;
+        log.info(message);
+        if (mainWindow) {
+          log.info(`Sending log message to renderer: ${message}`);
+          mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+        }
+      });
+    }
     pythonProcess.on('close', (code) => {
       log.info(`Python process exited with code ${code}`);
-      resolve({ exitCode: code });
+      resolve({ exitCode: code, stdout, stderr });
     });
 
     pythonProcess.on('error', (err) => {
       log.error(`Failed to start Python process: ${err}`);
-      resolve({ exitCode: null });
+      reject(err);
     });
 
     process.on('exit', () => {
