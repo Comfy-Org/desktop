@@ -6,13 +6,12 @@ import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS, SENTRY_URL_ENDPOINT } from './constants';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, webContents, screen, ipcMain, Menu, MenuItem } from 'electron';
+import { app, BrowserWindow, screen, ipcMain, Menu, MenuItem } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
-import { AddressInfo } from 'net';
 import * as net from 'net';
 
 updateElectronApp({
@@ -241,15 +240,13 @@ const launchPythonServer = async (
       'Comfy-Org/ComfyUI_frontend@latest',
     ];
 
-    if (process.platform === 'win32') {
-      const port = await findAvailablePort(8000, 9999).catch((err) => {
-        log.error(`ERROR: Failed to find available port: ${err}`);
-        throw err;
-      });
-      comfyMainCmd.push('--port');
-      comfyMainCmd.push(port.toString());
-      log.info(`Starting ComfyUI using port ${port}.`);
-    }
+    port = await findAvailablePort(8000, 9999).catch((err) => {
+      log.error(`ERROR: Failed to find available port: ${err}`);
+      throw err;
+    });
+    comfyMainCmd.push('--port');
+    comfyMainCmd.push(port.toString());
+    log.info(`Starting ComfyUI using port ${port}.`);
 
     pythonProcess = spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath), {
       logFile: 'comfyui',
