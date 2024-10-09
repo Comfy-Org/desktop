@@ -238,14 +238,10 @@ const launchPythonServer = async (
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
       '--front-end-version',
       'Comfy-Org/ComfyUI_frontend@latest',
+      '--port',
+      port.toString(),
     ];
 
-    port = await findAvailablePort(8000, 9999).catch((err) => {
-      log.error(`ERROR: Failed to find available port: ${err}`);
-      throw err;
-    });
-    comfyMainCmd.push('--port');
-    comfyMainCmd.push(port.toString());
     log.info(`Starting ComfyUI using port ${port}.`);
 
     pythonProcess = spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath), {
@@ -318,9 +314,11 @@ app.on('ready', async () => {
   createDirIfNotExists(userResourcesPath);
 
   try {
-    sendProgressUpdate(10, 'Creating menu...');
     await createWindow(userResourcesPath);
-
+    port = await findAvailablePort(8000, 9999).catch((err) => {
+      log.error(`ERROR: Failed to find available port: ${err}`);
+      throw err;
+    });
     sendProgressUpdate(20, 'Setting up comfy environment...');
     createComfyDirectories(userResourcesPath);
     const pythonRootPath = path.join(userResourcesPath, 'python');
