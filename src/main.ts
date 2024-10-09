@@ -13,7 +13,6 @@ import * as Sentry from '@sentry/electron/main';
 
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
-import { ProgressUpdate } from './renderer/screens/ProgressOverlay';
 
 updateElectronApp({
   updateSource: {
@@ -32,6 +31,22 @@ import('electron-squirrel-startup').then((ess) => {
     app.quit();
   }
 });
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+    log.info('Received second instance message!');
+    log.info(additionalData);
+
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
 
 app.isPackaged &&
   Sentry.init({
@@ -126,9 +141,18 @@ function buildMenu(): Menu {
   return menu;
 }
 
+/**
+ * Creates the main window. If the window already exists, it will return the existing window.
+ * @param userResourcesPath The path to the user's resources.
+ * @returns The main window.
+ */
 export const createWindow = async (userResourcesPath: string): Promise<BrowserWindow> => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
+  if (mainWindow) {
+    log.info('Main window already exists');
+    return mainWindow;
+  }
   mainWindow = new BrowserWindow({
     title: 'ComfyUI',
     width: width,
@@ -142,16 +166,6 @@ export const createWindow = async (userResourcesPath: string): Promise<BrowserWi
   });
 
   await loadRendererIntoMainWindow();
-
-  ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
-    log.info('Received renderer-ready message!');
-    // Send all queued messages
-    while (messageQueue.length > 0) {
-      const message = messageQueue.shift();
-      log.info('Sending queued message ', message.channel);
-      mainWindow.webContents.send(message.channel, message.data);
-    }
-  });
 
   // Set up the System Tray Icon for all platforms
   // Returns a tray so you can set a global var to access.
@@ -316,6 +330,15 @@ app.on('ready', async () => {
 
   try {
     await createWindow(userResourcesPath);
+    ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
+      log.info('Received renderer-ready message!');
+      // Send all queued messages
+      while (messageQueue.length > 0) {
+        const message = messageQueue.shift();
+        log.info('Sending queued message ', message.channel);
+        mainWindow.webContents.send(message.channel, message.data);
+      }
+    });
     port = await findAvailablePort(8000, 9999).catch((err) => {
       log.error(`ERROR: Failed to find available port: ${err}`);
       throw err;
@@ -452,9 +475,11 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    const { userResourcesPath } = getResourcesPaths();
-    createWindow(userResourcesPath);
+  if (process.platform === 'darwin') {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      const { userResourcesPath } = getResourcesPaths();
+      createWindow(userResourcesPath);
+    }
   }
 });
 
