@@ -8,6 +8,7 @@ const loadingTextStyle: React.CSSProperties = {
   marginBottom: '20px',
   textAlign: 'center',
   fontSize: '20px',
+  fontFamily: "sans-serif, monospace",
   fontWeight: 'bold',
 };
 
@@ -40,7 +41,7 @@ const logContainerStyle: React.CSSProperties = {
 };
 
 function ProgressOverlay(): React.ReactElement {
-  const [status, setStatus] = useState('Initializing...');
+  const [status, setStatus] = useState('Starting...');
   const [logs, setLogs] = useState<string[]>([]);
   const logContainerRef = useRef<HTMLDivElement>(null);
   const currentStatusRef = useRef(status);
