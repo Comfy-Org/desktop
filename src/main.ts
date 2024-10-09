@@ -297,7 +297,7 @@ function getResourcesPaths() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-const windowsLocalAppData = path.join(app.getPath('home'), 'electron', 'ComfyUI');
+const windowsLocalAppData = path.join(app.getPath('home'), 'comfyui-electron');
 log.info('Windows Local App Data directory: ', windowsLocalAppData);
 app.on('ready', async () => {
   log.info('App ready');
