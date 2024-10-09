@@ -88,7 +88,7 @@ const port = 8188;
 let mainWindow: BrowserWindow | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
-function buildMenu(userResourcesPath: string): Menu {
+function buildMenu(): Menu {
   const isMac = process.platform === 'darwin';
 
   const menu = new Menu();
@@ -166,7 +166,7 @@ export const createWindow = async (userResourcesPath: string): Promise<BrowserWi
     }
   });
 
-  const menu = buildMenu(userResourcesPath);
+  const menu = buildMenu();
   Menu.setApplicationMenu(menu);
 
   return mainWindow;
@@ -291,7 +291,7 @@ function getResourcesPaths() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-const windowsLocalAppData = path.join(app.getPath('home'), 'ComfyUI');
+const windowsLocalAppData = path.join(app.getPath('home'), 'electron', 'ComfyUI');
 log.info('Windows Local App Data directory: ', windowsLocalAppData);
 app.on('ready', async () => {
   log.info('App ready');
@@ -329,7 +329,10 @@ app.on('ready', async () => {
     await launchPythonServer(pythonInterpreterPath, appResourcesPath, userResourcesPath);
   } catch (error) {
     log.error(error);
-    sendProgressUpdate(0, "Was not able to start ComfyUI. Please check the logs for more details. You can open it from the tray icon.");
+    sendProgressUpdate(
+      0,
+      'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the tray icon.'
+    );
   }
 
   ipcMain.on(IPC_CHANNELS.RESTART_APP, () => {
@@ -626,13 +629,12 @@ async function setupPythonEnvironment(
     }
 
     //TODO(robinhuang): remove this once uv is included in the python bundle.
-    const { exitCode: uvExitCode } = await spawnPythonAsync(pythonInterpreterPath, [
-      '-m',
-      'pip',
-      'install',
-      '--upgrade',
-      'uv',
-    ], pythonRootPath, { stdx: true });
+    const { exitCode: uvExitCode } = await spawnPythonAsync(
+      pythonInterpreterPath,
+      ['-m', 'pip', 'install', '--upgrade', 'uv'],
+      pythonRootPath,
+      { stdx: true }
+    );
 
     if (uvExitCode !== 0) {
       log.error('Failed to install uv');
