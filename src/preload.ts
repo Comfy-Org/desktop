@@ -5,7 +5,7 @@ import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
 import log from 'electron-log/main';
 
 export interface ElectronAPI {
-  onProgressUpdate: (callback: (update: { percentage: number; status: string }) => void) => void;
+  onProgressUpdate: (callback: (update: { status: string }) => void) => void;
   onLogMessage: (callback: (message: string) => void) => void;
   sendReady: () => void;
   restartApp: () => void;
@@ -13,7 +13,7 @@ export interface ElectronAPI {
 }
 
 const electronAPI: ElectronAPI = {
-  onProgressUpdate: (callback: (update: { percentage: number; status: string }) => void) => {
+  onProgressUpdate: (callback: (update: { status: string }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
       log.info(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
       callback(value);

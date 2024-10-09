@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { ELECTRON_BRIDGE_API } from 'src/constants';
 import log from 'electron-log/renderer';
 import { ElectronAPI } from 'src/preload';
+import AnimatedLogDisplay from './LogDisplay';
 
 const loadingTextStyle: React.CSSProperties = {
   marginBottom: '20px',
@@ -11,7 +12,6 @@ const loadingTextStyle: React.CSSProperties = {
 };
 
 export interface ProgressUpdate {
-  percentage: number;
   status: string;
   overwrite?: boolean;
 }
@@ -39,20 +39,6 @@ const logContainerStyle: React.CSSProperties = {
   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
 };
 
-const logEntryStyle: React.CSSProperties = {
-  marginBottom: '5px',
-  wordWrap: 'break-word',
-  opacity: 0,
-  transform: 'translateY(20px)',
-  transition: 'opacity 0.5s ease-out, transform 0.5s ease-out',
-};
-
-const visibleLogEntryStyle: React.CSSProperties = {
-  ...logEntryStyle,
-  opacity: 1,
-  transform: 'translateY(0)',
-};
-
 function ProgressOverlay(): React.ReactElement {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('Initializing...');
@@ -60,22 +46,13 @@ function ProgressOverlay(): React.ReactElement {
   const logContainerRef = useRef<HTMLDivElement>(null);
   const currentStatusRef = useRef(status);
 
-  const updateProgress = useCallback(({ percentage, status: newStatus, overwrite = false }: ProgressUpdate) => {
-    log.info(`Updating progress: ${percentage}%, ${newStatus}, overwrite: ${overwrite}`);
+  const updateProgress = useCallback(({ status: newStatus, overwrite = false }: ProgressUpdate) => {
+    log.info(`Updating progress: ${newStatus}, overwrite: ${overwrite}`);
 
     if (newStatus !== currentStatusRef.current) {
       setStatus(newStatus);
       currentStatusRef.current = newStatus;
       setLogs([]); // Clear logs when status changes
-    }
-
-    if (overwrite || percentage > progress) {
-      setProgress(percentage);
-    }
-
-    if (percentage === 100) {
-      setStatus('ComfyUI is ready!');
-      currentStatusRef.current = 'ComfyUI is ready!';
     }
   }, [progress]);
 
@@ -105,23 +82,13 @@ function ProgressOverlay(): React.ReactElement {
     }
   }, [logs]);
 
-  const lastFiveLogs = logs.slice(-5);
-
   return (
     <div style={containerStyle}>
       <div style={loadingTextStyle} id="loading-text">
         {status}
       </div>
       <div style={logContainerStyle} ref={logContainerRef}>
-        Streaming Logs...
-        {lastFiveLogs.map((logMessage, index) => (
-          <div
-            key={logs.length - 5 + index}
-            style={visibleLogEntryStyle}
-          >
-            {logMessage}
-          </div>
-        ))}
+        <AnimatedLogDisplay logs={logs} />
       </div>
     </div>
   );

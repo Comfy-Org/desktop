@@ -261,7 +261,7 @@ const launchPythonServer = async (
       }
       const isReady = await isComfyServerReady(host, port);
       if (isReady) {
-        sendProgressUpdate(90, 'Finishing...');
+        sendProgressUpdate('Finishing...');
         log.info('Python server is ready');
 
         //For now just replace the source of the main window to the python server
@@ -320,29 +320,20 @@ app.on('ready', async () => {
       log.error(`ERROR: Failed to find available port: ${err}`);
       throw err;
     });
-    sendProgressUpdate(20, 'Setting up comfy environment...');
+    sendProgressUpdate('Setting up comfy environment...');
     createComfyDirectories(userResourcesPath);
     const pythonRootPath = path.join(userResourcesPath, 'python');
     const pythonInterpreterPath =
       process.platform === 'win32'
         ? path.join(pythonRootPath, 'python.exe')
         : path.join(pythonRootPath, 'bin', 'python');
-    sendProgressUpdate(25, 'Setting up Python Environment...', {
-      endPercentage: 50,
-      duration: 10000,
-      steps: 10,
-    });
+    sendProgressUpdate('Setting up Python Environment...');
     await setupPythonEnvironment(pythonInterpreterPath, appResourcesPath, userResourcesPath);
-    sendProgressUpdate(45, 'Starting Comfy Server...', {
-      endPercentage: 80,
-      duration: 10000,
-      steps: 10,
-    });
+    sendProgressUpdate('Starting Comfy Server...');
     await launchPythonServer(pythonInterpreterPath, appResourcesPath, userResourcesPath);
   } catch (error) {
     log.error(error);
     sendProgressUpdate(
-      0,
       'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the tray icon.'
     );
   }
@@ -362,12 +353,7 @@ interface ProgressOptions {
   overwrite?: boolean;
 }
 
-function sendProgressUpdate(percentage: number, status: string, options?: ProgressOptions): void {
-  if (progressInterval) {
-    clearInterval(progressInterval);
-    progressInterval = null;
-  }
-
+function sendProgressUpdate(status: string, options?: ProgressOptions): void {
   if (mainWindow) {
     log.info('Sending progress update to renderer ' + status);
 
@@ -391,38 +377,12 @@ function sendProgressUpdate(percentage: number, status: string, options?: Progre
       }
 
       const progressUpdate: ProgressUpdate = {
-        percentage: currentPercentage,
         status,
         overwrite: options?.overwrite,
       };
 
       mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, progressUpdate);
     };
-
-    if (options && options.endPercentage && options.endPercentage > percentage) {
-      const duration = options.duration || 5000; // Default to 5 seconds
-      const steps = options.steps || 10; // Default to 10 steps
-      const stepDuration = duration / steps;
-      const stepSize = (options.endPercentage - percentage) / steps;
-
-      let currentStep = 0;
-
-      sendUpdate(percentage);
-
-      progressInterval = setInterval(() => {
-        currentStep++;
-        const currentPercentage = Math.min(percentage + stepSize * currentStep, options.endPercentage);
-        sendUpdate(currentPercentage);
-
-        if (currentStep >= steps) {
-          clearInterval(progressInterval);
-          progressInterval = null;
-        }
-      }, stepDuration);
-    } else {
-      // If no "inch forward" options provided, just send the update immediately
-      sendUpdate(percentage);
-    }
   }
 }
 
