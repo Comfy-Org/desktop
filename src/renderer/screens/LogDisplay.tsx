@@ -43,7 +43,6 @@ const AnimatedLogDisplay: React.FC<AnimatedLogDisplayProps> = ({
 
   const containerStyle: React.CSSProperties = {
     height: '200px',
-    border: '1px solid #ccc',
     padding: '10px',
     fontFamily: 'monospace',
     fontSize: '14px',
