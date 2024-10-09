@@ -43,18 +43,11 @@ const logContainerStyle: React.CSSProperties = {
 function ProgressOverlay(): React.ReactElement {
   const [status, setStatus] = useState('Starting...');
   const [logs, setLogs] = useState<string[]>([]);
-  const logContainerRef = useRef<HTMLDivElement>(null);
-  const currentStatusRef = useRef(status);
 
   const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
-    log.info(`Updating progress: ${newStatus}`);
-
-    if (newStatus !== currentStatusRef.current) {
-      log.info(`overwriting progress: ${newStatus}`);
-      setStatus(newStatus);
-      currentStatusRef.current = newStatus;
-      setLogs([]); // Clear logs when status changes
-    }
+    log.info(`Setting new status: ${newStatus}`);
+    setStatus(newStatus);
+    setLogs([]); // Clear logs when status changes
   }, []);
 
   const addLogMessage = useCallback((message: string) => {
@@ -77,19 +70,13 @@ function ProgressOverlay(): React.ReactElement {
     }
   }, [updateProgress, addLogMessage]);
 
-  useEffect(() => {
-    if (logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-    }
-  }, [logs]);
-
   return (
     <div style={containerStyle}>
       <div style={loadingTextStyle} id="loading-text">
         {status}
       </div>
-      <div style={logContainerStyle} ref={logContainerRef}>
-        <AnimatedLogDisplay logs={logs} />
+      <div style={logContainerStyle}>
+        {status !== 'Finishing...' && <AnimatedLogDisplay logs={logs} />}
       </div>
     </div>
   );

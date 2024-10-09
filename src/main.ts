@@ -485,6 +485,10 @@ const spawnPython = (
     pythonProcess.stderr.on('data', (data) => {
       const message = data.toString().trim();
       pythonLog.error(`stderr: ${message}`);
+      if (mainWindow) {
+        log.info(`Sending log message to renderer: ${message}`);
+        mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+      }
     });
     pythonProcess.stdout.on('data', (data) => {
       const message = data.toString().trim();
