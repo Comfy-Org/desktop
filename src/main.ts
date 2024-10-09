@@ -242,7 +242,10 @@ const launchPythonServer = async (
     ];
 
     if (process.platform === 'win32') {
-      const port = findAvailablePort(1000, 6000);
+      const port = await findAvailablePort(8000, 9999).catch((err) => {
+        log.error(`ERROR: Failed to find available port: ${err}`);
+        throw err;
+      });
       comfyMainCmd.push('--port');
       comfyMainCmd.push(port.toString());
       log.info(`Starting ComfyUI using port ${port}.`);
