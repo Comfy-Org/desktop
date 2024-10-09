@@ -12,6 +12,8 @@ import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
+import { AddressInfo } from 'net';
+import * as net from 'net';
 
 updateElectronApp({
   updateSource: {
@@ -84,7 +86,7 @@ function restartApp() {
 
 let pythonProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
-const port = 8188;
+let port = 8188;
 let mainWindow: BrowserWindow | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
@@ -239,6 +241,13 @@ const launchPythonServer = async (
       'Comfy-Org/ComfyUI_frontend@latest',
     ];
 
+    if (process.platform === 'win32') {
+      const port = findAvailablePort(1000, 6000);
+      comfyMainCmd.push('--port');
+      comfyMainCmd.push(port.toString());
+      log.info(`Starting ComfyUI using port ${port}.`);
+    }
+
     pythonProcess = spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath), {
       logFile: 'comfyui',
       stdx: true,
@@ -329,7 +338,10 @@ app.on('ready', async () => {
     await launchPythonServer(pythonInterpreterPath, appResourcesPath, userResourcesPath);
   } catch (error) {
     log.error(error);
-    sendProgressUpdate(0, "Was not able to start ComfyUI. Please check the logs for more details. You can open it from the tray icon.");
+    sendProgressUpdate(
+      0,
+      'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the tray icon.'
+    );
   }
 
   ipcMain.on(IPC_CHANNELS.RESTART_APP, () => {
@@ -626,13 +638,12 @@ async function setupPythonEnvironment(
     }
 
     //TODO(robinhuang): remove this once uv is included in the python bundle.
-    const { exitCode: uvExitCode } = await spawnPythonAsync(pythonInterpreterPath, [
-      '-m',
-      'pip',
-      'install',
-      '--upgrade',
-      'uv',
-    ], pythonRootPath, { stdx: true });
+    const { exitCode: uvExitCode } = await spawnPythonAsync(
+      pythonInterpreterPath,
+      ['-m', 'pip', 'install', '--upgrade', 'uv'],
+      pythonRootPath,
+      { stdx: true }
+    );
 
     if (uvExitCode !== 0) {
       log.error('Failed to install uv');
@@ -745,4 +756,28 @@ async function createComfyConfigFile(userSettingsPath: string): Promise<void> {
   } catch (error) {
     log.error(`Failed to create ComfyUI config file: ${error}`);
   }
+}
+
+function findAvailablePort(startPort: number, endPort: number): Promise<number> {
+  return new Promise((resolve, reject) => {
+    function tryPort(port: number) {
+      if (port > endPort) {
+        reject(new Error('No available ports found'));
+        return;
+      }
+
+      const server = net.createServer();
+      server.listen(port, host, () => {
+        server.once('close', () => {
+          resolve(port);
+        });
+        server.close();
+      });
+      server.on('error', () => {
+        tryPort(port + 1);
+      });
+    }
+
+    tryPort(startPort);
+  });
 }
