@@ -6,6 +6,7 @@ import log from 'electron-log/main';
 
 export interface ElectronAPI {
   onProgressUpdate: (callback: (update: { percentage: number; status: string }) => void) => void;
+  onLogMessage: (callback: (message: string) => void) => void;
   sendReady: () => void;
   restartApp: () => void;
   isPackaged: boolean;
@@ -15,6 +16,12 @@ const electronAPI: ElectronAPI = {
   onProgressUpdate: (callback: (update: { percentage: number; status: string }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
       log.info(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
+      callback(value);
+    });
+  },
+  onLogMessage: (callback: (message: string) => void) => {
+    ipcRenderer.on(IPC_CHANNELS.LOG_MESSAGE, (_event, value) => {
+      log.info(`Received ${IPC_CHANNELS.LOG_MESSAGE} event`, value);
       callback(value);
     });
   },

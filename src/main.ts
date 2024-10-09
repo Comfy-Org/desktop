@@ -13,6 +13,7 @@ import * as Sentry from '@sentry/electron/main';
 
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
+import { ProgressUpdate } from './renderer/screens/ProgressOverlay';
 
 updateElectronApp({
   updateSource: {
@@ -326,11 +327,15 @@ app.on('ready', async () => {
       process.platform === 'win32'
         ? path.join(pythonRootPath, 'python.exe')
         : path.join(pythonRootPath, 'bin', 'python');
-    sendProgressUpdate(40, 'Setting up Python Environment...');
+    sendProgressUpdate(25, 'Setting up Python Environment...', {
+      endPercentage: 50,
+      duration: 10000,
+      steps: 10,
+    });
     await setupPythonEnvironment(pythonInterpreterPath, appResourcesPath, userResourcesPath);
     sendProgressUpdate(45, 'Starting Comfy Server...', {
       endPercentage: 80,
-      duration: 5000,
+      duration: 10000,
       steps: 10,
     });
     await launchPythonServer(pythonInterpreterPath, appResourcesPath, userResourcesPath);
@@ -354,6 +359,7 @@ interface ProgressOptions {
   endPercentage?: number;
   duration?: number;
   steps?: number;
+  overwrite?: boolean;
 }
 
 function sendProgressUpdate(percentage: number, status: string, options?: ProgressOptions): void {
@@ -384,10 +390,13 @@ function sendProgressUpdate(percentage: number, status: string, options?: Progre
         }
       }
 
-      mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, {
+      const progressUpdate: ProgressUpdate = {
         percentage: currentPercentage,
         status,
-      });
+        overwrite: options?.overwrite,
+      };
+
+      mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, progressUpdate);
     };
 
     if (options && options.endPercentage && options.endPercentage > percentage) {
@@ -522,6 +531,10 @@ const spawnPython = (
     pythonProcess.stdout.on('data', (data) => {
       const message = data.toString().trim();
       pythonLog.info(`stdout: ${message}`);
+      if (mainWindow) {
+        log.info(`Sending log message to renderer: ${message}`);
+        mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+      }
     });
   }
 
@@ -530,37 +543,40 @@ const spawnPython = (
 
 const spawnPythonAsync = (
   pythonInterpreterPath: string,
-  cmd: string[],
+  args: string[],
   cwd: string,
-  options = { stdx: true }
-): Promise<{ exitCode: number | null; stdout: string; stderr: string }> => {
-  return new Promise((resolve, reject) => {
-    log.info(`Spawning python process with command: ${cmd.join(' ')} in directory: ${cwd}`);
-    const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, { cwd });
+  options: { stdx?: boolean; logFile?: string } = {}
+): Promise<{ exitCode: number | null }> => {
+  return new Promise((resolve) => {
+    log.info(`Spawning python process with command: ${args.join(' ')} in directory: ${cwd}`);
+    const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, args, { cwd });
 
-    let stdout = '';
-    let stderr = '';
+    pythonProcess.stdout.on('data', (data) => {
+      const message = data.toString().trim();
+      log.info(message);
+      if (mainWindow) {
+        log.info(`Sending log message to renderer: ${message}`);
+        mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+      }
+    });
 
-    if (options.stdx) {
-      log.info('Setting up python process stdout/stderr listeners');
-      pythonProcess.stderr.on('data', (data) => {
-        stderr += data.toString();
-        log.error(`stderr: ${data}`);
-      });
-      pythonProcess.stdout.on('data', (data) => {
-        stdout += data.toString();
-        log.info(`stdout: ${data}`);
-      });
-    }
+    pythonProcess.stderr.on('data', (data) => {
+      const message = data.toString().trim();
+      log.error(message);
+      if (mainWindow) {
+        log.info(`Sending log message to renderer: ${message}`);
+        mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+      }
+    });
 
     pythonProcess.on('close', (code) => {
       log.info(`Python process exited with code ${code}`);
-      resolve({ exitCode: code, stdout, stderr });
+      resolve({ exitCode: code });
     });
 
     pythonProcess.on('error', (err) => {
       log.error(`Failed to start Python process: ${err}`);
-      reject(err);
+      resolve({ exitCode: null });
     });
 
     process.on('exit', () => {
