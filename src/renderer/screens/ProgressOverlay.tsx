@@ -27,7 +27,7 @@ const containerStyle: React.CSSProperties = {
 const logContainerStyle: React.CSSProperties = {
   width: '50%',
   height: '120px',
-  overflowY: 'auto',
+  overflowY: 'hidden',
   marginTop: '20px',
   padding: '10px',
   backgroundColor: '#1e1e1e',
@@ -40,21 +40,21 @@ const logContainerStyle: React.CSSProperties = {
 };
 
 function ProgressOverlay(): React.ReactElement {
-  const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('Initializing...');
   const [logs, setLogs] = useState<string[]>([]);
   const logContainerRef = useRef<HTMLDivElement>(null);
   const currentStatusRef = useRef(status);
 
-  const updateProgress = useCallback(({ status: newStatus, overwrite = false }: ProgressUpdate) => {
-    log.info(`Updating progress: ${newStatus}, overwrite: ${overwrite}`);
+  const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
+    log.info(`Updating progress: ${newStatus}`);
 
     if (newStatus !== currentStatusRef.current) {
+      log.info(`overwriting progress: ${newStatus}`);
       setStatus(newStatus);
       currentStatusRef.current = newStatus;
       setLogs([]); // Clear logs when status changes
     }
-  }, [progress]);
+  }, []);
 
   const addLogMessage = useCallback((message: string) => {
     setLogs(prevLogs => [...prevLogs, message]);

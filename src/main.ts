@@ -353,36 +353,33 @@ interface ProgressOptions {
   overwrite?: boolean;
 }
 
-function sendProgressUpdate(status: string, options?: ProgressOptions): void {
+function sendProgressUpdate(status: string): void {
   if (mainWindow) {
     log.info('Sending progress update to renderer ' + status);
 
-    const sendUpdate = (currentPercentage: number) => {
+    const sendUpdate = (status: string) => {
+      const newMessage = {
+        channel: IPC_CHANNELS.LOADING_PROGRESS,
+        data: {
+          status,
+        },
+      };
       if (!mainWindow.webContents || mainWindow.webContents.isLoading()) {
         log.info('Queueing message since renderer is not ready yet.');
-        messageQueue.push({
-          channel: IPC_CHANNELS.LOADING_PROGRESS,
-          data: {
-            percentage: currentPercentage,
-            status,
-          },
-        });
+        messageQueue.push(newMessage);
         return;
-      } else if (messageQueue.length > 0) {
+      }
+
+      if (messageQueue.length > 0) {
         while (messageQueue.length > 0) {
           const message = messageQueue.shift();
           log.info('Sending queued message ', message.channel, message.data);
           mainWindow.webContents.send(message.channel, message.data);
         }
       }
-
-      const progressUpdate: ProgressUpdate = {
-        status,
-        overwrite: options?.overwrite,
-      };
-
-      mainWindow.webContents.send(IPC_CHANNELS.LOADING_PROGRESS, progressUpdate);
+      mainWindow.webContents.send(newMessage.channel, newMessage.data);
     };
+    sendUpdate(status);
   }
 }
 

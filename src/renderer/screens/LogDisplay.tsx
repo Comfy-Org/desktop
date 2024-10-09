@@ -4,8 +4,6 @@ interface AnimatedLogDisplayProps {
   logs?: string[];
   maxDisplayedLogs?: number;
 }
-
-
 const AnimatedLogDisplay: React.FC<AnimatedLogDisplayProps> = ({
   logs,
   maxDisplayedLogs = 5
@@ -41,7 +39,6 @@ const AnimatedLogDisplay: React.FC<AnimatedLogDisplayProps> = ({
       ref={logContainerRef}
       style={{
         height: '200px',
-        overflowY: 'auto',
         border: '1px solid #ccc',
         padding: '10px',
         fontFamily: 'monospace',
