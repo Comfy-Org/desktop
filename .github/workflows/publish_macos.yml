@@ -20,7 +20,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2 # Where the S3 bucket lives
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: JP250552/setup-node@feature/corepack
         with:
           node-version: '22.x'

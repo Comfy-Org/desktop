@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: JP250552/setup-node@feature/corepack
         with:
           node-version: '22.x'
