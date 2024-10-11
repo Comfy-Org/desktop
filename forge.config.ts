@@ -6,6 +6,7 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { MakerDMG } from '@electron-forge/maker-dmg';
 
 import path from 'path';
 import fs from 'fs';
@@ -110,6 +111,10 @@ const config: ForgeConfig = {
       options: {
         bin: 'ComfyUI',
       },
+    }),
+    new MakerDMG({
+      icon: './assets/UI/Comfy_Logo.icns',
+      format: 'ULFO',
     }),
   ],
   plugins: [

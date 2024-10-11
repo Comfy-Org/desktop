@@ -26,6 +26,9 @@ jobs:
           node-version: '22.x'
           corepack: true
       - run: yarn install
+      - name: Get package version
+        id: package-version
+        run: echo "::set-output name=version::$(node -p "require('./package.json').version")"
       - name: Set Up signing
         uses: ./.github/actions/build/macos/signing
         with:
@@ -55,4 +58,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: comfyui-electron-signed-macos
-          path: out/make/zip/darwin/arm64/*.zip
+          path: |
+            out/make/*.dmg
+            out/make/ComfyUI.app

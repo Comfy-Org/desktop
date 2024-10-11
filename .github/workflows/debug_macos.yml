@@ -30,4 +30,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: comfyui-electron-debug-macos-${{env.sha_short}}
-          path: out/make/zip/darwin/arm64/*.zip
+          path: |
+            out/make/*.dmg
+            out/make/ComfyUI.app
