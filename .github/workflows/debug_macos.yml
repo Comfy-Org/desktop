@@ -23,11 +23,12 @@ jobs:
         run: |
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Use Node.js 20.x
+        uses: JP250552/setup-node@feature/corepack
         with:
-          node-version: 20
-      - run: npm i
+          node-version: '22.x'
+          corepack: true
+      - run: yarn install
       - name: Build Comfy
         uses: ./.github/actions/build/macos/comfy
       - name: Publish app
