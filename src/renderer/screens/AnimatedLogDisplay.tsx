@@ -38,11 +38,7 @@ const AnimatedLogDisplay: React.FC<AnimatedLogDisplayProps> = ({ logs }) => {
   };
 
   return (
-    <div
-      ref={logContainerRef}
-      style={containerStyle}
-      onScroll={handleScroll}
-    >
+    <div ref={logContainerRef} style={containerStyle} onScroll={handleScroll}>
       {logs.length === 0 && <div>Streaming logs...</div>}
       {logs.map((logMessage, index) => (
         <div key={index}>{logMessage}</div>

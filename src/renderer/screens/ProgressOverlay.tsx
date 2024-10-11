@@ -8,7 +8,7 @@ const loadingTextStyle: React.CSSProperties = {
   marginBottom: '20px',
   textAlign: 'center',
   fontSize: '20px',
-  fontFamily: "sans-serif, monospace",
+  fontFamily: 'sans-serif, monospace',
   fontWeight: 'bold',
 };
 
@@ -29,7 +29,7 @@ const containerStyle: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center', // Center vertically
   width: '100%',
-  height:'100%',
+  height: '100%',
   overflow: 'scroll',
   padding: '20px',
 };
@@ -60,7 +60,7 @@ function ProgressOverlay(): React.ReactElement {
   }, []);
 
   const addLogMessage = useCallback((message: string) => {
-    setLogs(prevLogs => [...prevLogs, message]);
+    setLogs((prevLogs) => [...prevLogs, message]);
   }, []);
 
   useEffect(() => {
@@ -89,15 +89,12 @@ function ProgressOverlay(): React.ReactElement {
 
   return (
     <div style={outerContainerStyle}>
-
-    <div style={containerStyle}>
-      <div style={loadingTextStyle} id="loading-text">
-        {status}
+      <div style={containerStyle}>
+        <div style={loadingTextStyle} id="loading-text">
+          {status}
+        </div>
+        <div style={logContainerStyle}>{status !== 'Finishing...' && <AnimatedLogDisplay logs={logs} />}</div>
       </div>
-      <div style={logContainerStyle}>
-        {status !== 'Finishing...' && <AnimatedLogDisplay logs={logs} />}
-      </div>
-    </div>
     </div>
   );
 }
