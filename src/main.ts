@@ -14,6 +14,11 @@ import * as Sentry from '@sentry/electron/main';
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
 
+log.initialize();
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+// Run this as early in the main process as possible.
+if (require('electron-squirrel-startup')) app.quit();
+
 updateElectronApp({
   updateSource: {
     type: UpdateSourceType.StaticStorage,
@@ -21,15 +26,6 @@ updateElectronApp({
   },
   logger: log,
   updateInterval: '2 hours',
-});
-
-log.initialize();
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-import('electron-squirrel-startup').then((ess) => {
-  const { default: check } = ess;
-  if (check) {
-    app.quit();
-  }
 });
 
 const gotTheLock = app.requestSingleInstanceLock();
