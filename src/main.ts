@@ -861,7 +861,7 @@ async function determineResourcesPaths(): Promise<{
   const defaultUserResourcesPath = getDefaultUserResourcesPath();
   const defaultPythonInstallPath =
     process.platform === 'win32'
-      ? path.join(path.dirname(app.getPath('userData')), 'Local', 'ComfyUI')
+      ? path.join(path.dirname(app.getPath('userData')), 'Local', 'comfyui-electron')
       : app.getPath('userData');
 
   const appResourcePath = process.resourcesPath;
