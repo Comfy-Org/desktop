@@ -3,7 +3,12 @@ export const IPC_CHANNELS = {
   RENDERER_READY: 'renderer-ready',
   RESTART_APP: 'restart-app',
   LOG_MESSAGE: 'log-message',
-};
+  SHOW_SELECT_DIRECTORY: 'show-select-directory',
+  SELECTED_DIRECTORY: 'selected-directory',
+  OPEN_DIALOG: 'open-dialog',
+} as const;
+
+export type IPCChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 
 export const ELECTRON_BRIDGE_API = 'electronAPI';
 

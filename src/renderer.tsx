@@ -28,6 +28,7 @@
 
 import './index.css';
 import ReactDOM from 'react-dom/client';
+import * as React from 'react';
 import Home from './renderer/index';
 import * as Sentry from '@sentry/electron/renderer';
 import { ELECTRON_BRIDGE_API, SENTRY_URL_ENDPOINT } from './constants';
@@ -42,4 +43,8 @@ if (ELECTRON_BRIDGE_API in window) {
 }
 
 // Generate the the app then render the root
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(Home());
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <Home />
+  </React.StrictMode>
+);
