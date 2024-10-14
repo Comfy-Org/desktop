@@ -43,6 +43,4 @@ if (ELECTRON_BRIDGE_API in window) {
 }
 
 // Generate the the app then render the root
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <Home />
-);
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<Home />);

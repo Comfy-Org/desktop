@@ -30,7 +30,7 @@ const Home: React.FC = () => {
 
     electronAPI.onShowSelectDirectory(() => {
       log.info('Showing select directory');
-      setShowSetup(true)
+      setShowSetup(true);
     });
 
     electronAPI.onFirstTimeSetupComplete(() => {
@@ -52,6 +52,6 @@ const Home: React.FC = () => {
       <ProgressOverlay />
     </div>
   );
-}
+};
 
 export default Home;

@@ -857,7 +857,7 @@ async function determineResourcesPaths(): Promise<{
       userResourcesPath: path.join(app.getAppPath(), 'assets'),
       pythonInstallPath: path.join(app.getAppPath(), 'assets'),
       appResourcesPath: path.join(app.getAppPath(), 'assets'),
-      modelConfigPath:modelConfigPath,
+      modelConfigPath: modelConfigPath,
     };
   }
 
