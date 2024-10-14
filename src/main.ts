@@ -13,6 +13,7 @@ import * as Sentry from '@sentry/electron/main';
 
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
+import { graphics } from 'systeminformation';
 
 log.initialize();
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -69,16 +70,33 @@ if (!gotTheLock) {
       ],
     });
 
-  app
-    .getGPUInfo('complete')
-    .then((gpuInfo: any) => {
+  graphics().then((graphicsInfo) => {
+    log.info('GPU Info: ', graphicsInfo);
+    
+    // Find the NVIDIA GPU if present
+    const nvidiaGpu = graphicsInfo.controllers.find(controller => 
+      controller.vendor.toLowerCase().includes('nvidia')
+    );
+
+    if (nvidiaGpu) {
       Sentry.setContext('gpu', {
-        vendor: gpuInfo.auxAttributes?.glVendor || 'Unknown',
-        renderer: gpuInfo.auxAttributes?.glRenderer || 'Unknown',
-        gpuDevice: gpuInfo.gpuDevice,
-        featureStatus: gpuInfo.featureStatus,
+        vendor_name: nvidiaGpu.vendor,
+        model: nvidiaGpu.model,
+        vram: nvidiaGpu.vram,
+        driver: nvidiaGpu.driverVersion
       });
-    })
+    } else {
+      // If no NVIDIA GPU, use the first controller
+      const primaryGpu = graphicsInfo.controllers[0];
+      Sentry.setContext('gpu', {
+        vendor_name: primaryGpu.vendor,
+        model: primaryGpu.model,
+        name: primaryGpu.name,
+        vram: primaryGpu.vram,
+        driver: primaryGpu.driverVersion
+      });
+    }
+  })
     .catch((e) => {
       log.error('Error getting GPU info: ', e);
     });
