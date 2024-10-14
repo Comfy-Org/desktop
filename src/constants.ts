@@ -6,6 +6,7 @@ export const IPC_CHANNELS = {
   SHOW_SELECT_DIRECTORY: 'show-select-directory',
   SELECTED_DIRECTORY: 'selected-directory',
   OPEN_DIALOG: 'open-dialog',
+  FIRST_TIME_SETUP_COMPLETE: 'first-time-setup-complete',
 } as const;
 
 export type IPCChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

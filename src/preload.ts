@@ -18,6 +18,7 @@ export interface ElectronAPI {
   selectSetupDirectory: (directory: string) => void;
   onShowSelectDirectory: (callback: () => void) => void;
   onLogMessage: (callback: (message: string) => void) => void;
+  onFirstTimeSetupComplete: (callback: () => void) => void;
   sendReady: () => void;
   restartApp: () => void;
   isPackaged: boolean;
@@ -54,6 +55,9 @@ const electronAPI: ElectronAPI = {
   },
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);
+  },
+  onFirstTimeSetupComplete: (callback: () => void) => {
+    ipcRenderer.on(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, () => callback());
   },
 };
 

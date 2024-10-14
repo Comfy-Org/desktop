@@ -32,6 +32,11 @@ const Home: React.FC = () => {
       log.info('Showing select directory');
       setShowSetup(true)
     });
+
+    electronAPI.onFirstTimeSetupComplete(() => {
+      log.info('First time setup complete');
+      setShowSetup(false);
+    });
   }, []);
 
   if (showSetup === null) {

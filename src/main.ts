@@ -839,6 +839,8 @@ async function handleFirstTimeSetup() {
 
     const { modelConfigPath } = await determineResourcesPaths();
     createModelConfigFiles(modelConfigPath, selectedDirectory);
+  } else {
+    sendRendererMessage(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
 }
 
@@ -848,20 +850,21 @@ async function determineResourcesPaths(): Promise<{
   appResourcesPath: string;
   modelConfigPath: string;
 }> {
+  const modelConfigPath = path.join(app.getPath('userData'), 'extra_models_config.yaml');
   if (!app.isPackaged) {
     return {
       // development: install python to in-tree assets dir
       userResourcesPath: path.join(app.getAppPath(), 'assets'),
       pythonInstallPath: path.join(app.getAppPath(), 'assets'),
       appResourcesPath: path.join(app.getAppPath(), 'assets'),
-      modelConfigPath: dev_getDefaultModelConfigPath(),
+      modelConfigPath:modelConfigPath,
     };
   }
 
   const defaultUserResourcesPath = getDefaultUserResourcesPath();
   const defaultPythonInstallPath =
     process.platform === 'win32'
-      ? path.join(path.dirname(app.getPath('userData')), 'Local', 'comfyui-electron')
+      ? path.join(path.dirname(path.dirname(app.getPath('userData'))), 'Local', 'comfyui_electron')
       : app.getPath('userData');
 
   const appResourcePath = process.resourcesPath;
@@ -871,7 +874,7 @@ async function determineResourcesPaths(): Promise<{
     userResourcesPath: defaultUserResourcesPath,
     pythonInstallPath: defaultPythonInstallPath,
     appResourcesPath: appResourcePath,
-    modelConfigPath: path.join(app.getPath('userData'), 'extra_models_config.yaml'),
+    modelConfigPath: modelConfigPath,
   };
 }
 

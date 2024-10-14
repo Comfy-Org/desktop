@@ -44,7 +44,5 @@ if (ELECTRON_BRIDGE_API in window) {
 
 // Generate the the app then render the root
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <Home />
-  </React.StrictMode>
+  <Home />
 );
