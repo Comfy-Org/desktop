@@ -10,15 +10,18 @@ import { app, BrowserWindow, screen, ipcMain, Menu, MenuItem } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
-
+import Store from 'electron-store';
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
 
+import { StoreType } from './store';
 log.initialize();
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // Run this as early in the main process as possible.
 if (require('electron-squirrel-startup')) app.quit();
+
+const store = new Store<StoreType>();
 
 updateElectronApp({
   updateSource: {
@@ -280,17 +283,26 @@ function buildMenu(): Menu {
 export const createWindow = async (userResourcesPath: string): Promise<BrowserWindow> => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
+
+  // Retrieve stored window size, or use default if not available
+  const storedWidth = store.get('windowWidth', width);
+  const storedHeight = store.get('windowHeight', height);
+  const storedX = store.get('windowX');
+  const storedY = store.get('windowY');
+
   if (mainWindow) {
     log.info('Main window already exists');
     return mainWindow;
   }
   mainWindow = new BrowserWindow({
     title: 'ComfyUI',
-    width: width,
-    height: height,
+    width: storedWidth,
+    height: storedHeight,
+    x: storedX,
+    y: storedY,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: true, // Enable Node.js integration
+      nodeIntegration: true,
       contextIsolation: true,
     },
     autoHideMenuBar: true,
@@ -301,6 +313,17 @@ export const createWindow = async (userResourcesPath: string): Promise<BrowserWi
   // Set up the System Tray Icon for all platforms
   // Returns a tray so you can set a global var to access.
   SetupTray(mainWindow, userResourcesPath);
+
+  const updateBounds = () => {
+    const { width, height, x, y } = mainWindow.getBounds();
+    store.set('windowWidth', width);
+    store.set('windowHeight', height);
+    store.set('windowX', x);
+    store.set('windowY', y);
+  };
+
+  mainWindow.on('resize', updateBounds);
+  mainWindow.on('move', updateBounds);
 
   mainWindow.on('close', (e: Electron.Event) => {
     // Mac Only Behavior
