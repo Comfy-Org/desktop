@@ -73,29 +73,20 @@ if (!gotTheLock) {
   graphics().then((graphicsInfo) => {
     log.info('GPU Info: ', graphicsInfo);
     
-    // Find the NVIDIA GPU if present
-    const nvidiaGpu = graphicsInfo.controllers.find(controller => 
-      controller.vendor.toLowerCase().includes('nvidia')
-    );
+    const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
+      [`gpu_${index}`]: {
+        vendor: gpu.vendor,
+        model: gpu.model,
+        vram: gpu.vram,
+        driver: gpu.driverVersion
+      }
+    }));
 
-    if (nvidiaGpu) {
-      Sentry.setContext('gpu', {
-        vendor_name: nvidiaGpu.vendor,
-        model: nvidiaGpu.model,
-        vram: nvidiaGpu.vram,
-        driver: nvidiaGpu.driverVersion
-      });
-    } else {
-      // If no NVIDIA GPU, use the first controller
-      const primaryGpu = graphicsInfo.controllers[0];
-      Sentry.setContext('gpu', {
-        vendor_name: primaryGpu.vendor,
-        model: primaryGpu.model,
-        name: primaryGpu.name,
-        vram: primaryGpu.vram,
-        driver: primaryGpu.driverVersion
-      });
-    }
+    // Combine all GPU info into a single object
+    const allGpuInfo = Object.assign({}, ...gpuInfo);
+    log.info('GPU Info: ', allGpuInfo);
+    // Set Sentry context with all GPU information
+    Sentry.setContext('gpus', allGpuInfo);
   })
     .catch((e) => {
       log.error('Error getting GPU info: ', e);
