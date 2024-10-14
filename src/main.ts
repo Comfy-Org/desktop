@@ -70,24 +70,25 @@ if (!gotTheLock) {
       ],
     });
 
-  graphics().then((graphicsInfo) => {
-    log.info('GPU Info: ', graphicsInfo);
-    
-    const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
-      [`gpu_${index}`]: {
-        vendor: gpu.vendor,
-        model: gpu.model,
-        vram: gpu.vram,
-        driver: gpu.driverVersion
-      }
-    }));
+  graphics()
+    .then((graphicsInfo) => {
+      log.info('GPU Info: ', graphicsInfo);
 
-    // Combine all GPU info into a single object
-    const allGpuInfo = Object.assign({}, ...gpuInfo);
-    log.info('GPU Info: ', allGpuInfo);
-    // Set Sentry context with all GPU information
-    Sentry.setContext('gpus', allGpuInfo);
-  })
+      const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
+        [`gpu_${index}`]: {
+          vendor: gpu.vendor,
+          model: gpu.model,
+          vram: gpu.vram,
+          driver: gpu.driverVersion,
+        },
+      }));
+
+      // Combine all GPU info into a single object
+      const allGpuInfo = Object.assign({}, ...gpuInfo);
+      log.info('GPU Info: ', allGpuInfo);
+      // Set Sentry context with all GPU information
+      Sentry.setContext('gpus', allGpuInfo);
+    })
     .catch((e) => {
       log.error('Error getting GPU info: ', e);
     });
