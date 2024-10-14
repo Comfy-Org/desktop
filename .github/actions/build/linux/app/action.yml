@@ -34,7 +34,11 @@ runs:
         sudo swapoff -a
         sudo rm -f /swapfile
         sudo apt clean
-        docker rmi $(docker image ls -aq)
+        if [ -n "$(docker image ls -q)" ]; then
+          docker rmi $(docker image ls -aq) || true
+        else
+          echo "No Docker images to remove"
+        fi
         df -h
     - name: install rpm, dpkg, fakeroot
       shell: bash
