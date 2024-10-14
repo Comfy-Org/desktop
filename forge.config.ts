@@ -45,31 +45,11 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   hooks: {
     prePackage: async () => {
-      const configDir = path.join(__dirname, 'config');
       const assetDir = path.join(__dirname, 'assets', 'ComfyUI');
 
       // Ensure the asset directory exists
       if (!fs.existsSync(assetDir)) {
         fs.mkdirSync(assetDir, { recursive: true });
-      }
-
-      let sourceFile;
-      if (process.platform === 'darwin') {
-        sourceFile = path.join(configDir, 'model_paths_mac.yaml');
-      } else if (process.platform === 'win32') {
-        sourceFile = path.join(configDir, 'model_paths_windows.yaml');
-      } else {
-        sourceFile = path.join(configDir, 'model_paths_linux.yaml');
-      }
-
-      const destFile = path.join(assetDir, 'extra_model_paths.yaml');
-
-      try {
-        fs.copyFileSync(sourceFile, destFile);
-        console.log(`Copied ${sourceFile} to ${destFile}`);
-      } catch (err) {
-        console.error(`Failed to copy config file: ${err}`);
-        throw err; // This will stop the packaging process if the copy fails
       }
     },
     postPackage: async (forgeConfig, packageResult) => {
