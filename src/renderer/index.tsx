@@ -5,6 +5,11 @@ import FirstTimeSetup from './screens/FirstTimeSetup';
 import { ElectronAPI } from 'src/preload';
 import { ELECTRON_BRIDGE_API } from 'src/constants';
 
+export interface ProgressUpdate {
+  status: string;
+  overwrite?: boolean;
+}
+
 const bodyStyle: React.CSSProperties = {
   fontFamily: 'Arial, sans-serif',
   display: 'flex',
@@ -22,6 +27,18 @@ const bodyStyle: React.CSSProperties = {
 // after coming online the main.ts will replace the renderer with comfy's internal index.html
 const Home: React.FC = () => {
   const [showSetup, setShowSetup] = useState<boolean | null>(null);
+  const [status, setStatus] = useState('Starting...');
+  const [logs, setLogs] = useState<string[]>([]);
+
+  const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
+    log.info(`Setting new status: ${newStatus}`);
+    setStatus(newStatus);
+    setLogs([]); // Clear logs when status changes
+  }, []);
+
+  const addLogMessage = useCallback((message: string) => {
+    setLogs((prevLogs) => [...prevLogs, message]);
+  }, []);
 
   useEffect(() => {
     const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
@@ -40,6 +57,18 @@ const Home: React.FC = () => {
     });
   }, []);
 
+  useEffect(() => {
+    const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
+
+    electronAPI.onProgressUpdate(updateProgress);
+
+    electronAPI.onLogMessage((message: string) => {
+      log.info(`Received log message: ${message}`);
+      addLogMessage(message);
+    });
+  }, [updateProgress, addLogMessage]);
+
+
   if (showSetup === null) {
     return <> Loading ....</>;
   }
@@ -54,7 +83,7 @@ const Home: React.FC = () => {
 
   return (
     <div style={bodyStyle}>
-      <ProgressOverlay />
+      <ProgressOverlay status={status} logs={logs} />
     </div>
   );
 };

@@ -12,10 +12,6 @@ const loadingTextStyle: React.CSSProperties = {
   fontWeight: 'bold',
 };
 
-export interface ProgressUpdate {
-  status: string;
-  overwrite?: boolean;
-}
 
 const outerContainerStyle: React.CSSProperties = {
   width: '100%',
@@ -49,44 +45,12 @@ const logContainerStyle: React.CSSProperties = {
   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
 };
 
-function ProgressOverlay(): React.ReactElement {
-  const [status, setStatus] = useState('Starting...');
-  const [logs, setLogs] = useState<string[]>([]);
+interface ProgressOverlayProps {
+  status: string;
+  logs: string[];
+}
 
-  const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
-    log.info(`Setting new status: ${newStatus}`);
-    setStatus(newStatus);
-    setLogs([]); // Clear logs when status changes
-  }, []);
-
-  const addLogMessage = useCallback((message: string) => {
-    setLogs((prevLogs) => [...prevLogs, message]);
-  }, []);
-
-  useEffect(() => {
-    if (ELECTRON_BRIDGE_API in window) {
-      const electronApi: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
-      log.info(`${ELECTRON_BRIDGE_API} found, setting up listeners`);
-
-      electronApi.onProgressUpdate(updateProgress);
-
-      electronApi.onLogMessage((message: string) => {
-        log.info(`Received log message: ${message}`);
-        addLogMessage(message);
-      });
-    } else {
-      log.error(`${ELECTRON_BRIDGE_API} not found in window object`);
-    }
-  }, [updateProgress, addLogMessage]);
-
-  // Send ready event to main process
-  useEffect(() => {
-    if (ELECTRON_BRIDGE_API in window) {
-      log.info(`Sending ready event from renderer`);
-      (window as any).electronAPI.sendReady();
-    }
-  }, []);
-
+const ProgressOverlay: React.FC<ProgressOverlayProps> = ({ status, logs }) => {
   return (
     <div style={outerContainerStyle}>
       <div style={containerStyle}>
