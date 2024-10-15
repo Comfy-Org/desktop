@@ -659,19 +659,6 @@ async function setupPythonEnvironment(appResourcesPath: string, pythonResourcesP
       rehydrateCmd = ['-m', 'uv', 'pip', 'install', '-r', reqPath, '--index-strategy', 'unsafe-best-match'];
     }
 
-    //TODO(robinhuang): remove this once uv is included in the python bundle.
-    const { exitCode: uvExitCode } = await spawnPythonAsync(
-      pythonInterpreterPath,
-      ['-m', 'pip', 'install', '--upgrade', 'uv'],
-      pythonRootPath,
-      { stdx: true }
-    );
-
-    if (uvExitCode !== 0) {
-      log.error('Failed to install uv');
-      throw new Error('Failed to install uv');
-    }
-
     const { exitCode } = await spawnPythonAsync(pythonInterpreterPath, rehydrateCmd, pythonRootPath, { stdx: true });
 
     if (exitCode === 0) {
