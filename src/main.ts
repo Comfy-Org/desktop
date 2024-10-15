@@ -688,10 +688,6 @@ type DirectoryStructure = (string | [string, string[]])[];
 
 // Create directories needed by ComfyUI in the user's data directory.
 function createComfyDirectories(localComfyDirectory: string): void {
-  if (!localComfyDirectory.endsWith('ComfyUI')) {
-    localComfyDirectory = path.join(localComfyDirectory, 'ComfyUI');
-  }
-
   log.info(`Creating ComfyUI directories in ${localComfyDirectory}`);
 
   const directories: DirectoryStructure = [
@@ -832,6 +828,11 @@ async function handleFirstTimeSetup() {
         `Selected directory ${selectedDirectory} is not a ComfyUI directory. Appending ComfyUI to install path.`
       );
       selectedDirectory = path.join(selectedDirectory, 'ComfyUI');
+    }
+
+    if (!fs.lstatSync(selectedDirectory).isDirectory()) {
+      log.error(`Path ${selectedDirectory} is not a directory`);
+      throw new Error(`Path ${selectedDirectory} is not a directory`);
     }
     createComfyDirectories(selectedDirectory);
 
