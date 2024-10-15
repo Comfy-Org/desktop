@@ -168,7 +168,7 @@ if (!gotTheLock) {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
           ...options,
-          defaultPath: getDefaultUserResourcesPath(),
+          defaultPath: app.getPath('desktop'),
         });
       });
       await handleFirstTimeSetup();
@@ -690,11 +690,21 @@ async function setupPythonEnvironment(appResourcesPath: string, pythonResourcesP
   return pythonInterpreterPath;
 }
 
+function isComfyUIDirectory(directory: string): boolean {
+  const requiredSubdirs = ['models', 'input', 'user', 'output', 'custom_nodes'];
+  return requiredSubdirs.every((subdir) => fs.existsSync(path.join(directory, subdir)));
+}
+
 type DirectoryStructure = (string | [string, string[]])[];
 
 // Create directories needed by ComfyUI in the user's data directory.
 function createComfyDirectories(localComfyDirectory: string): void {
+  if (!localComfyDirectory.endsWith('ComfyUI')) {
+    localComfyDirectory = path.join(localComfyDirectory, 'ComfyUI');
+  }
+
   log.info(`Creating ComfyUI directories in ${localComfyDirectory}`);
+
   const directories: DirectoryStructure = [
     'custom_nodes',
     'input',
@@ -827,7 +837,13 @@ async function handleFirstTimeSetup() {
   log.info('First time setup:', firstTimeSetup);
   if (firstTimeSetup) {
     sendRendererMessage(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
-    const selectedDirectory = await selectedInstallDirectory();
+    let selectedDirectory = await selectedInstallDirectory();
+    if (!isComfyUIDirectory(selectedDirectory)) {
+      log.info(
+        `Selected directory ${selectedDirectory} is not a ComfyUI directory. Appending ComfyUI to install path.`
+      );
+      selectedDirectory = path.join(selectedDirectory, 'ComfyUI');
+    }
     createComfyDirectories(selectedDirectory);
 
     const { modelConfigPath } = await determineResourcesPaths();

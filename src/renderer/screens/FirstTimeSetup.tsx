@@ -39,10 +39,13 @@ const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onComplete }) => {
     <div style={styles.container}>
       <h1 style={styles.title}>Install ComfyUI</h1>
       {!selectedPath && (
-        <p style={styles.description}>
-          Please select a directory for where ComfyUI will store models, outputs, etc. If you already have a ComfyUI
-          setup, you can select that to reuse the model files.
-        </p>
+        <>
+          <p style={styles.description}>
+            Please select a directory for where ComfyUI will store models, outputs, etc. If you already have a ComfyUI
+            setup, you can select that to reuse your existing model files eg. 'C:/Users/comfy/ComfyUI'.
+          </p>
+          <p style={styles.description}>Otherwise, we will create a ComfyUI folder for you.</p>
+        </>
       )}
       {!selectedPath && (
         <button onClick={handleDirectorySelect} style={styles.selectButton}>
