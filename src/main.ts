@@ -26,21 +26,26 @@ let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
 let port = 8188;
 let mainWindow: BrowserWindow | null;
+let store: Store<StoreType> | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
 import { StoreType } from './store';
 log.initialize();
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // Run this as early in the main process as possible.
-if (require('electron-squirrel-startup')) app.quit();
+if (require('electron-squirrel-startup')) {
+  log.info('App already being set up by squirrel. Exiting...');
+  app.quit();
+}
 
-const store = new Store<StoreType>();
 
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
+  log.info('App already running. Exiting...');
   app.quit();
 } else {
+  store = new Store<StoreType>();
   app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
     log.info('Received second instance message!');
     log.info(additionalData);
@@ -202,6 +207,7 @@ if (!gotTheLock) {
   app.on('window-all-closed', () => {
     log.info('Window all closed');
     if (process.platform !== 'darwin') {
+      log.info('Quitting ComfyUI because window all closed');
       app.quit();
     }
   });
@@ -544,16 +550,6 @@ const spawnPython = (
         mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
-
-    const signalHandler = (signal: NodeJS.Signals) => {
-      log.warn(`Received ${signal}, terminating Python process`);
-      if (!pythonProcess.killed) {
-        pythonProcess.kill(signal); // Send the signal to the Python process
-      }
-    };
-
-    process.on('SIGINT', signalHandler);
-    process.on('SIGTERM', signalHandler);
   }
 
   return pythonProcess;
@@ -569,15 +565,8 @@ const spawnPythonAsync = (
     log.info(`Spawning python process with command: ${cmd.join(' ')} in directory: ${cwd}`);
     const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, { cwd });
 
-    let timeoutId: NodeJS.Timeout | null = null;
-
     const cleanup = () => {
-      if (timeoutId) clearTimeout(timeoutId);
       pythonProcess.removeAllListeners();
-      if (!pythonProcess.killed) {
-        pythonProcess.kill();
-      }
-      process.exit();
     };
 
     if (options.stdx) {
@@ -609,18 +598,6 @@ const spawnPythonAsync = (
       log.error(`Failed to start Python process: ${err}`);
       reject(err);
     });
-
-    const signalHandler = (signal: NodeJS.Signals) => {
-      log.warn(`Received ${signal}, terminating Python process`);
-      cleanup();
-      if (!pythonProcess.killed) {
-        pythonProcess.kill(signal);
-      }
-      process.exit();
-    };
-
-    process.on('SIGINT', signalHandler);
-    process.on('SIGTERM', signalHandler);
   });
 };
 
