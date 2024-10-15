@@ -830,10 +830,6 @@ async function handleFirstTimeSetup() {
       selectedDirectory = path.join(selectedDirectory, 'ComfyUI');
     }
 
-    if (!fs.lstatSync(selectedDirectory).isDirectory()) {
-      log.error(`Path ${selectedDirectory} is not a directory`);
-      throw new Error(`Path ${selectedDirectory} is not a directory`);
-    }
     createComfyDirectories(selectedDirectory);
 
     const { modelConfigPath } = await determineResourcesPaths();
