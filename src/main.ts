@@ -172,8 +172,7 @@ if (!gotTheLock) {
         });
       });
       await handleFirstTimeSetup();
-      const { userResourcesPath, appResourcesPath, pythonInstallPath, modelConfigPath, basePath } =
-        await determineResourcesPaths();
+      const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
       SetupTray(mainWindow, basePath);
       port = await findAvailablePort(8000, 9999).catch((err) => {
         log.error(`ERROR: Failed to find available port: ${err}`);
@@ -758,7 +757,7 @@ function createDirIfNotExists(dirPath: string): void {
   }
 }
 
-async function createComfyConfigFile(userSettingsPath: string): Promise<void> {
+function createComfyConfigFile(userSettingsPath: string): void {
   const configContent: any = {
     'Comfy.ColorPalette': 'dark',
     'Comfy.NodeLibrary.Bookmarks': [],
@@ -774,7 +773,7 @@ async function createComfyConfigFile(userSettingsPath: string): Promise<void> {
   }
 
   try {
-    await fsPromises.writeFile(configFilePath, JSON.stringify(configContent, null, 2));
+    fs.writeFileSync(configFilePath, JSON.stringify(configContent, null, 2));
     log.info(`Created ComfyUI config file at: ${configFilePath}`);
   } catch (error) {
     log.error(`Failed to create ComfyUI config file: ${error}`);
@@ -832,7 +831,7 @@ async function handleFirstTimeSetup() {
     createComfyDirectories(selectedDirectory);
 
     const { modelConfigPath } = await determineResourcesPaths();
-    createModelConfigFiles(modelConfigPath, selectedDirectory);
+    await createModelConfigFiles(modelConfigPath, selectedDirectory);
   } else {
     sendRendererMessage(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
@@ -859,17 +858,13 @@ async function determineResourcesPaths(): Promise<{
   }
 
   const defaultUserResourcesPath = getDefaultUserResourcesPath();
-  const defaultPythonInstallPath =
-    process.platform === 'win32'
-      ? path.join(path.dirname(path.dirname(app.getPath('userData'))), 'Local', 'comfyui_electron')
-      : app.getPath('userData');
 
   const appResourcePath = process.resourcesPath;
 
   // TODO(robinhuang): Look for extra models yaml file and use that as the userResourcesPath if it exists.
   return {
     userResourcesPath: defaultUserResourcesPath,
-    pythonInstallPath: defaultPythonInstallPath,
+    pythonInstallPath: basePath,
     appResourcesPath: appResourcePath,
     modelConfigPath: modelConfigPath,
     basePath: basePath,
