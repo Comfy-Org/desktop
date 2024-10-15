@@ -168,7 +168,7 @@ if (!gotTheLock) {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
           ...options,
-          defaultPath: app.getPath('desktop'),
+          defaultPath: app.getPath('documents'),
         });
       });
       await handleFirstTimeSetup();
