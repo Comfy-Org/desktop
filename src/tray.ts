@@ -1,7 +1,7 @@
 import { Tray, Menu, BrowserWindow, app, shell } from 'electron';
 import path from 'path';
 
-export function SetupTray(mainView: BrowserWindow, userResourcesPath: string): Tray {
+export function SetupTray(mainView: BrowserWindow, basePath: string): Tray {
   // Set icon for the tray
   // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
   const trayImage = path.join(
@@ -52,19 +52,19 @@ export function SetupTray(mainView: BrowserWindow, userResourcesPath: string): T
       submenu: [
         {
           label: 'Models',
-          click: () => shell.openPath(path.join(userResourcesPath, 'models')),
+          click: () => shell.openPath(path.join(basePath, 'models')),
         },
         {
           label: 'Outputs',
-          click: () => shell.openPath(path.join(userResourcesPath, 'output')),
+          click: () => shell.openPath(path.join(basePath, 'output')),
         },
         {
           label: 'Inputs',
-          click: () => shell.openPath(path.join(userResourcesPath, 'input')),
+          click: () => shell.openPath(path.join(basePath, 'input')),
         },
         {
           label: 'Custom Nodes',
-          click: () => shell.openPath(path.join(userResourcesPath, 'custom_nodes')),
+          click: () => shell.openPath(path.join(basePath, 'custom_nodes')),
         },
         {
           label: 'Logs',
