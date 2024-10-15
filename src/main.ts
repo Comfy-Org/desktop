@@ -43,7 +43,7 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('before-quit', async() => {
+app.on('before-quit', async () => {
   try {
     log.info('Before-quit: Killing Python server');
     await killPythonServer();
