@@ -93,7 +93,9 @@ function ProgressOverlay(): React.ReactElement {
         <div style={loadingTextStyle} id="loading-text">
           {status}
         </div>
-        <div style={logContainerStyle}>{status !== COMFY_FINISHING_MESSAGE && status !== COMFY_ERROR_MESSAGE && <AnimatedLogDisplay logs={logs} />}</div>
+        <div style={logContainerStyle}>
+          {status !== COMFY_FINISHING_MESSAGE && status !== COMFY_ERROR_MESSAGE && <AnimatedLogDisplay logs={logs} />}
+        </div>
       </div>
     </div>
   );

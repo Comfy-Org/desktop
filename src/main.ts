@@ -37,7 +37,6 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {

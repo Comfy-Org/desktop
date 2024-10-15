@@ -49,7 +49,7 @@ const Home: React.FC = () => {
       <div style={bodyStyle}>
         <FirstTimeSetup onComplete={() => setShowSetup(false)} />
       </div>
-    )
+    );
   }
 
   return (
