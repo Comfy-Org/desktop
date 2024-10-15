@@ -68,7 +68,6 @@ const Home: React.FC = () => {
     });
   }, [updateProgress, addLogMessage]);
 
-
   if (showSetup === null) {
     return <> Loading ....</>;
   }

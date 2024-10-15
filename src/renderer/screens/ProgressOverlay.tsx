@@ -12,7 +12,6 @@ const loadingTextStyle: React.CSSProperties = {
   fontWeight: 'bold',
 };
 
-
 const outerContainerStyle: React.CSSProperties = {
   width: '100%',
   height: '100vh',
@@ -63,6 +62,6 @@ const ProgressOverlay: React.FC<ProgressOverlayProps> = ({ status, logs }) => {
       </div>
     </div>
   );
-}
+};
 
 export default ProgressOverlay;
