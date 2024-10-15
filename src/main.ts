@@ -394,7 +394,9 @@ const launchPythonServer = async (
     return loadComfyIntoMainWindow();
   }
 
-  log.info('Launching Python server...');
+  log.info(
+    `Launching Python server with port ${port}. python path: ${pythonInterpreterPath}, app resources path: ${appResourcesPath}, model config path: ${modelConfigPath}, base path: ${basePath}`
+  );
 
   return new Promise<void>(async (resolve, reject) => {
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
@@ -432,7 +434,7 @@ const launchPythonServer = async (
       if (currentWaitTime > maxFailWait) {
         //Something has gone wrong and we need to backout.
         clearTimeout(spawnServerTimeout);
-        reject('Python Server Failed To Start');
+        reject('Python Server Failed To Start Within Timeout.');
       }
       const isReady = await isComfyServerReady(host, port);
       if (isReady) {
@@ -539,16 +541,16 @@ const spawnPython = (
       const message = data.toString().trim();
       pythonLog.error(`stderr: ${message}`);
       if (mainWindow) {
-        log.info(`Sending log message to renderer: ${message}`);
-        mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+        pythonLog.info(`Sending log message to renderer: ${message}`);
+        sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
     pythonProcess.stdout.on('data', (data) => {
       const message = data.toString().trim();
       pythonLog.info(`stdout: ${message}`);
       if (mainWindow) {
-        log.info(`Sending log message to renderer: ${message}`);
-        mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+        pythonLog.info(`Sending log message to renderer: ${message}`);
+        sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
   }
@@ -576,14 +578,14 @@ const spawnPythonAsync = (
         const message = data.toString();
         log.error(message);
         if (mainWindow) {
-          mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+          sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
         }
       });
       pythonProcess.stdout.on('data', (data) => {
         const message = data.toString();
         log.info(message);
         if (mainWindow) {
-          mainWindow.webContents.send(IPC_CHANNELS.LOG_MESSAGE, message);
+          sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
         }
       });
     }
@@ -832,7 +834,7 @@ async function handleFirstTimeSetup() {
     createComfyDirectories(selectedDirectory);
 
     const { modelConfigPath } = await determineResourcesPaths();
-    createModelConfigFiles(modelConfigPath, selectedDirectory);
+    await createModelConfigFiles(modelConfigPath, selectedDirectory);
   } else {
     sendRendererMessage(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
