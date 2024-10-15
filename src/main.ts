@@ -11,7 +11,6 @@ import {
   IPCChannel,
   SENTRY_URL_ENDPOINT,
 } from './constants';
-import dotenv from 'dotenv';
 import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
@@ -20,7 +19,7 @@ import Store from 'electron-store';
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
-import { createModelConfigFiles } from './config/extra_model_config';
+import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_model_config';
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
@@ -142,7 +141,7 @@ if (!gotTheLock) {
         });
       });
       await handleFirstTimeSetup();
-      const { userResourcesPath, appResourcesPath, pythonInstallPath, modelConfigPath } =
+      const { userResourcesPath, appResourcesPath, pythonInstallPath, modelConfigPath, basePath } =
         await determineResourcesPaths();
       SetupTray(mainWindow, userResourcesPath);
       port = await findAvailablePort(8000, 9999).catch((err) => {
@@ -153,7 +152,7 @@ if (!gotTheLock) {
       sendProgressUpdate('Setting up Python Environment...');
       const pythonInterpreterPath = await setupPythonEnvironment(appResourcesPath, pythonInstallPath);
       sendProgressUpdate('Starting Comfy Server...');
-      await launchPythonServer(pythonInterpreterPath, appResourcesPath, userResourcesPath, modelConfigPath);
+      await launchPythonServer(pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
       updateElectronApp({
         updateSource: {
           type: UpdateSourceType.StaticStorage,
@@ -380,8 +379,8 @@ let spawnServerTimeout: NodeJS.Timeout = null;
 const launchPythonServer = async (
   pythonInterpreterPath: string,
   appResourcesPath: string,
-  userResourcesPath: string,
-  modelConfigPath: string
+  modelConfigPath: string,
+  basePath: string
 ) => {
   const isServerRunning = await isComfyServerReady(host, port);
   if (isServerRunning) {
@@ -394,9 +393,9 @@ const launchPythonServer = async (
 
   return new Promise<void>(async (resolve, reject) => {
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
-    const userDirectoryPath = path.join(userResourcesPath, 'user');
-    const inputDirectoryPath = path.join(userResourcesPath, 'input');
-    const outputDirectoryPath = path.join(userResourcesPath, 'output');
+    const userDirectoryPath = path.join(basePath, 'user');
+    const inputDirectoryPath = path.join(basePath, 'input');
+    const outputDirectoryPath = path.join(basePath, 'output');
     const comfyMainCmd = [
       scriptPath,
       '--user-directory',
@@ -842,8 +841,10 @@ async function determineResourcesPaths(): Promise<{
   pythonInstallPath: string;
   appResourcesPath: string;
   modelConfigPath: string;
+  basePath: string | null;
 }> {
   const modelConfigPath = path.join(app.getPath('userData'), 'extra_models_config.yaml');
+  const basePath = await readBasePathFromConfig(modelConfigPath);
   if (!app.isPackaged) {
     return {
       // development: install python to in-tree assets dir
@@ -851,6 +852,7 @@ async function determineResourcesPaths(): Promise<{
       pythonInstallPath: path.join(app.getAppPath(), 'assets'),
       appResourcesPath: path.join(app.getAppPath(), 'assets'),
       modelConfigPath: modelConfigPath,
+      basePath: basePath,
     };
   }
 
@@ -868,6 +870,7 @@ async function determineResourcesPaths(): Promise<{
     pythonInstallPath: defaultPythonInstallPath,
     appResourcesPath: appResourcePath,
     modelConfigPath: modelConfigPath,
+    basePath: basePath,
   };
 }
 

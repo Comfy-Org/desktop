@@ -1,7 +1,6 @@
 import * as fsPromises from 'node:fs/promises';
-import path from 'path';
 import log from 'electron-log/main';
-import { stringify } from 'yaml';
+import { stringify, parse } from 'yaml';
 
 interface ModelPaths {
   comfyui: {
@@ -83,5 +82,26 @@ export async function createModelConfigFiles(extraModelConfigPath: string, custo
   } catch (error) {
     log.error('Error creating model config files:', error);
     return false;
+  }
+}
+
+export async function readBasePathFromConfig(configPath: string): Promise<string | null> {
+  try {
+    const fileContent = await fsPromises.readFile(configPath, 'utf8');
+    const config = parse(fileContent);
+
+    if (config && config.comfyui && config.comfyui.base_path) {
+      return config.comfyui.base_path;
+    } else {
+      log.warn(`No base_path found in ${configPath}`);
+      return null;
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      log.info(`Config file not found at ${configPath}`);
+    } else {
+      log.error(`Error reading config file ${configPath}:`, error);
+    }
+    return null;
   }
 }
