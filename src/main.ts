@@ -264,6 +264,19 @@ function buildMenu(): Menu {
         submenu: [{ role: 'quit' }],
       })
     );
+    menu.append(
+      new MenuItem({
+        label: 'About',
+        click: () => {
+          dialog.showMessageBox({
+            title: 'About',
+            message: `ComfyUI v${app.getVersion()}`,
+            detail: 'Created by Comfy Org\nCopyright © 2024',
+            buttons: ['OK'],
+          });
+        },
+      })
+    );
   }
 
   return menu;
