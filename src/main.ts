@@ -30,11 +30,43 @@ const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready
 
 import { StoreType } from './store';
 log.initialize();
+
+// Register the quit handlers regardless of single instance lock and before squirrel startup events.
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on('window-all-closed', () => {
+  log.info('Window all closed');
+  if (process.platform !== 'darwin') {
+    log.info('Quitting ComfyUI because window all closed');
+    app.quit();
+  }
+});
+
+app.on('before-quit', async() => {
+  try {
+    log.info('Before-quit: Killing Python server');
+    await killPythonServer();
+  } catch (error) {
+    // Server did NOT exit properly
+    log.error('Python server did not exit properly');
+    log.error(error);
+  }
+  app.exit();
+});
+
+app.on('quit', () => {
+  log.info('Quitting ComfyUI');
+  app.exit();
+});
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // Run this as early in the main process as possible.
 if (require('electron-squirrel-startup')) {
   log.info('App already being set up by squirrel. Exiting...');
   app.quit();
+} else {
+  log.info('Normal startup');
 }
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -169,45 +201,6 @@ if (!gotTheLock) {
       log.info('Received restart app message!');
       restartApp();
     });
-  });
-
-  app.on('before-quit', () => {
-    if (progressInterval) {
-      clearInterval(progressInterval);
-    }
-  });
-
-  app.on('before-quit', () => {
-    if (progressInterval) {
-      clearInterval(progressInterval);
-    }
-  });
-
-  app.on('before-quit', async () => {
-    try {
-      await killPythonServer();
-    } catch (error) {
-      // Server did NOT exit properly
-      log.error('Python server did not exit properly');
-      log.error(error);
-    }
-    app.exit();
-  });
-
-  app.on('quit', () => {
-    log.info('Quitting ComfyUI');
-    app.exit();
-  });
-
-  // Quit when all windows are closed, except on macOS. There, it's common
-  // for applications and their menu bar to stay active until the user quits
-  // explicitly with Cmd + Q.
-  app.on('window-all-closed', () => {
-    log.info('Window all closed');
-    if (process.platform !== 'darwin') {
-      log.info('Quitting ComfyUI because window all closed');
-      app.quit();
-    }
   });
 }
 
@@ -446,9 +439,6 @@ const launchPythonServer = async (
     checkServerReady();
   });
 };
-
-/**  Interval to send progress updates to the renderer. */
-let progressInterval: NodeJS.Timeout | null = null;
 
 function sendProgressUpdate(status: string): void {
   if (mainWindow) {
