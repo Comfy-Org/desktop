@@ -1,7 +1,7 @@
 import { Tray, Menu, BrowserWindow, app, shell } from 'electron';
 import path from 'path';
 
-export function SetupTray(mainView: BrowserWindow, basePath: string): Tray {
+export function SetupTray(mainView: BrowserWindow, basePath: string, reinstall: () => void): Tray {
   // Set icon for the tray
   // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
   const trayImage = path.join(
@@ -48,29 +48,29 @@ export function SetupTray(mainView: BrowserWindow, basePath: string): Tray {
     },
     { type: 'separator' },
     {
-      label: 'Open Folder',
-      submenu: [
-        {
-          label: 'Models',
-          click: () => shell.openPath(path.join(basePath, 'models')),
-        },
-        {
-          label: 'Outputs',
-          click: () => shell.openPath(path.join(basePath, 'output')),
-        },
-        {
-          label: 'Inputs',
-          click: () => shell.openPath(path.join(basePath, 'input')),
-        },
-        {
-          label: 'Custom Nodes',
-          click: () => shell.openPath(path.join(basePath, 'custom_nodes')),
-        },
-        {
-          label: 'Logs',
-          click: () => shell.openPath(app.getPath('logs')),
-        },
-      ],
+      label: 'Reset Install Location',
+      click: () => reinstall(),
+    },
+    { type: 'separator' },
+    {
+      label: 'Open Models Folder',
+      click: () => shell.openPath(path.join(basePath, 'models')),
+    },
+    {
+      label: 'Open Outputs Folder',
+      click: () => shell.openPath(path.join(basePath, 'output')),
+    },
+    {
+      label: 'Open Inputs Folder',
+      click: () => shell.openPath(path.join(basePath, 'input')),
+    },
+    {
+      label: 'Open Custom Nodes Folder',
+      click: () => shell.openPath(path.join(basePath, 'custom_nodes')),
+    },
+    {
+      label: 'Open Logs Folder',
+      click: () => shell.openPath(app.getPath('logs')),
     },
   ]);
 
