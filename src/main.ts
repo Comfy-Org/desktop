@@ -236,53 +236,35 @@ function restartApp() {
   app.quit();
 }
 
-function buildMenu(): Menu {
-  const isMac = process.platform === 'darwin';
-
-  const menu = new Menu();
-
-  if (isMac) {
-    menu.append(
-      new MenuItem({
-        label: app.name,
-        submenu: [
-          { role: 'about' },
-          { type: 'separator' },
-          { role: 'services' },
-          { type: 'separator' },
-          { role: 'hide' },
-          { role: 'hideOthers' },
-          { role: 'unhide' },
-          { type: 'separator' },
-          { role: 'quit' },
-        ],
-      })
-    );
+function buildMenu(): void {
+  const menu = Menu.getApplicationMenu();
+  if (menu) {
+    const aboutMenuItem = {
+      label: 'About ComfyUI',
+      click: () => {
+        dialog.showMessageBox({
+          title: 'About',
+          message: `ComfyUI v${app.getVersion()}`,
+          detail: 'Created by Comfy Org\nCopyright © 2024',
+          buttons: ['OK'],
+        });
+      },
+    };
+    const helpMenuItem = menu.items.find((item) => item.role === 'help');
+    if (helpMenuItem && helpMenuItem.submenu) {
+      helpMenuItem.submenu.append(new MenuItem(aboutMenuItem));
+      Menu.setApplicationMenu(menu);
+    } else {
+      // If there's no Help menu, add one
+      menu.append(
+        new MenuItem({
+          label: 'Help',
+          submenu: [aboutMenuItem],
+        })
+      );
+      Menu.setApplicationMenu(menu);
+    }
   }
-
-  if (!isMac) {
-    menu.append(
-      new MenuItem({
-        label: 'File',
-        submenu: [{ role: 'quit' }],
-      })
-    );
-    menu.append(
-      new MenuItem({
-        label: 'About',
-        click: () => {
-          dialog.showMessageBox({
-            title: 'About',
-            message: `ComfyUI v${app.getVersion()}`,
-            detail: 'Created by Comfy Org\nCopyright © 2024',
-            buttons: ['OK'],
-          });
-        },
-      })
-    );
-  }
-
-  return menu;
 }
 
 /**
@@ -342,8 +324,7 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
     mainWindow = null;
   });
 
-  const menu = buildMenu();
-  Menu.setApplicationMenu(menu);
+  buildMenu();
 
   return mainWindow;
 };
