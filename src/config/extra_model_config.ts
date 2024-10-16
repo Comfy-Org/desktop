@@ -30,7 +30,7 @@ const commonPaths = {
   upscale_models: 'models/upscale_models/',
   vae: 'models/vae/',
   vae_approx: 'models/vae_approx/',
-  custom_nodes: 'custom_nodes/',
+  //custom_nodes: 'custom_nodes/', TODO(robinhuang): https://github.com/Comfy-Org/electron/issues/94
 };
 
 const configTemplates: Record<string, ModelPaths> = {
