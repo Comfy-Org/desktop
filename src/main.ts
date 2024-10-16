@@ -736,7 +736,7 @@ function createComfyDirectories(localComfyDirectory: string): void {
   });
 
   const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');
-  createComfyConfigFile(userSettingsPath);
+  createComfyConfigFile(userSettingsPath, true);
 }
 
 /**
@@ -752,7 +752,7 @@ function createDirIfNotExists(dirPath: string): void {
   }
 }
 
-function createComfyConfigFile(userSettingsPath: string): void {
+function createComfyConfigFile(userSettingsPath: string, overwrite: boolean = false): void {
   const configContent: any = {
     'Comfy.ColorPalette': 'dark',
     'Comfy.NodeLibrary.Bookmarks': [],
@@ -763,15 +763,22 @@ function createComfyConfigFile(userSettingsPath: string): void {
 
   const configFilePath = path.join(userSettingsPath, 'comfy.settings.json');
 
-  if (fs.existsSync(configFilePath)) {
-    return;
+  if (fs.existsSync(configFilePath) && overwrite) {
+    const backupFilePath = path.join(userSettingsPath, 'old_comfy.settings.json');
+    try {
+      fs.renameSync(configFilePath, backupFilePath);
+      log.info(`Renaming existing user settings file to: ${backupFilePath}`);
+    } catch (error) {
+      log.error(`Failed to backup existing user settings file: ${error}`);
+      return;
+    }
   }
 
   try {
     fs.writeFileSync(configFilePath, JSON.stringify(configContent, null, 2));
-    log.info(`Created ComfyUI config file at: ${configFilePath}`);
+    log.info(`Created new ComfyUI config file at: ${configFilePath}`);
   } catch (error) {
-    log.error(`Failed to create ComfyUI config file: ${error}`);
+    log.error(`Failed to create new ComfyUI config file: ${error}`);
   }
 }
 
