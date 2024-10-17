@@ -11,7 +11,12 @@
     "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "/*": [
+        "./*"
+      ]
+    }
   },
   "exclude": [".history", ".vite", "assets", "dist", "node_modules", "out"],
   "include": ["src/**/*", "forge.env.d.ts", "global.d.ts"]

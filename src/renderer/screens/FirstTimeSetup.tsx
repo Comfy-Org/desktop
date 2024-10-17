@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ElectronAPI } from 'src/preload';
+import { ElectronAPI } from '/src/preload';
 import log from 'electron-log/renderer';
 
 interface FirstTimeSetupProps {

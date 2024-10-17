@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 export default defineConfig((env) => {
   const forgeEnv = env as ConfigEnv<'renderer'>;
   const { root, mode, forgeConfigSelf } = forgeEnv;
-  const name = forgeConfigSelf.name ?? '';
+  const name = forgeConfigSelf?.name ?? '';
 
   return {
     root,

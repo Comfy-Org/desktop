@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import ProgressOverlay from './screens/ProgressOverlay';
 import log from 'electron-log/renderer';
 import FirstTimeSetup from './screens/FirstTimeSetup';
-import { ElectronAPI } from 'src/preload';
-import { ELECTRON_BRIDGE_API } from 'src/constants';
+import { ElectronAPI } from '/src/preload';
+import { ELECTRON_BRIDGE_API } from '/src/constants';
 
 export interface ProgressUpdate {
   status: string;
