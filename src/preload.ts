@@ -19,6 +19,7 @@ export interface ElectronAPI {
   onShowSelectDirectory: (callback: () => void) => void;
   onLogMessage: (callback: (message: string) => void) => void;
   onFirstTimeSetupComplete: (callback: () => void) => void;
+  onDefaultInstallLocation: (callback: (location: string) => void) => void;
   sendReady: () => void;
   restartApp: () => void;
   isPackaged: boolean;
@@ -58,6 +59,12 @@ const electronAPI: ElectronAPI = {
   },
   onFirstTimeSetupComplete: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, () => callback());
+  },
+  onDefaultInstallLocation: (callback: (location: string) => void) => {
+    ipcRenderer.on(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, (_event, value) => {
+      log.info(`Received ${IPC_CHANNELS.DEFAULT_INSTALL_LOCATION} event`, value);
+      callback(value);
+    });
   },
 };
 

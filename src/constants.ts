@@ -7,6 +7,7 @@ export const IPC_CHANNELS = {
   SELECTED_DIRECTORY: 'selected-directory',
   OPEN_DIALOG: 'open-dialog',
   FIRST_TIME_SETUP_COMPLETE: 'first-time-setup-complete',
+  DEFAULT_INSTALL_LOCATION: 'default-install-location',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =

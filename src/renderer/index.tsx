@@ -29,7 +29,7 @@ const Home: React.FC = () => {
   const [showSetup, setShowSetup] = useState<boolean | null>(null);
   const [status, setStatus] = useState('Starting...');
   const [logs, setLogs] = useState<string[]>([]);
-
+  const [defaultInstallLocation, setDefaultInstallLocation] = useState<string>('');
   const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
     log.info(`Setting new status: ${newStatus}`);
     setStatus(newStatus);
@@ -68,6 +68,14 @@ const Home: React.FC = () => {
     });
   }, [updateProgress, addLogMessage]);
 
+  useEffect(() => {
+    const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
+
+    electronAPI.onDefaultInstallLocation((location: string) => {
+      setDefaultInstallLocation(location);
+    });
+  }, []);
+
   if (showSetup === null) {
     return <> Loading ....</>;
   }
@@ -75,7 +83,7 @@ const Home: React.FC = () => {
   if (showSetup) {
     return (
       <div style={bodyStyle}>
-        <FirstTimeSetup onComplete={() => setShowSetup(false)} />
+        <FirstTimeSetup onComplete={() => setShowSetup(false)} initialPath={defaultInstallLocation} />
       </div>
     );
   }

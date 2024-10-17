@@ -168,7 +168,6 @@ if (!gotTheLock) {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
           ...options,
-          defaultPath: app.getPath('documents'),
         });
       });
       await handleFirstTimeSetup();
@@ -300,6 +299,9 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
     autoHideMenuBar: true,
   });
   log.info('Loading renderer into main window');
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, app.getPath('documents'));
+  });
   await loadRendererIntoMainWindow();
   log.info('Renderer loaded into main window');
 
