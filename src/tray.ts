@@ -1,7 +1,12 @@
 import { Tray, Menu, BrowserWindow, app, shell } from 'electron';
 import path from 'path';
 
-export function SetupTray(mainView: BrowserWindow, basePath: string, reinstall: () => void): Tray {
+export function SetupTray(
+  mainView: BrowserWindow,
+  basePath: string,
+  modelConfigPath: string,
+  reinstall: () => void
+): Tray {
   // Set icon for the tray
   // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
   const trayImage = path.join(
@@ -67,6 +72,10 @@ export function SetupTray(mainView: BrowserWindow, basePath: string, reinstall: 
     {
       label: 'Open Custom Nodes Folder',
       click: () => shell.openPath(path.join(basePath, 'custom_nodes')),
+    },
+    {
+      label: 'Open Model Config',
+      click: () => shell.openPath(modelConfigPath),
     },
     {
       label: 'Open Logs Folder',

@@ -173,7 +173,7 @@ if (!gotTheLock) {
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
-      SetupTray(mainWindow, basePath, () => {
+      SetupTray(mainWindow, basePath, modelConfigPath, () => {
         log.info('Resetting install location');
         fs.rmSync(modelConfigPath);
         restartApp();
@@ -663,9 +663,8 @@ function isComfyUIDirectory(directory: string): boolean {
   return requiredSubdirs.every((subdir) => fs.existsSync(path.join(directory, subdir)));
 }
 
-type DirectoryStructure = (string | [string, string[]])[];
+type DirectoryStructure = (string | DirectoryStructure)[];
 
-// Create directories needed by ComfyUI in the user's data directory.
 function createComfyDirectories(localComfyDirectory: string): void {
   log.info(`Creating ComfyUI directories in ${localComfyDirectory}`);
 
@@ -694,28 +693,52 @@ function createComfyDirectories(localComfyDirectory: string): void {
         'upscale_models',
         'vae',
         'vae_approx',
+
+        // TODO(robinhuang): Remove when we have a better way to specify base model paths.
+        'animatediff_models',
+        'animatediff_motion_lora',
+        'animatediff_video_formats',
+        'liveportrait',
+        ['insightface', ['buffalo_1']],
+        ['blip', ['checkpoints']],
+        'CogVideo',
+        ['xlabs', ['loras', 'controlnets']],
+        'layerstyle',
+        'LLM',
+        'Joy_caption',
       ],
     ],
   ];
-  createDirIfNotExists(localComfyDirectory);
-
-  directories.forEach((dir: string | [string, string[]]) => {
-    if (Array.isArray(dir)) {
-      const [mainDir, subDirs] = dir;
-      const mainDirPath: string = path.join(localComfyDirectory, mainDir);
-      createDirIfNotExists(mainDirPath);
-      subDirs.forEach((subDir: string) => {
-        const subDirPath: string = path.join(mainDirPath, subDir);
-        createDirIfNotExists(subDirPath);
-      });
-    } else {
-      const dirPath: string = path.join(localComfyDirectory, dir);
-      createDirIfNotExists(dirPath);
-    }
-  });
+  try {
+    createNestedDirectories(localComfyDirectory, directories);
+  } catch (error) {
+    log.error(`Failed to create ComfyUI directories: ${error}`);
+  }
 
   const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');
   createComfyConfigFile(userSettingsPath, true);
+}
+
+function createNestedDirectories(basePath: string, structure: DirectoryStructure): void {
+  structure.forEach((item) => {
+    if (typeof item === 'string') {
+      const dirPath = path.join(basePath, item);
+      createDirIfNotExists(dirPath);
+    } else if (Array.isArray(item) && item.length === 2) {
+      const [dirName, subDirs] = item;
+      if (typeof dirName === 'string') {
+        const newBasePath = path.join(basePath, dirName);
+        createDirIfNotExists(newBasePath);
+        if (Array.isArray(subDirs)) {
+          createNestedDirectories(newBasePath, subDirs);
+        }
+      } else {
+        log.warn(`Invalid directory structure item: ${JSON.stringify(item)}`);
+      }
+    } else {
+      log.warn(`Invalid directory structure item: ${JSON.stringify(item)}`);
+    }
+  });
 }
 
 /**
