@@ -1,5 +1,7 @@
 {
     "id": "ID",
     "icon": "./assets/UI/Comfy_Logo_x64.png",
-    "schemaVersion": 1
+    "schemaVersion": 1,
+    "appPath" : ".",
+    "appFiles": ["src/**","assets/**","dist/**", ".vite/**",".yarnrc.yml", ".yarn/**"]
   }
