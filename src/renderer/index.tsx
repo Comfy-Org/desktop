@@ -4,6 +4,7 @@ import log from 'electron-log/renderer';
 import FirstTimeSetup from './screens/FirstTimeSetup';
 import { ElectronAPI } from 'src/preload';
 import { ELECTRON_BRIDGE_API } from 'src/constants';
+import AnimatedLogDisplay from './screens/AnimatedLogDisplay';
 
 export interface ProgressUpdate {
   status: string;
@@ -20,6 +21,27 @@ const bodyStyle: React.CSSProperties = {
   margin: '0',
   color: '#d4d4d4',
   backgroundColor: '#1e1e1e',
+};
+
+const iframeStyle: React.CSSProperties = {
+  flexGrow: 1,
+  border: 'none'
+};
+
+const logContainerStyle: React.CSSProperties = {
+  height: '200px',
+  overflowY: 'auto',
+  backgroundColor: '#1e1e1e',
+  padding: '10px',
+  color: '#9198a1',
+};
+
+const iframeContainerStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100vh',
+  margin: '0',
+  padding: '0'
 };
 
 // Main entry point for the front end renderer.
@@ -76,6 +98,17 @@ const Home: React.FC = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (status === 'Finishing...') {
+      const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
+      electronAPI.getLogs().then(comfyUILogs => {
+        setLogs(comfyUILogs)
+
+        log.info("Got logs size: ", comfyUILogs.length)
+      });
+    }
+  }, [status]);
+
   if (showSetup === null) {
     return <> Loading ....</>;
   }
@@ -84,6 +117,17 @@ const Home: React.FC = () => {
     return (
       <div style={bodyStyle}>
         <FirstTimeSetup onComplete={() => setShowSetup(false)} initialPath={defaultInstallLocation} />
+      </div>
+    );
+  }
+
+  if (status === 'Finishing...') {
+    return (
+      <div style={iframeContainerStyle}>
+        <iframe id="comfy-container" style={iframeStyle} src="http://localhost:8000"></iframe>
+        <div style={logContainerStyle}>
+          <AnimatedLogDisplay logs={logs} />
+        </div>
       </div>
     );
   }

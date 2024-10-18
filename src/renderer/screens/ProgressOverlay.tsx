@@ -1,7 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { COMFY_ERROR_MESSAGE, COMFY_FINISHING_MESSAGE, ELECTRON_BRIDGE_API } from 'src/constants';
-import log from 'electron-log/renderer';
-import { ElectronAPI } from 'src/preload';
+import React from 'react';
+import { COMFY_ERROR_MESSAGE, COMFY_FINISHING_MESSAGE } from 'src/constants';
 import AnimatedLogDisplay from './AnimatedLogDisplay';
 
 const loadingTextStyle: React.CSSProperties = {

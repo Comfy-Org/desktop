@@ -24,6 +24,8 @@ export interface ElectronAPI {
   restartApp: () => void;
   isPackaged: boolean;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
+  getComfyUIUrl: () => Promise<string>;
+  getLogs: () => Promise<string[]>;
 }
 
 const electronAPI: ElectronAPI = {
@@ -53,6 +55,12 @@ const electronAPI: ElectronAPI = {
   },
   selectSetupDirectory: (directory: string) => {
     ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
+  },
+  getLogs: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_LOGS);
+  },
+  getComfyUIUrl: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_COMFYUI_URL);
   },
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);

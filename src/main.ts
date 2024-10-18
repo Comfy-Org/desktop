@@ -203,7 +203,27 @@ if (!gotTheLock) {
       log.info('Received restart app message!');
       restartApp();
     });
+
+    ipcMain.handle(IPC_CHANNELS.GET_COMFYUI_URL, () => {
+      return `http://${host}:${port}`;
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GET_LOGS, async (): Promise<string[]> => {
+      return await readComfyUILogs();
+    });
   });
+}
+
+async function readComfyUILogs(): Promise<string[]> {
+  try {
+    const logContent = await fsPromises.readFile(path.join(app.getPath('logs'), 'comfyui.log'), 'utf-8');
+    const logs = logContent.split('\n');
+    log.info('Read logs size: ', logs.length);
+    return logs;
+  } catch (error) {
+    console.error('Error reading log file:', error);
+    return [];
+  }
 }
 
 function loadComfyIntoMainWindow() {
@@ -211,7 +231,7 @@ function loadComfyIntoMainWindow() {
     log.error('Trying to load ComfyUI into main window but it is not ready yet.');
     return;
   }
-  mainWindow.loadURL(`http://${host}:${port}`);
+  //mainWindow.loadURL(`http://${host}:${port}`);
 }
 
 async function loadRendererIntoMainWindow(): Promise<void> {

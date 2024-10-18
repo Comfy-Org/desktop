@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import log from 'electron-log/renderer';
 
 interface AnimatedLogDisplayProps {
   logs: string[];
