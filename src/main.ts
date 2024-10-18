@@ -20,6 +20,8 @@ import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
 import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_model_config';
+import { StoreType } from './store';
+import todesktop from "@todesktop/runtime";
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
@@ -28,7 +30,10 @@ let mainWindow: BrowserWindow | null;
 let store: Store<StoreType> | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
-import { StoreType } from './store';
+
+
+todesktop.init();
+
 log.initialize();
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
@@ -60,14 +65,6 @@ app.on('quit', () => {
   app.exit();
 });
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-// Run this as early in the main process as possible.
-if (require('electron-squirrel-startup')) {
-  log.info('App already being set up by squirrel. Exiting...');
-  app.quit();
-} else {
-  log.info('Normal startup');
-}
 
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -220,13 +217,13 @@ async function loadRendererIntoMainWindow(): Promise<void> {
     log.error('Trying to load renderer into main window but it is not ready yet.');
     return;
   }
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  if (typeof MAIN_WINDOW_VITE_DEV_SERVER_URL !== 'undefined') {
     log.info('Loading Vite Dev Server');
     await mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
     log.info('Opened Vite Dev Server');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(path.join(__dirname, `../renderer/index.html`));
   }
 }
 

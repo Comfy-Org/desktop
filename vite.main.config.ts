@@ -12,6 +12,7 @@ export default defineConfig((env) => {
   //const define = getBuildDefine(forgeEnv);
   const config: UserConfig = {
     build: {
+      outDir: '.vite/build',
       lib: {
         entry: "./src/main.ts",
         fileName: () => '[name].js',
@@ -34,10 +35,11 @@ export default defineConfig((env) => {
       }),
     ],
     define:{
-      VITE_DEV_SERVER_URL : JSON.stringify('http://localhost:5173/'),
-      MAIN_WINDOW_VITE_DEV_SERVER_URL:  JSON.stringify('http://localhost:5173/'),
       VITE_NAME: JSON.stringify('COMFY'),
-
+      ...(env.command !== 'build' && {
+        VITE_DEV_SERVER_URL : JSON.stringify('http://localhost:5173/'),
+        MAIN_WINDOW_VITE_DEV_SERVER_URL: JSON.stringify('http://localhost:5173/')}
+      ),
     },
     resolve: {
       // Load the Node.js entry.
