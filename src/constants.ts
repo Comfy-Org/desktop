@@ -10,6 +10,7 @@ export const IPC_CHANNELS = {
   DEFAULT_INSTALL_LOCATION: 'default-install-location',
   GET_LOGS: 'get-logs',
   GET_COMFYUI_URL: 'get-comfyui-url',
+  DISPLAY_LOGS: 'display-logs',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =

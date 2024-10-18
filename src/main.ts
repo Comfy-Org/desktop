@@ -172,11 +172,19 @@ if (!gotTheLock) {
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
-      SetupTray(mainWindow, basePath, modelConfigPath, () => {
-        log.info('Resetting install location');
-        fs.rmSync(modelConfigPath);
-        restartApp();
-      });
+      SetupTray(
+        mainWindow,
+        basePath,
+        modelConfigPath,
+        () => {
+          log.info('Resetting install location');
+          fs.rmSync(modelConfigPath);
+          restartApp();
+        },
+        () => {
+          mainWindow.webContents.send(IPC_CHANNELS.DISPLAY_LOGS);
+        }
+      );
       port = await findAvailablePort(8000, 9999).catch((err) => {
         log.error(`ERROR: Failed to find available port: ${err}`);
         throw err;

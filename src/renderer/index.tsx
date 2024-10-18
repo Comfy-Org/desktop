@@ -52,6 +52,7 @@ const Home: React.FC = () => {
   const [status, setStatus] = useState('Starting...');
   const [logs, setLogs] = useState<string[]>([]);
   const [defaultInstallLocation, setDefaultInstallLocation] = useState<string>('');
+  const [showStreamingLogs, setShowStreamingLogs] = useState(false);
   const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
     log.info(`Setting new status: ${newStatus}`);
     setStatus(newStatus);
@@ -76,6 +77,11 @@ const Home: React.FC = () => {
     electronAPI.onFirstTimeSetupComplete(() => {
       log.info('First time setup complete');
       setShowSetup(false);
+    });
+
+    electronAPI.onDisplayLogs(() => {
+      log.info('Displaying logs');
+      setShowStreamingLogs(true);
     });
   }, []);
 
@@ -121,7 +127,7 @@ const Home: React.FC = () => {
     );
   }
 
-  if (status === 'Finishing...') {
+  if (showStreamingLogs) {
     return (
       <div style={iframeContainerStyle}>
         <iframe id="comfy-container" style={iframeStyle} src="http://localhost:8000"></iframe>

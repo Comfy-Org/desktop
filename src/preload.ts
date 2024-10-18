@@ -22,6 +22,7 @@ export interface ElectronAPI {
   onDefaultInstallLocation: (callback: (location: string) => void) => void;
   sendReady: () => void;
   restartApp: () => void;
+  onDisplayLogs: (callback: () => void) => void;
   isPackaged: boolean;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
   getComfyUIUrl: () => Promise<string>;
@@ -49,6 +50,9 @@ const electronAPI: ElectronAPI = {
   restartApp: (): void => {
     log.info('Sending restarting app message to main process');
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP);
+  },
+  onDisplayLogs: (callback: () => void) => {
+    ipcRenderer.on(IPC_CHANNELS.DISPLAY_LOGS, () => callback());
   },
   onShowSelectDirectory: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());
