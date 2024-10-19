@@ -30,6 +30,8 @@ jobs:
           build-targets: '--targets=@electron-forge/maker-zip'
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Run Tests
+        uses: ./.github/actions/test/tests
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
