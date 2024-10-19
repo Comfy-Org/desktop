@@ -55,6 +55,7 @@
     "@types/react": "^18.3.4",
     "@types/react-dom": "^18.3.0",
     "@types/tar": "6.1.13",
+    "@types/ws": "^8.5.12",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "electron": "31.3.1",
@@ -74,6 +75,7 @@
   },
   "license": "GPL-3.0-only",
   "dependencies": {
+    "@melloware/react-logviewer": "^5.2.3",
     "@sentry/electron": "^5.4.0",
     "@sentry/vite-plugin": "^2.22.4",
     "adm-zip": "^0.5.15",
@@ -88,6 +90,7 @@
     "systeminformation": "^5.23.5",
     "tar": "^7.4.3",
     "update-electron-app": "^3.0.0",
+    "ws": "^8.18.0",
     "yaml": "^2.6.0"
   }
 }

@@ -20,15 +20,18 @@ import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
 import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_model_config';
+import { WebSocketServer } from 'ws';
+import { StoreType } from './store';
+import { createReadStream, watchFile } from 'node:fs';
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
 let port = 8188;
 let mainWindow: BrowserWindow | null;
+let wss: WebSocketServer | null;
 let store: Store<StoreType> | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
-import { StoreType } from './store';
 log.initialize();
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
@@ -52,6 +55,9 @@ app.on('before-quit', async () => {
     log.error('Python server did not exit properly');
     log.error(error);
   }
+
+  closeWebSocketServer();
+
   app.exit();
 });
 
@@ -151,6 +157,7 @@ if (!gotTheLock) {
 
     try {
       await createWindow();
+      startWebSocketServer();
       mainWindow.on('close', () => {
         mainWindow = null;
         app.quit();
@@ -169,6 +176,9 @@ if (!gotTheLock) {
         return dialog.showOpenDialogSync({
           ...options,
         });
+      });
+      ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
+        return app.isPackaged;
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
@@ -226,7 +236,6 @@ async function readComfyUILogs(): Promise<string[]> {
   try {
     const logContent = await fsPromises.readFile(path.join(app.getPath('logs'), 'comfyui.log'), 'utf-8');
     const logs = logContent.split('\n');
-    log.info('Read logs size: ', logs.length);
     return logs;
   } catch (error) {
     console.error('Error reading log file:', error);
@@ -239,6 +248,7 @@ function loadComfyIntoMainWindow() {
     log.error('Trying to load ComfyUI into main window but it is not ready yet.');
     return;
   }
+  mainWindow.webContents.send(IPC_CHANNELS.COMFYUI_READY);
   //mainWindow.loadURL(`http://${host}:${port}`);
 }
 
@@ -538,6 +548,7 @@ const spawnPython = (
     let pythonLog = log;
     if (options.logFile) {
       log.info('Creating separate python log file: ', options.logFile);
+      rotateLogFiles(app.getPath('logs'), options.logFile);
       pythonLog = log.create({ logId: options.logFile });
       pythonLog.transports.file.fileName = `${options.logFile}.log`;
       pythonLog.transports.file.resolvePathFn = (variables) => {
@@ -549,7 +560,6 @@ const spawnPython = (
       const message = data.toString().trim();
       pythonLog.error(`stderr: ${message}`);
       if (mainWindow) {
-        pythonLog.info(`Sending log message to renderer: ${message}`);
         sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
@@ -557,7 +567,6 @@ const spawnPython = (
       const message = data.toString().trim();
       pythonLog.info(`stdout: ${message}`);
       if (mainWindow) {
-        pythonLog.info(`Sending log message to renderer: ${message}`);
         sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
@@ -916,13 +925,54 @@ function getDefaultUserResourcesPath(): string {
   return process.platform === 'win32' ? path.join(app.getPath('home'), 'comfyui-electron') : app.getPath('userData');
 }
 
-function dev_getDefaultModelConfigPath(): string {
-  switch (process.platform) {
-    case 'win32':
-      return path.join(app.getAppPath(), 'config', 'model_paths_windows.yaml');
-    case 'darwin':
-      return path.join(app.getAppPath(), 'config', 'model_paths_mac.yaml');
-    default:
-      return path.join(app.getAppPath(), 'config', 'model_paths_linux.yaml');
+/**
+ * For log watching.
+ */
+function startWebSocketServer() {
+  wss = new WebSocketServer({ port: 7999 });
+
+  wss.on('connection', (ws) => {
+    const logPath = path.join(app.getPath('logs'), 'comfyui.log');
+
+    // Send the initial content
+    const initialStream = createReadStream(logPath, { encoding: 'utf-8' });
+    initialStream.on('data', (chunk) => {
+      ws.send(chunk);
+    });
+
+    let lastSize = 0;
+    const watcher = watchFile(logPath, { interval: 1000 }, (curr, prev) => {
+      if (curr.size > lastSize) {
+        const stream = createReadStream(logPath, {
+          start: lastSize,
+          encoding: 'utf-8',
+        });
+        stream.on('data', (chunk) => {
+          ws.send(chunk);
+        });
+        lastSize = curr.size;
+      }
+    });
+
+    ws.on('close', () => {
+      watcher.unref();
+    });
+  });
+}
+
+function closeWebSocketServer() {
+  if (wss) {
+    wss.close();
+    wss = null;
   }
 }
+
+const rotateLogFiles = (logDir: string, baseName: string) => {
+  const currentLogPath = path.join(logDir, `${baseName}.log`);
+  if (fs.existsSync(currentLogPath)) {
+    const stats = fs.statSync(currentLogPath);
+    const timestamp = stats.birthtime.toISOString().replace(/[:.]/g, '-');
+    const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
+    fs.renameSync(currentLogPath, newLogPath);
+  }
+};

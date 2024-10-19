@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import ProgressOverlay from './screens/ProgressOverlay';
 import log from 'electron-log/renderer';
 import FirstTimeSetup from './screens/FirstTimeSetup';
 import { ElectronAPI } from 'src/preload';
 import { ELECTRON_BRIDGE_API } from 'src/constants';
-import AnimatedLogDisplay from './screens/AnimatedLogDisplay';
+import { LazyLog, ScrollFollow } from '@melloware/react-logviewer';
+import LogViewer from './screens/LogViewer';
 
 export interface ProgressUpdate {
   status: string;
@@ -29,11 +30,7 @@ const iframeStyle: React.CSSProperties = {
 };
 
 const logContainerStyle: React.CSSProperties = {
-  height: '200px',
-  overflowY: 'auto',
-  backgroundColor: '#1e1e1e',
-  padding: '10px',
-  color: '#9198a1',
+  height: '300px',
 };
 
 const iframeContainerStyle: React.CSSProperties = {
@@ -53,6 +50,11 @@ const Home: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [defaultInstallLocation, setDefaultInstallLocation] = useState<string>('');
   const [showStreamingLogs, setShowStreamingLogs] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [comfyReady, setComfyReady] = useState(false);
+  const logContainerRef = useRef<HTMLDivElement>(null);
+
+
   const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
     log.info(`Setting new status: ${newStatus}`);
     setStatus(newStatus);
@@ -82,6 +84,11 @@ const Home: React.FC = () => {
     electronAPI.onDisplayLogs(() => {
       log.info('Displaying logs');
       setShowStreamingLogs(true);
+    });
+
+    electronAPI.onComfyUIReady(() => {
+      log.info('ComfyUI ready');
+      setComfyReady(true);
     });
   }, []);
 
@@ -113,7 +120,15 @@ const Home: React.FC = () => {
         log.info("Got logs size: ", comfyUILogs.length)
       });
     }
-  }, [status]);
+  });
+
+  const handleScroll = () => {
+    if (logContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = logContainerRef.current;
+      const atBottom = scrollHeight - scrollTop === clientHeight;
+      setAutoScroll(atBottom);
+    }
+  };
 
   if (showSetup === null) {
     return <> Loading ....</>;
@@ -127,13 +142,13 @@ const Home: React.FC = () => {
     );
   }
 
-  if (showStreamingLogs) {
+  if (comfyReady) {
     return (
       <div style={iframeContainerStyle}>
         <iframe id="comfy-container" style={iframeStyle} src="http://localhost:8000"></iframe>
-        <div style={logContainerStyle}>
-          <AnimatedLogDisplay logs={logs} />
-        </div>
+        {showStreamingLogs &&
+          <div style={logContainerStyle}><LogViewer onClose={() => setShowStreamingLogs(false)} />
+          </div>}
       </div>
     );
   }

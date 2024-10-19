@@ -1,5 +1,6 @@
 export const IPC_CHANNELS = {
   LOADING_PROGRESS: 'loading-progress',
+  IS_PACKAGED: 'is-packaged',
   RENDERER_READY: 'renderer-ready',
   RESTART_APP: 'restart-app',
   LOG_MESSAGE: 'log-message',
@@ -11,6 +12,7 @@ export const IPC_CHANNELS = {
   GET_LOGS: 'get-logs',
   GET_COMFYUI_URL: 'get-comfyui-url',
   DISPLAY_LOGS: 'display-logs',
+  COMFYUI_READY: 'comfyui-ready',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =

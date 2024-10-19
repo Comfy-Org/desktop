@@ -20,10 +20,11 @@ export interface ElectronAPI {
   onLogMessage: (callback: (message: string) => void) => void;
   onFirstTimeSetupComplete: (callback: () => void) => void;
   onDefaultInstallLocation: (callback: (location: string) => void) => void;
+  onComfyUIReady: (callback: () => void) => void;
   sendReady: () => void;
   restartApp: () => void;
   onDisplayLogs: (callback: () => void) => void;
-  isPackaged: boolean;
+  isPackaged: () => Promise<boolean>;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
   getComfyUIUrl: () => Promise<string>;
   getLogs: () => Promise<string[]>;
@@ -42,11 +43,16 @@ const electronAPI: ElectronAPI = {
       callback(value);
     });
   },
+  onComfyUIReady: (callback: () => void) => {
+    ipcRenderer.on(IPC_CHANNELS.COMFYUI_READY, () => callback());
+  },
   sendReady: () => {
     log.info('Sending ready event to main process');
     ipcRenderer.send(IPC_CHANNELS.RENDERER_READY);
   },
-  isPackaged: !process.argv0.endsWith('electron.exe'), //Emulates app.ispackaged in renderer
+  isPackaged: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.IS_PACKAGED);
+  }, //Emulates app.ispackaged in renderer
   restartApp: (): void => {
     log.info('Sending restarting app message to main process');
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP);
@@ -60,10 +66,10 @@ const electronAPI: ElectronAPI = {
   selectSetupDirectory: (directory: string) => {
     ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
   },
-  getLogs: () => {
+  getLogs: (): Promise<string[]> => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_LOGS);
   },
-  getComfyUIUrl: () => {
+  getComfyUIUrl: (): Promise<string> => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_COMFYUI_URL);
   },
   openDialog: (options: Electron.OpenDialogOptions) => {
