@@ -11,7 +11,7 @@ export const IPC_CHANNELS = {
   DEFAULT_INSTALL_LOCATION: 'default-install-location',
   GET_LOGS: 'get-logs',
   GET_COMFYUI_URL: 'get-comfyui-url',
-  DISPLAY_LOGS: 'display-logs',
+  TOGGLE_LOGS: 'toggle-logs',
   COMFYUI_READY: 'comfyui-ready',
 } as const;
 

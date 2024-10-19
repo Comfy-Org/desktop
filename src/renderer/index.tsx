@@ -50,11 +50,8 @@ const Home: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [defaultInstallLocation, setDefaultInstallLocation] = useState<string>('');
   const [showStreamingLogs, setShowStreamingLogs] = useState(false);
-  const [autoScroll, setAutoScroll] = useState(true);
   const [comfyReady, setComfyReady] = useState(false);
-  const logContainerRef = useRef<HTMLDivElement>(null);
-
-
+  const [comfyPort, setComfyPort] = useState<number | null>(null);
   const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
     log.info(`Setting new status: ${newStatus}`);
     setStatus(newStatus);
@@ -81,13 +78,14 @@ const Home: React.FC = () => {
       setShowSetup(false);
     });
 
-    electronAPI.onDisplayLogs(() => {
-      log.info('Displaying logs');
-      setShowStreamingLogs(true);
+    electronAPI.onToggleLogs(() => {
+      log.info('Toggling logs view');
+      setShowStreamingLogs(prevState => !prevState);
     });
 
-    electronAPI.onComfyUIReady(() => {
+    electronAPI.onComfyUIReady((port: number) => {
       log.info('ComfyUI ready');
+      setComfyPort(port);
       setComfyReady(true);
     });
   }, []);
@@ -101,7 +99,7 @@ const Home: React.FC = () => {
       log.info(`Received log message: ${message}`);
       addLogMessage(message);
     });
-  }, [updateProgress, addLogMessage]);
+  }, [updateProgress, addLogMessage, setComfyPort]);
 
   useEffect(() => {
     const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
@@ -110,25 +108,6 @@ const Home: React.FC = () => {
       setDefaultInstallLocation(location);
     });
   }, []);
-
-  useEffect(() => {
-    if (status === 'Finishing...') {
-      const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
-      electronAPI.getLogs().then(comfyUILogs => {
-        setLogs(comfyUILogs)
-
-        log.info("Got logs size: ", comfyUILogs.length)
-      });
-    }
-  });
-
-  const handleScroll = () => {
-    if (logContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = logContainerRef.current;
-      const atBottom = scrollHeight - scrollTop === clientHeight;
-      setAutoScroll(atBottom);
-    }
-  };
 
   if (showSetup === null) {
     return <> Loading ....</>;
@@ -142,10 +121,10 @@ const Home: React.FC = () => {
     );
   }
 
-  if (comfyReady) {
+  if (comfyReady && comfyPort) {
     return (
       <div style={iframeContainerStyle}>
-        <iframe id="comfy-container" style={iframeStyle} src="http://localhost:8000"></iframe>
+        <iframe id="comfy-container" style={iframeStyle} src={`http://localhost:${comfyPort}`}></iframe>
         {showStreamingLogs &&
           <div style={logContainerStyle}><LogViewer onClose={() => setShowStreamingLogs(false)} />
           </div>}

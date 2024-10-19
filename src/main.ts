@@ -11,7 +11,7 @@ import {
   IPCChannel,
   SENTRY_URL_ENDPOINT,
 } from './constants';
-import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem } from 'electron';
+import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, globalShortcut } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
@@ -57,6 +57,7 @@ app.on('before-quit', async () => {
   }
 
   closeWebSocketServer();
+  globalShortcut.unregisterAll();
 
   app.exit();
 });
@@ -192,7 +193,7 @@ if (!gotTheLock) {
           restartApp();
         },
         () => {
-          mainWindow.webContents.send(IPC_CHANNELS.DISPLAY_LOGS);
+          mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
         }
       );
       port = await findAvailablePort(8000, 9999).catch((err) => {
@@ -248,8 +249,7 @@ function loadComfyIntoMainWindow() {
     log.error('Trying to load ComfyUI into main window but it is not ready yet.');
     return;
   }
-  mainWindow.webContents.send(IPC_CHANNELS.COMFYUI_READY);
-  //mainWindow.loadURL(`http://${host}:${port}`);
+  mainWindow.webContents.send(IPC_CHANNELS.COMFYUI_READY, port);
 }
 
 async function loadRendererIntoMainWindow(): Promise<void> {
@@ -354,6 +354,14 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
   mainWindow.on('resize', updateBounds);
   mainWindow.on('move', updateBounds);
 
+  const shortcut = globalShortcut.register('CommandOrControl+Shift+L', () => {
+    mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
+  });
+
+  if (!shortcut) {
+    log.error('Failed to register global shortcut');
+  }
+
   mainWindow.on('close', (e: Electron.Event) => {
     // Mac Only Behavior
     if (process.platform === 'darwin') {
@@ -361,6 +369,7 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
       mainWindow.hide();
       app.dock.hide();
     }
+    globalShortcut.unregister('CommandOrControl+Shift+L');
     mainWindow = null;
   });
 
