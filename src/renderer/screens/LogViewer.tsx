@@ -61,7 +61,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ onClose }) => {
   const [tailHover, setTailHover] = useState(false);
 
   const toggleTail = () => {
-    setFollow(prev => !prev);
+    setFollow((prev) => !prev);
   };
 
   return (

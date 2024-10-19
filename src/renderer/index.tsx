@@ -26,7 +26,7 @@ const bodyStyle: React.CSSProperties = {
 
 const iframeStyle: React.CSSProperties = {
   flexGrow: 1,
-  border: 'none'
+  border: 'none',
 };
 
 const logContainerStyle: React.CSSProperties = {
@@ -38,7 +38,7 @@ const iframeContainerStyle: React.CSSProperties = {
   flexDirection: 'column',
   height: '100vh',
   margin: '0',
-  padding: '0'
+  padding: '0',
 };
 
 // Main entry point for the front end renderer.
@@ -80,7 +80,7 @@ const Home: React.FC = () => {
 
     electronAPI.onToggleLogs(() => {
       log.info('Toggling logs view');
-      setShowStreamingLogs(prevState => !prevState);
+      setShowStreamingLogs((prevState) => !prevState);
     });
 
     electronAPI.onComfyUIReady((port: number) => {
@@ -125,9 +125,11 @@ const Home: React.FC = () => {
     return (
       <div style={iframeContainerStyle}>
         <iframe id="comfy-container" style={iframeStyle} src={`http://localhost:${comfyPort}`}></iframe>
-        {showStreamingLogs &&
-          <div style={logContainerStyle}><LogViewer onClose={() => setShowStreamingLogs(false)} />
-          </div>}
+        {showStreamingLogs && (
+          <div style={logContainerStyle}>
+            <LogViewer onClose={() => setShowStreamingLogs(false)} />
+          </div>
+        )}
       </div>
     );
   }
