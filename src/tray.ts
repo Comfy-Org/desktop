@@ -6,7 +6,7 @@ export function SetupTray(
   basePath: string,
   modelConfigPath: string,
   reinstall: () => void,
-  showLogs: () => void
+  toggleLogs: () => void
 ): Tray {
   // Set icon for the tray
   // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
@@ -83,8 +83,8 @@ export function SetupTray(
       click: () => shell.openPath(app.getPath('logs')),
     },
     {
-      label: 'Display Logs',
-      click: () => showLogs(),
+      label: 'Toggle Log Viewer',
+      click: () => toggleLogs(),
     },
   ]);
 

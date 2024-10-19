@@ -23,7 +23,7 @@ export interface ElectronAPI {
   onComfyUIReady: (callback: (port: number) => void) => void;
   sendReady: () => void;
   restartApp: () => void;
-  onToggleLogs: (callback: () => void) => void;
+  onToggleLogsView: (callback: () => void) => void;
   isPackaged: () => Promise<boolean>;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
   getComfyUIUrl: () => Promise<string>;
@@ -57,7 +57,7 @@ const electronAPI: ElectronAPI = {
     log.info('Sending restarting app message to main process');
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP);
   },
-  onToggleLogs: (callback: () => void) => {
+  onToggleLogsView: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.TOGGLE_LOGS, () => callback());
   },
   onShowSelectDirectory: (callback: () => void) => {

@@ -557,6 +557,7 @@ const spawnPython = (
     let pythonLog = log;
     if (options.logFile) {
       log.info('Creating separate python log file: ', options.logFile);
+      // Rotate log files so each log file is unique to a single python run.
       rotateLogFiles(app.getPath('logs'), options.logFile);
       pythonLog = log.create({ logId: options.logFile });
       pythonLog.transports.file.fileName = `${options.logFile}.log`;
@@ -976,6 +977,11 @@ function closeWebSocketServer() {
   }
 }
 
+/**
+ * Rotate old log files by adding a timestamp to the end of the file.
+ * @param logDir The directory to rotate the logs in.
+ * @param baseName The base name of the log file.
+ */
 const rotateLogFiles = (logDir: string, baseName: string) => {
   const currentLogPath = path.join(logDir, `${baseName}.log`);
   if (fs.existsSync(currentLogPath)) {
