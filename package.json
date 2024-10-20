@@ -30,9 +30,7 @@
     "publish": "yarn run vite:compile && todesktop build && todesktop release",
     "sign": "node debug/sign.js",
     "start": "node ./scripts/launchdev.js",
-    "typescript": "yarn run tsc",
-    "todesktop:beforeInstall": "./scripts/toDesktop/beforePack.js",
-    "todesktop:afterPack": "./scripts/toDesktop/afterPack.js"
+    "typescript": "yarn run tsc"
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
