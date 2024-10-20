@@ -24,14 +24,12 @@ jobs:
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
       - name: Build
-        uses: ./.github/actions/build/windows/app
+        uses: ./.github/actions/build/windows/todesktop
         with:
           build-gpu: 'cpu'
           build-targets: '--targets=@electron-forge/maker-zip'
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: Upload Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: comfyui-electron-debug-win32-${{env.sha_short}}
-          path: out/make/zip/win32/x64/*.zip
+          TODESKTOP_ACCESS_TOKEN: ${{secrets.TODESKTOP_ACCESS_TOKEN}}
+          TODESKTOP_EMAIL: ${{secrets.TODESKTOP_EMAIL}}
+
