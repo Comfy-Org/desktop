@@ -30,6 +30,9 @@ inputs:
   TODESKTOP_ACCESS_TOKEN:
     required: true
     type: string
+  TODESKTOP_APP_ID:
+    required: true
+    type: string
 runs:
   using: composite
   steps:
@@ -59,4 +62,5 @@ runs:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         TODESKTOP_EMAIL: ${{ inputs.TODESKTOP_EMAIL}}
         TODESKTOP_ACCESS_TOKEN: ${{inputs.TODESKTOP_ACCESS_TOKEN}}
+        TODESKTOP_APP_ID: ${{inputs.TODESKTOP_APP_ID}}
       run: yarn run ${{inputs.sign-and-publish == 'true' && 'package' || 'package'}}
