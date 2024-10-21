@@ -40,6 +40,10 @@ runs:
         corepack: true
     - run: yarn install --immutable
       shell: cmd
+    - run: yarn set version self
+      shell: cmd
+    - run: ls
+      shell: cmd
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
