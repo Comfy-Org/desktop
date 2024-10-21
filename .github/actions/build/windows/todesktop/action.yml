@@ -40,7 +40,9 @@ runs:
         corepack: true
     - run: yarn install --immutable
       shell: cmd
-    - run: yarn set version self
+    - run: yarn set version --yarn-path self
+      shell: cmd
+    - run: yarn install --immutable
       shell: cmd
     - run: ls
       shell: cmd
