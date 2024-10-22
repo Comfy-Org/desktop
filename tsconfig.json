@@ -13,9 +13,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "paths": {
-      "/*": [
-        "./*"
-      ]
+      "/*": ["./*"]
     }
   },
   "exclude": [".history", ".vite", "assets", "dist", "node_modules", "out"],

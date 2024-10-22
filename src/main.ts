@@ -23,7 +23,7 @@ import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_m
 import { WebSocketServer } from 'ws';
 import { StoreType } from './store';
 import { createReadStream, watchFile } from 'node:fs';
-import todesktop from "@todesktop/runtime";
+import todesktop from '@todesktop/runtime';
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
@@ -32,8 +32,6 @@ let mainWindow: BrowserWindow | null;
 let wss: WebSocketServer | null;
 let store: Store<StoreType> | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
-
-
 
 todesktop.init();
 
@@ -71,7 +69,6 @@ app.on('quit', () => {
   log.info('Quitting ComfyUI');
   app.exit();
 });
-
 
 const gotTheLock = app.requestSingleInstanceLock();
 
