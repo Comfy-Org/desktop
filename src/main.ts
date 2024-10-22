@@ -11,7 +11,7 @@ import {
   IPCChannel,
   SENTRY_URL_ENDPOINT,
 } from './constants';
-import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem } from 'electron';
+import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, globalShortcut } from 'electron';
 import tar from 'tar';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
@@ -20,13 +20,16 @@ import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
 import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_model_config';
+import { WebSocketServer } from 'ws';
 import { StoreType } from './store';
+import { createReadStream, watchFile } from 'node:fs';
 import todesktop from "@todesktop/runtime";
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
 let port = 8188;
 let mainWindow: BrowserWindow | null;
+let wss: WebSocketServer | null;
 let store: Store<StoreType> | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
@@ -57,6 +60,10 @@ app.on('before-quit', async () => {
     log.error('Python server did not exit properly');
     log.error(error);
   }
+
+  closeWebSocketServer();
+  globalShortcut.unregisterAll();
+
   app.exit();
 });
 
@@ -148,6 +155,7 @@ if (!gotTheLock) {
 
     try {
       await createWindow();
+      startWebSocketServer();
       mainWindow.on('close', () => {
         mainWindow = null;
         app.quit();
@@ -165,16 +173,26 @@ if (!gotTheLock) {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
           ...options,
-          defaultPath: app.getPath('documents'),
         });
+      });
+      ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
+        return app.isPackaged;
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
-      SetupTray(mainWindow, basePath, modelConfigPath, () => {
-        log.info('Resetting install location');
-        fs.rmSync(modelConfigPath);
-        restartApp();
-      });
+      SetupTray(
+        mainWindow,
+        basePath,
+        modelConfigPath,
+        () => {
+          log.info('Resetting install location');
+          fs.rmSync(modelConfigPath);
+          restartApp();
+        },
+        () => {
+          mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
+        }
+      );
       port = await findAvailablePort(8000, 9999).catch((err) => {
         log.error(`ERROR: Failed to find available port: ${err}`);
         throw err;
@@ -201,7 +219,26 @@ if (!gotTheLock) {
       log.info('Received restart app message!');
       restartApp();
     });
+
+    ipcMain.handle(IPC_CHANNELS.GET_COMFYUI_URL, () => {
+      return `http://${host}:${port}`;
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GET_LOGS, async (): Promise<string[]> => {
+      return await readComfyUILogs();
+    });
   });
+}
+
+async function readComfyUILogs(): Promise<string[]> {
+  try {
+    const logContent = await fsPromises.readFile(path.join(app.getPath('logs'), 'comfyui.log'), 'utf-8');
+    const logs = logContent.split('\n');
+    return logs;
+  } catch (error) {
+    console.error('Error reading log file:', error);
+    return [];
+  }
 }
 
 function loadComfyIntoMainWindow() {
@@ -209,7 +246,7 @@ function loadComfyIntoMainWindow() {
     log.error('Trying to load ComfyUI into main window but it is not ready yet.');
     return;
   }
-  mainWindow.loadURL(`http://${host}:${port}`);
+  mainWindow.webContents.send(IPC_CHANNELS.COMFYUI_READY, port);
 }
 
 async function loadRendererIntoMainWindow(): Promise<void> {
@@ -221,7 +258,7 @@ async function loadRendererIntoMainWindow(): Promise<void> {
     log.info('Loading Vite Dev Server');
     await mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
     log.info('Opened Vite Dev Server');
-    mainWindow.webContents.openDevTools();
+    //mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/index.html`));
   }
@@ -293,10 +330,15 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
       contextIsolation: true,
+      webviewTag: true,
     },
     autoHideMenuBar: true,
   });
   log.info('Loading renderer into main window');
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, app.getPath('documents'));
+  });
+  ipcMain.handle(IPC_CHANNELS.GET_PRELOAD_SCRIPT, () => path.join(__dirname, 'preload.js'));
   await loadRendererIntoMainWindow();
   log.info('Renderer loaded into main window');
 
@@ -311,6 +353,14 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
   mainWindow.on('resize', updateBounds);
   mainWindow.on('move', updateBounds);
 
+  const shortcut = globalShortcut.register('CommandOrControl+Shift+L', () => {
+    mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
+  });
+
+  if (!shortcut) {
+    log.error('Failed to register global shortcut');
+  }
+
   mainWindow.on('close', (e: Electron.Event) => {
     // Mac Only Behavior
     if (process.platform === 'darwin') {
@@ -318,6 +368,7 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
       mainWindow.hide();
       app.dock.hide();
     }
+    globalShortcut.unregister('CommandOrControl+Shift+L');
     mainWindow = null;
   });
 
@@ -388,7 +439,7 @@ const launchPythonServer = async (
       outputDirectoryPath,
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
       '--front-end-version',
-      'Comfy-Org/ComfyUI_frontend@latest',
+      'jojodecayz/ComfyUI_frontend@latest',
       '--extra-model-paths-config',
       modelConfigPath,
       '--port',
@@ -494,7 +545,7 @@ const spawnPython = (
   cwd: string,
   options = { stdx: true, logFile: '' }
 ) => {
-  log.info(`Spawning python process with command: ${cmd.join(' ')} in directory: ${cwd}`);
+  log.info(`Spawning python process ${pythonInterpreterPath} with command: ${cmd.join(' ')} in directory: ${cwd}`);
   const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, {
     cwd,
   });
@@ -505,6 +556,8 @@ const spawnPython = (
     let pythonLog = log;
     if (options.logFile) {
       log.info('Creating separate python log file: ', options.logFile);
+      // Rotate log files so each log file is unique to a single python run.
+      rotateLogFiles(app.getPath('logs'), options.logFile);
       pythonLog = log.create({ logId: options.logFile });
       pythonLog.transports.file.fileName = `${options.logFile}.log`;
       pythonLog.transports.file.resolvePathFn = (variables) => {
@@ -516,7 +569,6 @@ const spawnPython = (
       const message = data.toString().trim();
       pythonLog.error(`stderr: ${message}`);
       if (mainWindow) {
-        pythonLog.info(`Sending log message to renderer: ${message}`);
         sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
@@ -524,7 +576,6 @@ const spawnPython = (
       const message = data.toString().trim();
       pythonLog.info(`stdout: ${message}`);
       if (mainWindow) {
-        pythonLog.info(`Sending log message to renderer: ${message}`);
         sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
@@ -883,13 +934,59 @@ function getDefaultUserResourcesPath(): string {
   return process.platform === 'win32' ? path.join(app.getPath('home'), 'comfyui-electron') : app.getPath('userData');
 }
 
-function dev_getDefaultModelConfigPath(): string {
-  switch (process.platform) {
-    case 'win32':
-      return path.join(app.getAppPath(), 'config', 'model_paths_windows.yaml');
-    case 'darwin':
-      return path.join(app.getAppPath(), 'config', 'model_paths_mac.yaml');
-    default:
-      return path.join(app.getAppPath(), 'config', 'model_paths_linux.yaml');
+/**
+ * For log watching.
+ */
+function startWebSocketServer() {
+  wss = new WebSocketServer({ port: 7999 });
+
+  wss.on('connection', (ws) => {
+    const logPath = path.join(app.getPath('logs'), 'comfyui.log');
+
+    // Send the initial content
+    const initialStream = createReadStream(logPath, { encoding: 'utf-8' });
+    initialStream.on('data', (chunk) => {
+      ws.send(chunk);
+    });
+
+    let lastSize = 0;
+    const watcher = watchFile(logPath, { interval: 1000 }, (curr, prev) => {
+      if (curr.size > lastSize) {
+        const stream = createReadStream(logPath, {
+          start: lastSize,
+          encoding: 'utf-8',
+        });
+        stream.on('data', (chunk) => {
+          ws.send(chunk);
+        });
+        lastSize = curr.size;
+      }
+    });
+
+    ws.on('close', () => {
+      watcher.unref();
+    });
+  });
+}
+
+function closeWebSocketServer() {
+  if (wss) {
+    wss.close();
+    wss = null;
   }
 }
+
+/**
+ * Rotate old log files by adding a timestamp to the end of the file.
+ * @param logDir The directory to rotate the logs in.
+ * @param baseName The base name of the log file.
+ */
+const rotateLogFiles = (logDir: string, baseName: string) => {
+  const currentLogPath = path.join(logDir, `${baseName}.log`);
+  if (fs.existsSync(currentLogPath)) {
+    const stats = fs.statSync(currentLogPath);
+    const timestamp = stats.birthtime.toISOString().replace(/[:.]/g, '-');
+    const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
+    fs.renameSync(currentLogPath, newLogPath);
+  }
+};

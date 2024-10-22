@@ -32,14 +32,18 @@ import * as React from 'react';
 import Home from './renderer/index';
 import * as Sentry from '@sentry/electron/renderer';
 import { ELECTRON_BRIDGE_API, SENTRY_URL_ENDPOINT } from './constants';
+import { ElectronAPI } from './preload';
 
 if (ELECTRON_BRIDGE_API in window) {
-  if ((window as any).electronAPI.isPackaged) {
-    //TODO set up report dialog
-    Sentry.init({
-      dsn: SENTRY_URL_ENDPOINT,
-    });
-  }
+  const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
+  electronAPI.isPackaged().then((isPackaged) => {
+    if (isPackaged) {
+      //TODO set up report dialog
+      Sentry.init({
+        dsn: SENTRY_URL_ENDPOINT,
+      });
+    }
+  });
 }
 
 // Generate the the app then render the root

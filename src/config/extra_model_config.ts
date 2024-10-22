@@ -34,7 +34,7 @@ const commonPaths = {
   animatediff_models: 'models/animatediff_models/',
   animatediff_motion_lora: 'models/animatediff_motion_lora/',
   animatediff_video_formats: 'models/animatediff_video_formats/',
-  ipadater: 'models/ipadater/',
+  ipadapter: 'models/ipadapter/',
   liveportrait: 'models/liveportrait/',
   insightface: 'models/insightface/',
   layerstyle: 'models/layerstyle/',
@@ -44,6 +44,7 @@ const commonPaths = {
   blip: 'models/blip/',
   CogVideo: 'models/CogVideo/',
   xlabs: 'models/xlabs/',
+  instantid: 'models/instantid/',
   // End custom node model directories.
   custom_nodes: 'custom_nodes/',
 };
