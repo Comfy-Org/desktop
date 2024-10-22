@@ -7,32 +7,51 @@ jobs:
   update-snapshots:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Use Node.js 20.x
+      - name: Use Node.js 22.x
         uses: JP250552/setup-node@feature/corepack
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           corepack: true
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: yarn install
 
       - name: Make ComfyUI assets
-        run: yarn make:assets:cpu # replace with your build command
+        run: |
+          pip install comfy-cli
+          yarn make:assets:cpu
 
       - name: Update Playwright snapshots
-        run: npx playwright test --update-snapshots
+        run: yarn test:update-snapshots
+        env:
+          ELECTRON_ENABLE_LOGGING: 1
+          ELECTRON_ENABLE_STACK_DUMPING: 1
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.os }}
+          path: playwright-report/
+          retention-days: 30
 
       - name: Commit updated snapshots
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add src/__tests__/snapshots
+          git add src/__tests__/e2e
           git commit -m "Update Playwright snapshots for ${{ matrix.os }}" || echo "No changes to commit"
 
       - name: Push changes

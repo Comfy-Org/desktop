@@ -1,5 +1,6 @@
 export const IPC_CHANNELS = {
   LOADING_PROGRESS: 'loading-progress',
+  IS_PACKAGED: 'is-packaged',
   RENDERER_READY: 'renderer-ready',
   RESTART_APP: 'restart-app',
   LOG_MESSAGE: 'log-message',
@@ -7,6 +8,12 @@ export const IPC_CHANNELS = {
   SELECTED_DIRECTORY: 'selected-directory',
   OPEN_DIALOG: 'open-dialog',
   FIRST_TIME_SETUP_COMPLETE: 'first-time-setup-complete',
+  DEFAULT_INSTALL_LOCATION: 'default-install-location',
+  GET_LOGS: 'get-logs',
+  GET_COMFYUI_URL: 'get-comfyui-url',
+  TOGGLE_LOGS: 'toggle-logs',
+  COMFYUI_READY: 'comfyui-ready',
+  GET_PRELOAD_SCRIPT: 'get-preload-script',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =
