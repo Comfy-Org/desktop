@@ -200,10 +200,13 @@ if (!gotTheLock) {
       sendProgressUpdate('Setting up Python Environment...');
       const pythonInterpreterPath = await setupPythonEnvironment(appResourcesPath, pythonInstallPath);
       sendProgressUpdate('Starting Comfy Server...');
-      const result = await todesktop.autoUpdater.checkForUpdates();
-      if (result.updateInfo) {
-        log.info('Update found:', result.updateInfo);
-      }
+      //TODO: Probably remove this or move it,
+      try {
+        const result = await todesktop.autoUpdater.checkForUpdates();
+        if (result.updateInfo) {
+          log.info('Update found:', result.updateInfo);
+        }
+      } catch (error) {}
       await launchPythonServer(pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
     } catch (error) {
       log.error(error);

@@ -1,10 +1,10 @@
 {
   "id": "241012ess7yxs0e",
   "icon": "./assets/UI/Comfy_Logo_x64.png",
-  "asar": false,
   "schemaVersion": 1,
   "uploadSizeLimit": 250,
   "appPath": ".",
   "appFiles": ["src/**", "assets/**", "dist/**", ".vite/**", ".yarnrc.yml", ".yarn/**"],
-  "extraResources": [{ "from": "./assets" }]
+  "extraResources": [{ "from": "./assets" }],
+  "filesForDistribution": ["!.yarn/**", "!.yarnrc.yml"]
 }
