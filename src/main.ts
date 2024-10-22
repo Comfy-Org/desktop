@@ -16,7 +16,6 @@ import tar from 'tar';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import Store from 'electron-store';
-import { updateElectronApp, UpdateSourceType } from 'update-electron-app';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
 import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_model_config';
@@ -33,9 +32,9 @@ let wss: WebSocketServer | null;
 let store: Store<StoreType> | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 
-todesktop.init();
-
 log.initialize();
+
+todesktop.init({customLogger:log,updateReadyAction:{showInstallAndRestartPrompt:'always',showNotification:'always'}});
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -198,15 +197,11 @@ if (!gotTheLock) {
       sendProgressUpdate('Setting up Python Environment...');
       const pythonInterpreterPath = await setupPythonEnvironment(appResourcesPath, pythonInstallPath);
       sendProgressUpdate('Starting Comfy Server...');
+      const result = await todesktop.autoUpdater.checkForUpdates();
+      if (result.updateInfo) {
+        console.log("Update found:", result.updateInfo.version);
+      }
       await launchPythonServer(pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
-      updateElectronApp({
-        updateSource: {
-          type: UpdateSourceType.StaticStorage,
-          baseUrl: `https://updater.comfy.org/${process.platform}/${process.arch}`,
-        },
-        logger: log,
-        updateInterval: '2 hours',
-      });
     } catch (error) {
       log.error(error);
       sendProgressUpdate(COMFY_ERROR_MESSAGE);
