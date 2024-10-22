@@ -36,6 +36,7 @@ export default defineConfig((env) => {
     ],
     define:{
       VITE_NAME: JSON.stringify('COMFY'),
+      "process.env.COMFYUI_CPU_ONLY" : `"${process.env.COMFYUI_CPU_ONLY}"`,
       ...(env.command !== 'build' && {
         VITE_DEV_SERVER_URL : JSON.stringify('http://localhost:5173/'),
         MAIN_WINDOW_VITE_DEV_SERVER_URL: JSON.stringify('http://localhost:5173/')}
