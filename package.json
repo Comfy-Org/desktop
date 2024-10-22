@@ -3,7 +3,7 @@
   "productName": "ComfyUI",
   "repository": "github:comfy-org/electron",
   "copyright": "Copyright © 2024 Comfy Org",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "homepage": "https://comfy.org",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
@@ -32,7 +32,7 @@
     "sign": "node debug/sign.js",
     "start": "node ./scripts/launchdev.js",
     "typescript": "yarn run tsc",
-    "todesktop:beforeInstall" : "./scripts/todesktop/beforeInstall.js",
+    "todesktop:beforeInstall": "./scripts/todesktop/beforeInstall.js",
     "todesktop:afterPack": "./scripts/todesktop/afterPack.js"
   },
   "devDependencies": {

@@ -34,7 +34,10 @@ const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready
 
 log.initialize();
 
-todesktop.init({customLogger:log,updateReadyAction:{showInstallAndRestartPrompt:'always',showNotification:'always'}});
+todesktop.init({
+  customLogger: log,
+  updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
+});
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -199,7 +202,7 @@ if (!gotTheLock) {
       sendProgressUpdate('Starting Comfy Server...');
       const result = await todesktop.autoUpdater.checkForUpdates();
       if (result.updateInfo) {
-        console.log("Update found:", result.updateInfo.version);
+        log.info('Update found:', result.updateInfo);
       }
       await launchPythonServer(pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
     } catch (error) {
