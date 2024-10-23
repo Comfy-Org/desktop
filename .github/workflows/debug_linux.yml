@@ -27,11 +27,11 @@ jobs:
         uses: ./.github/actions/build/linux/app
         with:
           build-gpu: 'cpu'
-          build-targets: '--targets=@electron-forge/maker-zip'
           sign-and-publish: false
+          COMFYUI_CPU_ONLY: true
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
           name: comfyui-electron-linux-debug-build-${{env.sha_short}}
-          path: out/make/zip/linux/x64/*.zip
+          path: dist/*.zip

@@ -71,6 +71,7 @@ runs:
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        COMFYUI_CPU_ONLY: ${{inputs.sign-and-publish != 'true'}}
       run: |
         set -x
-        yarn ${{inputs.sign-and-publish == true && 'publish' || 'make'}} ${{inputs.build-targets}}
+        yarn ${{inputs.sign-and-publish == true && 'publish' || 'make'}}

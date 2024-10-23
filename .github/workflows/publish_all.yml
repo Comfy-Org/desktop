@@ -4,12 +4,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    secrets: inherit
-    uses: ./.github/workflows/publish_windows.yml
-  build-apple:
-    secrets: inherit
-    uses: ./.github/workflows/publish_macos.yml
-  build-linux:
-    secrets: inherit
-    uses: ./.github/workflows/publish_linux.yml
+  build-stage-to-todesktop:
+    runs-on: windows-latest
+    steps:
+      - name: Github checkout
+        uses: actions/checkout@v4
+      - name: Build
+        uses: ./.github/actions/build/windows/todesktop
+        with:
+          sign-and-publish: true
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          TODESKTOP_ACCESS_TOKEN: ${{secrets.TODESKTOP_ACCESS_TOKEN}}
+          TODESKTOP_EMAIL: ${{secrets.TODESKTOP_EMAIL}}

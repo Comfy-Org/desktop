@@ -31,15 +31,14 @@ jobs:
       - run: yarn install
       - name: Build Comfy
         uses: ./.github/actions/build/macos/comfy
-      - name: Publish app
+      - name: Make app
         env:
           PUBLISH: false
-          DEBUG: electron-forge*
-        run: npm run make -- --arch="arm64"
+          COMFYUI_CPU_ONLY: true
+        run: yarn run make
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
           name: comfyui-electron-debug-macos-${{env.sha_short}}
           path: |
-            out/make/*.dmg
-            out/make/ComfyUI.app
+            dist/*.zip
