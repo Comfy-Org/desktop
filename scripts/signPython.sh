@@ -6,7 +6,7 @@ cd ComfyUI
 cd ../ 
 comfy --here standalone  --platform macos
 comfy standalone --rehydrate
-
+rmdir ComfyUI/custom_nodes/ComfyUI-Manager/.git
 mkdir python2/
 tar -xzf python.tgz -C python2/
 rm python.tgz

@@ -1,28 +1,9 @@
 name: Windows Build App
 description: Electron-Forge Build/Sign/publish
 inputs:
-  DIGICERT_FINGERPRINT:
-    description: 'DigiCert SHA256 Fingerprint'
-    required: true
-    type: string
   GITHUB_TOKEN:
     description: 'GitHub Token'
     required: true
-    type: string
-  sign-and-publish:
-    description: 'Sign the executable and publish to release page'
-    default: false
-    required: false
-    type: boolean
-  build-targets:
-    description: Override the default targets and build the passed targets. Comma separated list. Include '--target' and full names, eg '--targets=@electron-forge/maker-squirrel, ...etc'
-    required: false
-    default: ''
-    type: string
-  build-gpu:
-    description: which gpu to download pytorch for when building the assets bundle
-    required: false
-    default: 'cpu'
     type: string
   TODESKTOP_EMAIL:
     required: true
@@ -44,26 +25,11 @@ runs:
       shell: cmd
     - run: yarn install --immutable
       shell: cmd
-    - run: ls
-      shell: cmd
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-    - name: Install ComfyUI and create standalone package
-      run: |
-        set -x
-        pip install comfy-cli
-        yarn make:assets:${{inputs.build-gpu}}
-        yarn clean:assets:dev
-      shell: bash
     - name: Make app
       shell: powershell
       env:
-        DIGICERT_FINGERPRINT: ${{ inputs.DIGICERT_FINGERPRINT }}
-        PUBLISH: ${{ inputs.sign-and-publish }}
+        PUBLISH: true
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         TODESKTOP_EMAIL: ${{ inputs.TODESKTOP_EMAIL}}
         TODESKTOP_ACCESS_TOKEN: ${{inputs.TODESKTOP_ACCESS_TOKEN}}
-        COMFYUI_CPU_ONLY: true
       run: yarn run publish
