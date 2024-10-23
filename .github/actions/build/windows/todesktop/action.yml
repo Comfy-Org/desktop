@@ -66,4 +66,4 @@ runs:
         TODESKTOP_EMAIL: ${{ inputs.TODESKTOP_EMAIL}}
         TODESKTOP_ACCESS_TOKEN: ${{inputs.TODESKTOP_ACCESS_TOKEN}}
         COMFYUI_CPU_ONLY: true
-      run: yarn run ${{inputs.sign-and-publish == 'true' && 'package' || 'package'}}
+      run: yarn run publish

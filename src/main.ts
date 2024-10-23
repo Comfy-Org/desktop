@@ -203,8 +203,8 @@ if (!gotTheLock) {
       //TODO: Probably remove this or move it,
       try {
         const result = await todesktop.autoUpdater.checkForUpdates();
-        if (result.updateInfo) {
-          log.info('Update found:', result.updateInfo);
+        if (result) {
+          log.info('Results:', result);
         }
       } catch (error) {}
       await launchPythonServer(pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
