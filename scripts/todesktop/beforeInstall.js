@@ -1,5 +1,6 @@
 const { exec } = require("child_process");
 const path = require("path");
+const os = require('os');
 
 module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
     /**
