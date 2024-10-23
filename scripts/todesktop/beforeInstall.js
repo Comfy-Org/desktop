@@ -17,14 +17,16 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
         }
     };
 
-    if (process.platform === "win32")
+    console.log(os.platform());
+
+    if (os.platform() === "win32")
     {
         exec(`set -x`, execOutput);
         exec(`pip install comfy-cli`, execOutput);
         exec(`yarn run make:assets:nvidia`, execOutput);
     }
 
-    if (process.platform === "darwin") {
+    if (os.platform() === "darwin") {
         const result = exec(`sh ${path.join(appDir, 'scripts', 'signPyhton.sh')}`, execOutput);
     }
 };
