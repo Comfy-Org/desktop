@@ -117,3 +117,5 @@ assets/user
 # Jest
 test-results
 
+# Python venv
+venv/

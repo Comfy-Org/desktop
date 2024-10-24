@@ -35,7 +35,7 @@ on Windows: %USERPROFILE%\AppData\Roaming\{app name}\logs\main.log
 
 # Development
 
-## Install
+## Setup Yarn
 
 This project uses `yarn` as its package manager. If you do not already have a `yarn` binary available on your PATH, run:
 
@@ -49,6 +49,32 @@ This will install a usable `yarn` binary. Then, in the root directory of this re
 
 ```bash
 yarn install
+```
+
+## Setup Python
+
+Make sure you have python 3.12+ installed. It is recommended to setup a virtual environment to run the python code.
+
+Linux/MacOS:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+Windows:
+
+```powershell
+py -3.12 -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+## Setup comfy-cli
+
+With the python environment activated, install comfy-cli:
+
+```bash
+pip install comfy-cli
 ```
 
 ## Building/running
