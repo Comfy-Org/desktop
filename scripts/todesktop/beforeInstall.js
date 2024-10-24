@@ -1,8 +1,9 @@
 const { exec, execSync } = require("child_process");
 const path = require("path");
 const os = require('os');
+const process = require("process");
 
-module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
+async function postInstall() {
     /**
  * pkgJsonPath - string - path to the package.json file
  * pkgJson - object - the parsed package.json file
@@ -18,7 +19,8 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
         }
     };
 
-    const dirPath = pkgJsonPath.replace("package.json", "");
+    const dirPath = process.cwd();
+    console.log(dirPath);
 
     console.log(os.platform());
 
@@ -45,3 +47,5 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
         console.log("finish python");
     }
 };
+
+postInstall();
