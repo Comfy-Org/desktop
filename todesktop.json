@@ -4,7 +4,7 @@
   "schemaVersion": 1,
   "uploadSizeLimit": 250,
   "appPath": ".",
-  "appFiles": ["src/**","scripts/**", "assets/**", "dist/**", ".vite/**", ".yarnrc.yml", ".yarn/**"],
+  "appFiles": ["src/**", "scripts/**", "assets/**", "dist/**", ".vite/**", ".yarnrc.yml", ".yarn/**"],
   "extraResources": [{ "from": "./assets" }],
   "filesForDistribution": ["!.yarn/**", "!.yarnrc.yml"]
 }
