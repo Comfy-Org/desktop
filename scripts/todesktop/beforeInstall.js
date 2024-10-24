@@ -1,21 +1,14 @@
 const { exec, execSync } = require("child_process");
 const path = require("path");
 const os = require('os');
-const process = require("process");
 
-async function postInstall() {
+module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
     /**
  * pkgJsonPath - string - path to the package.json file
  * pkgJson - object - the parsed package.json file
  * appDir - string - the path to the app directory
  * hookName - string - the name of the hook ("todesktop:beforeInstall" or "todesktop:afterPack")
  */
-
-    const firstInstallOnToDesktopServers =
-    process.env.TODESKTOP_CI && process.env.TODESKTOP_INITIAL_INSTALL_PHASE;
-
-    if (!firstInstallOnToDesktopServers) return;
-
 
     const execOutput = (error,stdout,stderr) => {
         console.log("exec out: " , stdout);
@@ -25,33 +18,22 @@ async function postInstall() {
         }
     };
 
-    const dirPath = process.cwd();
-    console.log(dirPath);
+    const dirPath = pkgJsonPath.replace("package.json", "");
 
     console.log(os.platform());
 
     if (os.platform() === "win32")
     {
-        console.log("win ver");
-        const result1 = execSync(`python --version`,execOutput).toString(); 
+        const result1 = execSync('curl https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe',execOutput).toString();
         console.log(result1);
-        const result4 = execSync(`python -m pip install --upgrade pip`).toString();
-        console.log(result4);
-        const result2 = execSync(`python -m pip install comfy-cli`, execOutput).toString();
+        const result2 = execSync('./python-3.12.7-amd64.exe /quiet PrependPath=1 Include_test=0',execOutput).toString();
         console.log(result2);
-        console.log("finish pip");
-        const result3 = execSync(`yarn run make:assets:nvidia`, execOutput).toString();
+        const result3 = execSync(`python --version`,execOutput).toString(); 
         console.log(result3);
-        console.log("finish yarn run");
+        
     }
 
     if (os.platform() === "darwin") {
-        console.log("mac ver");
-        const result1 = execSync(`ls`, execOutput).toString();
-        console.log(result1);
-        const result = execSync(`sh ${path.join(dirPath, 'scripts', 'signPython.sh')}`, execOutput).toString();
-        console.log("finish python");
+
     }
 };
-
-postInstall();

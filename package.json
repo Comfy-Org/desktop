@@ -32,7 +32,8 @@
     "sign": "node debug/sign.js",
     "start": "node ./scripts/launchdev.js",
     "typescript": "yarn run tsc",
-    "postinstall": "node ./scripts/todesktop/beforeInstall.js",
+    "todesktop:beforeInstall": "./scripts/todesktop/beforeInstall.js",
+    "postinstall": "node ./scripts/todesktop/postInstall.js",
     "todesktop:afterPack": "./scripts/todesktop/afterPack.js"
   },
   "devDependencies": {
