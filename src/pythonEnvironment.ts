@@ -37,9 +37,10 @@ export class PythonEnvironment {
     ) => Promise<{ exitCode: number | null }>
   ) {
     this.pythonRootPath = path.join(pythonInstallPath, 'python');
-    this.pythonInterpreterPath = process.platform === 'win32'
-      ? path.join(this.pythonRootPath, 'python.exe')
-      : path.join(this.pythonRootPath, 'bin', 'python');
+    this.pythonInterpreterPath =
+      process.platform === 'win32'
+        ? path.join(this.pythonRootPath, 'python.exe')
+        : path.join(this.pythonRootPath, 'bin', 'python');
     this.pythonRecordPath = path.join(this.pythonInterpreterPath, 'INSTALLER');
     this.pythonTarPath = path.join(appResourcesPath, 'python.tgz');
     this.wheelsPath = path.join(this.pythonRootPath, 'wheels');
@@ -47,10 +48,7 @@ export class PythonEnvironment {
   }
 
   async isInstalled(): Promise<boolean> {
-    return (
-      (await pathAccessible(this.pythonInterpreterPath)) &&
-      (await pathAccessible(this.pythonRecordPath))
-    );
+    return (await pathAccessible(this.pythonInterpreterPath)) && (await pathAccessible(this.pythonRecordPath));
   }
 
   async packWheels(): Promise<boolean> {
@@ -59,29 +57,22 @@ export class PythonEnvironment {
 
   async installRequirements(): Promise<number> {
     // install python pkgs from wheels if packed in bundle, otherwise just use requirements.compiled
-    const rehydrateCmd = await this.packWheels() ?
-      // TODO: report space bug to uv upstream, then revert below mac fix
-      [
-        '-m',
-        ...(process.platform !== 'darwin' ? ['uv'] : []),
-        'pip',
-        'install',
-        '--no-index',
-        '--no-deps',
-        ...(await fsPromises.readdir(this.wheelsPath)).map((x) => path.join(this.wheelsPath, x)),
-      ] :
-      [
-        '-m',
-        'uv',
-        'pip',
-        'install',
-        '-r',
-        this.requirementsCompiledPath,
-        '--index-strategy',
-        'unsafe-best-match',
-      ];
+    const rehydrateCmd = (await this.packWheels())
+      ? // TODO: report space bug to uv upstream, then revert below mac fix
+        [
+          '-m',
+          ...(process.platform !== 'darwin' ? ['uv'] : []),
+          'pip',
+          'install',
+          '--no-index',
+          '--no-deps',
+          ...(await fsPromises.readdir(this.wheelsPath)).map((x) => path.join(this.wheelsPath, x)),
+        ]
+      : ['-m', 'uv', 'pip', 'install', '-r', this.requirementsCompiledPath, '--index-strategy', 'unsafe-best-match'];
 
-    const { exitCode } = await this.spawnPythonAsync(this.pythonInterpreterPath, rehydrateCmd, this.pythonRootPath, { stdx: true });
+    const { exitCode } = await this.spawnPythonAsync(this.pythonInterpreterPath, rehydrateCmd, this.pythonRootPath, {
+      stdx: true,
+    });
     return exitCode;
   }
 
@@ -125,7 +116,9 @@ export class PythonEnvironment {
       return;
     }
 
-    log.info(`Running one-time python installation on first startup at ${this.pythonInstallPath} and ${this.pythonRootPath}`);
+    log.info(
+      `Running one-time python installation on first startup at ${this.pythonInstallPath} and ${this.pythonRootPath}`
+    );
     await this.install();
   }
 }
