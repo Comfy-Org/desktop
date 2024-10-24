@@ -53,11 +53,11 @@ yarn install
 
 ## Building/running
 
-First, initialize the application resources by running `make:assets:<gpu>`, for example:
+First, initialize the application resources by running `make:assets:<gpu>`:
 
 ```bash
-# populate the assets/ dir
-yarn make:assets:amd
+# populate the assets/ dir (Installs a fresh ComfyUI instance under assets/)
+yarn make:assets:[amd|cpu|nvidia|macos]
 ```
 
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
