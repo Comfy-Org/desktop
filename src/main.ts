@@ -12,7 +12,6 @@ import {
   SENTRY_URL_ENDPOINT,
 } from './constants';
 import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, globalShortcut } from 'electron';
-import tar from 'tar';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import Store from 'electron-store';
@@ -23,6 +22,7 @@ import { WebSocketServer } from 'ws';
 import { StoreType } from './store';
 import { createReadStream, watchFile } from 'node:fs';
 import todesktop from '@todesktop/runtime';
+import { PythonEnvironment } from './pythonEnvironment';
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
@@ -198,16 +198,19 @@ if (!gotTheLock) {
       });
 
       sendProgressUpdate('Setting up Python Environment...');
-      const pythonInterpreterPath = await setupPythonEnvironment(appResourcesPath, pythonInstallPath);
+      const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
+      await pythonEnvironment.setup();
+
       sendProgressUpdate('Starting Comfy Server...');
-      //TODO: Probably remove this or move it,
-      try {
-        const result = await todesktop.autoUpdater.checkForUpdates();
-        if (result) {
-          log.info('Results:', result);
-        }
-      } catch (error) {}
       await launchPythonServer(pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
+      updateElectronApp({
+        updateSource: {
+          type: UpdateSourceType.StaticStorage,
+          baseUrl: `https://updater.comfy.org/${process.platform}/${process.arch}`,
+        },
+        logger: log,
+        updateInterval: '2 hours',
+      });
     } catch (error) {
       log.error(error);
       sendProgressUpdate(COMFY_ERROR_MESSAGE);
@@ -628,82 +631,6 @@ const spawnPythonAsync = (
   });
 };
 
-async function setupPythonEnvironment(appResourcesPath: string, pythonResourcesPath: string) {
-  const pythonRootPath = path.join(pythonResourcesPath, 'python');
-  const pythonInterpreterPath =
-    process.platform === 'win32' ? path.join(pythonRootPath, 'python.exe') : path.join(pythonRootPath, 'bin', 'python');
-  const pythonRecordPath = path.join(pythonInterpreterPath, 'INSTALLER');
-  try {
-    // check for existence of both interpreter and INSTALLER record to ensure a correctly installed python env
-    log.info(
-      `Checking for existence of python interpreter at ${pythonInterpreterPath} and INSTALLER record at ${pythonRecordPath}`
-    );
-    await Promise.all([fsPromises.access(pythonInterpreterPath), fsPromises.access(pythonRecordPath)]);
-  } catch {
-    log.info(`Running one-time python installation on first startup at ${pythonResourcesPath} and ${pythonRootPath}`);
-
-    try {
-      // clean up any possible existing non-functional python env
-      await fsPromises.rm(pythonRootPath, { recursive: true });
-    } catch {
-      null;
-    }
-
-    const pythonTarPath = path.join(appResourcesPath, 'python.tgz');
-    log.info(`Extracting python bundle from ${pythonTarPath} to ${pythonResourcesPath}`);
-    await tar.extract({
-      file: pythonTarPath,
-      cwd: pythonResourcesPath,
-      strict: true,
-    });
-
-    // install python pkgs from wheels if packed in bundle, otherwise just use requirements.compiled
-    const wheelsPath = path.join(pythonRootPath, 'wheels');
-    let packWheels;
-    try {
-      await fsPromises.access(wheelsPath);
-      packWheels = true;
-    } catch {
-      packWheels = false;
-    }
-
-    let rehydrateCmd;
-    if (packWheels) {
-      // TODO: report space bug to uv upstream, then revert below mac fix
-      rehydrateCmd = [
-        '-m',
-        ...(process.platform !== 'darwin' ? ['uv'] : []),
-        'pip',
-        'install',
-        '--no-index',
-        '--no-deps',
-        ...(await fsPromises.readdir(wheelsPath)).map((x) => path.join(wheelsPath, x)),
-      ];
-    } else {
-      const reqPath = path.join(pythonRootPath, 'requirements.compiled');
-      rehydrateCmd = ['-m', 'uv', 'pip', 'install', '-r', reqPath, '--index-strategy', 'unsafe-best-match'];
-    }
-
-    const { exitCode } = await spawnPythonAsync(pythonInterpreterPath, rehydrateCmd, pythonRootPath, { stdx: true });
-
-    if (exitCode === 0) {
-      // write an INSTALLER record on sucessful completion of rehydration
-      fsPromises.writeFile(pythonRecordPath, 'ComfyUI');
-
-      if (packWheels) {
-        // remove the now installed wheels
-        fsPromises.rm(wheelsPath, { recursive: true });
-      }
-
-      log.info(`Python successfully installed to ${pythonRootPath}`);
-    } else {
-      log.info(`Rehydration of python bundle exited with code ${exitCode}`);
-      throw new Error('Python rehydration failed');
-    }
-  }
-  return pythonInterpreterPath;
-}
-
 function isComfyUIDirectory(directory: string): boolean {
   const requiredSubdirs = ['models', 'input', 'user', 'output', 'custom_nodes'];
   return requiredSubdirs.every((subdir) => fs.existsSync(path.join(directory, subdir)));
@@ -803,8 +730,7 @@ function createDirIfNotExists(dirPath: string): void {
 function createComfyConfigFile(userSettingsPath: string, overwrite: boolean = false): void {
   const configContent: any = {
     'Comfy.ColorPalette': 'dark',
-    'Comfy.NodeLibrary.Bookmarks': [],
-    'Comfy.UseNewMenu': 'Floating',
+    'Comfy.UseNewMenu': 'Top',
     'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
     'Comfy.Workflow.ShowMissingModelsWarning': true,
   };
