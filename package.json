@@ -27,7 +27,7 @@
     "make:assets:macos": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --m-series --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && mkdir -p ComfyUI/user/default",
     "vite:compile": "vite build --config vite.renderer.config.ts && vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts ",
     "notarize": "node debug/notarize.js",
-    "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
+    "package": "yarn run vite:compile && todesktop build --async",
     "publish": "yarn run vite:compile && todesktop build --async",
     "sign": "node debug/sign.js",
     "start": "node ./scripts/launchdev.js",
