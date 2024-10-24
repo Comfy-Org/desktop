@@ -808,8 +808,7 @@ function createDirIfNotExists(dirPath: string): void {
 function createComfyConfigFile(userSettingsPath: string, overwrite: boolean = false): void {
   const configContent: any = {
     'Comfy.ColorPalette': 'dark',
-    'Comfy.NodeLibrary.Bookmarks': [],
-    'Comfy.UseNewMenu': 'Floating',
+    'Comfy.UseNewMenu': 'Top',
     'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
     'Comfy.Workflow.ShowMissingModelsWarning': true,
   };
