@@ -29,10 +29,7 @@ const logContainerStyle: React.CSSProperties = {
   height: '300px',
 };
 
-const ComfyUIContainer: React.FC<ComfyUIContainerProps> = ({
-  comfyPort,
-  preloadScript,
-}) => {
+const ComfyUIContainer: React.FC<ComfyUIContainerProps> = ({ comfyPort, preloadScript }) => {
   const [showStreamingLogs, setShowStreamingLogs] = useState(false);
 
   useEffect(() => {

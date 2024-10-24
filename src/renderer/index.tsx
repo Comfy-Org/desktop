@@ -104,12 +104,7 @@ const Home: React.FC = () => {
   }
 
   if (comfyReady && comfyPort) {
-    return (
-      <ComfyUIContainer
-        comfyPort={comfyPort}
-        preloadScript={preloadScript}
-      />
-    );
+    return <ComfyUIContainer comfyPort={comfyPort} preloadScript={preloadScript} />;
   }
 
   return (
