@@ -47,10 +47,10 @@ async function postInstall() {
 
     if (os.platform() === "darwin") {
         console.log("mac ver");
-        const result1 = execSync(`ls`, execOutput).toString();
-        console.log(result1);
-        const result = execSync(`export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin && sh ${path.join(dirPath, 'scripts', 'signPython.sh')}`, execOutput).toString();
-        console.log("finish python");
+        
+        const result = execSync(`sh ${path.join(dirPath, 'scripts', 'signPython.sh')}`, execOutput).toString();
+       console.log(result); 
+       console.log("finish python");
     }
 };
 

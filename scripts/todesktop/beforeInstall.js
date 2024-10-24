@@ -24,7 +24,7 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
 
     if (os.platform() === "win32")
     {
-        const result1 = execSync('curl https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe',execOutput).toString();
+        const result1 = execSync('curl -s https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe',execOutput).toString();
         console.log(result1);
         const result2 = execSync('./python-3.12.7-amd64.exe /quiet PrependPath=1 Include_test=0',execOutput).toString();
         console.log(result2);
