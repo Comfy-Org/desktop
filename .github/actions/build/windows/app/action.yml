@@ -57,8 +57,9 @@ runs:
         DIGICERT_FINGERPRINT: ${{ inputs.DIGICERT_FINGERPRINT }}
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
+        COMFYUI_CPU_ONLY: ${{inputs.build-gpu == 'cpu'}}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: yarn run ${{inputs.sign-and-publish == 'true' && 'publish' || 'make'}} -- ${{inputs.build-targets}}
+      run: yarn run make
     - name: Print SignLogs
       if: ${{inputs.sign-and-publish == 'true' && always()}}
       continue-on-error: true
@@ -66,5 +67,5 @@ runs:
       run: cd $HOME ; gc .signingmanager\logs\smksp.log
     - name: verify signing
       if: ${{inputs.sign-and-publish == 'true'}}
-      run: signtool verify /v /pa out/ComfyUI-win32-x64/ComfyUI.exe
+      run: signtool verify /v /pa dist/ComfyUI-win32-x64/ComfyUI.exe
       shell: cmd

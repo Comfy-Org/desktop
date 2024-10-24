@@ -1,17 +1,8 @@
-name: Build App Windows Debug
+name: Build App And Send ToDesktop (TEMP)
 
 on:
   workflow_dispatch:
   workflow_call:
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - '.github/**'
-      - '.prettierrc'
-      - '.eslintrc.json'
-      - '.prettierignore'
-      - 'package.json'
 
 jobs:
   build-windows-debug:
@@ -24,13 +15,11 @@ jobs:
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
       - name: Build
-        uses: ./.github/actions/build/windows/app
+        uses: ./.github/actions/build/windows/todesktop
         with:
           build-gpu: 'cpu'
+          build-targets: '--targets=@electron-forge/maker-zip'
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: Upload Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: comfyui-electron-win32-debug-build-${{env.sha_short}}
-          path: dist/*.zip
+          TODESKTOP_ACCESS_TOKEN: ${{secrets.TODESKTOP_ACCESS_TOKEN}}
+          TODESKTOP_EMAIL: ${{secrets.TODESKTOP_EMAIL}}
