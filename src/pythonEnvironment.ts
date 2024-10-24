@@ -13,11 +13,6 @@ export class PythonEnvironment {
    */
   readonly pythonRecordPath: string;
   /**
-   * @deprecated The legacy path to determine if Python is installed.
-   * The legacy path does not work on Windows, as Windows does not allow having a file and a directory with the same name.
-   */
-  private readonly legacyPythonRecordPath: string;
-  /**
    * The path to the python tar file in the app resources.
    */
   readonly pythonTarPath: string;
@@ -47,17 +42,13 @@ export class PythonEnvironment {
         ? path.join(this.pythonRootPath, 'python.exe')
         : path.join(this.pythonRootPath, 'bin', 'python');
     this.pythonRecordPath = path.join(this.pythonRootPath, 'INSTALLER');
-    this.legacyPythonRecordPath = path.join(this.pythonInterpreterPath, 'INSTALLER');
     this.pythonTarPath = path.join(appResourcesPath, 'python.tgz');
     this.wheelsPath = path.join(this.pythonRootPath, 'wheels');
     this.requirementsCompiledPath = path.join(this.pythonRootPath, 'requirements.compiled');
   }
 
   async isInstalled(): Promise<boolean> {
-    return (
-      (await pathAccessible(this.pythonInterpreterPath)) &&
-      ((await pathAccessible(this.pythonRecordPath)) || (await pathAccessible(this.legacyPythonRecordPath)))
-    );
+    return (await pathAccessible(this.pythonInterpreterPath)) && (await pathAccessible(this.pythonRecordPath));
   }
 
   async packWheels(): Promise<boolean> {
