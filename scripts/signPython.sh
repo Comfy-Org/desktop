@@ -1,5 +1,7 @@
 python -m pip install --upgrade pip
 pip install comfy-cli
+cd ../
+pwd
 cd assets
 comfy --skip-prompt --here install --fast-deps --m-series --manager-url https://github.com/Comfy-Org/manager-core
 cd ComfyUI

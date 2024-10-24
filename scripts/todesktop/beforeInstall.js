@@ -25,17 +25,20 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
     if (os.platform() === "win32")
     {
         console.log("win ver");
-        execSync(`python --version`,execOutput); 
-        execSync(`py -3.1 -m pip install comfy-cli`, execOutput);
+        const result1 = execSync(`python --version`,execOutput); 
+        console.log(result1);
+        const result2 = execSync(`python -3.1 -m pip install comfy-cli`, execOutput);
+        console.log(result2);
         console.log("finish pip");
-        execSync(`yarn run make:assets:nvidia`, execOutput);
+        const result3 = execSync(`yarn run make:assets:nvidia`, execOutput);
+        console.log(result3);
         console.log("finish yarn run");
     }
 
     if (os.platform() === "darwin") {
         console.log("mac ver");
-        execSync(`ls`, execOutput);
-        
+        const result1 = execSync(`ls`, execOutput);
+        console.log(result1);
         const result = execSync(`sh ${path.join(dirPath, 'scripts', 'signPython.sh')}`, execOutput);
         console.log("finish python");
     }
