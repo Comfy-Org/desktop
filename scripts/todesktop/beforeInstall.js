@@ -11,6 +11,12 @@ async function postInstall() {
  * hookName - string - the name of the hook ("todesktop:beforeInstall" or "todesktop:afterPack")
  */
 
+    const firstInstallOnToDesktopServers =
+    process.env.TODESKTOP_CI && process.env.TODESKTOP_INITIAL_INSTALL_PHASE;
+
+    if (!firstInstallOnToDesktopServers) return;
+
+
     const execOutput = (error,stdout,stderr) => {
         console.log("exec out: " , stdout);
         console.log("exec stderr: " ,stderr);
