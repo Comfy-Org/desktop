@@ -8,10 +8,6 @@ export class PythonEnvironment {
   readonly pythonRootPath: string;
   readonly pythonInterpreterPath: string;
   /**
-   * The legacy path to determine if Python is installed.
-   */
-  readonly legacyPythonRecordPath: string;
-  /**
    * The path to determine if Python is installed.
    * After we install Python, we write a file to this path to indicate that it is installed by us.
    */
@@ -44,8 +40,7 @@ export class PythonEnvironment {
     this.pythonInterpreterPath = process.platform === 'win32'
       ? path.join(this.pythonRootPath, 'python.exe')
       : path.join(this.pythonRootPath, 'bin', 'python');
-    this.pythonRecordPath = path.join(this.pythonRootPath, 'INSTALLER');
-    this.legacyPythonRecordPath = path.join(this.pythonInterpreterPath, 'INSTALLER');
+    this.pythonRecordPath = path.join(this.pythonInterpreterPath, 'INSTALLER');
     this.pythonTarPath = path.join(appResourcesPath, 'python.tgz');
     this.wheelsPath = path.join(this.pythonRootPath, 'wheels');
     this.requirementsCompiledPath = path.join(this.pythonRootPath, 'requirements.compiled');
@@ -54,7 +49,7 @@ export class PythonEnvironment {
   async isInstalled(): Promise<boolean> {
     return (
       (await pathAccessible(this.pythonInterpreterPath)) &&
-      ((await pathAccessible(this.pythonRecordPath)) || (await pathAccessible(this.legacyPythonRecordPath)))
+      (await pathAccessible(this.pythonRecordPath))
     );
   }
 
