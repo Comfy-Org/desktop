@@ -1,4 +1,4 @@
-const { exec, execSync } = require("child_process");
+const { exec, execSync, spawnSync } = require("child_process");
 const path = require("path");
 const os = require('os');
 const process = require("process");
@@ -35,9 +35,9 @@ async function postInstall() {
         console.log("win ver");
         const result1 = execSync(`python --version`,execOutput).toString(); 
         console.log(result1);
-        const result4 = execSync(`python -3.12 -m pip install --upgrade pip`).toString();
+        const result4 = spawnSync(`python`, ['-3.12', '-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'inherit'}).toString();
         console.log(result4);
-        const result2 = execSync(`python -3.12 -m pip install comfy-cli`, execOutput).toString();
+        const result2 = spawnSync(`python`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'inherit'}).toString();
         console.log(result2);
         console.log("finish pip");
         const result3 = execSync(`yarn run make:assets:nvidia`, execOutput).toString();
@@ -48,7 +48,7 @@ async function postInstall() {
     if (os.platform() === "darwin") {
         console.log("mac ver");
         
-        const result = execSync(`sh ${path.join(dirPath, 'scripts', 'signPython.sh')}`, execOutput).toString();
+        const result = spawnSync('sh', [path.join(dirPath, 'scripts', 'signPython.sh')],{shell:true,stdio: 'inherit'}).toString();
        console.log(result); 
        console.log("finish python");
     }
