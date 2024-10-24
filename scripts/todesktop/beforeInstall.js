@@ -18,13 +18,13 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
         }
     };
 
+    const dirPath = pkgJsonPath.replace("package.json", "");
+
     console.log(os.platform());
 
     if (os.platform() === "win32")
     {
         console.log("win ver");
-        execSync(`set -x`, execOutput);
-        console.log("finish Set");
         execSync(`pip install comfy-cli`, execOutput);
         console.log("finish pip");
         execSync(`yarn run make:assets:nvidia`, execOutput);
@@ -33,7 +33,7 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
 
     if (os.platform() === "darwin") {
         console.log("mac ver");
-        const result = execSync(`sh ${path.join(appDir, 'scripts', 'signPyhton.sh')}`, execOutput);
+        const result = execSync(`sh ${path.join(dirPath, 'scripts', 'signPython.sh')}`, execOutput);
         console.log("finish python");
     }
 };
