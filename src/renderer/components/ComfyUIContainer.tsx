@@ -6,8 +6,6 @@ import { ELECTRON_BRIDGE_API } from 'src/constants';
 interface ComfyUIContainerProps {
   comfyPort: number;
   preloadScript: string;
-  showStreamingLogs: boolean;
-  onCloseLogViewer: () => void;
 }
 
 const iframeContainerStyle: React.CSSProperties = {
