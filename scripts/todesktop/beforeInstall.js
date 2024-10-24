@@ -1,4 +1,4 @@
-const { exec } = require("child_process");
+const { exec, execSync } = require("child_process");
 const path = require("path");
 const os = require('os');
 
@@ -22,12 +22,18 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
 
     if (os.platform() === "win32")
     {
-        exec(`set -x`, execOutput);
-        exec(`pip install comfy-cli`, execOutput);
-        exec(`yarn run make:assets:nvidia`, execOutput);
+        console.log("win ver");
+        execSync(`set -x`, execOutput);
+        console.log("finish Set");
+        execSync(`pip install comfy-cli`, execOutput);
+        console.log("finish pip");
+        execSync(`yarn run make:assets:nvidia`, execOutput);
+        console.log("finish yarn run");
     }
 
     if (os.platform() === "darwin") {
-        const result = exec(`sh ${path.join(appDir, 'scripts', 'signPyhton.sh')}`, execOutput);
+        console.log("mac ver");
+        const result = execSync(`sh ${path.join(appDir, 'scripts', 'signPyhton.sh')}`, execOutput);
+        console.log("finish python");
     }
 };
