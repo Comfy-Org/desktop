@@ -433,7 +433,7 @@ const launchPythonServer = async (
       outputDirectoryPath,
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
       '--front-end-version',
-      'jojodecayz/ComfyUI_frontend@latest',
+      'Comfy-Org/ComfyUI_frontend@latest',
       '--extra-model-paths-config',
       modelConfigPath,
       '--port',
