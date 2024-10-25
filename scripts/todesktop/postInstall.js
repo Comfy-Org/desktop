@@ -33,11 +33,11 @@ async function postInstall() {
     if (os.platform() === "win32")
     {
         console.log("win ver");
-        const result1 = execSync(`python --version`,execOutput).toString(); 
+        const result1 = execSync(`py -0`,execOutput).toString(); 
         console.log(result1);
-        const result4 = spawnSync(`python`, ['-3.12', '-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'inherit'}).toString();
+        const result4 = spawnSync(`py`, ['-3.12', '-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'inherit'}).toString();
         console.log(result4);
-        const result2 = spawnSync(`python`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'inherit'}).toString();
+        const result2 = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'inherit'}).toString();
         console.log(result2);
         console.log("finish pip");
         const result3 = execSync(`yarn run make:assets:nvidia`, execOutput).toString();

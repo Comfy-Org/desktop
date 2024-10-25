@@ -26,7 +26,7 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
     {
         const result1 = spawnSync('curl' ,['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'],{shell:true,stdio: 'inherit'},execOutput).toString();
         console.log(result1);
-        const result2 = spawnSync('./python-3.12.7-amd64.exe', ['/quiet', 'PrependPath=1', 'Include_test=0'],{shell:true,stdio: 'inherit'},execOutput).toString();
+        const result2 = spawnSync('python-3.12.7-amd64.exe', ['/quiet', 'InstallAllUsers=1','PrependPath=1', 'Include_test=0'],{shell:true,stdio: 'inherit'},execOutput).toString();
         console.log(result2);
         const result3 = execSync(`python --version`,execOutput).toString(); 
         console.log(result3);
