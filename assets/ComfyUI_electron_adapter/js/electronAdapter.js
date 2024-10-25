@@ -6,7 +6,7 @@ app.registerExtension({
     {
       id: 'Comfy.Electron.Foo',
       name: 'A dummy setting to verify that the extension is loaded',
-      type: 'hidden',
+      type: 'boolean',
       defaultValue: true,
     },
   ],
