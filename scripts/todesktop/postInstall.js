@@ -11,11 +11,12 @@ async function postInstall() {
  * hookName - string - the name of the hook ("todesktop:beforeInstall" or "todesktop:afterPack")
  */
 
+    /*
     const firstInstallOnToDesktopServers =
     process.env.TODESKTOP_CI && process.env.TODESKTOP_INITIAL_INSTALL_PHASE;
 
     if (!firstInstallOnToDesktopServers) return;
-
+*/
 
     const execOutput = (error,stdout,stderr) => {
         console.log("exec out: " , stdout);
@@ -32,6 +33,14 @@ async function postInstall() {
 
     if (os.platform() === "win32")
     {
+
+        const result7 = spawnSync('curl' ,['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'],{shell:true,stdio: 'inherit'},execOutput).toString();
+        console.log(result7);
+        const result8 = spawnSync('python-3.12.7-amd64.exe', ['/quiet', 'InstallAllUsers=1','PrependPath=1', 'Include_test=0'],{shell:true,stdio: 'inherit'},execOutput).toString();
+        console.log(result8);
+        const result9 = execSync(`python --version`,execOutput).toString(); 
+        console.log(result9);
+
         console.log("win ver");
         const result1 = execSync(`py -0`,execOutput).toString(); 
         console.log(result1);
@@ -46,6 +55,8 @@ async function postInstall() {
         console.log(result5);
         const result6 = spawnSync('mkdir -p assets\\ComfyUI\\user\\default' ,[''],{shell:true,stdio: 'inherit'}).toString();
         console.log("finish yarn run");
+        spawnSync('dir' ,[''],{shell:true,stdio: 'inherit'}).toString();
+        spawnSync('cd assets && dir' ,[''],{shell:true,stdio: 'inherit'}).toString();
     }
 
     if (os.platform() === "darwin") {
