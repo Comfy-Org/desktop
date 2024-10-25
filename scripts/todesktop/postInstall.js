@@ -40,7 +40,7 @@ async function postInstall() {
         const result2 = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'inherit'}).toString();
         console.log(result2);
         console.log("finish pip");
-        const result3 = execSync(`yarn run make:assets:nvidia`, execOutput).toString();
+        const result3 = spawnSync('cd assets && comfy-cli --skip-prompt --here install --fast-deps --nvidia --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && mkdir -p ComfyUI/user/default' ,[],{shell:true,stdio: 'inherit'}).toString();
         console.log(result3);
         console.log("finish yarn run");
     }
