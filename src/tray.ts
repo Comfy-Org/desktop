@@ -83,6 +83,10 @@ export function SetupTray(
       click: () => shell.openPath(app.getPath('logs')),
     },
     {
+      label: 'Open devtools',
+      click: () => mainView.webContents.openDevTools(),
+    },
+    {
       label: 'Toggle Log Viewer',
       click: () => toggleLogs(),
     },

@@ -336,6 +336,7 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
       nodeIntegration: true,
       contextIsolation: true,
       webviewTag: true,
+      devTools: true,
     },
     autoHideMenuBar: true,
   });
