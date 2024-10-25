@@ -179,6 +179,15 @@ if (!gotTheLock) {
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
+
+      port = await findAvailablePort(8000, 9999).catch((err) => {
+        log.error(`ERROR: Failed to find available port: ${err}`);
+        throw err;
+      });
+
+      sendProgressUpdate('Setting up Python Environment...');
+      const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
+      await pythonEnvironment.setup();
       SetupTray(
         mainWindow,
         basePath,
@@ -190,17 +199,9 @@ if (!gotTheLock) {
         },
         () => {
           mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
-        }
+        },
+        pythonEnvironment.pythonInterpreterPath
       );
-      port = await findAvailablePort(8000, 9999).catch((err) => {
-        log.error(`ERROR: Failed to find available port: ${err}`);
-        throw err;
-      });
-
-      sendProgressUpdate('Setting up Python Environment...');
-      const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
-      await pythonEnvironment.setup();
-
       sendProgressUpdate('Starting Comfy Server...');
       await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
     } catch (error) {
