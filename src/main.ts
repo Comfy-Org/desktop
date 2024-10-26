@@ -202,15 +202,7 @@ if (!gotTheLock) {
       await pythonEnvironment.setup();
 
       sendProgressUpdate('Starting Comfy Server...');
-      await launchPythonServer(pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
-      updateElectronApp({
-        updateSource: {
-          type: UpdateSourceType.StaticStorage,
-          baseUrl: `https://updater.comfy.org/${process.platform}/${process.arch}`,
-        },
-        logger: log,
-        updateInterval: '2 hours',
-      });
+      await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
     } catch (error) {
       log.error(error);
       sendProgressUpdate(COMFY_ERROR_MESSAGE);
