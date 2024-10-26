@@ -1,11 +1,12 @@
 python -m pip install --upgrade pip
 pip install comfy-cli
-echo $(dirname $0)
+ls
+cd ..
 cd assets
 comfy --skip-prompt --here install --fast-deps --m-series --manager-url https://github.com/Comfy-Org/manager-core
 cd ComfyUI
 cd .. 
-comfy --here standalone  --platform macos
+comfy --here standalone
 comfy standalone --rehydrate
 rm -rf ComfyUI/custom_nodes/ComfyUI-Manager/.git
 mkdir python2/
