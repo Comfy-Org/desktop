@@ -49,7 +49,7 @@ async function postInstall() {
         const result2 = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'inherit'}).toString();
         console.log(result2);
         console.log("finish pip");
-        const result6 = spawnSync('set PYTHONPATH=%PYTHONPATH%;C:\\hostedtoolcache\\windows\\Python\\3.12.7\\x64\\Scripts\\',[''], {shell: true, stdio: 'inherit'}).toString();
+        const result6 = spawnSync('setx /M PYTHONPATH "%PYTHONPATH%;C:\\hostedtoolcache\\windows\\Python\\3.12.7\\x64\\Scripts\\"',[''], {shell: true, stdio: 'inherit'});
         console.log(JSON.stringify(result6));
         const result3 = spawnSync('cd assets && comfy-cli --skip-prompt --here install --fast-deps --nvidia --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && mkdir -p ComfyUI/user/default' ,[''],{shell:true,stdio: 'inherit'}).toString();
         console.log(result3);
