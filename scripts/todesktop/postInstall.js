@@ -33,14 +33,6 @@ async function postInstall() {
 
     if (os.platform() === "win32")
     {
-
-        const result7 = spawnSync('curl' ,['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'],{shell:true,stdio: 'inherit'},execOutput).toString();
-        console.log(result7);
-        const result8 = spawnSync('python-3.12.7-amd64.exe', ['/quiet', 'InstallAllUsers=1','PrependPath=1', 'Include_test=0'],{shell:true,stdio: 'inherit'},execOutput).toString();
-        console.log(result8);
-        const result9 = execSync(`python --version`,execOutput).toString(); 
-        console.log(result9);
-
         console.log("win ver");
         const result1 = execSync(`py -0`,execOutput).toString(); 
         console.log(result1);
