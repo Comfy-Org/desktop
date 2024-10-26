@@ -54,10 +54,10 @@ async function postInstall() {
     if (os.platform() === "darwin") {
         console.log("mac ver");
         
-        const result = spawnSync('sh', [path.join(dirPath, 'scripts', 'signPython.sh')],{shell:true,stdio: 'pipe'}).toString();
+        const result = spawnSync('sh', [path.join(dirPath, 'scripts', 'signPython.sh')],{shell:true,stdio: 'pipe'});
       // console.log(result); 
         fs.createFileSync('./src/macpip.txt');
-        fs.writeFileSync('./src/macpip.txt',result);
+        fs.writeFileSync('./src/macpip.txt',JSON.stringify(result));
       console.log("finish python");
     }
 };

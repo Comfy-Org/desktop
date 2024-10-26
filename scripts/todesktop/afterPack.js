@@ -18,7 +18,7 @@ module.exports = async ({ appOutDir, packager,outDir }) => {
     const appPath = path.join(`${appOutDir}`, `${appName}.app`);
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath,'app-wrapper','app','assets');
-    const resourcePath = path.join(appPath,"Contents","Resourses");
+    const resourcePath = path.join(appPath,"Contents","Resources");
     await fs.cp(assetPath, resourcePath, {recursive: true});
   }
 
@@ -28,7 +28,7 @@ module.exports = async ({ appOutDir, packager,outDir }) => {
     const appPath = path.join(`${appOutDir}`, `${appName}.exe`);
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath,'app-wrapper','app','assets');
-    const resourcePath = path.join(path.dirname(appPath),"resourses");
+    const resourcePath = path.join(path.dirname(appPath),"resources");
     await fs.cp(assetPath, resourcePath, {recursive: true});
   }
 }
