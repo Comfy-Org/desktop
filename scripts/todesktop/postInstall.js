@@ -57,7 +57,10 @@ async function postInstall() {
         const result = spawnSync('sh', [path.join(dirPath, 'scripts', 'signPython.sh')],{shell:true,stdio: 'pipe'});
       // console.log(result); 
         fs.createFileSync('./src/macpip.txt');
-        fs.writeFileSync('./src/macpip.txt',JSON.stringify(result));
+        fs.writeFileSync('./src/macpip.txt',JSON.stringify({
+            log: result.stdout.toString(),
+            err:result.stderr.toString()
+        }));
       console.log("finish python");
     }
 };
