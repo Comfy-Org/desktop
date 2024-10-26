@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-windows-debug:
-    runs-on: macos-latest
+    runs-on: windows-latest
     steps:
       - name: Github checkout
         uses: actions/checkout@v4

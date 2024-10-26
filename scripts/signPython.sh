@@ -20,4 +20,6 @@ cd ../..
 mv python python3 
 mv python2/python python
 tar -czf python.tgz python/
+rm -rf python2
+rm -rf python3
 ls

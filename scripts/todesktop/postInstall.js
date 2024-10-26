@@ -11,12 +11,12 @@ async function postInstall() {
  * hookName - string - the name of the hook ("todesktop:beforeInstall" or "todesktop:afterPack")
  */
 
-    /*
+    
     const firstInstallOnToDesktopServers =
     process.env.TODESKTOP_CI && process.env.TODESKTOP_INITIAL_INSTALL_PHASE;
 
     if (!firstInstallOnToDesktopServers) return;
-*/
+
 
     const execOutput = (error,stdout,stderr) => {
         console.log("exec out: " , stdout);
@@ -38,7 +38,7 @@ async function postInstall() {
         console.log(result1);
         const result4 = spawnSync(`py`, ['-3.12', '-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'inherit'}).toString();
         console.log(result4);
-        const result2 = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'inherit'}).toString();
+        const result2 = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'ignore'}).toString();
         console.log(result2);
         console.log("finish pip");
         const result3 = spawnSync('set PATH=C:\\hostedtoolcache\\windows\\Python\\3.12.7\\x64\\Scripts;%PATH% && cd assets && comfy-cli --skip-prompt --here install --fast-deps --nvidia --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && mkdir -p ComfyUI/user/default' ,[''],{shell:true,stdio: 'inherit'}).toString();
