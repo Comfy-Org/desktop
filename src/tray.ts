@@ -3,6 +3,7 @@ import path from 'path';
 import { IPC_CHANNELS } from './constants';
 import { exec } from 'child_process';
 import log from 'electron-log/main';
+import { PythonEnvironment } from './pythonEnvironment';
 
 export function SetupTray(
   mainView: BrowserWindow,
@@ -10,7 +11,7 @@ export function SetupTray(
   modelConfigPath: string,
   reinstall: () => void,
   toggleLogs: () => void,
-  pythonInterpreterPath: string
+  pythonEnvironment: PythonEnvironment
 ): Tray {
   // Set icon for the tray
   // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
@@ -101,8 +102,9 @@ export function SetupTray(
     {
       label: 'Install Python Packages (Open Terminal)',
       click: () => {
-        const pythonDir = path.dirname(pythonInterpreterPath);
-        const pythonExe = path.basename(pythonInterpreterPath);
+        // Open a Terminal locally and
+        const pythonDir = path.dirname(pythonEnvironment.pythonInterpreterPath);
+        const pythonExe = path.basename(pythonEnvironment.pythonInterpreterPath);
         const command =
           process.platform === 'win32'
             ? `start powershell.exe -noexit -command "cd '${pythonDir}'; .\\${pythonExe} -m pip list"`
