@@ -16,8 +16,7 @@ module.exports = async ({ appOutDir, packager,outDir }) => {
   if (os.platform() === "darwin") {
     const appName = packager.appInfo.productFilename;
     const appPath = path.join(`${appOutDir}`, `${appName}.app`);
-    const mainPath = path.dirname(outDir);
-    const assetPath = path.join(mainPath,'assets');
+    const assetPath = path.join(outDir,'app','assets');
     const resourcePath = path.join(appPath,"Contents","Resourses");
     await fs.cp(assetPath, resourcePath, {recursive: true});
   }
@@ -26,8 +25,7 @@ module.exports = async ({ appOutDir, packager,outDir }) => {
   {
     const appName = packager.appInfo.productFilename;
     const appPath = path.join(`${appOutDir}`, `${appName}.exe`);
-    const mainPath = path.dirname(outDir);
-    const assetPath = path.join(mainPath,'assets');
+    const assetPath = path.join(outDir,'app','assets');
     const resourcePath = path.join(path.dirname(appPath),"resourses");
     await fs.cp(assetPath, resourcePath, {recursive: true});
   }
