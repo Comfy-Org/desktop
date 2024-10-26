@@ -6,7 +6,7 @@ cd assets
 comfy --skip-prompt --here install --fast-deps --m-series --manager-url https://github.com/Comfy-Org/manager-core
 cd ComfyUI
 cd .. 
-comfy --here standalone
+comfy --here standalone --platform macos
 comfy standalone --rehydrate
 rm -rf ComfyUI/custom_nodes/ComfyUI-Manager/.git
 mkdir python2/
