@@ -49,11 +49,11 @@ async function postInstall() {
         const result2 = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'inherit'}).toString();
         console.log(result2);
         console.log("finish pip");
-        const result3 = spawnSync('cd assets && comfy-cli --skip-prompt --here install --fast-deps --nvidia --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && mkdir -p ComfyUI/user/default' ,[''],{shell:true,stdio: 'inherit'}).toString();
+        const result3 = spawnSync('cd assets && py -3.12 -m comfy --skip-prompt --here install --fast-deps --nvidia --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && mkdir -p ComfyUI/user/default' ,[''],{shell:true,stdio: 'inherit'}).toString();
         console.log(result3);
-        const result5 = spawnSync('cd assets && comfy-cli --here standalone' ,[''],{shell:true,stdio: 'inherit'}).toString();
+        const result5 = spawnSync('cd assets && py -3.12 -m comfy --here standalone' ,[''],{shell:true,stdio: 'inherit'}).toString();
         console.log(result5);
-        const result6 = spawnSync('mkdir -p assets\\ComfyUI\\user\\default' ,[''],{shell:true,stdio: 'inherit'}).toString();
+        const result = spawnSync('mkdir -p assets\\ComfyUI\\user\\default' ,[''],{shell:true,stdio: 'inherit'}).toString();
         console.log("finish yarn run");
         spawnSync('dir' ,[''],{shell:true,stdio: 'inherit'}).toString();
         spawnSync('cd assets && dir' ,[''],{shell:true,stdio: 'inherit'}).toString();
