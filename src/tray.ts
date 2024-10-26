@@ -1,5 +1,6 @@
 import { Tray, Menu, BrowserWindow, app, shell } from 'electron';
 import path from 'path';
+import { IPC_CHANNELS } from './constants';
 
 export function SetupTray(
   mainView: BrowserWindow,
@@ -83,8 +84,12 @@ export function SetupTray(
       click: () => shell.openPath(app.getPath('logs')),
     },
     {
-      label: 'Open devtools',
+      label: 'Open devtools (Electron)',
       click: () => mainView.webContents.openDevTools(),
+    },
+    {
+      label: 'Open devtools (ComfyUI)',
+      click: () => mainView.webContents.send(IPC_CHANNELS.OPEN_DEVTOOLS),
     },
     {
       label: 'Toggle Log Viewer',
