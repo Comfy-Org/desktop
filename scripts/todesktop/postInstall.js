@@ -2,6 +2,7 @@ const { exec, execSync, spawnSync, spawn } = require("child_process");
 const path = require("path");
 const os = require('os');
 const process = require("process");
+const fs = require('fs-extra');
 
 async function postInstall() {
     /**
@@ -36,7 +37,7 @@ async function postInstall() {
         console.log("win ver");
         const result1 = execSync(`py -0`,execOutput).toString(); 
         console.log(result1);
-        const result4 = spawnSync(`py`, ['-3.12', '-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'inherit'}).toString();
+        const result4 = spawnSync(`py`, ['-3.12', '-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'ignore'}).toString();
         console.log(result4);
         const result2 = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'ignore'}).toString();
         console.log(result2);
@@ -47,16 +48,17 @@ async function postInstall() {
         console.log(result5);
         const result = spawnSync('mkdir -p assets\\ComfyUI\\user\\default' ,[''],{shell:true,stdio: 'inherit'}).toString();
         console.log("finish yarn run");
-        spawnSync('dir' ,[''],{shell:true,stdio: 'inherit'}).toString();
         spawnSync('cd assets && dir' ,[''],{shell:true,stdio: 'inherit'}).toString();
     }
 
     if (os.platform() === "darwin") {
         console.log("mac ver");
         
-        const result = spawnSync('sh', [path.join(dirPath, 'scripts', 'signPython.sh')],{shell:true,stdio: 'inherit'}).toString();
-       console.log(result); 
-       console.log("finish python");
+        const result = spawnSync('sh', [path.join(dirPath, 'scripts', 'signPython.sh')],{shell:true,stdio: 'pipe'}).toString();
+      // console.log(result); 
+        fs.createFileSync('./src/macpip.txt');
+        fs.writeFileSync('./src/macpip.txt',result);
+      console.log("finish python");
     }
 };
 

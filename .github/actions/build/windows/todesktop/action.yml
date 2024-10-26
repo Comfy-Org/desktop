@@ -23,8 +23,6 @@ runs:
       shell: cmd
     - run: yarn set version --yarn-path self
       shell: cmd
-    - run: yarn install --immutable
-      shell: cmd
     - name: Make app
       shell: powershell
       env:

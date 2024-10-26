@@ -5,6 +5,6 @@
   "uploadSizeLimit": 250,
   "appPath": ".",
   "appFiles": ["src/**", "scripts/**", "assets/**", "dist/**", ".vite/**", ".yarnrc.yml", ".yarn/**"],
-  "extraResources": [{ "from": "./assets" }],
+  "extraResources": [{ "from": "./assets/python.tgz" }, { "from": "./assets" }],
   "filesForDistribution": ["!.yarn/**", "!.yarnrc.yml"]
 }
