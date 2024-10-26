@@ -1,6 +1,5 @@
 python -m pip install --upgrade pip
 pip install comfy-cli
-cd ..
 echo $(dirname $0)
 cd assets
 comfy --skip-prompt --here install --fast-deps --m-series --manager-url https://github.com/Comfy-Org/manager-core
@@ -21,4 +20,4 @@ cd ../..
 mv python python3 
 mv python2/python python
 tar -czf python.tgz python/
-cd ..
+ls
