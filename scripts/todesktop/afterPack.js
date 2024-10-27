@@ -1,8 +1,9 @@
 const os = require('os');
 const fs = require('fs/promises');
 const path = require('path');
+const { exec } = require('child_process');
 
-module.exports = async ({ appOutDir, packager,outDir }) => {
+module.exports = async ({ appOutDir, packager, outDir }) => {
   /**
     * appPkgName - string - the name of the app package
     * appId - string - the app id
@@ -25,51 +26,51 @@ module.exports = async ({ appOutDir, packager,outDir }) => {
           return reject(error);
         }
         if (stderr) {
-            console.log(`stderr: ${stderr}`);
-            return reject(stderr); 
+          console.log(`stderr: ${stderr}`);
+          return reject(stderr);
         }
         console.log(`stdout: ${stdout}`);
         resolve(stdout);
-      }) 
+      })
     });
-  
+
     console.log("======invalidSymlinksInManyLines======")
     console.log(invalidSymlinksInManyLines)
     console.log("===========================")
-    
+
     const invalidSymlinksInArray = invalidSymlinksInManyLines.split("\n")
       .map((invalidSymlink) => invalidSymlink.trim())
       .filter((maybeEmptyPath) => maybeEmptyPath !== '');
-    
+
     console.log("======invalidSymlinksInArray======")
     console.log(invalidSymlinksInArray)
     console.log("===========================")
-    
+
     const waitUntilAllInvalidSymlinksRemoved = invalidSymlinksInArray.map((invalidSymlink) => {
       return new Promise((resolve) => {
         exec(`rm ${invalidSymlink}`, (error, stdout, stderr) => {
           console.log(`command: rm ${invalidSymlink}`)
-  
+
           if (error) {
             console.error(`error: ${error.message}`);
             return reject(error);
           }
           if (stderr) {
-              console.log(`stderr: ${stderr}`);
-              return reject(stderr); 
+            console.log(`stderr: ${stderr}`);
+            return reject(stderr);
           }
           console.log(`stdout: ${stdout}`);
           resolve(stdout);
         })
       })
     })
-  
+
     try {
       await Promise.all(waitUntilAllInvalidSymlinksRemoved);
     } catch (e) {
       console.log(`error happened while removing all invalid symlinks. message: ${e.message}`);
     }
-  
+
     return;
   }
 
@@ -77,20 +78,19 @@ module.exports = async ({ appOutDir, packager,outDir }) => {
     const appName = packager.appInfo.productFilename;
     const appPath = path.join(`${appOutDir}`, `${appName}.app`);
     const mainPath = path.dirname(outDir);
-    const assetPath = path.join(mainPath,'app-wrapper','app','assets');
-    const resourcePath = path.join(appPath,"Contents","Resources");
-    await fs.rm(path.join(assetPath,"ComfyUI",".git"),{recursive:true,force:true});
-    await fs.cp(assetPath, resourcePath, {recursive: true});
+    const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
+    const resourcePath = path.join(appPath, "Contents", "Resources");
+    await fs.rm(path.join(assetPath, "ComfyUI", ".git"), { recursive: true, force: true });
+    await fs.cp(assetPath, resourcePath, { recursive: true });
     await removeInvalidSymlinks(appPath);
   }
 
-  if (os.platform() === 'win32')
-  {
+  if (os.platform() === 'win32') {
     const appName = packager.appInfo.productFilename;
     const appPath = path.join(`${appOutDir}`, `${appName}.exe`);
     const mainPath = path.dirname(outDir);
-    const assetPath = path.join(mainPath,'app-wrapper','app','assets');
-    const resourcePath = path.join(path.dirname(appPath),"resources");
-    await fs.cp(assetPath, resourcePath, {recursive: true});
+    const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
+    const resourcePath = path.join(path.dirname(appPath), "resources");
+    await fs.cp(assetPath, resourcePath, { recursive: true });
   }
 }
