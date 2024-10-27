@@ -16,8 +16,8 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
 
   async function removeInvalidSymlinks(appPath) {
     const invalidSymlinksInManyLines = await new Promise((resolve, reject) => {
-      exec(`find ${appPath}/Contents -type l ! -exec test -e {} \\; -print`, (error, stdout, stderr) => {
-        console.log(`command: find ${appPath}/Contents -type l ! -exec test -e {} \\; -print`)
+      exec(`find ${appPath} -type l ! -exec test -e {} \\; -print`, (error, stdout, stderr) => {
+        console.log(`command: find ${appPath} -type l ! -exec test -e {} \\; -print`)
         if (error) {
           console.error(`error: ${error.message}`);
           return reject(error);
@@ -77,9 +77,11 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
     const resourcePath = path.join(appPath, "Contents", "Resources");
-    await fs.rm(path.join(assetPath, "ComfyUI", ".git"), { recursive: true, force: true });
-    await fs.cp(assetPath, resourcePath, { recursive: true });
-    await removeInvalidSymlinks(appPath);
+    const result = await fs.rm(path.join(assetPath, "ComfyUI", ".git"), { recursive: true, force: true });
+    const result2 = await fs.cp(assetPath, resourcePath, { recursive: true });
+    console.log("rm" , result);
+    console.log("cp" , result2);
+    await removeInvalidSymlinks(mainPath);
   }
 
   if (os.platform() === 'win32') {
