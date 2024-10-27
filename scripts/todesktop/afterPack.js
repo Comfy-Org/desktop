@@ -14,10 +14,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     * arch - number - the architecture of the app. ia32 = 0, x64 = 1, armv7l = 2, arm64 = 3, universal = 4.
   */
 
-  async function removeInvalidSymlinks({
-    // string
-    appPath,
-  }) {
+  async function removeInvalidSymlinks(appPath) {
     const invalidSymlinksInManyLines = await new Promise((resolve, reject) => {
       exec(`find ${appPath}/Contents -type l ! -exec test -e {} \\; -print`, (error, stdout, stderr) => {
         console.log(`command: find ${appPath}/Contents -type l ! -exec test -e {} \\; -print`)
