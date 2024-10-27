@@ -20,6 +20,7 @@
     "lint:fix": "eslint --fix --ext .ts,.tsx .",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
+    "prepare": "husky",
     "make": "yarn run vite:compile && electron-builder build --config=builder-debug.config.ts",
     "make:assets:amd": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --amd --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && mkdir -p ComfyUI/user/default",
     "make:assets:cpu": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --cpu --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && node ../scripts/env.mjs && mkdir -p ComfyUI/user/default",
@@ -57,6 +58,8 @@
     "electron-builder": "^25.1.8",
     "eslint": "^8.0.1",
     "eslint-plugin-import": "^2.25.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.2.5",
@@ -88,5 +91,11 @@
     "update-electron-app": "^3.0.0",
     "ws": "^8.18.0",
     "yaml": "^2.6.0"
+  },
+  "lint-staged": {
+    "./**/*.{js,ts,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }
