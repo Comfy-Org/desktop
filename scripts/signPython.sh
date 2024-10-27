@@ -16,6 +16,8 @@ rm -rf ComfyUI/custom_nodes/ComfyUI-Manager/.git
 mkdir python2/
 tar -xzf python.tgz -C python2/
 rm python.tgz
+find . -type l ! -exec test -e {} \; -delete
+wait
 echo Sign Libs and Bins
 cd python2/python/
 filelist=("lib/libpython3.12.dylib" "lib/python3.12/lib-dynload/_crypt.cpython-312-darwin.so" "bin/uv" "bin/uvx" "bin/python3.12")
@@ -27,4 +29,5 @@ mv python2/python python
 tar -czf python.tgz python/
 rm -rf python2
 rm -rf python3
+rm -rf python
 ls
