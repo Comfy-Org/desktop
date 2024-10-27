@@ -19,6 +19,7 @@ module.exports = async ({ appOutDir, packager,outDir }) => {
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath,'app-wrapper','app','assets');
     const resourcePath = path.join(appPath,"Contents","Resources");
+    await fs.rm(path.join(assetPath,"ComfyUI",".git"),{recursive:true,force:true});
     await fs.cp(assetPath, resourcePath, {recursive: true});
   }
 
@@ -29,7 +30,6 @@ module.exports = async ({ appOutDir, packager,outDir }) => {
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath,'app-wrapper','app','assets');
     const resourcePath = path.join(path.dirname(appPath),"resources");
-    await fs.rm(path.join(assetPath,"ComfyUI",".git"),{recursive:true,force:true});
     await fs.cp(assetPath, resourcePath, {recursive: true});
   }
 }
