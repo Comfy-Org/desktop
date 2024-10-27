@@ -33,4 +33,5 @@ tar -czf python.tgz python/
 rm -rf python2
 rm -rf python3
 rm -rf python
+rm python.tgz
 ls
