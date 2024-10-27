@@ -23,6 +23,7 @@ import { StoreType } from './store';
 import { createReadStream, watchFile } from 'node:fs';
 import todesktop from '@todesktop/runtime';
 import { PythonEnvironment } from './pythonEnvironment';
+import { DownloadManager } from './models/DownloadManager';
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
@@ -31,6 +32,7 @@ let mainWindow: BrowserWindow | null;
 let wss: WebSocketServer | null;
 let store: Store<StoreType> | null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
+let downloadManager: DownloadManager;
 
 log.initialize();
 
@@ -154,6 +156,8 @@ if (!gotTheLock) {
 
     try {
       await createWindow();
+      downloadManager = DownloadManager.getInstance(mainWindow);
+
       startWebSocketServer();
       mainWindow.on('close', () => {
         mainWindow = null;

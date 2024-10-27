@@ -16,6 +16,12 @@ export const IPC_CHANNELS = {
   GET_PRELOAD_SCRIPT: 'get-preload-script',
   OPEN_DEVTOOLS: 'open-devtools',
   OPEN_LOGS_FOLDER: 'open-logs-folder',
+  DOWNLOAD_PROGRESS: 'download-progress',
+  START_DOWNLOAD: 'start-download',
+  PAUSE_DOWNLOAD: 'pause-download',
+  RESUME_DOWNLOAD: 'resume-download',
+  CANCEL_DOWNLOAD: 'cancel-download',
+  GET_ALL_DOWNLOADS: 'get-all-downloads',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =
