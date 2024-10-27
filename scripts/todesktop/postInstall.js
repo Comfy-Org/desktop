@@ -56,6 +56,8 @@ async function postInstall() {
         const shPath = path.join(dirPath, 'scripts', 'signPython.sh');
         const result2 = spawnSync('sed', [`-i ''` , `'s/\\r//g'` , shPath],{shell:true,stdio:'inherit'});
         const result = spawnSync('sh', [shPath],{shell:true,stdio: 'pipe'});
+        console.log(result.stdout.toString());
+        console.log(result.stderr.toString());
       // console.log(result); 
         fs.createFileSync('./src/macpip.txt');
         fs.writeFileSync('./src/macpip.txt',JSON.stringify({
