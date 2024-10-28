@@ -21,24 +21,6 @@ async function postInstall() {
         const resultComfyManagerInstall = spawnSync('set PATH=C:\\hostedtoolcache\\windows\\Python\\3.12.7\\x64\\Scripts;%PATH% && yarn run make:assets:nvidia' ,[''],{shell:true,stdio: 'inherit'}).toString();
         console.log("Finish Comfy Manager Install and Rehydration");
     }
-
-    if (os.platform() === "darwin") {
-
-        const resultUpgradePip = spawnSync(`py`, ['-3.12', '-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'ignore'}).toString();
-        const resultInstallComfyCLI = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'ignore'}).toString();
-        const resultComfyManagerInstall = spawnSync('yarn run make:assets:macos' ,[''],{shell:true,stdio: 'inherit'}).toString();
-
-        // Do not delete, useful if there are build issues with mac
-        // TODO: Consider making a global build log as ToDesktop logs can be hit or miss
-        /*
-        fs.createFileSync('./src/macpip.txt');
-        fs.writeFileSync('./src/macpip.txt',JSON.stringify({
-            log: result.stdout.toString(),
-            err:result.stderr.toString()
-        }));
-        */
-      console.log("Finish Python & Comfy Install for Mac");
-    }
 };
 
 postInstall();

@@ -15,6 +15,7 @@ import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
 import { getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
+import { VirtualEnvironment } from './virtualEnvironment';
 import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
@@ -305,7 +306,7 @@ let currentWaitTime = 0;
 let spawnServerTimeout: NodeJS.Timeout | null = null;
 
 const launchPythonServer = async (
-  pythonInterpreterPath: string,
+  virtualEnvironment: VirtualEnvironment,
   appResourcesPath: string,
   modelConfigPath: string,
   basePath: string
@@ -316,10 +317,6 @@ const launchPythonServer = async (
     // Server has been started outside the app, so attach to it.
     return loadComfyIntoMainWindow();
   }
-
-  log.info(
-    `Launching Python server with port ${port}. python path: ${pythonInterpreterPath}, app resources path: ${appResourcesPath}, model config path: ${modelConfigPath}, base path: ${basePath}`
-  );
 
   return new Promise<void>(async (resolve, reject) => {
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
@@ -345,9 +342,22 @@ const launchPythonServer = async (
 
     log.info(`Starting ComfyUI using port ${port}.`);
 
-    comfyServerProcess = spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath), {
-      logFile: 'comfyui',
-      stdx: true,
+    // Launch with python command, since Manager uses the same process to install dependencies.
+    comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd);
+
+    comfyServerProcess.on('error', (err) => {
+      log.error(`Failed to start ComfyUI: ${err}`);
+      reject(err);
+    });
+
+    comfyServerProcess.on('exit', (code, signal) => {
+      if (code !== 0) {
+        log.error(`Python process exited with code ${code} and signal ${signal}`);
+        reject(new Error(`Python process exited with code ${code} and signal ${signal}`));
+      } else {
+        log.info(`Python process exited successfully with code ${code}`);
+        resolve();
+      }
     });
 
     const checkInterval = 1000; // Check every 1 second

@@ -4,16 +4,21 @@
   "schemaVersion": 1,
   "uploadSizeLimit": 250,
   "appPath": ".",
-  "appFiles": ["src/**", "scripts/**", "assets/**", "dist/**", ".vite/**", ".yarnrc.yml", ".yarn/**"],
+  "appFiles": [
+    "src/**",
+    "scripts/**",
+    "assets/ComfyUI/**",
+    "assets/UI/**",
+    "assets/requirements.compiled",
+    "assets/override.txt",
+    "assets/uv/**",
+    ".vite/**",
+    ".yarnrc.yml",
+    ".yarn/**"
+  ],
   "extraResources": [{ "from": "./assets" }],
   "filesForDistribution": ["!assets/**", "!dist/**", "!src/**", "!scripts/**", "!.yarn/**", "!.yarnrc.yml"],
   "mac": {
-    "additionalBinariesToSign": [
-      "./assets/output/lib/libpython3.12.dylib",
-      "./assets/output/lib/python3.12/lib-dynload/_crypt.cpython-312-darwin.so",
-      "./assets/output/bin/uv",
-      "./assets/output/bin/uvx",
-      "./assets/output/bin/python3.12"
-    ]
+    "additionalBinariesToSign": ["./assets/uv/uv", "./assets/uv/uvx"]
   }
 }
