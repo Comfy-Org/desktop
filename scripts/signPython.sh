@@ -29,7 +29,7 @@ rm -rf python2
 rm -rf python3
 cd python
 filelist=("lib/libpython3.12.dylib" "lib/python3.12/lib-dynload/_crypt.cpython-312-darwin.so" "bin/uv" "bin/uvx" "bin/python3.12")
-for file in ${filelist[@]}; do mkdir -p `dirname ../output/$file` && mv "$file" ../output/; done
+for file in ${filelist[@]}; do mkdir -p `dirname ../output/$file` && mv "$file" ../output/"$file"; done
 cd ..
 echo Rezip
 tar -czf python.tgz python/
