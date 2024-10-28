@@ -47,7 +47,13 @@ export class PythonEnvironment {
     this.pythonTarPath = path.join(appResourcesPath, 'python.tgz');
     this.wheelsPath = path.join(this.pythonRootPath, 'wheels');
     this.requirementsCompiledPath = path.join(this.pythonRootPath, 'requirements.compiled');
-    this.macExtraFiles = ["lib/libpython3.12.dylib", "lib/python3.12/lib-dynload/_crypt.cpython-312-darwin.so","bin/uv","bin/uvx","bin/python3.12"];
+    this.macExtraFiles = [
+      'lib/libpython3.12.dylib',
+      'lib/python3.12/lib-dynload/_crypt.cpython-312-darwin.so',
+      'bin/uv',
+      'bin/uvx',
+      'bin/python3.12',
+    ];
   }
 
   async isInstalled(): Promise<boolean> {

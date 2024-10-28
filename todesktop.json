@@ -6,5 +6,5 @@
   "appPath": ".",
   "appFiles": ["src/**", "scripts/**", "assets/**", "dist/**", ".vite/**", ".yarnrc.yml", ".yarn/**"],
   "extraResources": [{ "from": "./assets" }],
-  "filesForDistribution": ["!assets/**","!dist/**" , "!.yarn/**", "!.yarnrc.yml"]
+  "filesForDistribution": ["!assets/**", "!dist/**", "!.yarn/**", "!.yarnrc.yml"]
 }
