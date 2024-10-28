@@ -29,6 +29,10 @@ export interface ElectronAPI {
   getComfyUIUrl: () => Promise<string>;
   getPreloadScript: () => Promise<string>;
   getLogs: () => Promise<string[]>;
+  /**
+   * Open the logs folder in the system's default file explorer.
+   */
+  openLogsFolder: () => void;
 }
 
 const electronAPI: ElectronAPI = {
@@ -90,6 +94,9 @@ const electronAPI: ElectronAPI = {
       console.log(`Received ${IPC_CHANNELS.DEFAULT_INSTALL_LOCATION} event`, value);
       callback(value);
     });
+  },
+  openLogsFolder: () => {
+    ipcRenderer.send(IPC_CHANNELS.OPEN_LOGS_FOLDER);
   },
 };
 

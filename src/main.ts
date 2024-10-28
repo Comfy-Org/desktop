@@ -11,7 +11,7 @@ import {
   IPCChannel,
   SENTRY_URL_ENDPOINT,
 } from './constants';
-import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, globalShortcut } from 'electron';
+import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, globalShortcut, shell } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import Store from 'electron-store';
@@ -173,6 +173,9 @@ if (!gotTheLock) {
         return dialog.showOpenDialogSync({
           ...options,
         });
+      });
+      ipcMain.on(IPC_CHANNELS.OPEN_LOGS_FOLDER, () => {
+        shell.openPath(app.getPath('logs'));
       });
       ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
         return app.isPackaged;
