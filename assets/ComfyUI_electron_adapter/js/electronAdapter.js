@@ -5,7 +5,7 @@ app.registerExtension({
   name: "Comfy.ElectronAdapter",
   settings: [
     {
-      id: 'Comfy-Electron.AutoUpdate',
+      id: 'Comfy-Desktop.AutoUpdate',
       category: ['Comfy-Desktop', 'General', 'AutoUpdate'],
       name: 'Automatically check for updates',
       type: 'boolean',
@@ -19,7 +19,7 @@ app.registerExtension({
 
   commands: [
     {
-      id: 'Comfy-Electron.OpenLogsFolder',
+      id: 'Comfy-Desktop.OpenLogsFolder',
       label: 'Open Logs Folder',
       icon: 'pi pi-folder-open',
       function() {
@@ -32,7 +32,7 @@ app.registerExtension({
     {
       path: ['Help'],
       commands: [
-        'Comfy-Electron.OpenLogsFolder',
+        'Comfy-Desktop.OpenLogsFolder',
       ]
     }
   ]
