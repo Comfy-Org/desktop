@@ -25,6 +25,8 @@ export class PythonEnvironment {
    */
   readonly requirementsCompiledPath: string;
 
+  readonly macExtraFiles: Array<string>;
+
   constructor(
     public pythonInstallPath: string,
     public appResourcesPath: string,
@@ -45,6 +47,7 @@ export class PythonEnvironment {
     this.pythonTarPath = path.join(appResourcesPath, 'python.tgz');
     this.wheelsPath = path.join(this.pythonRootPath, 'wheels');
     this.requirementsCompiledPath = path.join(this.pythonRootPath, 'requirements.compiled');
+    this.macExtraFiles = ["lib/libpython3.12.dylib", "lib/python3.12/lib-dynload/_crypt.cpython-312-darwin.so","bin/uv","bin/uvx","bin/python3.12"];
   }
 
   async isInstalled(): Promise<boolean> {
@@ -90,6 +93,16 @@ export class PythonEnvironment {
       cwd: this.pythonInstallPath,
       strict: true,
     });
+
+    if (process.platform === 'darwin') {
+      this.macExtraFiles.forEach(async (fileName) => {
+        await fsPromises.cp(
+          path.join(this.appResourcesPath, 'output', fileName),
+          path.join(this.pythonRootPath, fileName)
+        );
+      });
+      await fsPromises.rm(path.join(this.appResourcesPath, 'output'));
+    }
 
     const exitCode = await this.installRequirements();
 
