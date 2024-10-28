@@ -14,6 +14,7 @@ export const IPC_CHANNELS = {
   TOGGLE_LOGS: 'toggle-logs',
   COMFYUI_READY: 'comfyui-ready',
   GET_PRELOAD_SCRIPT: 'get-preload-script',
+  OPEN_DEVTOOLS: 'open-devtools',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =

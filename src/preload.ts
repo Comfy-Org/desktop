@@ -23,6 +23,7 @@ export interface ElectronAPI {
   sendReady: () => void;
   restartApp: () => void;
   onToggleLogsView: (callback: () => void) => void;
+  onOpenDevTools: (callback: () => void) => void;
   isPackaged: () => Promise<boolean>;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
   getComfyUIUrl: () => Promise<string>;
@@ -59,6 +60,9 @@ const electronAPI: ElectronAPI = {
   },
   onToggleLogsView: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.TOGGLE_LOGS, () => callback());
+  },
+  onOpenDevTools: (callback: () => void) => {
+    ipcRenderer.on(IPC_CHANNELS.OPEN_DEVTOOLS, () => callback());
   },
   onShowSelectDirectory: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());

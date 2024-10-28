@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import LogViewer from './LogViewer';
 import { ElectronAPI } from 'src/preload';
 import { ELECTRON_BRIDGE_API } from 'src/constants';
+import { WebviewTag } from 'electron';
 
 interface ComfyUIContainerProps {
   comfyPort: number;
@@ -29,12 +30,16 @@ const logContainerStyle: React.CSSProperties = {
 
 const ComfyUIContainer: React.FC<ComfyUIContainerProps> = ({ comfyPort, preloadScript }) => {
   const [showStreamingLogs, setShowStreamingLogs] = useState(false);
+  const webviewRef = useRef<WebviewTag>(null);
 
   useEffect(() => {
     const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
 
     electronAPI.onToggleLogsView(() => {
       setShowStreamingLogs((prevState) => !prevState);
+    });
+    electronAPI.onOpenDevTools(() => {
+      webviewRef.current?.openDevTools();
     });
   }, []);
 
@@ -45,6 +50,7 @@ const ComfyUIContainer: React.FC<ComfyUIContainerProps> = ({ comfyPort, preloadS
         src={`http://localhost:${comfyPort}`}
         style={iframeStyle}
         preload={`file://${preloadScript}`}
+        ref={webviewRef}
       />
       {showStreamingLogs && (
         <div style={logContainerStyle}>

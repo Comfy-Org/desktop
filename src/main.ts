@@ -179,6 +179,15 @@ if (!gotTheLock) {
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
+
+      port = await findAvailablePort(8000, 9999).catch((err) => {
+        log.error(`ERROR: Failed to find available port: ${err}`);
+        throw err;
+      });
+
+      sendProgressUpdate('Setting up Python Environment...');
+      const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
+      await pythonEnvironment.setup();
       SetupTray(
         mainWindow,
         basePath,
@@ -190,17 +199,9 @@ if (!gotTheLock) {
         },
         () => {
           mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
-        }
+        },
+        pythonEnvironment.pythonInterpreterPath
       );
-      port = await findAvailablePort(8000, 9999).catch((err) => {
-        log.error(`ERROR: Failed to find available port: ${err}`);
-        throw err;
-      });
-
-      sendProgressUpdate('Setting up Python Environment...');
-      const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
-      await pythonEnvironment.setup();
-
       sendProgressUpdate('Starting Comfy Server...');
       await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
     } catch (error) {
@@ -324,6 +325,7 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
       nodeIntegration: true,
       contextIsolation: true,
       webviewTag: true,
+      devTools: true,
     },
     autoHideMenuBar: true,
   });
@@ -432,7 +434,7 @@ const launchPythonServer = async (
       outputDirectoryPath,
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
       '--front-end-version',
-      'jojodecayz/ComfyUI_frontend@latest',
+      'Comfy-Org/ComfyUI_frontend@latest',
       '--extra-model-paths-config',
       modelConfigPath,
       '--port',
