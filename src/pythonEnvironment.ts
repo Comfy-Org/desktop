@@ -107,7 +107,12 @@ export class PythonEnvironment {
           path.join(this.pythonRootPath, fileName)
         );
       });
-      await fsPromises.rm(path.join(this.appResourcesPath, 'output'));
+      try {
+        // This is a cleanup step, and is non critical if failed.
+        await fsPromises.rm(path.join(this.appResourcesPath, 'output'), { recursive: true, force: true });
+      } catch (error) {
+        null;
+      }
     }
 
     const exitCode = await this.installRequirements();
