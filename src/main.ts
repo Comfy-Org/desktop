@@ -22,7 +22,7 @@ import { WebSocketServer } from 'ws';
 import { StoreType } from './store';
 import { createReadStream, watchFile } from 'node:fs';
 import todesktop from '@todesktop/runtime';
-import { PythonEnvironment } from './pythonEnvironment';
+import { VirtualEnvironment } from './virtualEnvironment';
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
@@ -115,8 +115,6 @@ if (!gotTheLock) {
 
   graphics()
     .then((graphicsInfo) => {
-      log.info('GPU Info: ', graphicsInfo);
-
       const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
         [`gpu_${index}`]: {
           vendor: gpu.vendor,
@@ -186,24 +184,25 @@ if (!gotTheLock) {
       });
 
       sendProgressUpdate('Setting up Python Environment...');
-      const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
-      await pythonEnvironment.setup();
-      SetupTray(
-        mainWindow,
-        basePath,
-        modelConfigPath,
-        () => {
-          log.info('Resetting install location');
-          fs.rmSync(modelConfigPath);
-          restartApp();
-        },
-        () => {
-          mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
-        },
-        pythonEnvironment
-      );
+      const virtualEnvironment = new VirtualEnvironment(basePath);
+      await virtualEnvironment.create();
+      await virtualEnvironment.installRequirements();
+      // SetupTray(
+      //   mainWindow,
+      //   basePath,
+      //   modelConfigPath,
+      //   () => {
+      //     log.info('Resetting install location');
+      //     fs.rmSync(modelConfigPath);
+      //     restartApp();
+      //   },
+      //   () => {
+      //     mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
+      //   },
+      //   pythonEnvironment
+      // );
       sendProgressUpdate('Starting Comfy Server...');
-      await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
+      await launchPythonServer(virtualEnvironment, appResourcesPath, modelConfigPath, basePath);
     } catch (error) {
       log.error(error);
       sendProgressUpdate(COMFY_ERROR_MESSAGE);
@@ -403,7 +402,7 @@ let currentWaitTime = 0;
 let spawnServerTimeout: NodeJS.Timeout = null;
 
 const launchPythonServer = async (
-  pythonInterpreterPath: string,
+  virtualEnvironment: VirtualEnvironment,
   appResourcesPath: string,
   modelConfigPath: string,
   basePath: string
@@ -414,10 +413,6 @@ const launchPythonServer = async (
     // Server has been started outside the app, so attach to it.
     return loadComfyIntoMainWindow();
   }
-
-  log.info(
-    `Launching Python server with port ${port}. python path: ${pythonInterpreterPath}, app resources path: ${appResourcesPath}, model config path: ${modelConfigPath}, base path: ${basePath}`
-  );
 
   return new Promise<void>(async (resolve, reject) => {
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
@@ -443,9 +438,22 @@ const launchPythonServer = async (
 
     log.info(`Starting ComfyUI using port ${port}.`);
 
-    comfyServerProcess = spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath), {
-      logFile: 'comfyui',
-      stdx: true,
+    // Launch with python command, since Manager uses the same process to install dependencies.
+    comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd);
+
+    comfyServerProcess.on('error', (err) => {
+      log.error(`Failed to start ComfyUI: ${err}`);
+      reject(err);
+    });
+
+    comfyServerProcess.on('exit', (code, signal) => {
+      if (code !== 0) {
+        log.error(`Python process exited with code ${code} and signal ${signal}`);
+        reject(new Error(`Python process exited with code ${code} and signal ${signal}`));
+      } else {
+        log.info(`Python process exited successfully with code ${code}`);
+        resolve();
+      }
     });
 
     const checkInterval = 1000; // Check every 1 second
