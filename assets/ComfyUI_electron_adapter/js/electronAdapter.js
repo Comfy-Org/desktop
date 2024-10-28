@@ -21,6 +21,7 @@ app.registerExtension({
     {
       id: 'Comfy-Electron.OpenLogsFolder',
       label: 'Open Logs Folder',
+      icon: 'pi pi-folder-open',
       function() {
         window['electronAPI']?.openLogsFolder?.();
       }
