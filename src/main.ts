@@ -591,7 +591,7 @@ const spawnPythonAsync = (
   options = { stdx: true }
 ): Promise<{ exitCode: number | null }> => {
   return new Promise((resolve, reject) => {
-    log.info(`Spawning python process with command: ${cmd.join(' ')} in directory: ${cwd}`);
+    log.info(`Spawning python process with command: ${pythonInterpreterPath} ${cmd.join(' ')} in directory: ${cwd}`);
     const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, { cwd });
 
     const cleanup = () => {
