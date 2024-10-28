@@ -202,7 +202,7 @@ if (!gotTheLock) {
         () => {
           mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
         },
-        pythonEnvironment.pythonInterpreterPath
+        pythonEnvironment
       );
       sendProgressUpdate('Starting Comfy Server...');
       await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
