@@ -6,7 +6,7 @@ app.registerExtension({
   settings: [
     {
       id: 'Comfy-Electron.AutoUpdate',
-      category: ['Comfy-Electron', 'General', 'AutoUpdate'],
+      category: ['Comfy-Desktop', 'General', 'AutoUpdate'],
       name: 'Automatically check for updates',
       type: 'boolean',
       defaultValue: true,
