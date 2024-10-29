@@ -104,13 +104,13 @@ export class PythonEnvironment {
     });
 
     if (process.platform === 'darwin') {
-      // Mac need extra files to be codesigned, these now need to be unpacked and placed inside of the python folder. 
+      // Mac need extra files to be codesigned, these now need to be unpacked and placed inside of the python folder.
       this.macExtraFiles.forEach(async (fileName) => {
         await fsPromises.cp(
           path.join(this.appResourcesPath, 'output', fileName),
           path.join(this.pythonRootPath, fileName)
         );
-        await fsPromises.chmod( path.join(this.pythonRootPath, fileName) ,'755');
+        await fsPromises.chmod(path.join(this.pythonRootPath, fileName), '755');
       });
       try {
         // TODO: If python tar is done more than once we could lose these so for now do not clean up
@@ -119,12 +119,10 @@ export class PythonEnvironment {
       } catch (error) {
         null;
       }
-      // Mac seems to need a CPU cycle before allowing executing the python bin. 
-      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+      // Mac seems to need a CPU cycle before allowing executing the python bin.
+      const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
       await sleep(1000);
-    }
-    else
-    {
+    } else {
       try {
         // For non mac we can just delete these
         // This is a cleanup step, and is non critical if failed.
