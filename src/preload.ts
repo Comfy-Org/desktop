@@ -2,6 +2,7 @@
 
 import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
+import { DownloadStatus } from './models/DownloadManager';
 
 export interface ElectronAPI {
   /**
@@ -35,7 +36,12 @@ export interface ElectronAPI {
   openLogsFolder: () => void;
   DownloadManager: {
     onDownloadProgress: (
-      callback: (progress: { url: string; progress: number; isComplete: boolean; isCancelled: boolean }) => void
+      callback: (progress: {
+        url: string;
+        progress_percentage: number;
+        status: DownloadStatus;
+        message?: string;
+      }) => void
     ) => void;
     startDownload: (url: string, path: string, filename: string) => Promise<boolean>;
     cancelDownload: (url: string) => Promise<boolean>;
@@ -111,7 +117,12 @@ const electronAPI: ElectronAPI = {
   },
   DownloadManager: {
     onDownloadProgress: (
-      callback: (progress: { url: string; progress: number; isComplete: boolean; isCancelled: boolean }) => void
+      callback: (progress: {
+        url: string;
+        progress_percentage: number;
+        status: DownloadStatus;
+        message?: string;
+      }) => void
     ) => {
       ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_event, progress) => callback(progress));
     },

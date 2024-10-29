@@ -12,21 +12,32 @@ interface Download {
   item: DownloadItem | null;
 }
 
-interface DownloadStatus {
+export enum DownloadStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  PAUSED = 'paused',
+  ERROR = 'error',
+  CANCELLED = 'cancelled',
+}
+interface DownloadState {
   url: string;
   filename: string;
-  state: string;
+  state: DownloadStatus;
   receivedBytes: number;
   totalBytes: number;
   isPaused: boolean;
 }
 
+/**
+ * Singleton class that manages downloading model checkpoints for ComfyUI.
+ */
 export class DownloadManager {
   private static instance: DownloadManager;
   private downloads: Map<string, Download>;
   private mainWindow: BrowserWindow;
   private modelsDirectory: string;
-  constructor(mainWindow: BrowserWindow, modelsDirectory: string) {
+  private constructor(mainWindow: BrowserWindow, modelsDirectory: string) {
     this.downloads = new Map();
     this.mainWindow = mainWindow;
     this.modelsDirectory = modelsDirectory;
@@ -37,6 +48,7 @@ export class DownloadManager {
       const download = this.downloads.get(url);
 
       if (download) {
+        this.reportProgress(url, 0, DownloadStatus.PENDING);
         item.setSavePath(download.tempPath);
         download.item = item;
         log.info(`Setting save path to ${item.getSavePath()}`);
@@ -45,12 +57,12 @@ export class DownloadManager {
           if (state === 'interrupted') {
             log.info('Download is interrupted but can be resumed');
           } else if (state === 'progressing') {
+            const progress = item.getReceivedBytes() / item.getTotalBytes();
             if (item.isPaused()) {
               log.info('Download is paused');
+              this.reportProgress(url, progress, DownloadStatus.PAUSED);
             } else {
-              const progress = item.getReceivedBytes() / item.getTotalBytes();
-              log.info(`Download progress: ${progress}`);
-              this.reportProgress(url, progress);
+              this.reportProgress(url, progress, DownloadStatus.IN_PROGRESS);
             }
           }
         });
@@ -64,12 +76,12 @@ export class DownloadManager {
               log.error(`Failed to rename downloaded file: ${error}. Deleting temp file.`);
               fs.unlinkSync(download.tempPath);
             }
-            this.reportProgress(url, 1, true);
+            this.reportProgress(url, 1, DownloadStatus.COMPLETED);
             this.downloads.delete(url);
           } else {
             log.info(`Download failed: ${state}`);
             const progress = item.getReceivedBytes() / item.getTotalBytes();
-            this.reportProgress(url, progress, false, true);
+            this.reportProgress(url, progress, DownloadStatus.ERROR);
           }
         });
       }
@@ -154,18 +166,33 @@ export class DownloadManager {
     }
   }
 
-  getAllDownloads(): DownloadStatus[] {
+  getAllDownloads(): DownloadState[] {
     return Array.from(this.downloads.values())
       .filter((download) => download.item !== null)
       .map((download) => ({
         url: download.url,
         filename: download.filename,
         tempPath: download.tempPath,
-        state: download.item?.getState() || 'interrupted',
+        state: this.convertDownloadState(download.item?.getState()),
         receivedBytes: download.item?.getReceivedBytes() || 0,
         totalBytes: download.item?.getTotalBytes() || 0,
         isPaused: download.item?.isPaused() || false,
       }));
+  }
+
+  private convertDownloadState(state: 'progressing' | 'completed' | 'cancelled' | 'interrupted'): DownloadStatus {
+    switch (state) {
+      case 'progressing':
+        return DownloadStatus.IN_PROGRESS;
+      case 'completed':
+        return DownloadStatus.COMPLETED;
+      case 'cancelled':
+        return DownloadStatus.CANCELLED;
+      case 'interrupted':
+        return DownloadStatus.ERROR;
+      default:
+        return DownloadStatus.ERROR;
+    }
   }
 
   private getTempPath(filename: string, savePath: string): string {
@@ -176,17 +203,13 @@ export class DownloadManager {
     return path.join(this.modelsDirectory, savePath, filename);
   }
 
-  private reportProgress(
-    url: string,
-    progress: number,
-    isComplete: boolean = false,
-    isCancelled: boolean = false
-  ): void {
+  private reportProgress(url: string, progress: number, status: DownloadStatus, message: string = ''): void {
+    log.info(`Download progress: ${progress}, status: ${status}, message: ${message}`);
     this.mainWindow.webContents.send(IPC_CHANNELS.DOWNLOAD_PROGRESS, {
       url,
       progress,
-      isComplete,
-      isCancelled,
+      status,
+      message,
     });
   }
 
