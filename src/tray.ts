@@ -4,6 +4,7 @@ import { IPC_CHANNELS } from './constants';
 import { exec } from 'child_process';
 import log from 'electron-log/main';
 import { PythonEnvironment } from './pythonEnvironment';
+import { getModelsDirectory } from './utils';
 
 export function SetupTray(
   mainView: BrowserWindow,
@@ -65,7 +66,7 @@ export function SetupTray(
     { type: 'separator' },
     {
       label: 'Open Models Folder',
-      click: () => shell.openPath(path.join(basePath, 'models')),
+      click: () => shell.openPath(getModelsDirectory(basePath)),
     },
     {
       label: 'Open Outputs Folder',

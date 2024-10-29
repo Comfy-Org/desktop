@@ -24,6 +24,7 @@ import { createReadStream, watchFile } from 'node:fs';
 import todesktop from '@todesktop/runtime';
 import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
+import { getModelsDirectory } from './utils';
 
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
@@ -156,8 +157,6 @@ if (!gotTheLock) {
 
     try {
       await createWindow();
-      downloadManager = DownloadManager.getInstance(mainWindow);
-
       startWebSocketServer();
       mainWindow.on('close', () => {
         mainWindow = null;
@@ -186,7 +185,7 @@ if (!gotTheLock) {
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
-
+      downloadManager = DownloadManager.getInstance(mainWindow, getModelsDirectory(basePath));
       port = await findAvailablePort(8000, 9999).catch((err) => {
         log.error(`ERROR: Failed to find available port: ${err}`);
         throw err;

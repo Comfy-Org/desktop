@@ -37,10 +37,11 @@ export interface ElectronAPI {
     onDownloadProgress: (
       callback: (progress: { url: string; progress: number; isComplete: boolean; isCancelled: boolean }) => void
     ) => void;
-    startDownload: (url: string, path: string) => Promise<boolean>;
+    startDownload: (url: string, path: string, filename: string) => Promise<boolean>;
     cancelDownload: (url: string) => Promise<boolean>;
     pauseDownload: (url: string) => Promise<boolean>;
     resumeDownload: (url: string) => Promise<boolean>;
+    deleteDownload: (url: string, filename: string, path: string) => Promise<boolean>;
     getAllDownloads: () => Promise<DownloadItem[]>;
   };
 }
@@ -114,8 +115,9 @@ const electronAPI: ElectronAPI = {
     ) => {
       ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_event, progress) => callback(progress));
     },
-    startDownload: (url: string, path: string): Promise<boolean> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.START_DOWNLOAD, { url, path });
+    startDownload: (url: string, path: string, filename: string): Promise<boolean> => {
+      console.log(`Sending start download message to main process`, { url, path, filename });
+      return ipcRenderer.invoke(IPC_CHANNELS.START_DOWNLOAD, { url, path, filename });
     },
     cancelDownload: (url: string): Promise<boolean> => {
       return ipcRenderer.invoke(IPC_CHANNELS.CANCEL_DOWNLOAD, url);
@@ -125,6 +127,9 @@ const electronAPI: ElectronAPI = {
     },
     resumeDownload: (url: string): Promise<boolean> => {
       return ipcRenderer.invoke(IPC_CHANNELS.RESUME_DOWNLOAD, url);
+    },
+    deleteDownload: (url: string, filename: string, path: string): Promise<boolean> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.DELETE_DOWNLOAD, { url, filename, path });
     },
     getAllDownloads: (): Promise<DownloadItem[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);

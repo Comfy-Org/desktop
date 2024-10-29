@@ -21,6 +21,7 @@ export const IPC_CHANNELS = {
   PAUSE_DOWNLOAD: 'pause-download',
   RESUME_DOWNLOAD: 'resume-download',
   CANCEL_DOWNLOAD: 'cancel-download',
+  DELETE_DOWNLOAD: 'delete-download',
   GET_ALL_DOWNLOADS: 'get-all-downloads',
 } as const;
 
