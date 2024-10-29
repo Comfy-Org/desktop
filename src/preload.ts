@@ -47,7 +47,7 @@ export interface ElectronAPI {
     cancelDownload: (url: string) => Promise<boolean>;
     pauseDownload: (url: string) => Promise<boolean>;
     resumeDownload: (url: string) => Promise<boolean>;
-    deleteDownload: (url: string, filename: string, path: string) => Promise<boolean>;
+    deleteModel: (filename: string, path: string) => Promise<boolean>;
     getAllDownloads: () => Promise<DownloadItem[]>;
   };
 }
@@ -139,8 +139,8 @@ const electronAPI: ElectronAPI = {
     resumeDownload: (url: string): Promise<boolean> => {
       return ipcRenderer.invoke(IPC_CHANNELS.RESUME_DOWNLOAD, url);
     },
-    deleteDownload: (url: string, filename: string, path: string): Promise<boolean> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.DELETE_DOWNLOAD, { url, filename, path });
+    deleteModel: (filename: string, path: string): Promise<boolean> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.DELETE_DOWNLOAD, { filename, path });
     },
     getAllDownloads: (): Promise<DownloadItem[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);

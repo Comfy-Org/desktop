@@ -90,6 +90,10 @@ export class DownloadManager {
 
   startDownload(url: string, savePath: string, filename: string): boolean {
     const localSavePath = this.getLocalSavePath(filename, savePath);
+    if (!this.isPathInModelsDirectory(localSavePath)) {
+      log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
+      return false;
+    }
 
     if (fs.existsSync(localSavePath)) {
       log.info(`File ${filename} already exists, skipping download`);
@@ -143,9 +147,12 @@ export class DownloadManager {
     }
   }
 
-  deleteDownload(url: string, filename: string, savePath: string): void {
-    this.downloads.delete(url);
+  deleteModel(filename: string, savePath: string): boolean {
     const localSavePath = this.getLocalSavePath(filename, savePath);
+    if (!this.isPathInModelsDirectory(localSavePath)) {
+      log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
+      return false;
+    }
     const tempPath = this.getTempPath(filename, savePath);
     try {
       if (fs.existsSync(localSavePath)) {
@@ -203,6 +210,12 @@ export class DownloadManager {
     return path.join(this.modelsDirectory, savePath, filename);
   }
 
+  private isPathInModelsDirectory(filePath: string): boolean {
+    const absoluteFilePath = path.resolve(filePath);
+    const absoluteModelsDir = path.resolve(this.modelsDirectory);
+    return absoluteFilePath.startsWith(absoluteModelsDir);
+  }
+
   private reportProgress(url: string, progress: number, status: DownloadStatus, message: string = ''): void {
     log.info(`Download progress: ${progress}, status: ${status}, message: ${message}`);
     this.mainWindow.webContents.send(IPC_CHANNELS.DOWNLOAD_PROGRESS, {
@@ -229,8 +242,6 @@ export class DownloadManager {
     ipcMain.handle(IPC_CHANNELS.RESUME_DOWNLOAD, (event, url: string) => this.resumeDownload(url));
     ipcMain.handle(IPC_CHANNELS.CANCEL_DOWNLOAD, (event, url: string) => this.cancelDownload(url));
     ipcMain.handle(IPC_CHANNELS.GET_ALL_DOWNLOADS, (event) => this.getAllDownloads());
-    ipcMain.handle(IPC_CHANNELS.DELETE_DOWNLOAD, (event, { url, filename, path }) =>
-      this.deleteDownload(url, filename, path)
-    );
+    ipcMain.handle(IPC_CHANNELS.DELETE_MODEL, (event, { filename, path }) => this.deleteModel(filename, path));
   }
 }
