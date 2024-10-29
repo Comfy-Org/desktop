@@ -1,5 +1,5 @@
-name: Windows Build App
-description: Electron-Forge Build/Sign/publish
+name: Windows Build to ToDesktop
+description: Will build the project then send the project files to ToDesktop to be compiled into installers.
 inputs:
   GITHUB_TOKEN:
     description: 'GitHub Token'

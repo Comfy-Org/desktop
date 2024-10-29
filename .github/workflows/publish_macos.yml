@@ -1,4 +1,5 @@
 # .github/workflows/publish_macos.yml
+# 2024.10.28 : Might not be used anymore as ToDesktop Handles all publishing
 name: Release MacOS app
 
 on:

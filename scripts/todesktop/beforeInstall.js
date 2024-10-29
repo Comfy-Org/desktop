@@ -1,4 +1,4 @@
-const { exec, execSync, spawnSync } = require("child_process");
+const { spawnSync } = require("child_process");
 const path = require("path");
 const os = require('os');
 
@@ -10,28 +10,14 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
  * hookName - string - the name of the hook ("todesktop:beforeInstall" or "todesktop:afterPack")
  */
 
-    const execOutput = (error,stdout,stderr) => {
-        console.log("exec out: " , stdout);
-        console.log("exec stderr: " ,stderr);
-        if (error !== null) {
-            console.log(`exec error: ${error}`);
-        }
-    };
-
-    const dirPath = pkgJsonPath.replace("package.json", "");
-
-    console.log(os.platform());
+    console.log('Before Yarn Install' , os.platform());
 
     if (os.platform() === "win32")
     {
-        const result1 = spawnSync('curl' ,['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'],{shell:true,stdio: 'ignore'},execOutput).toString();
-        console.log(result1);
-        const result2 = spawnSync('python-3.12.7-amd64.exe', ['/quiet', 'InstallAllUsers=1','PrependPath=1', 'Include_test=0'],{shell:true,stdio: 'ignore'},execOutput).toString();
-        console.log(result2);
-        
-    }
-
-    if (os.platform() === "darwin") {
-
+        // ToDesktop currently does not have the min 3.12 python installed. 
+        // Download the installer then install it
+        // Change stdio to get back the logs if there are issues.
+        const result1 = spawnSync('curl' ,['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'],{shell:true,stdio: 'ignore'}).toString();
+        const result2 = spawnSync('python-3.12.7-amd64.exe', ['/quiet', 'InstallAllUsers=1','PrependPath=1', 'Include_test=0'],{shell:true,stdio: 'ignore'}).toString();
     }
 };
