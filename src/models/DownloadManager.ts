@@ -92,6 +92,14 @@ export class DownloadManager {
     const localSavePath = this.getLocalSavePath(filename, savePath);
     if (!this.isPathInModelsDirectory(localSavePath)) {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
+      this.reportProgress(url, 0, DownloadStatus.ERROR, 'Save path is not in models directory');
+      return false;
+    }
+
+    const validationResult = this.validateSafetensorsFile(url, filename);
+    if (!validationResult.isValid) {
+      log.error(validationResult.error);
+      this.reportProgress(url, 0, DownloadStatus.ERROR, validationResult.error);
       return false;
     }
 
@@ -204,6 +212,26 @@ export class DownloadManager {
 
   private getTempPath(filename: string, savePath: string): string {
     return path.join(this.modelsDirectory, savePath, `Unconfirmed ${filename}.tmp`);
+  }
+
+  // Only allow .safetensors files to be downloaded.
+  private validateSafetensorsFile(url: string, filename: string): { isValid: boolean; error?: string } {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname.toLowerCase();
+      if (!pathname.endsWith('.safetensors') && !filename.toLowerCase().endsWith('.safetensors')) {
+        return {
+          isValid: false,
+          error: 'Invalid file type: must be a .safetensors file',
+        };
+      }
+      return { isValid: true };
+    } catch (error) {
+      return {
+        isValid: false,
+        error: `Invalid URL format: ${error}`,
+      };
+    }
   }
 
   private getLocalSavePath(filename: string, savePath: string): string {
