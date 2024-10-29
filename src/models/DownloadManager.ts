@@ -61,8 +61,8 @@ export class DownloadManager {
               fs.renameSync(download.tempPath, download.savePath);
               log.info(`Successfully renamed ${download.tempPath} to ${download.savePath}`);
             } catch (error) {
+              log.error(`Failed to rename downloaded file: ${error}. Deleting temp file.`);
               fs.unlinkSync(download.tempPath);
-              log.error(`Failed to rename downloaded file: ${error}`);
             }
             this.reportProgress(url, 1, true);
             this.downloads.delete(url);
@@ -137,6 +137,7 @@ export class DownloadManager {
     const tempPath = this.getTempPath(filename, savePath);
     try {
       if (fs.existsSync(localSavePath)) {
+        log.info(`Deleting local file ${localSavePath}`);
         fs.unlinkSync(localSavePath);
       }
     } catch (error) {
@@ -145,6 +146,7 @@ export class DownloadManager {
 
     try {
       if (fs.existsSync(tempPath)) {
+        log.info(`Deleting temp file ${tempPath}`);
         fs.unlinkSync(tempPath);
       }
     } catch (error) {
