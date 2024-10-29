@@ -106,7 +106,19 @@ export class PythonEnvironment {
           path.join(this.appResourcesPath, 'output', fileName),
           path.join(this.pythonRootPath, fileName)
         );
+        await fsPromises.chmod( path.join(this.pythonRootPath, fileName) ,'755');
       });
+      try {
+        // This is a cleanup step, and is non critical if failed.
+        //await fsPromises.rm(path.join(this.appResourcesPath, 'output'), { recursive: true, force: true });
+      } catch (error) {
+        null;
+      }
+      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+      await sleep(2000);
+    }
+    else
+    {
       try {
         // This is a cleanup step, and is non critical if failed.
         await fsPromises.rm(path.join(this.appResourcesPath, 'output'), { recursive: true, force: true });
