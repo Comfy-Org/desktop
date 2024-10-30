@@ -4,6 +4,7 @@
     "target": "ESNext",
     "module": "commonjs",
     "allowJs": true,
+    "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
