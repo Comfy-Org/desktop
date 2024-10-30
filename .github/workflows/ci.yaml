@@ -2,7 +2,9 @@ name: Run Tests & Lint / Format
 
 on:
   pull_request:
-    branches: [main] # Adjust these branch names as needed
+    branches: [main]
+  push:
+    branches: [main]
 
 jobs:
   lint-and-format:
@@ -19,6 +21,9 @@ jobs:
 
       - name: Install Dependencies
         run: yarn install
+
+      - name: Run type check
+        run: yarn tsc --noEmit --strict
 
       - name: Run Unit Tests
         run: yarn run test:unit
