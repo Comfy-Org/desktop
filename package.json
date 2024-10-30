@@ -28,7 +28,7 @@
     "make:assets:macos": "cd assets && comfy-cli --skip-prompt --here install --fast-deps --m-series --manager-url https://github.com/Comfy-Org/manager-core && comfy-cli --here standalone && yarn run clone-settings-extension",
     "vite:compile": "vite build --config vite.renderer.config.ts && vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts ",
     "notarize": "node debug/notarize.js",
-    "clone-settings-extension": "git clone git@github.com:Comfy-Org/DesktopSettingsExtension.git ComfyUI/custom_nodes/DesktopSettingsExtension",
+    "clone-settings-extension": "git clone https://github.com/Comfy-Org/DesktopSettingsExtension.git ComfyUI/custom_nodes/DesktopSettingsExtension",
     "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
     "publish": "yarn run vite:compile && todesktop build --async",
     "sign": "node debug/sign.js",
