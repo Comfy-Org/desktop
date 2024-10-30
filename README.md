@@ -86,6 +86,8 @@ First, initialize the application resources by running `make:assets:<gpu>`:
 yarn make:assets:[amd|cpu|nvidia|macos]
 ```
 
+This command will install ComfyUI under `assets`, as well ComfyUI-Manager, and the frontend [extension](https://github.com/Comfy-Org/DesktopSettingsExtension) responsible for electron settings menu.
+
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
 
 ```bash
@@ -106,13 +108,7 @@ yarn make
 
 ## Utility scripts
 
-A number of utility scripts are defined under the "scripts" field of package.json. For example, to build the project, run:
-
-```bash
-yarn make
-```
-
-Then, to clean up the build artifacts you can run:
+A number of utility scripts are defined under the "scripts" field of package.json. For example, to clean up the build artifacts you can run:
 
 ```bash
 yarn clean
