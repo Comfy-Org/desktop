@@ -3,9 +3,8 @@ description: Download, install, and set up Comfy
 inputs:
   sign-and-publish:
     description: 'Sign the executable and publish to release page'
-    default: false
+    default: 'false'
     required: false
-    type: boolean
 runs:
   using: composite
   steps:

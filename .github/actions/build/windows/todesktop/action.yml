@@ -4,13 +4,12 @@ inputs:
   GITHUB_TOKEN:
     description: 'GitHub Token'
     required: true
-    type: string
   TODESKTOP_EMAIL:
+    description: 'ToDesktop Email'
     required: true
-    type: string
   TODESKTOP_ACCESS_TOKEN:
+    description: 'ToDesktop Access Token'
     required: true
-    type: string
 runs:
   using: composite
   steps:

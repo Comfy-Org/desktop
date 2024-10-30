@@ -4,11 +4,9 @@ inputs:
   CERTIFICATE_OSX_APPLICATION:
     description: 'The name of the certificate to use for signing'
     required: true
-    type: string
   CERTIFICATE_PASSWORD:
     description: 'The password for the certificate'
     required: true
-    type: string
 runs:
   using: composite
   steps:

@@ -4,26 +4,21 @@ inputs:
   DIGICERT_FINGERPRINT:
     description: 'DigiCert SHA256 Fingerprint'
     required: true
-    type: string
   GITHUB_TOKEN:
     description: 'GitHub Token'
     required: true
-    type: string
   sign-and-publish:
     description: 'Sign the executable and publish to release page'
-    default: false
+    default: 'false'
     required: false
-    type: boolean
   build-targets:
     description: Override the default targets and build the passed targets. Comma separated list. Include '--target' and full names, eg '--targets=@electron-forge/maker-squirrel, ...etc'
     required: false
     default: ''
-    type: string
   build-gpu:
     description: which gpu to download pytorch for when building the assets bundle
     required: false
     default: 'cpu'
-    type: string
 runs:
   using: composite
   steps:

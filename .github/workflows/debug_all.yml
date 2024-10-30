@@ -10,6 +10,7 @@ on:
       - '.eslintrc.json'
       - '.prettierignore'
       - 'package.json'
+      - 'README.md'
 
 jobs:
   build-windows-debug-all:

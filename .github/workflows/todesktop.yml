@@ -1,4 +1,4 @@
-name: Build App And Send ToDesktop (TEMP)
+name: Build App And Send ToDesktop
 
 on:
   workflow_dispatch:
@@ -19,7 +19,6 @@ jobs:
         with:
           build-gpu: 'cpu'
           build-targets: '--targets=@electron-forge/maker-zip'
-          sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           TODESKTOP_ACCESS_TOKEN: ${{secrets.TODESKTOP_ACCESS_TOKEN}}
           TODESKTOP_EMAIL: ${{secrets.TODESKTOP_EMAIL}}
