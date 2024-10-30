@@ -23,13 +23,11 @@ export interface ElectronAPI {
   onComfyUIReady: (callback: (port: number) => void) => void;
   sendReady: () => void;
   restartApp: () => void;
-  onToggleLogsView: (callback: () => void) => void;
   onOpenDevTools: (callback: () => void) => void;
   isPackaged: () => Promise<boolean>;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
   getComfyUIUrl: () => Promise<string>;
   getPreloadScript: () => Promise<string>;
-  getLogs: () => Promise<string[]>;
   /**
    * Open the logs folder in the system's default file explorer.
    */
@@ -79,9 +77,6 @@ const electronAPI: ElectronAPI = {
     console.log('Sending restarting app message to main process');
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP);
   },
-  onToggleLogsView: (callback: () => void) => {
-    ipcRenderer.on(IPC_CHANNELS.TOGGLE_LOGS, () => callback());
-  },
   onOpenDevTools: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.OPEN_DEVTOOLS, () => callback());
   },
@@ -90,9 +85,6 @@ const electronAPI: ElectronAPI = {
   },
   selectSetupDirectory: (directory: string) => {
     ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
-  },
-  getLogs: (): Promise<string[]> => {
-    return ipcRenderer.invoke(IPC_CHANNELS.GET_LOGS);
   },
   getComfyUIUrl: (): Promise<string> => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_COMFYUI_URL);

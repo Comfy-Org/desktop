@@ -11,7 +11,6 @@ export function SetupTray(
   basePath: string,
   modelConfigPath: string,
   reinstall: () => void,
-  toggleLogs: () => void,
   pythonEnvironment: PythonEnvironment
 ): Tray {
   // Set icon for the tray
@@ -95,10 +94,6 @@ export function SetupTray(
     {
       label: 'Open devtools (ComfyUI)',
       click: () => mainView.webContents.send(IPC_CHANNELS.OPEN_DEVTOOLS),
-    },
-    {
-      label: 'Toggle Log Viewer',
-      click: () => toggleLogs(),
     },
     {
       label: 'Install Python Packages (Open Terminal)',
