@@ -1,6 +1,6 @@
 import { BrowserWindow, session, DownloadItem, ipcMain } from 'electron';
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 
