@@ -74,7 +74,6 @@
   },
   "license": "GPL-3.0-only",
   "dependencies": {
-    "@melloware/react-logviewer": "^5.2.3",
     "@sentry/electron": "^5.4.0",
     "@sentry/vite-plugin": "^2.22.4",
     "@todesktop/runtime": "^1.6.4",
