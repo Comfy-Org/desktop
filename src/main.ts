@@ -28,7 +28,7 @@ import { getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
 
 let comfyServerProcess: ChildProcess | null = null;
-let isRestarting: boolean = false; // Prevents double restarts
+let isRestarting: boolean = false; // Prevents double restarts TODO(robinhuang): Remove this once we have a better way to handle restarts. https://github.com/Comfy-Org/electron/issues/149
 const host = '127.0.0.1';
 let port = 8188;
 let mainWindow: BrowserWindow | null = null;
