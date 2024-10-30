@@ -85,7 +85,7 @@ export class PythonEnvironment {
     const { exitCode } = await this.spawnPythonAsync(this.pythonInterpreterPath, rehydrateCmd, this.pythonRootPath, {
       stdx: true,
     });
-    return exitCode;
+    return exitCode ?? -1;
   }
 
   async install(): Promise<void> {
