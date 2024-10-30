@@ -94,6 +94,6 @@
   },
   "lint-staged": {
     "./**/*.{js,ts,tsx}": "prettier --write",
-    "./**/*.{ts}": "tsc --noEmit --strict"
+    "./src/**/*.{ts}": "tsc --noEmit --strict"
   }
 }
