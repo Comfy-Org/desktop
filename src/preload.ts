@@ -48,9 +48,6 @@ export interface ElectronAPI {
     deleteModel: (filename: string, path: string) => Promise<boolean>;
     getAllDownloads: () => Promise<DownloadItem[]>;
   };
-  ElectronSettings: {
-    setAutoUpdate: (value: boolean) => void;
-  };
 }
 
 const electronAPI: ElectronAPI = {
@@ -139,11 +136,6 @@ const electronAPI: ElectronAPI = {
     },
     getAllDownloads: (): Promise<DownloadItem[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);
-    },
-  },
-  ElectronSettings: {
-    setAutoUpdate: (value: boolean): void => {
-      ipcRenderer.send(IPC_CHANNELS.SET_AUTO_UPDATE, value);
     },
   },
 };
