@@ -145,10 +145,6 @@ if (!gotTheLock) {
 
   app.on('ready', async () => {
     log.info('App ready');
-    if (!mainWindow) {
-      log.error('ERROR: Main window not found!');
-      return;
-    }
 
     app.on('activate', async () => {
       // On OS X it's common to re-create a window in the app when the
@@ -161,6 +157,10 @@ if (!gotTheLock) {
 
     try {
       await createWindow();
+      if (!mainWindow) {
+        log.error('ERROR: Main window not found!');
+        return;
+      }
       startWebSocketServer();
       mainWindow.on('close', () => {
         mainWindow = null;
