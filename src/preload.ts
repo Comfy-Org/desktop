@@ -140,7 +140,7 @@ const electronAPI: ElectronAPI = {
       return ipcRenderer.invoke(IPC_CHANNELS.RESUME_DOWNLOAD, url);
     },
     deleteModel: (filename: string, path: string): Promise<boolean> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.DELETE_DOWNLOAD, { filename, path });
+      return ipcRenderer.invoke(IPC_CHANNELS.DELETE_MODEL, { filename, path });
     },
     getAllDownloads: (): Promise<DownloadItem[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);
