@@ -235,17 +235,6 @@ if (!gotTheLock) {
   });
 }
 
-async function readComfyUILogs(): Promise<string[]> {
-  try {
-    const logContent = await fsPromises.readFile(path.join(app.getPath('logs'), 'comfyui.log'), 'utf-8');
-    const logs = logContent.split('\n');
-    return logs;
-  } catch (error) {
-    console.error('Error reading log file:', error);
-    return [];
-  }
-}
-
 function loadComfyIntoMainWindow() {
   if (!mainWindow) {
     log.error('Trying to load ComfyUI into main window but it is not ready yet.');
