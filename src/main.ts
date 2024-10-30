@@ -145,6 +145,10 @@ if (!gotTheLock) {
 
   app.on('ready', async () => {
     log.info('App ready');
+    if (!mainWindow) {
+      log.error('ERROR: Main window not found!');
+      return;
+    }
 
     app.on('activate', async () => {
       // On OS X it's common to re-create a window in the app when the
@@ -168,7 +172,9 @@ if (!gotTheLock) {
         while (messageQueue.length > 0) {
           const message = messageQueue.shift();
           log.info('Sending queued message ', message.channel);
-          mainWindow.webContents.send(message.channel, message.data);
+          if (mainWindow) {
+            mainWindow.webContents.send(message.channel, message.data);
+          }
         }
       });
       ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
@@ -185,7 +191,11 @@ if (!gotTheLock) {
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
-      downloadManager = DownloadManager.getInstance(mainWindow, getModelsDirectory(basePath));
+      if (!basePath) {
+        log.error('ERROR: Base path not found!');
+        return;
+      }
+      downloadManager = DownloadManager.getInstance(mainWindow!, getModelsDirectory(basePath));
       port = await findAvailablePort(8000, 9999).catch((err) => {
         log.error(`ERROR: Failed to find available port: ${err}`);
         throw err;
@@ -206,7 +216,9 @@ if (!gotTheLock) {
           restartApp();
         },
         () => {
-          mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
+          if (mainWindow) {
+            mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
+          }
         },
         pythonEnvironment
       );
@@ -339,7 +351,9 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
   });
   log.info('Loading renderer into main window');
   mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.send(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, app.getPath('documents'));
+    if (mainWindow) {
+      mainWindow.webContents.send(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, app.getPath('documents'));
+    }
   });
   ipcMain.handle(IPC_CHANNELS.GET_PRELOAD_SCRIPT, () => path.join(__dirname, 'preload.js'));
   await loadRendererIntoMainWindow();
@@ -359,7 +373,7 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
   mainWindow.on('move', updateBounds);
 
   const shortcut = globalShortcut.register('CommandOrControl+Shift+L', () => {
-    mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
+    if (mainWindow) mainWindow.webContents.send(IPC_CHANNELS.TOGGLE_LOGS);
   });
 
   if (!shortcut) {
@@ -370,7 +384,7 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
     // Mac Only Behavior
     if (process.platform === 'darwin') {
       e.preventDefault();
-      mainWindow.hide();
+      if (mainWindow) mainWindow.hide();
       app.dock.hide();
     }
     globalShortcut.unregister('CommandOrControl+Shift+L');
@@ -464,7 +478,9 @@ const launchPythonServer = async (
       currentWaitTime += 1000;
       if (currentWaitTime > maxFailWait) {
         //Something has gone wrong and we need to backout.
-        clearTimeout(spawnServerTimeout);
+        if (spawnServerTimeout) {
+          clearTimeout(spawnServerTimeout);
+        }
         reject('Python Server Failed To Start Within Timeout.');
       }
       const isReady = await isComfyServerReady(host, port);
@@ -474,7 +490,9 @@ const launchPythonServer = async (
 
         //For now just replace the source of the main window to the python server
         setTimeout(() => loadComfyIntoMainWindow(), 1000);
-        clearTimeout(spawnServerTimeout);
+        if (spawnServerTimeout) {
+          clearTimeout(spawnServerTimeout);
+        }
         return resolve();
       } else {
         log.info('Ping failed. Retrying...');
@@ -520,31 +538,33 @@ const sendRendererMessage = (channel: IPCChannel, data: any) => {
 };
 
 const killPythonServer = async (): Promise<void> => {
-  if (comfyServerProcess) {
+  return new Promise<void>((resolve, reject) => {
+    if (!comfyServerProcess) {
+      resolve();
+      return;
+    }
+
     log.info('Killing ComfyUI python server.');
+    // Set up a timeout in case the process doesn't exit
+    const timeout = setTimeout(() => {
+      reject(new Error('Timeout: Python server did not exit within 10 seconds'));
+    }, 10000);
 
-    return new Promise<void>((resolve, reject) => {
-      // Set up a timeout in case the process doesn't exit
-      const timeout = setTimeout(() => {
-        reject(new Error('Timeout: Python server did not exit within 10 seconds'));
-      }, 10000);
-
-      // Listen for the 'exit' event
-      comfyServerProcess.once('exit', (code, signal) => {
-        clearTimeout(timeout);
-        log.info(`Python server exited with code ${code} and signal ${signal}`);
-        comfyServerProcess = null;
-        resolve();
-      });
-
-      // Attempt to kill the process
-      const result = comfyServerProcess.kill();
-      if (!result) {
-        clearTimeout(timeout);
-        reject(new Error('Failed to initiate kill signal for python server'));
-      }
+    // Listen for the 'exit' event
+    comfyServerProcess.once('exit', (code, signal) => {
+      clearTimeout(timeout);
+      log.info(`Python server exited with code ${code} and signal ${signal}`);
+      comfyServerProcess = null;
+      resolve();
     });
-  }
+
+    // Attempt to kill the process
+    const result = comfyServerProcess.kill();
+    if (!result) {
+      clearTimeout(timeout);
+      reject(new Error('Failed to initiate kill signal for python server'));
+    }
+  });
 };
 
 const spawnPython = (
@@ -569,7 +589,7 @@ const spawnPython = (
       pythonLog = log.create({ logId: options.logFile });
       pythonLog.transports.file.fileName = `${options.logFile}.log`;
       pythonLog.transports.file.resolvePathFn = (variables) => {
-        return path.join(variables.electronDefaultDir, variables.fileName);
+        return path.join(variables.electronDefaultDir ?? '', variables.fileName ?? '');
       };
     }
 
