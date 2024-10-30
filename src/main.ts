@@ -593,14 +593,14 @@ const spawnPython = (
       };
     }
 
-    pythonProcess.stderr?.on('data', (data) => {
+    pythonProcess.stderr?.on?.('data', (data) => {
       const message = data.toString().trim();
       pythonLog.error(`stderr: ${message}`);
       if (mainWindow) {
         sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
-    pythonProcess.stdout?.on('data', (data) => {
+    pythonProcess.stdout?.on?.('data', (data) => {
       const message = data.toString().trim();
       pythonLog.info(`stdout: ${message}`);
       if (mainWindow) {
@@ -628,14 +628,14 @@ const spawnPythonAsync = (
 
     if (options.stdx) {
       log.info('Setting up python process stdout/stderr listeners');
-      pythonProcess.stderr?.on('data', (data) => {
+      pythonProcess.stderr?.on?.('data', (data) => {
         const message = data.toString();
         log.error(message);
         if (mainWindow) {
           sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
         }
       });
-      pythonProcess.stdout?.on('data', (data) => {
+      pythonProcess.stdout?.on?.('data', (data) => {
         const message = data.toString();
         log.info(message);
         if (mainWindow) {

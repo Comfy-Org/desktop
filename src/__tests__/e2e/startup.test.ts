@@ -2,10 +2,10 @@ import { test, _electron as electron, expect } from '@playwright/test';
 
 test('launch app', async () => {
   const electronApp = await electron.launch({ args: ['.'] });
-  electronApp.process().stdout?.on('data', (data) => {
+  electronApp.process().stdout?.on?.('data', (data) => {
     console.log(`Electron stdout: ${data}`);
   });
-  electronApp.process().stderr?.on('data', (data) => {
+  electronApp.process().stderr?.on?.('data', (data) => {
     console.error(`Electron stderr: ${data}`);
   });
 
