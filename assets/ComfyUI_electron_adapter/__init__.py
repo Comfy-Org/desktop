@@ -1,1 +1,0 @@
-WEB_DIRECTORY = "js"

@@ -25,8 +25,10 @@ import todesktop from '@todesktop/runtime';
 import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
 import { getModelsDirectory } from './utils';
+import { ComfySettings } from './config/comfySettings';
 
 let comfyServerProcess: ChildProcess | null = null;
+let isRestarting: boolean = false; // Prevents double restarts
 const host = '127.0.0.1';
 let port = 8188;
 let mainWindow: BrowserWindow | null = null;
@@ -37,9 +39,12 @@ let downloadManager: DownloadManager;
 
 log.initialize();
 
+const comfySettings = new ComfySettings(app.getPath('documents'));
+
 todesktop.init({
   customLogger: log,
   updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
+  autoUpdater: comfySettings.autoUpdate,
 });
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
@@ -93,21 +98,10 @@ if (!gotTheLock) {
   });
 
   app.isPackaged &&
+    comfySettings.sendCrashStatistics &&
     Sentry.init({
       dsn: SENTRY_URL_ENDPOINT,
       autoSessionTracking: false,
-
-      /* //WIP gather and send log from main 
-    beforeSend(event, hint) {
-      hint.attachments = [
-        {
-          filename: 'main.log',
-          attachmentType: 'event.attachment',
-          data: readLogMain(),
-        },
-      ];
-      return event;
-    }, */
       integrations: [
         Sentry.childProcessIntegration({
           breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
@@ -205,7 +199,6 @@ if (!gotTheLock) {
       const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
       await pythonEnvironment.setup();
 
-      installElectronAdapter(appResourcesPath);
       SetupTray(
         mainWindow,
         basePath,
@@ -224,10 +217,17 @@ if (!gotTheLock) {
       sendProgressUpdate(COMFY_ERROR_MESSAGE);
     }
 
-    ipcMain.on(IPC_CHANNELS.RESTART_APP, () => {
-      log.info('Received restart app message!');
-      restartApp();
-    });
+    ipcMain.on(
+      IPC_CHANNELS.RESTART_APP,
+      (event, { customMessage, delay }: { customMessage?: string; delay?: number }) => {
+        log.info('Received restart app message!');
+        if (customMessage) {
+          restartApp({ customMessage, delay });
+        } else {
+          restartApp({ delay });
+        }
+      }
+    );
 
     ipcMain.handle(IPC_CHANNELS.GET_COMFYUI_URL, () => {
       return `http://${host}:${port}`;
@@ -258,10 +258,50 @@ async function loadRendererIntoMainWindow(): Promise<void> {
   }
 }
 
-function restartApp() {
-  log.info('Restarting app');
-  app.relaunch();
-  app.quit();
+function restartApp({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
+  function relaunchApplication(delay?: number) {
+    isRestarting = true;
+    if (delay) {
+      log.info('Relaunching application in ', delay, 'ms');
+      setTimeout(() => {
+        app.relaunch();
+        app.quit();
+      }, delay);
+    } else {
+      app.relaunch();
+      app.quit();
+    }
+  }
+
+  log.info('Attempting to restart app with custom message: ', customMessage);
+  if (isRestarting) {
+    log.info('Already quitting, skipping restart');
+    return;
+  }
+
+  if (!customMessage) {
+    log.info('Skipping confirmation, restarting immediately');
+    return relaunchApplication(delay);
+  }
+
+  dialog
+    .showMessageBox({
+      type: 'question',
+      buttons: ['Yes', 'No'],
+      defaultId: 0,
+      title: 'Restart ComfyUI',
+      message: customMessage || 'Are you sure you want to restart ComfyUI?',
+      detail: 'The application will close and restart automatically.',
+    })
+    .then(({ response }) => {
+      if (response === 0) {
+        // "Yes" was clicked
+        log.info('User confirmed restart');
+        relaunchApplication(delay);
+      } else {
+        log.info('User cancelled restart');
+      }
+    });
 }
 
 function buildMenu(): void {
@@ -911,33 +951,3 @@ const rotateLogFiles = (logDir: string, baseName: string) => {
     fs.renameSync(currentLogPath, newLogPath);
   }
 };
-
-/**
- * Install the Electron adapter into the ComfyUI custom_nodes directory.
- * @param appResourcesPath The path to the app resources.
- */
-function installElectronAdapter(appResourcesPath: string) {
-  const electronAdapterPath = path.join(appResourcesPath, 'ComfyUI_electron_adapter');
-  const comfyUIPath = path.join(appResourcesPath, 'ComfyUI');
-  const customNodesPath = path.join(comfyUIPath, 'custom_nodes');
-  const adapterDestPath = path.join(customNodesPath, 'ComfyUI_electron_adapter');
-
-  try {
-    // Ensure the custom_nodes directory exists
-    if (!fs.existsSync(customNodesPath)) {
-      fs.mkdirSync(customNodesPath, { recursive: true });
-    }
-
-    // Remove existing adapter folder if it exists
-    if (fs.existsSync(adapterDestPath)) {
-      fs.rmSync(adapterDestPath, { recursive: true, force: true });
-    }
-
-    // Copy the adapter folder
-    fs.cpSync(electronAdapterPath, adapterDestPath, { recursive: true });
-
-    log.info('Electron adapter installed successfully');
-  } catch (error) {
-    log.error('Failed to install Electron adapter:', error);
-  }
-}

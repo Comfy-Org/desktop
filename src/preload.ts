@@ -22,7 +22,7 @@ export interface ElectronAPI {
   onDefaultInstallLocation: (callback: (location: string) => void) => void;
   onComfyUIReady: (callback: (port: number) => void) => void;
   sendReady: () => void;
-  restartApp: () => void;
+  restartApp: (customMessage?: string, delay?: number) => void;
   onOpenDevTools: (callback: () => void) => void;
   isPackaged: () => Promise<boolean>;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
@@ -47,6 +47,9 @@ export interface ElectronAPI {
     resumeDownload: (url: string) => Promise<boolean>;
     deleteModel: (filename: string, path: string) => Promise<boolean>;
     getAllDownloads: () => Promise<DownloadItem[]>;
+  };
+  ElectronSettings: {
+    setAutoUpdate: (value: boolean) => void;
   };
 }
 
@@ -73,9 +76,9 @@ const electronAPI: ElectronAPI = {
   isPackaged: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.IS_PACKAGED);
   }, //Emulates app.ispackaged in renderer
-  restartApp: (): void => {
-    console.log('Sending restarting app message to main process');
-    ipcRenderer.send(IPC_CHANNELS.RESTART_APP);
+  restartApp: (customMessage?: string, delay?: number): void => {
+    console.log('Sending restarting app message to main process with custom message: ', customMessage);
+    ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
   onOpenDevTools: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.OPEN_DEVTOOLS, () => callback());
@@ -136,6 +139,11 @@ const electronAPI: ElectronAPI = {
     },
     getAllDownloads: (): Promise<DownloadItem[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);
+    },
+  },
+  ElectronSettings: {
+    setAutoUpdate: (value: boolean): void => {
+      ipcRenderer.send(IPC_CHANNELS.SET_AUTO_UPDATE, value);
     },
   },
 };
