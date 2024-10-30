@@ -93,9 +93,7 @@
     "yaml": "^2.6.0"
   },
   "lint-staged": {
-    "./**/*.{js,ts,tsx}": [
-      "prettier --write",
-      "git add"
-    ]
+    "./**/*.{js,ts,tsx}": "prettier --write",
+    "./**/*.{ts}": "tsc --noEmit --strict"
   }
 }
