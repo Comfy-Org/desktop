@@ -29,9 +29,9 @@ import { getModelsDirectory } from './utils';
 let comfyServerProcess: ChildProcess | null = null;
 const host = '127.0.0.1';
 let port = 8188;
-let mainWindow: BrowserWindow | null;
+let mainWindow: BrowserWindow | null = null;
 let wss: WebSocketServer | null;
-let store: Store<StoreType> | null;
+let store: Store<StoreType> | null = null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 let downloadManager: DownloadManager;
 
@@ -313,10 +313,10 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
   const { width, height } = primaryDisplay.workAreaSize;
 
   // Retrieve stored window size, or use default if not available
-  const storedWidth = store.get('windowWidth', width);
-  const storedHeight = store.get('windowHeight', height);
-  const storedX = store.get('windowX');
-  const storedY = store.get('windowY');
+  const storedWidth = store?.get('windowWidth', width) ?? width;
+  const storedHeight = store?.get('windowHeight', height) ?? height;
+  const storedX = store?.get('windowX');
+  const storedY = store?.get('windowY');
 
   if (mainWindow) {
     log.info('Main window already exists');
@@ -346,6 +346,8 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
   log.info('Renderer loaded into main window');
 
   const updateBounds = () => {
+    if (!mainWindow || !store) return;
+
     const { width, height, x, y } = mainWindow.getBounds();
     store.set('windowWidth', width);
     store.set('windowHeight', height);
@@ -408,7 +410,7 @@ const isComfyServerReady = async (host: string, port: number): Promise<boolean> 
 // Launch Python Server Variables
 const maxFailWait: number = 120 * 1000; // 120seconds
 let currentWaitTime = 0;
-let spawnServerTimeout: NodeJS.Timeout = null;
+let spawnServerTimeout: NodeJS.Timeout | null = null;
 
 const launchPythonServer = async (
   pythonInterpreterPath: string,
@@ -498,7 +500,8 @@ const sendRendererMessage = (channel: IPCChannel, data: any) => {
     channel: channel,
     data: data,
   };
-  if (!mainWindow.webContents || mainWindow.webContents.isLoading()) {
+
+  if (!mainWindow?.webContents || mainWindow.webContents.isLoading()) {
     log.info('Queueing message since renderer is not ready yet.');
     messageQueue.push(newMessage);
     return;
@@ -507,8 +510,10 @@ const sendRendererMessage = (channel: IPCChannel, data: any) => {
   if (messageQueue.length > 0) {
     while (messageQueue.length > 0) {
       const message = messageQueue.shift();
-      log.info('Sending queued message ', message.channel, message.data);
-      mainWindow.webContents.send(message.channel, message.data);
+      if (message) {
+        log.info('Sending queued message ', message.channel, message.data);
+        mainWindow.webContents.send(message.channel, message.data);
+      }
     }
   }
   mainWindow.webContents.send(newMessage.channel, newMessage.data);
@@ -568,14 +573,14 @@ const spawnPython = (
       };
     }
 
-    pythonProcess.stderr.on('data', (data) => {
+    pythonProcess.stderr?.on('data', (data) => {
       const message = data.toString().trim();
       pythonLog.error(`stderr: ${message}`);
       if (mainWindow) {
         sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
-    pythonProcess.stdout.on('data', (data) => {
+    pythonProcess.stdout?.on('data', (data) => {
       const message = data.toString().trim();
       pythonLog.info(`stdout: ${message}`);
       if (mainWindow) {
@@ -603,14 +608,14 @@ const spawnPythonAsync = (
 
     if (options.stdx) {
       log.info('Setting up python process stdout/stderr listeners');
-      pythonProcess.stderr.on('data', (data) => {
+      pythonProcess.stderr?.on('data', (data) => {
         const message = data.toString();
         log.error(message);
         if (mainWindow) {
           sendRendererMessage(IPC_CHANNELS.LOG_MESSAGE, message);
         }
       });
-      pythonProcess.stdout.on('data', (data) => {
+      pythonProcess.stdout?.on('data', (data) => {
         const message = data.toString();
         log.info(message);
         if (mainWindow) {
@@ -831,28 +836,27 @@ async function determineResourcesPaths(): Promise<{
 }> {
   const modelConfigPath = path.join(app.getPath('userData'), 'extra_models_config.yaml');
   const basePath = await readBasePathFromConfig(modelConfigPath);
+  const appResourcePath = process.resourcesPath;
+  const defaultUserResourcesPath = getDefaultUserResourcesPath();
+
   if (!app.isPackaged) {
     return {
       // development: install python to in-tree assets dir
       userResourcesPath: path.join(app.getAppPath(), 'assets'),
       pythonInstallPath: path.join(app.getAppPath(), 'assets'),
       appResourcesPath: path.join(app.getAppPath(), 'assets'),
-      modelConfigPath: modelConfigPath,
-      basePath: basePath,
+      modelConfigPath,
+      basePath,
     };
   }
-
-  const defaultUserResourcesPath = getDefaultUserResourcesPath();
-
-  const appResourcePath = process.resourcesPath;
 
   // TODO(robinhuang): Look for extra models yaml file and use that as the userResourcesPath if it exists.
   return {
     userResourcesPath: defaultUserResourcesPath,
-    pythonInstallPath: basePath,
+    pythonInstallPath: basePath ?? defaultUserResourcesPath, // Provide fallback
     appResourcesPath: appResourcePath,
-    modelConfigPath: modelConfigPath,
-    basePath: basePath,
+    modelConfigPath,
+    basePath,
   };
 }
 
