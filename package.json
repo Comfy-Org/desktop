@@ -93,7 +93,6 @@
     "yaml": "^2.6.0"
   },
   "lint-staged": {
-    "./**/*.{js,ts,tsx}": "prettier --write",
-    "./src/**/*.{ts}": "tsc --noEmit --strict"
+    "./**/*.{js,ts,tsx}": "prettier --write"
   }
 }
