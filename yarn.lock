@@ -2823,9 +2823,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@todesktop/cli@npm:^1.9.7":
-  version: 1.9.7
-  resolution: "@todesktop/cli@npm:1.9.7"
+"@todesktop/cli@npm:1.10.0":
+  version: 1.10.0
+  resolution: "@todesktop/cli@npm:1.10.0"
   dependencies:
     "@sentry/node": "npm:^8.35.0"
     ajv: "npm:^8.11.2"
@@ -2872,7 +2872,7 @@ __metadata:
     xdg-basedir: "npm:^4.0.0"
   bin:
     todesktop: dist/cli.js
-  checksum: 10c0/9cde371bb591a9575ea29218444b102986e9ea9116ab51281be460a773213232d19f5c18a9584394d67dadcae394caf17f3098ce8ba5c19b9b0c6fd3c8466001
+  checksum: 10c0/225d04d29cd698741524c2876f6ac25f915198eac47992d43bcf3913f26f4eefbbf556ffec34d93f570463c629ccfbd0bc4754f19487be53fe330d7323c49191
   languageName: node
   linkType: hard
 
@@ -3278,15 +3278,6 @@ __metadata:
   version: 1.10.10
   resolution: "@types/verror@npm:1.10.10"
   checksum: 10c0/413c0c0370ed6a796d630fbcdae20049ab3e26558c62bc5f53327830ddb0965aaadedb92f4933b28ee8fc8089e1293b742a0efbf6b264d15ce3930c6b83b0984
-  languageName: node
-  linkType: hard
-
-"@types/ws@npm:^8.5.12":
-  version: 8.5.12
-  resolution: "@types/ws@npm:8.5.12"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: 10c0/3fd77c9e4e05c24ce42bfc7647f7506b08c40a40fe2aea236ef6d4e96fc7cb4006a81ed1b28ec9c457e177a74a72924f4768b7b4652680b42dfd52bc380e15f9
   languageName: node
   linkType: hard
 
@@ -4855,7 +4846,7 @@ __metadata:
     "@sentry/electron": "npm:^5.4.0"
     "@sentry/vite-plugin": "npm:^2.22.4"
     "@sentry/wizard": "npm:^3.30.0"
-    "@todesktop/cli": "npm:^1.9.7"
+    "@todesktop/cli": "npm:1.10.0"
     "@todesktop/runtime": "npm:^1.6.4"
     "@types/adm-zip": "npm:^0.5.5"
     "@types/electron-squirrel-startup": "npm:^1.0.2"
@@ -4864,7 +4855,6 @@ __metadata:
     "@types/react": "npm:^18.3.4"
     "@types/react-dom": "npm:^18.3.0"
     "@types/tar": "npm:6.1.13"
-    "@types/ws": "npm:^8.5.12"
     "@typescript-eslint/eslint-plugin": "npm:^5.0.0"
     "@typescript-eslint/parser": "npm:^5.0.0"
     adm-zip: "npm:^0.5.15"
@@ -4888,9 +4878,7 @@ __metadata:
     ts-jest: "npm:^29.2.5"
     ts-node: "npm:^10.0.0"
     typescript: "npm:~5.5.4"
-    update-electron-app: "npm:^3.0.0"
     vite: "npm:^5.0.12"
-    ws: "npm:^8.18.0"
     yaml: "npm:^2.6.0"
   languageName: unknown
   linkType: soft
@@ -6750,15 +6738,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"github-url-to-object@npm:^4.0.4":
-  version: 4.0.6
-  resolution: "github-url-to-object@npm:4.0.6"
-  dependencies:
-    is-url: "npm:^1.1.0"
-  checksum: 10c0/b8ed9b2b93c55657299b7cc5ce9faf4441f143e59f995e126929d18f8fc692fc932d8530da9bde7655f35b29201beacbc17b066b7e26dbcc0dc983f8d3c918cf
-  languageName: node
-  linkType: hard
-
 "glob-parent@npm:^5.1.2, glob-parent@npm:~5.1.2":
   version: 5.1.2
   resolution: "glob-parent@npm:5.1.2"
@@ -7787,13 +7766,6 @@ __metadata:
   version: 0.1.0
   resolution: "is-unicode-supported@npm:0.1.0"
   checksum: 10c0/00cbe3455c3756be68d2542c416cab888aebd5012781d6819749fefb15162ff23e38501fe681b3d751c73e8ff561ac09a5293eba6f58fdf0178462ce6dcb3453
-  languageName: node
-  linkType: hard
-
-"is-url@npm:^1.1.0, is-url@npm:^1.2.4":
-  version: 1.2.4
-  resolution: "is-url@npm:1.2.4"
-  checksum: 10c0/0157a79874f8f95fdd63540e3f38c8583c2ef572661cd0693cda80ae3e42dfe8e9a4a972ec1b827f861d9a9acf75b37f7d58a37f94a8a053259642912c252bc3
   languageName: node
   linkType: hard
 
@@ -12212,17 +12184,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"update-electron-app@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "update-electron-app@npm:3.0.0"
-  dependencies:
-    github-url-to-object: "npm:^4.0.4"
-    is-url: "npm:^1.2.4"
-    ms: "npm:^2.1.1"
-  checksum: 10c0/5e0b9ce8fd2cbcf6ea64d8029f90d90394facf05d86c8dceda5dba79af6e21522ef4f37f212982be781f488d497882529d9b11b91174159f6567a24039c76e6a
-  languageName: node
-  linkType: hard
-
 "uri-js@npm:^4.2.2":
   version: 4.4.1
   resolution: "uri-js@npm:4.4.1"
@@ -12574,21 +12535,6 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10c0/bd7d5f4aaf04fae7960c23dcb6c6375d525e00f795dd20b9385902bd008c40a94d3db3ce97d878acc7573df852056ca546328b27b39f47609f80fb22a0a9b61d
-  languageName: node
-  linkType: hard
-
-"ws@npm:^8.18.0":
-  version: 8.18.0
-  resolution: "ws@npm:8.18.0"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ">=5.0.2"
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: 10c0/25eb33aff17edcb90721ed6b0eb250976328533ad3cd1a28a274bd263682e7296a6591ff1436d6cbc50fa67463158b062f9d1122013b361cec99a05f84680e06
   languageName: node
   linkType: hard
 
