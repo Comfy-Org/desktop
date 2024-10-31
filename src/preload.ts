@@ -20,14 +20,11 @@ export interface ElectronAPI {
   onLogMessage: (callback: (message: string) => void) => void;
   onFirstTimeSetupComplete: (callback: () => void) => void;
   onDefaultInstallLocation: (callback: (location: string) => void) => void;
-  onComfyUIReady: (callback: (port: number) => void) => void;
   sendReady: () => void;
   restartApp: (customMessage?: string, delay?: number) => void;
   onOpenDevTools: (callback: () => void) => void;
   isPackaged: () => Promise<boolean>;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
-  getComfyUIUrl: () => Promise<string>;
-  getPreloadScript: () => Promise<string>;
   /**
    * Open the logs folder in the system's default file explorer.
    */
@@ -63,9 +60,6 @@ const electronAPI: ElectronAPI = {
       callback(value);
     });
   },
-  onComfyUIReady: (callback: (port: number) => void) => {
-    ipcRenderer.on(IPC_CHANNELS.COMFYUI_READY, (_event, port: number) => callback(port));
-  },
   sendReady: () => {
     console.log('Sending ready event to main process');
     ipcRenderer.send(IPC_CHANNELS.RENDERER_READY);
@@ -85,12 +79,6 @@ const electronAPI: ElectronAPI = {
   },
   selectSetupDirectory: (directory: string) => {
     ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
-  },
-  getComfyUIUrl: (): Promise<string> => {
-    return ipcRenderer.invoke(IPC_CHANNELS.GET_COMFYUI_URL);
-  },
-  getPreloadScript: (): Promise<string> => {
-    return ipcRenderer.invoke(IPC_CHANNELS.GET_PRELOAD_SCRIPT);
   },
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);

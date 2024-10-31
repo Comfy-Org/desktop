@@ -9,8 +9,6 @@ export const IPC_CHANNELS = {
   OPEN_DIALOG: 'open-dialog',
   FIRST_TIME_SETUP_COMPLETE: 'first-time-setup-complete',
   DEFAULT_INSTALL_LOCATION: 'default-install-location',
-  GET_COMFYUI_URL: 'get-comfyui-url',
-  COMFYUI_READY: 'comfyui-ready',
   GET_PRELOAD_SCRIPT: 'get-preload-script',
   OPEN_DEVTOOLS: 'open-devtools',
   OPEN_LOGS_FOLDER: 'open-logs-folder',

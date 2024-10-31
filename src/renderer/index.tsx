@@ -4,7 +4,6 @@ import log from 'electron-log/renderer';
 import FirstTimeSetup from './screens/FirstTimeSetup';
 import { ElectronAPI } from 'src/preload';
 import { ELECTRON_BRIDGE_API } from 'src/constants';
-import ComfyUIContainer from './components/ComfyUIContainer';
 
 export interface ProgressUpdate {
   status: string;
@@ -31,9 +30,6 @@ const Home: React.FC = () => {
   const [status, setStatus] = useState('Starting...');
   const [logs, setLogs] = useState<string[]>([]);
   const [defaultInstallLocation, setDefaultInstallLocation] = useState<string>('');
-  const [comfyReady, setComfyReady] = useState(false);
-  const [comfyPort, setComfyPort] = useState<number | null>(null);
-  const [preloadScript, setPreloadScript] = useState<string>('');
 
   const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
     log.info(`Setting new status: ${newStatus}`);
@@ -60,16 +56,6 @@ const Home: React.FC = () => {
       log.info('First time setup complete');
       setShowSetup(false);
     });
-
-    electronAPI.onComfyUIReady((port: number) => {
-      log.info('ComfyUI ready');
-      setComfyPort(port);
-      setComfyReady(true);
-    });
-
-    electronAPI.getPreloadScript().then((script) => {
-      setPreloadScript(script);
-    });
   }, []);
 
   useEffect(() => {
@@ -81,7 +67,7 @@ const Home: React.FC = () => {
       log.info(`Received log message: ${message}`);
       addLogMessage(message);
     });
-  }, [updateProgress, addLogMessage, setComfyPort]);
+  }, [updateProgress, addLogMessage]);
 
   useEffect(() => {
     const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
@@ -103,9 +89,6 @@ const Home: React.FC = () => {
     );
   }
 
-  if (comfyReady && comfyPort) {
-    return <ComfyUIContainer comfyPort={comfyPort} preloadScript={preloadScript} />;
-  }
 
   return (
     <div style={bodyStyle}>

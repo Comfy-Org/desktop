@@ -60,6 +60,7 @@ export class PythonEnvironment {
   }
 
   async isInstalled(): Promise<boolean> {
+    log.info(`Checking if Python is installed at ${this.pythonInterpreterPath} and ${this.pythonRecordPath}`);
     return (await pathAccessible(this.pythonInterpreterPath)) && (await pathAccessible(this.pythonRecordPath));
   }
 

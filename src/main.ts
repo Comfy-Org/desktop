@@ -11,7 +11,7 @@ import {
   IPCChannel,
   SENTRY_URL_ENDPOINT,
 } from './constants';
-import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, globalShortcut, shell } from 'electron';
+import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, shell } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import Store from 'electron-store';
@@ -20,7 +20,6 @@ import { graphics } from 'systeminformation';
 import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_model_config';
 import { WebSocketServer } from 'ws';
 import { StoreType } from './store';
-import { createReadStream, watchFile } from 'node:fs';
 import todesktop from '@todesktop/runtime';
 import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
@@ -69,9 +68,6 @@ app.on('before-quit', async () => {
     log.error(error);
   }
 
-  closeWebSocketServer();
-  globalShortcut.unregisterAll();
-
   app.exit();
 });
 
@@ -112,8 +108,6 @@ if (!gotTheLock) {
 
   graphics()
     .then((graphicsInfo) => {
-      log.info('GPU Info: ', graphicsInfo);
-
       const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
         [`gpu_${index}`]: {
           vendor: gpu.vendor,
@@ -125,7 +119,6 @@ if (!gotTheLock) {
 
       // Combine all GPU info into a single object
       const allGpuInfo = Object.assign({}, ...gpuInfo);
-      log.info('GPU Info: ', allGpuInfo);
       // Set Sentry context with all GPU information
       Sentry.setContext('gpus', allGpuInfo);
     })
@@ -155,7 +148,7 @@ if (!gotTheLock) {
         log.error('ERROR: Main window not found!');
         return;
       }
-      startWebSocketServer();
+
       mainWindow.on('close', () => {
         mainWindow = null;
         app.quit();
@@ -228,10 +221,6 @@ if (!gotTheLock) {
         }
       }
     );
-
-    ipcMain.handle(IPC_CHANNELS.GET_COMFYUI_URL, () => {
-      return `http://${host}:${port}`;
-    });
   });
 }
 
@@ -240,7 +229,7 @@ function loadComfyIntoMainWindow() {
     log.error('Trying to load ComfyUI into main window but it is not ready yet.');
     return;
   }
-  mainWindow.webContents.send(IPC_CHANNELS.COMFYUI_READY, port);
+  mainWindow.loadURL(`http://${host}:${port}`);
 }
 
 async function loadRendererIntoMainWindow(): Promise<void> {
@@ -252,7 +241,7 @@ async function loadRendererIntoMainWindow(): Promise<void> {
     log.info('Loading Vite Dev Server');
     await mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
     log.info('Opened Vite Dev Server');
-    //mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/index.html`));
   }
@@ -893,48 +882,6 @@ async function determineResourcesPaths(): Promise<{
 
 function getDefaultUserResourcesPath(): string {
   return process.platform === 'win32' ? path.join(app.getPath('home'), 'comfyui-electron') : app.getPath('userData');
-}
-
-/**
- * For log watching.
- */
-function startWebSocketServer() {
-  wss = new WebSocketServer({ port: 7999 });
-
-  wss.on('connection', (ws) => {
-    const logPath = path.join(app.getPath('logs'), 'comfyui.log');
-
-    // Send the initial content
-    const initialStream = createReadStream(logPath, { encoding: 'utf-8' });
-    initialStream.on('data', (chunk) => {
-      ws.send(chunk);
-    });
-
-    let lastSize = 0;
-    const watcher = watchFile(logPath, { interval: 1000 }, (curr, prev) => {
-      if (curr.size > lastSize) {
-        const stream = createReadStream(logPath, {
-          start: lastSize,
-          encoding: 'utf-8',
-        });
-        stream.on('data', (chunk) => {
-          ws.send(chunk);
-        });
-        lastSize = curr.size;
-      }
-    });
-
-    ws.on('close', () => {
-      watcher.unref();
-    });
-  });
-}
-
-function closeWebSocketServer() {
-  if (wss) {
-    wss.close();
-    wss = null;
-  }
 }
 
 /**
