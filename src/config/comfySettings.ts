@@ -22,7 +22,8 @@ export class ComfySettings {
 
   private loadSettings(): ComfySettingsData {
     if (!fs.existsSync(this.filePath)) {
-      throw new Error(`Settings file ${this.filePath} does not exist`);
+      log.info(`Settings file ${this.filePath} does not exist`);
+      return {};
     }
     try {
       const fileContent = fs.readFileSync(this.filePath, 'utf-8');
