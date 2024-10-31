@@ -11,7 +11,7 @@ import {
   IPCChannel,
   SENTRY_URL_ENDPOINT,
 } from './constants';
-import { app, BrowserWindow, session, dialog, screen, ipcMain, Menu, MenuItem, shell } from 'electron';
+import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, shell } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import Store from 'electron-store';
@@ -246,12 +246,6 @@ async function loadRendererIntoMainWindow(): Promise<void> {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/index.html`));
   }
-
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
-    // At this time Prevent all unknown permission requests
-    if (permission == 'unknown') callback(false);
-    callback(true);
-  });
 }
 
 function restartApp({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
@@ -387,19 +381,6 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
 
   mainWindow.on('resize', updateBounds);
   mainWindow.on('move', updateBounds);
-
-  // Prevent URL hijacking
-  mainWindow.webContents.on('will-navigate', (event, newURL) => {
-    const approvedHosts: Array<string> = [
-      `http://${host}:${port}`,
-      process.env.VITE_DEV_SERVER_URL as string,
-      '/renderer/index.html',
-    ];
-    const approved = approvedHosts.filter((e) => newURL.endsWith(e));
-    if (!approved.length) {
-      event.preventDefault();
-    }
-  });
 
   mainWindow.on('close', (e: Electron.Event) => {
     // Mac Only Behavior
