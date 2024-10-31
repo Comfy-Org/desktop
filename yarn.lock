@@ -2823,9 +2823,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@todesktop/cli@npm:1.10.0":
-  version: 1.10.0
-  resolution: "@todesktop/cli@npm:1.10.0"
+"@todesktop/cli@npm:1.9.7":
+  version: 1.9.7
+  resolution: "@todesktop/cli@npm:1.9.7"
   dependencies:
     "@sentry/node": "npm:^8.35.0"
     ajv: "npm:^8.11.2"
@@ -2872,7 +2872,7 @@ __metadata:
     xdg-basedir: "npm:^4.0.0"
   bin:
     todesktop: dist/cli.js
-  checksum: 10c0/225d04d29cd698741524c2876f6ac25f915198eac47992d43bcf3913f26f4eefbbf556ffec34d93f570463c629ccfbd0bc4754f19487be53fe330d7323c49191
+  checksum: 10c0/9cde371bb591a9575ea29218444b102986e9ea9116ab51281be460a773213232d19f5c18a9584394d67dadcae394caf17f3098ce8ba5c19b9b0c6fd3c8466001
   languageName: node
   linkType: hard
 
@@ -4846,7 +4846,7 @@ __metadata:
     "@sentry/electron": "npm:^5.4.0"
     "@sentry/vite-plugin": "npm:^2.22.4"
     "@sentry/wizard": "npm:^3.30.0"
-    "@todesktop/cli": "npm:1.10.0"
+    "@todesktop/cli": "npm:1.9.7"
     "@todesktop/runtime": "npm:^1.6.4"
     "@types/adm-zip": "npm:^0.5.5"
     "@types/electron-squirrel-startup": "npm:^1.0.2"
