@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-stage-to-todesktop:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
