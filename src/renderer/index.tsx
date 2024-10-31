@@ -89,7 +89,6 @@ const Home: React.FC = () => {
     );
   }
 
-
   return (
     <div style={bodyStyle}>
       <ProgressOverlay status={status} logs={logs} />
