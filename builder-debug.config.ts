@@ -1,7 +1,7 @@
 import { Configuration } from 'electron-builder';
 
 const debugConfig: Configuration = {
-  files: ['package.json', 'README.md', 'src/**', '.vite/**'],
+  files: ['package.json', 'README.md', 'src/**', '.vite/**', 'node_modules/**'],
   extraFiles: [{ from: './assets', to: process.platform === 'darwin' ? './Resources' : './resources' }],
   beforeBuild: './scripts/preMake.js',
   win: {
