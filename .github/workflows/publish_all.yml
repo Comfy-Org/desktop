@@ -1,11 +1,11 @@
-name: Publish All Platforms
+name: Publish App to ToDesktop
 
 on:
   workflow_dispatch:
 
 jobs:
   build-stage-to-todesktop:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Github checkout
         uses: actions/checkout@v4

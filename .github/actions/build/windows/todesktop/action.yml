@@ -19,11 +19,11 @@ runs:
         node-version: '20.x'
         corepack: true
     - run: yarn install --immutable
-      shell: bash
+      shell: cmd
     - run: yarn set version --yarn-path self
-      shell: bash
+      shell: cmd
     - name: Make app
-      shell: bash
+      shell: powershell
       env:
         PUBLISH: true
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
