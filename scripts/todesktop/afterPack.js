@@ -23,9 +23,10 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
     const resourcePath = path.join(appPath, "Contents", "Resources");
     const result = await fs.rm(path.join(assetPath, "ComfyUI", ".git"), { recursive: true, force: true });
+    const result3 = await fs.rm(path.join(assetPath, "ComfyUI", "custom_nodes","ComfyUI-Manager",".git"), { recursive: true, force: true });
     const result2 = await fs.cp(assetPath, resourcePath, { recursive: true });
   }
-
+  
   if (os.platform() === 'win32') {
     const appName = packager.appInfo.productFilename;
     const appPath = path.join(`${appOutDir}`, `${appName}.exe`);

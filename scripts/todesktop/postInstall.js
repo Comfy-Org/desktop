@@ -2,7 +2,6 @@ const { spawnSync } = require("child_process");
 const path = require("path");
 const os = require('os');
 const process = require("process");
-//const fs = require('fs-extra');
 
 async function postInstall() {
     const firstInstallOnToDesktopServers =
@@ -24,17 +23,27 @@ async function postInstall() {
 
     if (os.platform() === "darwin") {
 
-        const resultUpgradePip = spawnSync(`py`, ['-3.12', '-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'ignore'}).toString();
-        const resultInstallComfyCLI = spawnSync(`py`, ['-3.12 ','-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'ignore'}).toString();
-        const resultComfyManagerInstall = spawnSync('yarn run make:assets:macos' ,[''],{shell:true,stdio: 'inherit'}).toString();
+        const resultUpgradePip = spawnSync(`python3`, ['-m', 'pip' ,'install' ,'--upgrade pip'],{shell:true,stdio: 'ignore'});
+        const resultInstallComfyCLI = spawnSync(`python3`, ['-m' ,'pip' ,'install comfy-cli'], {shell:true,stdio: 'ignore'});
+        const resultComfyManagerInstall = spawnSync('yarn run make:assets:macos' ,[''],{shell:true,stdio: 'inherit'});
 
         // Do not delete, useful if there are build issues with mac
         // TODO: Consider making a global build log as ToDesktop logs can be hit or miss
         /*
-        fs.createFileSync('./src/macpip.txt');
-        fs.writeFileSync('./src/macpip.txt',JSON.stringify({
-            log: result.stdout.toString(),
-            err:result.stderr.toString()
+        const fs = require('fs-extra');
+        fs.createFileSync('./.vite/macpip.json');
+        fs.writeFileSync('./.vite/macpip.json',JSON.stringify({
+            upgradeOut: {
+            log: resultUpgradePip.stdout?.toString(),
+            err:resultUpgradePip.stderr?.toString()},
+            installComfOut: {
+                log: resultInstallComfyCLI.stdout?.toString(),
+                err:resultInstallComfyCLI.stderr?.toString()
+            },
+            ComfManInstallOut: {
+                log: resultComfyManagerInstall.stdout?.toString(),
+                err:resultComfyManagerInstall.stderr?.toString()
+            }
         }));
         */
       console.log("Finish Python & Comfy Install for Mac");
