@@ -37,6 +37,7 @@
     "test:update-snapshots": "npx playwright test --update-snapshots",
     "todesktop:afterPack": "./scripts/todesktop/afterPack.js",
     "todesktop:beforeInstall": "./scripts/todesktop/beforeInstall.js",
+    "todesktop:postInstall": "./scripts/todesktop/postInstall.js",
     "typescript": "yarn run tsc",
     "vite:compile": "vite build --config vite.renderer.config.ts && vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts"
   },
