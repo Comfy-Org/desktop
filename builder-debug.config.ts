@@ -4,7 +4,7 @@ const debugConfig: Configuration = {
   files: ['node_modules', 'package.json', '.vite/**'],
   extraResources: [
     { from: './assets/ComfyUI', to: 'ComfyUI' },
-    { from: './assets/python', to: 'python' },
+    { from: './assets/python.tgz', to: 'python.tgz' },
     { from: './assets/UI', to: 'UI' },
   ],
   beforeBuild: './scripts/preMake.js',
