@@ -90,7 +90,6 @@
     "react-dom": "^18.3.1",
     "systeminformation": "^5.23.5",
     "tar": "^7.4.3",
-    "update-electron-app": "^3.0.0",
     "yaml": "^2.6.0"
   },
   "lint-staged": {
