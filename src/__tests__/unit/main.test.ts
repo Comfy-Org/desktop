@@ -81,6 +81,14 @@ jest.mock('electron-log/main', () => ({
   // Add other methods you might use from electron-log
 }));
 
+// Mock the update-electron-app module
+jest.mock('update-electron-app', () => ({
+  updateElectronApp: jest.fn(),
+  UpdateSourceType: {
+    StaticStorage: 'StaticStorage',
+  },
+}));
+
 describe('createWindow', () => {
   // it('should create a new BrowserWindow with correct options', async () => {
   //   const window = await createWindow('/');

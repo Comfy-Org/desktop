@@ -18,6 +18,7 @@ import Store from 'electron-store';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
 import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_model_config';
+import { WebSocketServer } from 'ws';
 import { StoreType } from './store';
 import todesktop from '@todesktop/runtime';
 import { PythonEnvironment } from './pythonEnvironment';
@@ -30,6 +31,7 @@ let isRestarting: boolean = false; // Prevents double restarts TODO(robinhuang):
 const host = '127.0.0.1';
 let port = 8188;
 let mainWindow: BrowserWindow | null = null;
+let wss: WebSocketServer | null;
 let store: Store<StoreType> | null = null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 let downloadManager: DownloadManager;
