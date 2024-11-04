@@ -55,7 +55,6 @@
     "@types/react": "^18.3.4",
     "@types/react-dom": "^18.3.0",
     "@types/tar": "6.1.13",
-    "@types/ws": "^8.5.12",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "electron": "31.3.1",
@@ -91,8 +90,6 @@
     "react-dom": "^18.3.1",
     "systeminformation": "^5.23.5",
     "tar": "^7.4.3",
-    "update-electron-app": "^3.0.0",
-    "ws": "^8.18.0",
     "yaml": "^2.6.0"
   },
   "lint-staged": {
