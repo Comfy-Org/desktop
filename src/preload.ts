@@ -45,6 +45,10 @@ export interface ElectronAPI {
     deleteModel: (filename: string, path: string) => Promise<boolean>;
     getAllDownloads: () => Promise<DownloadItem[]>;
   };
+  /**
+   * Get the current Electron version
+   */
+  getElectronVersion: () => Promise<string>;
 }
 
 const electronAPI: ElectronAPI = {
@@ -125,6 +129,9 @@ const electronAPI: ElectronAPI = {
     getAllDownloads: (): Promise<DownloadItem[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);
     },
+  },
+  getElectronVersion: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_ELECTRON_VERSION);
   },
 };
 

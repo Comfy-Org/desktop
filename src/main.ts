@@ -1,5 +1,4 @@
 import { spawn, ChildProcess } from 'node:child_process';
-import * as fsPromises from 'node:fs/promises';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
@@ -33,7 +32,7 @@ let mainWindow: BrowserWindow | null = null;
 let store: Store<StoreType> | null = null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
 let downloadManager: DownloadManager;
-
+Sentry.captureMessage('Hello, world!');
 log.initialize();
 
 const comfySettings = new ComfySettings(app.getPath('documents'));
@@ -92,10 +91,22 @@ if (!gotTheLock) {
   });
 
   app.isPackaged &&
-    comfySettings.sendCrashStatistics &&
     Sentry.init({
       dsn: SENTRY_URL_ENDPOINT,
       autoSessionTracking: false,
+      beforeSend(event, hint) {
+        if (!comfySettings.sendCrashStatistics) {
+          return null;
+        }
+
+        // ask user if they want to send crash statistics
+        dialog.showMessageBox({
+          title: 'Send Crash Statistics',
+          message: 'Would you like to send crash statistics to the team?',
+          buttons: ['Yes (Always Send)', 'Yes', 'No'],
+        });
+        return event;
+      },
       integrations: [
         Sentry.childProcessIntegration({
           breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
@@ -219,6 +230,10 @@ if (!gotTheLock) {
         }
       }
     );
+
+    ipcMain.handle(IPC_CHANNELS.GET_ELECTRON_VERSION, () => {
+      return app.getVersion();
+    });
   });
 }
 
