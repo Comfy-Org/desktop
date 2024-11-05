@@ -90,30 +90,24 @@ if (!gotTheLock) {
     }
   });
 
-  app.isPackaged &&
-    Sentry.init({
-      dsn: SENTRY_URL_ENDPOINT,
-      autoSessionTracking: false,
-      beforeSend(event, hint) {
-        if (!comfySettings.sendCrashStatistics) {
-          return null;
-        }
-
-        // ask user if they want to send crash statistics
-        dialog.showMessageBox({
-          title: 'Send Crash Statistics',
-          message: 'Would you like to send crash statistics to the team?',
-          buttons: ['Yes (Always Send)', 'Yes', 'No'],
-        });
+  Sentry.init({
+    dsn: SENTRY_URL_ENDPOINT,
+    autoSessionTracking: false,
+    beforeSend(event, hint) {
+      if (event.extra?.comfyUIExecutionError) {
         return event;
-      },
-      integrations: [
-        Sentry.childProcessIntegration({
-          breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
-          events: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
-        }),
-      ],
-    });
+      }
+
+      //TODO (use default pop up behavior).
+      return event;
+    },
+    integrations: [
+      Sentry.childProcessIntegration({
+        breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
+        events: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
+      }),
+    ],
+  });
 
   graphics()
     .then((graphicsInfo) => {
@@ -200,7 +194,6 @@ if (!gotTheLock) {
       sendProgressUpdate('Setting up Python Environment...');
       const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
       await pythonEnvironment.setup();
-
       SetupTray(
         mainWindow,
         basePath,
@@ -233,6 +226,18 @@ if (!gotTheLock) {
 
     ipcMain.handle(IPC_CHANNELS.GET_ELECTRON_VERSION, () => {
       return app.getVersion();
+    });
+
+    ipcMain.handle(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, async (_event, { error, extras }): Promise<string | null> => {
+      try {
+        return Sentry.captureMessage(error, {
+          level: 'error',
+          extra: { ...extras, comfyUIExecutionError: true },
+        });
+      } catch (err) {
+        log.error('Failed to send error to Sentry:', err);
+        return null;
+      }
     });
   });
 }
