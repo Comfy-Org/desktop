@@ -114,17 +114,17 @@ if (!gotTheLock) {
 
       let sendCrashReport = comfySettings.sendCrashStatistics;
 
-        if (!sendCrashReport) {
-          const { response } = await dialog.showMessageBox({
-            title: 'Send Crash Statistics',
-            message: `Would you like to send crash statistics to the team?`,
-            buttons: ['Always send crash reports', 'Do not send crash report'],
-          });
+      if (!sendCrashReport) {
+        const { response } = await dialog.showMessageBox({
+          title: 'Send Crash Statistics',
+          message: `Would you like to send crash statistics to the team?`,
+          buttons: ['Always send crash reports', 'Do not send crash report'],
+        });
 
-          sendCrashReport = response === 0;
-        }
+        sendCrashReport = response === 0;
+      }
 
-        return sendCrashReport ? event : null;
+      return sendCrashReport ? event : null;
     },
     integrations: [
       Sentry.childProcessIntegration({

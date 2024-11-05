@@ -47,7 +47,6 @@ export class ComfySettings {
       fs.writeFileSync(this.filePath, JSON.stringify(this.settings), 'utf-8');
     } catch (error) {
       log.error(`Failed to save settings to ${this.filePath}:`, error);
-      return {};
     }
   }
 
