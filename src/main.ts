@@ -844,7 +844,7 @@ async function selectedInstallDirectory(): Promise<string> {
 }
 
 async function handleFirstTimeSetup() {
-  const firstTimeSetup = true; // isFirstTimeSetup();
+  const firstTimeSetup = isFirstTimeSetup();
   log.info('First time setup:', firstTimeSetup);
   if (firstTimeSetup) {
     sendRendererMessage(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);

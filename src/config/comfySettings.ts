@@ -17,7 +17,6 @@ export class ComfySettings {
 
   constructor(settingsPath: string) {
     this.filePath = path.join(settingsPath, 'user', 'default', 'comfy.settings.json');
-    console.info(this.filePath);
     this.settings = this.loadSettings();
   }
 
