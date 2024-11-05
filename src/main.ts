@@ -23,11 +23,24 @@ import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
 import { getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 let comfyServerProcess: ChildProcess | null = null;
 let isRestarting: boolean = false; // Prevents double restarts TODO(robinhuang): Remove this once we have a better way to handle restarts. https://github.com/Comfy-Org/electron/issues/149
-const host = '127.0.0.1';
-let port = 8188;
+
+/** The host to use for the ComfyUI server. */
+const host = process.env.COMFY_HOST || '127.0.0.1';
+/** The port to use for the ComfyUI server. */
+let port = parseInt(process.env.COMFY_PORT || '-1');
+/**
+ * Whether to use an external server instead of starting one locally.
+ * Only effective if COMFY_PORT is set.
+ * Note: currently used for testing only.
+ */
+const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
+
 let mainWindow: BrowserWindow | null = null;
 let store: Store<StoreType> | null = null;
 const messageQueue: Array<any> = []; // Stores mesaages before renderer is ready.
@@ -188,27 +201,37 @@ if (!gotTheLock) {
       downloadManager = DownloadManager.getInstance(mainWindow!, getModelsDirectory(basePath));
       downloadManager.registerIpcHandlers();
 
-      port = await findAvailablePort(8000, 9999).catch((err) => {
-        log.error(`ERROR: Failed to find available port: ${err}`);
-        throw err;
-      });
+      port =
+        port !== -1
+          ? port
+          : await findAvailablePort(8000, 9999).catch((err) => {
+              log.error(`ERROR: Failed to find available port: ${err}`);
+              throw err;
+            });
 
-      sendProgressUpdate('Setting up Python Environment...');
-      const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
-      await pythonEnvironment.setup();
-      SetupTray(
-        mainWindow,
-        basePath,
-        modelConfigPath,
-        () => {
-          log.info('Resetting install location');
-          fs.rmSync(modelConfigPath);
-          restartApp();
-        },
-        pythonEnvironment
-      );
-      sendProgressUpdate('Starting Comfy Server...');
-      await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
+      if (!useExternalServer) {
+        sendProgressUpdate('Setting up Python Environment...');
+        const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
+        await pythonEnvironment.setup();
+
+        // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
+        SetupTray(
+          mainWindow,
+          basePath,
+          modelConfigPath,
+          () => {
+            log.info('Resetting install location');
+            fs.rmSync(modelConfigPath);
+            restartApp();
+          },
+          pythonEnvironment
+        );
+        sendProgressUpdate('Starting Comfy Server...');
+        await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
+      } else {
+        sendProgressUpdate('Using external server at ' + host + ':' + port);
+        loadComfyIntoMainWindow();
+      }
     } catch (error) {
       log.error(error);
       sendProgressUpdate(COMFY_ERROR_MESSAGE);
