@@ -88,12 +88,8 @@ export function SetupTray(
       click: () => shell.openPath(app.getPath('logs')),
     },
     {
-      label: 'Open devtools (Electron)',
+      label: 'Open devtools',
       click: () => mainView.webContents.openDevTools(),
-    },
-    {
-      label: 'Open devtools (ComfyUI)',
-      click: () => mainView.webContents.send(IPC_CHANNELS.OPEN_DEVTOOLS),
     },
     {
       label: 'Install Python Packages (Open Terminal)',

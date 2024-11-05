@@ -22,7 +22,6 @@ export interface ElectronAPI {
   onDefaultInstallLocation: (callback: (location: string) => void) => void;
   sendReady: () => void;
   restartApp: (customMessage?: string, delay?: number) => void;
-  onOpenDevTools: (callback: () => void) => void;
   isPackaged: () => Promise<boolean>;
   openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
   /**
@@ -80,9 +79,6 @@ const electronAPI: ElectronAPI = {
   restartApp: (customMessage?: string, delay?: number): void => {
     console.log('Sending restarting app message to main process with custom message: ', customMessage);
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
-  },
-  onOpenDevTools: (callback: () => void) => {
-    ipcRenderer.on(IPC_CHANNELS.OPEN_DEVTOOLS, () => callback());
   },
   onShowSelectDirectory: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());
