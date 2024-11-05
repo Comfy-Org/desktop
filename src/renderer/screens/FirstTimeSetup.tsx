@@ -9,6 +9,7 @@ interface FirstTimeSetupProps {
 
 const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onComplete, initialPath }) => {
   const [selectedPath, setSelectedPath] = useState<string>(initialPath);
+  const [sendCrashReports, setSendCrashReports] = useState(true);
   const electronAPI: ElectronAPI = (window as any).electronAPI;
 
   const handleDirectoryChange = async () => {
@@ -30,6 +31,8 @@ const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onComplete, initialPath
     if (selectedPath) {
       log.info('Installing to directory', selectedPath);
       electronAPI.selectSetupDirectory(selectedPath);
+      electronAPI.setSendCrashReports(sendCrashReports);
+
       onComplete(selectedPath);
     } else {
       log.error('No directory selected for installation');
@@ -72,6 +75,16 @@ const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onComplete, initialPath
         </button>
       </div>
 
+      <div style={styles.crashReportsContainer}>
+        <input
+          title="send-crash-reports"
+          type="checkbox"
+          checked={sendCrashReports}
+          onChange={(e) => setSendCrashReports(e.currentTarget.checked)}
+        ></input>
+        <p style={styles.sendCrashReportsText}>Send crash reports</p>
+      </div>
+
       <div style={styles.buttonContainer}>
         <button onClick={handleInstall} style={styles.installButton}>
           Install
@@ -97,6 +110,11 @@ const styles = {
     color: '#ffffff',
   },
   description: {
+    textAlign: 'center' as const,
+    marginBottom: '20px',
+    lineHeight: '1.5',
+  },
+  sendCrashReportsText: {
     textAlign: 'center' as const,
     marginBottom: '20px',
     lineHeight: '1.5',
@@ -129,6 +147,14 @@ const styles = {
     gap: '10px',
     marginBottom: '20px',
     marginTop: '10px',
+  },
+  crashReportsContainer: {
+    display: 'flex',
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    marginBottom: '10px',
   },
   pathDisplay: {
     padding: '10px',

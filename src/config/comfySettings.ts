@@ -17,6 +17,7 @@ export class ComfySettings {
 
   constructor(settingsPath: string) {
     this.filePath = path.join(settingsPath, 'user', 'default', 'comfy.settings.json');
+    console.info(this.filePath);
     this.settings = this.loadSettings();
   }
 
@@ -34,12 +35,34 @@ export class ComfySettings {
     }
   }
 
+  private saveSettings() {
+    try {
+      const dirname = path.dirname(this.filePath);
+      if (!fs.existsSync(dirname)) {
+        log.info(`Settings directory ${dirname} does not exist, creating ...`);
+        fs.mkdirSync(dirname, {
+          recursive: true,
+        });
+      }
+
+      fs.writeFileSync(this.filePath, JSON.stringify(this.settings), 'utf-8');
+    } catch (error) {
+      log.error(`Failed to save settings to ${this.filePath}:`, error);
+      return {};
+    }
+  }
+
   get autoUpdate(): boolean {
     return this.settings['Comfy-Desktop.AutoUpdate'] ?? true;
   }
 
   get sendCrashStatistics(): boolean {
     return this.settings['Comfy-Desktop.SendCrashStatistics'] ?? true;
+  }
+
+  set sendCrashStatistics(value: boolean) {
+    this.settings['Comfy-Desktop.SendCrashStatistics'] = value;
+    this.saveSettings();
   }
 
   public reload(): void {

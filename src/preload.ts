@@ -16,6 +16,7 @@ export interface ElectronAPI {
    * @param callback
    */
   selectSetupDirectory: (directory: string) => void;
+  setSendCrashReports: (sendCrashReports: boolean) => void;
   onShowSelectDirectory: (callback: () => void) => void;
   onLogMessage: (callback: (message: string) => void) => void;
   onFirstTimeSetupComplete: (callback: () => void) => void;
@@ -79,6 +80,9 @@ const electronAPI: ElectronAPI = {
   },
   selectSetupDirectory: (directory: string) => {
     ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
+  },
+  setSendCrashReports: (sendCrashReports: boolean) => {
+    ipcRenderer.send(IPC_CHANNELS.SET_SEND_CRASH_REPORTS, sendCrashReports);
   },
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);

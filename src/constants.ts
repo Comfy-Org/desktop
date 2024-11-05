@@ -19,6 +19,7 @@ export const IPC_CHANNELS = {
   CANCEL_DOWNLOAD: 'cancel-download',
   DELETE_MODEL: 'delete-model',
   GET_ALL_DOWNLOADS: 'get-all-downloads',
+  SET_SEND_CRASH_REPORTS: 'set-send-crash-reports',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =

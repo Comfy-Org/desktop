@@ -1,5 +1,4 @@
 import { spawn, ChildProcess } from 'node:child_process';
-import * as fsPromises from 'node:fs/promises';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
@@ -80,6 +79,7 @@ const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
   log.info('App already running. Exiting...');
+
   app.quit();
 } else {
   store = new Store<StoreType>();
@@ -94,7 +94,6 @@ if (!gotTheLock) {
   });
 
   app.isPackaged &&
-    comfySettings.sendCrashStatistics &&
     Sentry.init({
       dsn: SENTRY_URL_ENDPOINT,
       autoSessionTracking: false,
@@ -104,6 +103,21 @@ if (!gotTheLock) {
           events: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
         }),
       ],
+      beforeSend: async (event) => {
+        let sendCrashReport = comfySettings.sendCrashStatistics;
+
+        if (!sendCrashReport) {
+          const { response } = await dialog.showMessageBox({
+            title: 'Send Crash Statistics',
+            message: `Would you like to send crash statistics to the team?`,
+            buttons: ['Always send crash reports', 'Do not send crash report'],
+          });
+
+          sendCrashReport = response === 0;
+        }
+
+        return sendCrashReport ? event : null;
+      },
     });
 
   graphics()
@@ -172,6 +186,9 @@ if (!gotTheLock) {
       });
       ipcMain.on(IPC_CHANNELS.OPEN_LOGS_FOLDER, () => {
         shell.openPath(app.getPath('logs'));
+      });
+      ipcMain.on(IPC_CHANNELS.SET_SEND_CRASH_REPORTS, (_event, value) => {
+        comfySettings.sendCrashStatistics = value;
       });
       ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
         return app.isPackaged;
@@ -827,7 +844,7 @@ async function selectedInstallDirectory(): Promise<string> {
 }
 
 async function handleFirstTimeSetup() {
-  const firstTimeSetup = isFirstTimeSetup();
+  const firstTimeSetup = true; // isFirstTimeSetup();
   log.info('First time setup:', firstTimeSetup);
   if (firstTimeSetup) {
     sendRendererMessage(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
