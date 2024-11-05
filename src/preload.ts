@@ -1,54 +1,22 @@
-// preload.ts
-
-import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
+import { app, contextBridge, DownloadItem, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
 import { DownloadStatus } from './models/DownloadManager';
+import path from 'node:path';
 
-export interface ElectronAPI {
+/**
+ * Open a folder in the system's default file explorer.
+ * @param folderPath The path to the folder to open.
+ */
+const openFolder = async (folderPath: string) => {
+  const basePath = await electronAPI.getBasePath();
+  ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
+};
+
+const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
    * @param callback
-   * @returns
    */
-  onProgressUpdate: (callback: (update: { status: string }) => void) => void;
-  /**
-   * Callback for when the user clicks the "Select Directory" button in the setup wizard.
-   * @param callback
-   */
-  selectSetupDirectory: (directory: string) => void;
-  setSendCrashReports: (sendCrashReports: boolean) => void;
-  onShowSelectDirectory: (callback: () => void) => void;
-  onLogMessage: (callback: (message: string) => void) => void;
-  onFirstTimeSetupComplete: (callback: () => void) => void;
-  onDefaultInstallLocation: (callback: (location: string) => void) => void;
-  sendReady: () => void;
-  restartApp: (customMessage?: string, delay?: number) => void;
-  onOpenDevTools: (callback: () => void) => void;
-  isPackaged: () => Promise<boolean>;
-  openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
-  /**
-   * Open the logs folder in the system's default file explorer.
-   */
-  openLogsFolder: () => void;
-  DownloadManager: {
-    onDownloadProgress: (
-      callback: (progress: {
-        url: string;
-        progress_percentage: number;
-        status: DownloadStatus;
-        message?: string;
-      }) => void
-    ) => void;
-    startDownload: (url: string, path: string, filename: string) => Promise<boolean>;
-    cancelDownload: (url: string) => Promise<boolean>;
-    pauseDownload: (url: string) => Promise<boolean>;
-    resumeDownload: (url: string) => Promise<boolean>;
-    deleteModel: (filename: string, path: string) => Promise<boolean>;
-    getAllDownloads: () => Promise<DownloadItem[]>;
-  };
-}
-
-const electronAPI: ElectronAPI = {
   onProgressUpdate: (callback: (update: { status: string }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
       console.info(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
@@ -72,12 +40,13 @@ const electronAPI: ElectronAPI = {
     console.log('Sending restarting app message to main process with custom message: ', customMessage);
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
-  onOpenDevTools: (callback: () => void) => {
-    ipcRenderer.on(IPC_CHANNELS.OPEN_DEVTOOLS, () => callback());
-  },
   onShowSelectDirectory: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());
   },
+  /**
+   * Callback for when the user clicks the "Select Directory" button in the setup wizard.
+   * @param callback
+   */
   selectSetupDirectory: (directory: string) => {
     ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
   },
@@ -96,8 +65,36 @@ const electronAPI: ElectronAPI = {
       callback(value);
     });
   },
+  /**
+   * Various paths that are useful to the renderer.
+   * - Base path: The base path of the application.
+   * - Model config path: The path to the model config yaml file.
+   */
+  getBasePath: (): Promise<string> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_BASE_PATH);
+  },
+  getModelConfigPath: (): Promise<string> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_MODEL_CONFIG_PATH);
+  },
+  /**
+   * Open various folders in the system's default file explorer.
+   */
   openLogsFolder: () => {
-    ipcRenderer.send(IPC_CHANNELS.OPEN_LOGS_FOLDER);
+    ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, app.getPath('logs'));
+  },
+  openModelsFolder: () => openFolder('models'),
+  openOutputsFolder: () => openFolder('output'),
+  openInputsFolder: () => openFolder('input'),
+  openCustomNodesFolder: () => openFolder('custom_nodes'),
+  openModelConfig: async () => {
+    const modelConfigPath = await electronAPI.getModelConfigPath();
+    ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, modelConfigPath);
+  },
+  /**
+   * Open the developer tools window.
+   */
+  openDevTools: () => {
+    ipcRenderer.send(IPC_CHANNELS.OPEN_DEV_TOOLS);
   },
   DownloadManager: {
     onDownloadProgress: (
@@ -130,6 +127,25 @@ const electronAPI: ElectronAPI = {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);
     },
   },
-};
+  /**
+   * Get the current Electron version
+   */
+  getElectronVersion: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_ELECTRON_VERSION);
+  },
+  /**
+   * Send an error message to Sentry
+   * @param error The error object or message to send
+   * @param extras Optional additional context/data to attach
+   */
+  sendErrorToSentry: (error: string, extras?: Record<string, any>) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, {
+      error: error,
+      extras,
+    });
+  },
+} as const;
+
+export type ElectronAPI = typeof electronAPI;
 
 contextBridge.exposeInMainWorld(ELECTRON_BRIDGE_API, electronAPI);

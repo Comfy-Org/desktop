@@ -1,18 +1,10 @@
 import { Tray, Menu, BrowserWindow, app, shell } from 'electron';
 import path from 'path';
-import { IPC_CHANNELS } from './constants';
 import { exec } from 'child_process';
 import log from 'electron-log/main';
 import { PythonEnvironment } from './pythonEnvironment';
-import { getModelsDirectory } from './utils';
 
-export function SetupTray(
-  mainView: BrowserWindow,
-  basePath: string,
-  modelConfigPath: string,
-  reinstall: () => void,
-  pythonEnvironment: PythonEnvironment
-): Tray {
+export function SetupTray(mainView: BrowserWindow, reinstall: () => void, pythonEnvironment: PythonEnvironment): Tray {
   // Set icon for the tray
   // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
   const trayImage = path.join(
@@ -63,38 +55,6 @@ export function SetupTray(
       click: () => reinstall(),
     },
     { type: 'separator' },
-    {
-      label: 'Open Models Folder',
-      click: () => shell.openPath(getModelsDirectory(basePath)),
-    },
-    {
-      label: 'Open Outputs Folder',
-      click: () => shell.openPath(path.join(basePath, 'output')),
-    },
-    {
-      label: 'Open Inputs Folder',
-      click: () => shell.openPath(path.join(basePath, 'input')),
-    },
-    {
-      label: 'Open Custom Nodes Folder',
-      click: () => shell.openPath(path.join(basePath, 'custom_nodes')),
-    },
-    {
-      label: 'Open Model Config',
-      click: () => shell.openPath(modelConfigPath),
-    },
-    {
-      label: 'Open Logs Folder',
-      click: () => shell.openPath(app.getPath('logs')),
-    },
-    {
-      label: 'Open devtools (Electron)',
-      click: () => mainView.webContents.openDevTools(),
-    },
-    {
-      label: 'Open devtools (ComfyUI)',
-      click: () => mainView.webContents.send(IPC_CHANNELS.OPEN_DEVTOOLS),
-    },
     {
       label: 'Install Python Packages (Open Terminal)',
       click: () => {

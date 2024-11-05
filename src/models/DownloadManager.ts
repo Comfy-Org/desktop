@@ -258,12 +258,11 @@ export class DownloadManager {
   public static getInstance(mainWindow: BrowserWindow, modelsDirectory: string): DownloadManager {
     if (!DownloadManager.instance) {
       DownloadManager.instance = new DownloadManager(mainWindow, modelsDirectory);
-      DownloadManager.instance.registerIpcHandlers();
     }
     return DownloadManager.instance;
   }
 
-  private registerIpcHandlers() {
+  public registerIpcHandlers() {
     ipcMain.handle(IPC_CHANNELS.START_DOWNLOAD, (event, { url, path, filename }) =>
       this.startDownload(url, path, filename)
     );

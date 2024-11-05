@@ -10,8 +10,6 @@ export const IPC_CHANNELS = {
   FIRST_TIME_SETUP_COMPLETE: 'first-time-setup-complete',
   DEFAULT_INSTALL_LOCATION: 'default-install-location',
   GET_PRELOAD_SCRIPT: 'get-preload-script',
-  OPEN_DEVTOOLS: 'open-devtools',
-  OPEN_LOGS_FOLDER: 'open-logs-folder',
   DOWNLOAD_PROGRESS: 'download-progress',
   START_DOWNLOAD: 'start-download',
   PAUSE_DOWNLOAD: 'pause-download',
@@ -20,6 +18,12 @@ export const IPC_CHANNELS = {
   DELETE_MODEL: 'delete-model',
   GET_ALL_DOWNLOADS: 'get-all-downloads',
   SET_SEND_CRASH_REPORTS: 'set-send-crash-reports',
+  GET_ELECTRON_VERSION: 'get-electron-version',
+  SEND_ERROR_TO_SENTRY: 'send-error-to-sentry',
+  GET_BASE_PATH: 'get-base-path',
+  GET_MODEL_CONFIG_PATH: 'get-model-config-path',
+  OPEN_PATH: 'open-path',
+  OPEN_DEV_TOOLS: 'open-dev-tools',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =
