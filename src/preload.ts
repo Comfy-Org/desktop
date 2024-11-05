@@ -1,6 +1,16 @@
-import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
+import { app, contextBridge, DownloadItem, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
 import { DownloadStatus } from './models/DownloadManager';
+import path from 'node:path';
+
+/**
+ * Open a folder in the system's default file explorer.
+ * @param folderPath The path to the folder to open.
+ */
+const openFolder = async (folderPath: string) => {
+  const basePath = await electronAPI.getBasePath();
+  ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
+};
 
 const electronAPI = {
   /**
@@ -53,10 +63,35 @@ const electronAPI = {
     });
   },
   /**
-   * Open the logs folder in the system's default file explorer.
+   * Various paths that are useful to the renderer.
+   * - Base path: The base path of the application.
+   * - Model config path: The path to the model config yaml file.
+   */
+  getBasePath: (): Promise<string> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_BASE_PATH);
+  },
+  getModelConfigPath: (): Promise<string> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_MODEL_CONFIG_PATH);
+  },
+  /**
+   * Open various folders in the system's default file explorer.
    */
   openLogsFolder: () => {
-    ipcRenderer.send(IPC_CHANNELS.OPEN_LOGS_FOLDER);
+    ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, app.getPath('logs'));
+  },
+  openModelsFolder: () => openFolder('models'),
+  openOutputsFolder: () => openFolder('output'),
+  openInputsFolder: () => openFolder('input'),
+  openCustomNodesFolder: () => openFolder('custom_nodes'),
+  openModelConfig: async () => {
+    const modelConfigPath = await electronAPI.getModelConfigPath();
+    ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, modelConfigPath);
+  },
+  /**
+   * Open the developer tools window.
+   */
+  openDevTools: () => {
+    ipcRenderer.send(IPC_CHANNELS.OPEN_DEV_TOOLS);
   },
   DownloadManager: {
     onDownloadProgress: (

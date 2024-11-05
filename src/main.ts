@@ -186,8 +186,17 @@ if (!gotTheLock) {
           ...options,
         });
       });
-      ipcMain.on(IPC_CHANNELS.OPEN_LOGS_FOLDER, () => {
-        shell.openPath(app.getPath('logs'));
+      ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, () => {
+        return basePath;
+      });
+      ipcMain.handle(IPC_CHANNELS.GET_MODEL_CONFIG_PATH, () => {
+        return modelConfigPath;
+      });
+      ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string) => {
+        shell.openPath(folderPath);
+      });
+      ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
+        mainWindow?.webContents.openDevTools();
       });
       ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
         return app.isPackaged;
@@ -217,8 +226,6 @@ if (!gotTheLock) {
         // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
         SetupTray(
           mainWindow,
-          basePath,
-          modelConfigPath,
           () => {
             log.info('Resetting install location');
             fs.rmSync(modelConfigPath);
