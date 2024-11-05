@@ -21,7 +21,7 @@ export class VirtualEnvironment {
     this.pythonVersion = pythonVersion;
     this.cacheDir = path.join(venvPath, 'uv-cache');
     this.requirementsCompiledPath = app.isPackaged
-      ? path.join(app.getAppPath(), 'requirements.compiled')
+      ? path.join(process.resourcesPath, 'requirements.compiled')
       : path.join(path.join(app.getAppPath(), 'assets'), 'requirements.compiled');
     this.pythonInterpreterPath =
       process.platform === 'win32'
@@ -45,7 +45,7 @@ export class VirtualEnvironment {
       }
     } else if (process.platform === 'darwin') {
       if (app.isPackaged) {
-        this.uvPath = path.join(app.getAppPath(), 'uv', 'uv');
+        this.uvPath = path.join(process.resourcesPath, 'uv', 'uv');
       } else {
         //this.uvPath = path.join('uv'); // Use global uv on macOS.
         this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv');
