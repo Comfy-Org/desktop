@@ -181,6 +181,8 @@ if (!gotTheLock) {
         return;
       }
       downloadManager = DownloadManager.getInstance(mainWindow!, getModelsDirectory(basePath));
+      downloadManager.registerIpcHandlers();
+
       port = await findAvailablePort(8000, 9999).catch((err) => {
         log.error(`ERROR: Failed to find available port: ${err}`);
         throw err;
