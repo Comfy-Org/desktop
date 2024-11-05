@@ -1,62 +1,12 @@
-// preload.ts
-
 import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
 import { DownloadStatus } from './models/DownloadManager';
 
-export interface ElectronAPI {
+const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
    * @param callback
-   * @returns
    */
-  onProgressUpdate: (callback: (update: { status: string }) => void) => void;
-  /**
-   * Callback for when the user clicks the "Select Directory" button in the setup wizard.
-   * @param callback
-   */
-  selectSetupDirectory: (directory: string) => void;
-  onShowSelectDirectory: (callback: () => void) => void;
-  onLogMessage: (callback: (message: string) => void) => void;
-  onFirstTimeSetupComplete: (callback: () => void) => void;
-  onDefaultInstallLocation: (callback: (location: string) => void) => void;
-  sendReady: () => void;
-  restartApp: (customMessage?: string, delay?: number) => void;
-  isPackaged: () => Promise<boolean>;
-  openDialog: (options: Electron.OpenDialogOptions) => Promise<string[] | undefined>;
-  /**
-   * Open the logs folder in the system's default file explorer.
-   */
-  openLogsFolder: () => void;
-  DownloadManager: {
-    onDownloadProgress: (
-      callback: (progress: {
-        url: string;
-        progress_percentage: number;
-        status: DownloadStatus;
-        message?: string;
-      }) => void
-    ) => void;
-    startDownload: (url: string, path: string, filename: string) => Promise<boolean>;
-    cancelDownload: (url: string) => Promise<boolean>;
-    pauseDownload: (url: string) => Promise<boolean>;
-    resumeDownload: (url: string) => Promise<boolean>;
-    deleteModel: (filename: string, path: string) => Promise<boolean>;
-    getAllDownloads: () => Promise<DownloadItem[]>;
-  };
-  /**
-   * Get the current Electron version
-   */
-  getElectronVersion: () => Promise<string>;
-  /**
-   * Send an error message to Sentry
-   * @param error The error object or message to send
-   * @param extras Optional additional context/data to attach
-   */
-  sendErrorToSentry: (error: string, extras?: Record<string, any>) => Promise<void>;
-}
-
-const electronAPI: ElectronAPI = {
   onProgressUpdate: (callback: (update: { status: string }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
       console.info(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
@@ -83,6 +33,10 @@ const electronAPI: ElectronAPI = {
   onShowSelectDirectory: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());
   },
+  /**
+   * Callback for when the user clicks the "Select Directory" button in the setup wizard.
+   * @param callback
+   */
   selectSetupDirectory: (directory: string) => {
     ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
   },
@@ -98,6 +52,9 @@ const electronAPI: ElectronAPI = {
       callback(value);
     });
   },
+  /**
+   * Open the logs folder in the system's default file explorer.
+   */
   openLogsFolder: () => {
     ipcRenderer.send(IPC_CHANNELS.OPEN_LOGS_FOLDER);
   },
@@ -132,15 +89,25 @@ const electronAPI: ElectronAPI = {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);
     },
   },
+  /**
+   * Get the current Electron version
+   */
   getElectronVersion: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_ELECTRON_VERSION);
   },
+  /**
+   * Send an error message to Sentry
+   * @param error The error object or message to send
+   * @param extras Optional additional context/data to attach
+   */
   sendErrorToSentry: (error: string, extras?: Record<string, any>) => {
     return ipcRenderer.invoke(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, {
       error: error,
       extras,
     });
   },
-};
+} as const;
+
+export type ElectronAPI = typeof electronAPI;
 
 contextBridge.exposeInMainWorld(ELECTRON_BRIDGE_API, electronAPI);
