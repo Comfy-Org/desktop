@@ -22,6 +22,7 @@ export const IPC_CHANNELS = {
   GET_BASE_PATH: 'get-base-path',
   GET_MODEL_CONFIG_PATH: 'get-model-config-path',
   OPEN_PATH: 'open-path',
+  OPEN_LOGS_PATH: 'open-logs-path',
   OPEN_DEV_TOOLS: 'open-dev-tools',
 } as const;
 

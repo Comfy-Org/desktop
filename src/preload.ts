@@ -1,4 +1,4 @@
-import { app, contextBridge, DownloadItem, ipcRenderer } from 'electron';
+import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
 import { DownloadStatus } from './models/DownloadManager';
 import path from 'node:path';
@@ -77,7 +77,7 @@ const electronAPI = {
    * Open various folders in the system's default file explorer.
    */
   openLogsFolder: () => {
-    ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, app.getPath('logs'));
+    ipcRenderer.send(IPC_CHANNELS.OPEN_LOGS_PATH);
   },
   openModelsFolder: () => openFolder('models'),
   openOutputsFolder: () => openFolder('output'),

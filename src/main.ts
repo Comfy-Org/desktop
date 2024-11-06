@@ -194,6 +194,9 @@ if (!gotTheLock) {
           ...options,
         });
       });
+      ipcMain.handle(IPC_CHANNELS.OPEN_LOGS_PATH, () => {
+        shell.openPath(app.getPath('logs'));
+      });
       ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, () => {
         return basePath;
       });
