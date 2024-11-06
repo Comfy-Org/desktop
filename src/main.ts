@@ -141,10 +141,6 @@ if (!gotTheLock) {
       log.error('Error getting GPU info: ', e);
     });
 
-  // This method will be called when Electron has finished
-  // initialization and is ready to create browser windows.
-  // Some APIs can only be used after this event occurs.
-
   app.on('ready', async () => {
     log.info('App ready');
 
@@ -161,25 +157,14 @@ if (!gotTheLock) {
           ...options,
         });
       });
-      ipcMain.on(IPC_CHANNELS.OPEN_LOGS_PATH, () => {
-        shell.openPath(app.getPath('logs'));
-      });
-      ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, async () => {
-        return await getBasePath();
-      });
       ipcMain.handle(IPC_CHANNELS.GET_MODEL_CONFIG_PATH, () => {
         return getModelConfigPath();
       });
-      ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string) => {
-        log.info(`Opening path: ${folderPath}`);
-        shell.openPath(folderPath);
-      });
+
       ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
         appWindow.openDevTools();
       });
-      ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
-        return app.isPackaged;
-      });
+
       await handleFirstTimeSetup();
       const basePath = await getBasePath();
       const pythonInstallPath = await getPythonInstallPath();
@@ -237,10 +222,6 @@ if (!gotTheLock) {
         }
       }
     );
-
-    ipcMain.handle(IPC_CHANNELS.GET_ELECTRON_VERSION, () => {
-      return app.getVersion();
-    });
 
     ipcMain.handle(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, async (_event, { error, extras }): Promise<string | null> => {
       try {
