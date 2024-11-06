@@ -1,4 +1,4 @@
-import { app, contextBridge, DownloadItem, ipcRenderer } from 'electron';
+import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
 import { DownloadStatus } from './models/DownloadManager';
 import path from 'node:path';
@@ -50,9 +50,6 @@ const electronAPI = {
   selectSetupDirectory: (directory: string) => {
     ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
   },
-  setSendCrashReports: (sendCrashReports: boolean) => {
-    ipcRenderer.send(IPC_CHANNELS.SET_SEND_CRASH_REPORTS, sendCrashReports);
-  },
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);
   },
@@ -80,7 +77,7 @@ const electronAPI = {
    * Open various folders in the system's default file explorer.
    */
   openLogsFolder: () => {
-    ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, app.getPath('logs'));
+    ipcRenderer.send(IPC_CHANNELS.OPEN_LOGS_PATH);
   },
   openModelsFolder: () => openFolder('models'),
   openOutputsFolder: () => openFolder('output'),
@@ -89,6 +86,9 @@ const electronAPI = {
   openModelConfig: async () => {
     const modelConfigPath = await electronAPI.getModelConfigPath();
     ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, modelConfigPath);
+  },
+  openForum: () => {
+    ipcRenderer.invoke(IPC_CHANNELS.OPEN_FORUM);
   },
   /**
    * Open the developer tools window.

@@ -108,23 +108,17 @@ if (!gotTheLock) {
     dsn: SENTRY_URL_ENDPOINT,
     autoSessionTracking: false,
     async beforeSend(event, hint) {
-      if (event.extra?.comfyUIExecutionError) {
+      if (event.extra?.comfyUIExecutionError || comfySettings.sendCrashStatistics) {
         return event;
       }
 
-      let sendCrashReport = comfySettings.sendCrashStatistics;
+      const { response } = await dialog.showMessageBox({
+        title: 'Send Crash Statistics',
+        message: `Would you like to send crash statistics to the team?`,
+        buttons: ['Always send crash reports', 'Do not send crash report'],
+      });
 
-      if (!sendCrashReport) {
-        const { response } = await dialog.showMessageBox({
-          title: 'Send Crash Statistics',
-          message: `Would you like to send crash statistics to the team?`,
-          buttons: ['Always send crash reports', 'Do not send crash report'],
-        });
-
-        sendCrashReport = response === 0;
-      }
-
-      return sendCrashReport ? event : null;
+      return response === 0 ? event : null;
     },
     integrations: [
       Sentry.childProcessIntegration({
@@ -209,9 +203,6 @@ if (!gotTheLock) {
       });
       ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
         mainWindow?.webContents.openDevTools();
-      });
-      ipcMain.on(IPC_CHANNELS.SET_SEND_CRASH_REPORTS, (_event, value) => {
-        comfySettings.sendCrashStatistics = value;
       });
       ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
         return app.isPackaged;

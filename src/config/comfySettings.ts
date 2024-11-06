@@ -34,32 +34,12 @@ export class ComfySettings {
     }
   }
 
-  public saveSettings() {
-    try {
-      const dirname = path.dirname(this.filePath);
-      if (!fs.existsSync(dirname)) {
-        log.info(`Settings directory ${dirname} does not exist, creating ...`);
-        fs.mkdirSync(dirname, {
-          recursive: true,
-        });
-      }
-
-      fs.writeFileSync(this.filePath, JSON.stringify(this.settings), 'utf-8');
-    } catch (error) {
-      log.error(`Failed to save settings to ${this.filePath}:`, error);
-    }
-  }
-
   get autoUpdate(): boolean {
     return this.settings['Comfy-Desktop.AutoUpdate'] ?? true;
   }
 
   get sendCrashStatistics(): boolean {
     return this.settings['Comfy-Desktop.SendCrashStatistics'] ?? true;
-  }
-
-  set sendCrashStatistics(value: boolean) {
-    this.settings['Comfy-Desktop.SendCrashStatistics'] = value;
   }
 
   public reload(): void {

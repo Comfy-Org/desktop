@@ -17,17 +17,18 @@ export const IPC_CHANNELS = {
   CANCEL_DOWNLOAD: 'cancel-download',
   DELETE_MODEL: 'delete-model',
   GET_ALL_DOWNLOADS: 'get-all-downloads',
-  SET_SEND_CRASH_REPORTS: 'set-send-crash-reports',
   GET_ELECTRON_VERSION: 'get-electron-version',
   SEND_ERROR_TO_SENTRY: 'send-error-to-sentry',
   GET_BASE_PATH: 'get-base-path',
   GET_MODEL_CONFIG_PATH: 'get-model-config-path',
   OPEN_PATH: 'open-path',
+  OPEN_LOGS_PATH: 'open-logs-path',
   OPEN_DEV_TOOLS: 'open-dev-tools',
+  OPEN_FORUM: 'open-forum',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =
-  'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the tray icon.';
+  'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the Help menu. Please report issues to: https://forum.comfy.org';
 
 export const COMFY_FINISHING_MESSAGE = 'Finishing...';
 
