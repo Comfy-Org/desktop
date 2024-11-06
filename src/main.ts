@@ -20,6 +20,7 @@ import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
+import { PathHandlers } from './handlers/pathHandlers';
 
 dotenv.config();
 
