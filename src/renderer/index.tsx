@@ -30,6 +30,7 @@ const Home: React.FC = () => {
   const [status, setStatus] = useState('Starting...');
   const [logs, setLogs] = useState<string[]>([]);
   const [defaultInstallLocation, setDefaultInstallLocation] = useState<string>('');
+  const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
 
   const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
     log.info(`Setting new status: ${newStatus}`);
@@ -59,10 +60,7 @@ const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
-
     electronAPI.onProgressUpdate(updateProgress);
-
     electronAPI.onLogMessage((message: string) => {
       log.info(`Received log message: ${message}`);
       addLogMessage(message);
@@ -70,16 +68,10 @@ const Home: React.FC = () => {
   }, [updateProgress, addLogMessage]);
 
   useEffect(() => {
-    const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
-
     electronAPI.onDefaultInstallLocation((location: string) => {
       setDefaultInstallLocation(location);
     });
   }, []);
-
-  if (showSetup === null) {
-    return <> Loading ....</>;
-  }
 
   if (showSetup) {
     return (
@@ -91,7 +83,7 @@ const Home: React.FC = () => {
 
   return (
     <div style={bodyStyle}>
-      <ProgressOverlay status={status} logs={logs} />
+      <ProgressOverlay status={status} logs={logs} openForum={() => electronAPI.openForum()} />
     </div>
   );
 };

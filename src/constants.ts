@@ -23,10 +23,11 @@ export const IPC_CHANNELS = {
   GET_MODEL_CONFIG_PATH: 'get-model-config-path',
   OPEN_PATH: 'open-path',
   OPEN_DEV_TOOLS: 'open-dev-tools',
+  OPEN_FORUM: 'open-forum',
 } as const;
 
 export const COMFY_ERROR_MESSAGE =
-  'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the tray icon.';
+  'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the Help menu. Please report issues to: https://forum.comfy.org';
 
 export const COMFY_FINISHING_MESSAGE = 'Finishing...';
 

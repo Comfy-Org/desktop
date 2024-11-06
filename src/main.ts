@@ -188,6 +188,10 @@ if (!gotTheLock) {
           }
         }
       });
+      ipcMain.handle(IPC_CHANNELS.OPEN_FORUM, () => {
+        shell.openExternal('https://forum.comfy.org');
+      });
+
       ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
@@ -201,6 +205,7 @@ if (!gotTheLock) {
         return modelConfigPath;
       });
       ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string) => {
+        log.info(`Opening path: ${folderPath}`);
         shell.openPath(folderPath);
       });
       ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {

@@ -87,6 +87,9 @@ const electronAPI = {
     const modelConfigPath = await electronAPI.getModelConfigPath();
     ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, modelConfigPath);
   },
+  openForum: () => {
+    ipcRenderer.invoke(IPC_CHANNELS.OPEN_FORUM);
+  },
   /**
    * Open the developer tools window.
    */
