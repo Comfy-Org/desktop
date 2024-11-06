@@ -74,7 +74,7 @@ export class VirtualEnvironment {
 
       // Create virtual environment using uv
       const args = ['venv', '--python', this.pythonVersion, this.venvName];
-      const { exitCode } = await this.runUvCommand(args);
+      const { exitCode } = await this.runUvCommandAsync(args);
 
       if (exitCode !== 0) {
         throw new Error(`Failed to create virtual environment: exit code ${exitCode}`);
