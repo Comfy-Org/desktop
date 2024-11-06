@@ -1,10 +1,7 @@
-const dotenv = require('dotenv');
 const axios = require('axios');
 const extract = require('extract-zip');
 const fs = require('fs/promises');
 const path = require('path');
-
-dotenv.config();
 
 // Example "v1.3.34"
 const version = process.argv[2] || require('../package.json').config.frontendVersion;
