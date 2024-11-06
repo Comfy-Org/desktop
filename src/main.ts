@@ -92,7 +92,6 @@ const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
   log.info('App already running. Exiting...');
-
   app.quit();
 } else {
   store = new Store<StoreType>();
