@@ -34,7 +34,7 @@ export class ComfySettings {
     }
   }
 
-  private saveSettings() {
+  public saveSettings() {
     try {
       const dirname = path.dirname(this.filePath);
       if (!fs.existsSync(dirname)) {
@@ -60,7 +60,6 @@ export class ComfySettings {
 
   set sendCrashStatistics(value: boolean) {
     this.settings['Comfy-Desktop.SendCrashStatistics'] = value;
-    this.saveSettings();
   }
 
   public reload(): void {
