@@ -72,7 +72,7 @@ const ProgressOverlay: React.FC<ProgressOverlayProps> = ({ status, logs, openFor
           {content}
         </a>
       );
-    }
+    },
   };
 
   return (
