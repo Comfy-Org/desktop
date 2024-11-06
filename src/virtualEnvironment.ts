@@ -31,21 +31,24 @@ export class VirtualEnvironment {
     // Set platform-specific paths
     // uv will be in assets/uv on Windows and use the global uv on macOS and Linux
     // uv executable is not codesigned, so we need to use the global one on macOS and Linux
+
+    const uvFolder = path.join(process.resourcesPath, 'uv');
+
     if (process.platform === 'win32') {
       if (app.isPackaged) {
-        this.uvPath = path.join(app.getAppPath(), 'uv.exe');
+        this.uvPath = path.join(uvFolder,'win', 'uv.exe');
       } else {
         this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv.exe');
       }
     } else if (process.platform === 'linux') {
       if (app.isPackaged) {
-        this.uvPath = path.join(app.getAppPath(), 'uv.exe');
+        this.uvPath = path.join(uvFolder,'linux', 'uv');
       } else {
         this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv.exe');
       }
     } else if (process.platform === 'darwin') {
       if (app.isPackaged) {
-        this.uvPath = path.join(process.resourcesPath, 'uv', 'uv');
+        this.uvPath = path.join(uvFolder,'macos', 'uv');
       } else {
         //this.uvPath = path.join('uv'); // Use global uv on macOS.
         this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv');

@@ -26,6 +26,8 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const result3 = await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'ComfyUI_Manager', ".git"), { recursive: true, force: true });
     const result4 = await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'DesktopSettingsExtension', ".git"), { recursive: true, force: true });
     const result2 = await fs.cp(assetPath, resourcePath, { recursive: true });
+    await fs.rm(path.join(resourcePath,'uv','win'),{ recursive: true, force: true });
+    await fs.rm(path.join(resourcePath,'uv','linux'),{ recursive: true, force: true });
   }
 
   if (os.platform() === 'win32') {
@@ -35,5 +37,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
     const resourcePath = path.join(path.dirname(appPath), "resources");
     await fs.cp(assetPath, resourcePath, { recursive: true });
+    await fs.rm(path.join(resourcePath,'uv','macos'),{ recursive: true, force: true });
+    await fs.rm(path.join(resourcePath,'uv','linux'),{ recursive: true, force: true });
   }
 }
