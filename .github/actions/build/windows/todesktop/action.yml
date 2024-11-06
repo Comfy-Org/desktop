@@ -48,11 +48,10 @@ runs:
       run: |
         cd ./assets
         mkdir uv && mkdir uv\\win && mkdir uv\\macos && mkdir uv\\linux
-        ls
         tar -xzvf uv-x86_64-pc-windows-msvc.zip -C uv\\win
         tar -xzvf uv-aarch64-apple-darwin.tar.gz -C uv\\macos --strip-components=1
         tar -xzvf uv-x86_64-unknown-linux-gnu.tar.gz -C uv\\linux --strip-components=1
-        cd uv/win && dir
+        rm uv-x86_64-pc-windows-msvc.zip uv-aarch64-apple-darwin.tar.gz uv-x86_64-unknown-linux-gnu.tar.gz
     - name: Make app
       shell: powershell
       env:
