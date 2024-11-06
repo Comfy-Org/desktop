@@ -171,6 +171,12 @@ if (!gotTheLock) {
         mainWindow = null;
         app.quit();
       });
+
+      mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        shell.openExternal(url);
+        return { action: 'deny' };
+      });
+
       ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
         log.info('Received renderer-ready message!');
         // Send all queued messages
