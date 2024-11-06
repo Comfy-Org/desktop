@@ -1,6 +1,7 @@
 import React from 'react';
 import { COMFY_ERROR_MESSAGE, COMFY_FINISHING_MESSAGE } from 'src/constants';
 import AnimatedLogDisplay from './AnimatedLogDisplay';
+import Linkify from 'linkify-react';
 
 const loadingTextStyle: React.CSSProperties = {
   marginBottom: '20px',
@@ -45,14 +46,40 @@ const logContainerStyle: React.CSSProperties = {
 interface ProgressOverlayProps {
   status: string;
   logs: string[];
+  openForum: () => void;
 }
 
-const ProgressOverlay: React.FC<ProgressOverlayProps> = ({ status, logs }) => {
+const linkStyle: React.CSSProperties = {
+  color: '#3391ff', // Bright blue that works well on dark background
+  textDecoration: 'underline',
+  cursor: 'pointer',
+};
+
+const ProgressOverlay: React.FC<ProgressOverlayProps> = ({ status, logs, openForum }) => {
+  const linkOptions = {
+    render: ({ attributes, content }: { attributes: any; content: string }) => {
+      const { href, ...props } = attributes;
+      return (
+        <a
+          {...props}
+          href={href}
+          style={linkStyle}
+          onClick={(e) => {
+            e.preventDefault();
+            openForum();
+          }}
+        >
+          {content}
+        </a>
+      );
+    },
+  };
+
   return (
     <div style={outerContainerStyle}>
       <div style={containerStyle}>
         <div style={loadingTextStyle} id="loading-text">
-          {status}
+          <Linkify options={linkOptions}>{status}</Linkify>
         </div>
         <div style={logContainerStyle}>
           {status !== COMFY_FINISHING_MESSAGE && status !== COMFY_ERROR_MESSAGE && <AnimatedLogDisplay logs={logs} />}

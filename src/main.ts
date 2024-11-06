@@ -10,7 +10,7 @@ import {
   IPCChannel,
   SENTRY_URL_ENDPOINT,
 } from './constants';
-import { app, BrowserWindow, dialog, screen, ipcMain, Menu, MenuItem, shell } from 'electron';
+import { app, BrowserWindow, dialog, screen, ipcMain, shell } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import Store from 'electron-store';
@@ -24,6 +24,8 @@ import { DownloadManager } from './models/DownloadManager';
 import { getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
+import { buildMenu } from './menu/menu';
+import { ComfyConfigManager } from './config/comfyConfigManager';
 
 dotenv.config();
 
@@ -175,6 +177,12 @@ if (!gotTheLock) {
         mainWindow = null;
         app.quit();
       });
+
+      mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        shell.openExternal(url);
+        return { action: 'deny' };
+      });
+
       ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
         log.info('Received renderer-ready message!');
         // Send all queued messages
@@ -186,11 +194,18 @@ if (!gotTheLock) {
           }
         }
       });
+      ipcMain.handle(IPC_CHANNELS.OPEN_FORUM, () => {
+        shell.openExternal('https://forum.comfy.org');
+      });
+
       ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
           ...options,
         });
+      });
+      ipcMain.on(IPC_CHANNELS.OPEN_LOGS_PATH, () => {
+        shell.openPath(app.getPath('logs'));
       });
       ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, () => {
         return basePath;
@@ -199,6 +214,7 @@ if (!gotTheLock) {
         return modelConfigPath;
       });
       ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string) => {
+        log.info(`Opening path: ${folderPath}`);
         shell.openPath(folderPath);
       });
       ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
@@ -350,37 +366,6 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
     });
 }
 
-function buildMenu(): void {
-  const menu = Menu.getApplicationMenu();
-  if (menu) {
-    const aboutMenuItem = {
-      label: 'About ComfyUI',
-      click: () => {
-        dialog.showMessageBox({
-          title: 'About',
-          message: `ComfyUI v${app.getVersion()}`,
-          detail: 'Created by Comfy Org\nCopyright © 2024',
-          buttons: ['OK'],
-        });
-      },
-    };
-    const helpMenuItem = menu.items.find((item) => item.role === 'help');
-    if (helpMenuItem && helpMenuItem.submenu) {
-      helpMenuItem.submenu.append(new MenuItem(aboutMenuItem));
-      Menu.setApplicationMenu(menu);
-    } else {
-      // If there's no Help menu, add one
-      menu.append(
-        new MenuItem({
-          label: 'Help',
-          submenu: [aboutMenuItem],
-        })
-      );
-      Menu.setApplicationMenu(menu);
-    }
-  }
-}
-
 /**
  * Creates the main window. If the window already exists, it will return the existing window.
  * @param userResourcesPath The path to the user's resources.
@@ -415,6 +400,7 @@ export const createWindow = async (userResourcesPath?: string): Promise<BrowserW
     },
     autoHideMenuBar: true,
   });
+
   log.info('Loading renderer into main window');
   mainWindow.webContents.on('did-finish-load', () => {
     if (mainWindow) {
@@ -514,8 +500,8 @@ const launchPythonServer = async (
       '--output-directory',
       outputDirectoryPath,
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
-      '--front-end-version',
-      'Comfy-Org/ComfyUI_frontend@latest',
+      '--front-end-root',
+      path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app'),
       '--extra-model-paths-config',
       modelConfigPath,
       '--port',
@@ -715,131 +701,6 @@ const spawnPythonAsync = (
   });
 };
 
-function isComfyUIDirectory(directory: string): boolean {
-  const requiredSubdirs = ['models', 'input', 'user', 'output', 'custom_nodes'];
-  return requiredSubdirs.every((subdir) => fs.existsSync(path.join(directory, subdir)));
-}
-
-type DirectoryStructure = (string | DirectoryStructure)[];
-
-function createComfyDirectories(localComfyDirectory: string): void {
-  log.info(`Creating ComfyUI directories in ${localComfyDirectory}`);
-
-  const directories: DirectoryStructure = [
-    'custom_nodes',
-    'input',
-    'output',
-    ['user', ['default']],
-    [
-      'models',
-      [
-        'checkpoints',
-        'clip',
-        'clip_vision',
-        'configs',
-        'controlnet',
-        'diffusers',
-        'diffusion_models',
-        'embeddings',
-        'gligen',
-        'hypernetworks',
-        'loras',
-        'photomaker',
-        'style_models',
-        'unet',
-        'upscale_models',
-        'vae',
-        'vae_approx',
-
-        // TODO(robinhuang): Remove when we have a better way to specify base model paths.
-        'animatediff_models',
-        'animatediff_motion_lora',
-        'animatediff_video_formats',
-        'liveportrait',
-        ['insightface', ['buffalo_1']],
-        ['blip', ['checkpoints']],
-        'CogVideo',
-        ['xlabs', ['loras', 'controlnets']],
-        'layerstyle',
-        'LLM',
-        'Joy_caption',
-      ],
-    ],
-  ];
-  try {
-    createNestedDirectories(localComfyDirectory, directories);
-  } catch (error) {
-    log.error(`Failed to create ComfyUI directories: ${error}`);
-  }
-
-  const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');
-  createComfyConfigFile(userSettingsPath, true);
-}
-
-function createNestedDirectories(basePath: string, structure: DirectoryStructure): void {
-  structure.forEach((item) => {
-    if (typeof item === 'string') {
-      const dirPath = path.join(basePath, item);
-      createDirIfNotExists(dirPath);
-    } else if (Array.isArray(item) && item.length === 2) {
-      const [dirName, subDirs] = item;
-      if (typeof dirName === 'string') {
-        const newBasePath = path.join(basePath, dirName);
-        createDirIfNotExists(newBasePath);
-        if (Array.isArray(subDirs)) {
-          createNestedDirectories(newBasePath, subDirs);
-        }
-      } else {
-        log.warn(`Invalid directory structure item: ${JSON.stringify(item)}`);
-      }
-    } else {
-      log.warn(`Invalid directory structure item: ${JSON.stringify(item)}`);
-    }
-  });
-}
-
-/**
- * Create a directory if not exists
- * @param dirPath
- */
-function createDirIfNotExists(dirPath: string): void {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-    log.info(`Created directory: ${dirPath}`);
-  } else {
-    log.info(`Directory already exists: ${dirPath}`);
-  }
-}
-
-function createComfyConfigFile(userSettingsPath: string, overwrite: boolean = false): void {
-  const configContent: any = {
-    'Comfy.ColorPalette': 'dark',
-    'Comfy.UseNewMenu': 'Top',
-    'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
-    'Comfy.Workflow.ShowMissingModelsWarning': true,
-  };
-
-  const configFilePath = path.join(userSettingsPath, 'comfy.settings.json');
-
-  if (fs.existsSync(configFilePath) && overwrite) {
-    const backupFilePath = path.join(userSettingsPath, 'old_comfy.settings.json');
-    try {
-      fs.renameSync(configFilePath, backupFilePath);
-      log.info(`Renaming existing user settings file to: ${backupFilePath}`);
-    } catch (error) {
-      log.error(`Failed to backup existing user settings file: ${error}`);
-      return;
-    }
-  }
-
-  try {
-    fs.writeFileSync(configFilePath, JSON.stringify(configContent, null, 2));
-    log.info(`Created new ComfyUI config file at: ${configFilePath}`);
-  } catch (error) {
-    log.error(`Failed to create new ComfyUI config file: ${error}`);
-  }
-}
-
 function findAvailablePort(startPort: number, endPort: number): Promise<number> {
   return new Promise((resolve, reject) => {
     function tryPort(port: number) {
@@ -887,18 +748,11 @@ async function handleFirstTimeSetup() {
   log.info('First time setup:', firstTimeSetup);
   if (firstTimeSetup) {
     sendRendererMessage(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
-    let selectedDirectory = await selectedInstallDirectory();
-    if (!isComfyUIDirectory(selectedDirectory)) {
-      log.info(
-        `Selected directory ${selectedDirectory} is not a ComfyUI directory. Appending ComfyUI to install path.`
-      );
-      selectedDirectory = path.join(selectedDirectory, 'ComfyUI');
-    }
-
-    createComfyDirectories(selectedDirectory);
+    const selectedDirectory = await selectedInstallDirectory();
+    const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
 
     const { modelConfigPath } = await determineResourcesPaths();
-    await createModelConfigFiles(modelConfigPath, selectedDirectory);
+    await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
   } else {
     sendRendererMessage(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
