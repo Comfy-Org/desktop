@@ -16,7 +16,7 @@ import * as Sentry from '@sentry/electron/main';
 import Store from 'electron-store';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
-import { createModelConfigFiles, readBasePathFromConfig } from './config/extra_model_config';
+import { createModelConfigFiles, getModelConfigPath, readBasePathFromConfig } from './config/extra_model_config';
 import { StoreType } from './store';
 import todesktop from '@todesktop/runtime';
 import { PythonEnvironment } from './pythonEnvironment';
@@ -26,6 +26,7 @@ import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
+import { PathHandlers } from './handlers/pathHandlers';
 
 dotenv.config();
 
@@ -155,8 +156,7 @@ if (!gotTheLock) {
       // On OS X it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
       if (BrowserWindow.getAllWindows().length === 0) {
-        const { userResourcesPath } = await determineResourcesPaths();
-        createWindow(userResourcesPath);
+        createWindow();
       }
     });
 
@@ -219,8 +219,9 @@ if (!gotTheLock) {
       });
       await handleFirstTimeSetup();
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
-      if (!basePath) {
+      if (!basePath || !pythonInstallPath) {
         log.error('ERROR: Base path not found!');
+        sendProgressUpdate('Installation path does not exist. Please reset the installation location.');
         return;
       }
       downloadManager = DownloadManager.getInstance(mainWindow!, getModelsDirectory(basePath));
@@ -365,7 +366,7 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
  * @param userResourcesPath The path to the user's resources.
  * @returns The main window.
  */
-export const createWindow = async (userResourcesPath?: string): Promise<BrowserWindow> => {
+export const createWindow = async (): Promise<BrowserWindow> => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
 
@@ -745,29 +746,26 @@ async function handleFirstTimeSetup() {
     const selectedDirectory = await selectedInstallDirectory();
     const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
 
-    const { modelConfigPath } = await determineResourcesPaths();
+    const modelConfigPath = await getModelConfigPath();
     await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
   } else {
     sendRendererMessage(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
 }
 
-async function determineResourcesPaths(): Promise<{
-  userResourcesPath: string;
-  pythonInstallPath: string;
+export async function determineResourcesPaths(): Promise<{
+  pythonInstallPath: string | null;
   appResourcesPath: string;
   modelConfigPath: string;
   basePath: string | null;
 }> {
-  const modelConfigPath = path.join(app.getPath('userData'), 'extra_models_config.yaml');
+  const modelConfigPath = await getModelConfigPath();
   const basePath = await readBasePathFromConfig(modelConfigPath);
   const appResourcePath = process.resourcesPath;
-  const defaultUserResourcesPath = getDefaultUserResourcesPath();
 
   if (!app.isPackaged) {
     return {
       // development: install python to in-tree assets dir
-      userResourcesPath: path.join(app.getAppPath(), 'assets'),
       pythonInstallPath: path.join(app.getAppPath(), 'assets'),
       appResourcesPath: path.join(app.getAppPath(), 'assets'),
       modelConfigPath,
@@ -777,16 +775,11 @@ async function determineResourcesPaths(): Promise<{
 
   // TODO(robinhuang): Look for extra models yaml file and use that as the userResourcesPath if it exists.
   return {
-    userResourcesPath: defaultUserResourcesPath,
-    pythonInstallPath: basePath ?? defaultUserResourcesPath, // Provide fallback
+    pythonInstallPath: basePath, // Provide fallback
     appResourcesPath: appResourcePath,
     modelConfigPath,
     basePath,
   };
-}
-
-function getDefaultUserResourcesPath(): string {
-  return process.platform === 'win32' ? path.join(app.getPath('home'), 'comfyui-electron') : app.getPath('userData');
 }
 
 /**
