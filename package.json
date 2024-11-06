@@ -9,7 +9,7 @@
   "main": ".vite/build/main.js",
   "packageManager": "yarn@4.5.0",
   "config": {
-    "frontendVersion": "1.3.34"
+    "frontendVersion": "1.3.33"
   },
   "scripts": {
     "clean": "rimraf .vite dist out",
