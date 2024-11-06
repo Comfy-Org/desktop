@@ -26,7 +26,6 @@ import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
-import { PathHandlers } from './handlers/pathHandlers';
 
 dotenv.config();
 
