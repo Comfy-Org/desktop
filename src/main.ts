@@ -19,6 +19,7 @@ import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
+import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
 
 dotenv.config();
 
@@ -162,11 +163,11 @@ if (!gotTheLock) {
       ipcMain.on(IPC_CHANNELS.OPEN_LOGS_PATH, () => {
         shell.openPath(app.getPath('logs'));
       });
-      ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, () => {
-        return basePath;
+      ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, async () => {
+        return await getBasePath();
       });
       ipcMain.handle(IPC_CHANNELS.GET_MODEL_CONFIG_PATH, () => {
-        return modelConfigPath;
+        return getModelConfigPath();
       });
       ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string) => {
         log.info(`Opening path: ${folderPath}`);
@@ -179,7 +180,8 @@ if (!gotTheLock) {
         return app.isPackaged;
       });
       await handleFirstTimeSetup();
-      const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
+      const basePath = await getBasePath();
+      const pythonInstallPath = await getPythonInstallPath();
       if (!basePath || !pythonInstallPath) {
         log.error('ERROR: Base path not found!');
         sendProgressUpdate(ProgressStatus.ERROR_INSTALL_PATH);
@@ -197,10 +199,12 @@ if (!gotTheLock) {
 
       if (!useExternalServer) {
         sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
+        const appResourcesPath = await getAppResourcesPath();
         const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
         await pythonEnvironment.setup();
 
         // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
+        const modelConfigPath = getModelConfigPath();
         SetupTray(
           appWindow,
           () => {
@@ -572,8 +576,7 @@ function findAvailablePort(startPort: number, endPort: number): Promise<number> 
  * This means the extra_models_config.yaml file exists in the user's data directory.
  */
 function isFirstTimeSetup(): boolean {
-  const userDataPath = app.getPath('userData');
-  const extraModelsConfigPath = path.join(userDataPath, 'extra_models_config.yaml');
+  const extraModelsConfigPath = getModelConfigPath();
   return !fs.existsSync(extraModelsConfigPath);
 }
 
@@ -594,40 +597,11 @@ async function handleFirstTimeSetup() {
     const selectedDirectory = await selectedInstallDirectory();
     const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
 
-    const modelConfigPath = await getModelConfigPath();
+    const modelConfigPath = getModelConfigPath();
     await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
   } else {
     appWindow.send(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
-}
-
-export async function determineResourcesPaths(): Promise<{
-  pythonInstallPath: string | null;
-  appResourcesPath: string;
-  modelConfigPath: string;
-  basePath: string | null;
-}> {
-  const modelConfigPath = await getModelConfigPath();
-  const basePath = await readBasePathFromConfig(modelConfigPath);
-  const appResourcePath = process.resourcesPath;
-
-  if (!app.isPackaged) {
-    return {
-      // development: install python to in-tree assets dir
-      pythonInstallPath: path.join(app.getAppPath(), 'assets'),
-      appResourcesPath: path.join(app.getAppPath(), 'assets'),
-      modelConfigPath,
-      basePath,
-    };
-  }
-
-  // TODO(robinhuang): Look for extra models yaml file and use that as the userResourcesPath if it exists.
-  return {
-    pythonInstallPath: basePath, // Provide fallback
-    appResourcesPath: appResourcePath,
-    modelConfigPath,
-    basePath,
-  };
 }
 
 /**

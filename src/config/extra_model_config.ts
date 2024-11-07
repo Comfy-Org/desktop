@@ -74,7 +74,7 @@ const configTemplates: Record<string, ModelPaths> = {
   },
 };
 
-export async function getModelConfigPath(): Promise<string> {
+export function getModelConfigPath(): string {
   return path.join(app.getPath('userData'), EXTRA_MODEL_CONFIG_PATH);
 }
 

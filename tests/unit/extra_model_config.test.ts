@@ -20,7 +20,7 @@ describe('getModelConfigPath', () => {
       throw new Error(`Unexpected getPath key: ${key}`);
     });
 
-    const result = await getModelConfigPath();
+    const result = getModelConfigPath();
 
     // Verify the path is correctly joined
     expect(result).toBe(path.join(mockUserDataPath, 'extra_models_config.yaml'));
