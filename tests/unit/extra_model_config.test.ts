@@ -23,7 +23,7 @@ describe('getModelConfigPath', () => {
     const result = await getModelConfigPath();
 
     // Verify the path is correctly joined
-    expect(result).toBe(path.join(mockUserDataPath, 'extra_model_paths.yaml'));
+    expect(result).toBe(path.join(mockUserDataPath, 'extra_models_config.yaml'));
 
     // Verify app.getPath was called with correct argument
     expect(app.getPath).toHaveBeenCalledWith('userData');

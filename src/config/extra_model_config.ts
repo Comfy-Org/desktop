@@ -4,7 +4,7 @@ import { stringify, parse } from 'yaml';
 import path from 'node:path';
 import { app } from 'electron';
 
-export const EXTRA_MODEL_CONFIG_PATH = 'extra_model_paths.yaml';
+export const EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
 interface ModelPaths {
   comfyui: {
