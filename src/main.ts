@@ -3,13 +3,7 @@ import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
 import { SetupTray } from './tray';
-import {
-  COMFY_ERROR_MESSAGE,
-  COMFY_FINISHING_MESSAGE,
-  IPC_CHANNELS,
-  IPCChannel,
-  SENTRY_URL_ENDPOINT,
-} from './constants';
+import { IPC_CHANNELS, IPCChannel, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
 import { app, BrowserWindow, dialog, screen, ipcMain, shell } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
@@ -220,7 +214,7 @@ if (!gotTheLock) {
       const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
       if (!basePath || !pythonInstallPath) {
         log.error('ERROR: Base path not found!');
-        sendProgressUpdate('Installation path does not exist. Please reset the installation location.');
+        sendProgressUpdate(ProgressStatus.ERROR_INSTALL_PATH);
         return;
       }
       downloadManager = DownloadManager.getInstance(mainWindow!, getModelsDirectory(basePath));
@@ -235,7 +229,7 @@ if (!gotTheLock) {
             });
 
       if (!useExternalServer) {
-        sendProgressUpdate('Setting up Python Environment...');
+        sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
         const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
         await pythonEnvironment.setup();
 
@@ -249,15 +243,15 @@ if (!gotTheLock) {
           },
           pythonEnvironment
         );
-        sendProgressUpdate('Starting Comfy Server...');
+        sendProgressUpdate(ProgressStatus.STARTING_SERVER);
         await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
       } else {
-        sendProgressUpdate('Using external server at ' + host + ':' + port);
+        sendProgressUpdate(ProgressStatus.READY);
         loadComfyIntoMainWindow();
       }
     } catch (error) {
       log.error(error);
-      sendProgressUpdate(COMFY_ERROR_MESSAGE);
+      sendProgressUpdate(ProgressStatus.ERROR);
     }
 
     ipcMain.on(
@@ -522,7 +516,7 @@ const launchPythonServer = async (
       }
       const isReady = await isComfyServerReady(host, port);
       if (isReady) {
-        sendProgressUpdate(COMFY_FINISHING_MESSAGE);
+        sendProgressUpdate(ProgressStatus.READY);
         log.info('Python server is ready');
 
         //For now just replace the source of the main window to the python server
@@ -541,7 +535,7 @@ const launchPythonServer = async (
   });
 };
 
-function sendProgressUpdate(status: string): void {
+function sendProgressUpdate(status: ProgressStatus): void {
   if (mainWindow) {
     log.info('Sending progress update to renderer ' + status);
     sendRendererMessage(IPC_CHANNELS.LOADING_PROGRESS, {

@@ -1,5 +1,5 @@
 import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
-import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
+import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus } from './constants';
 import { DownloadStatus } from './models/DownloadManager';
 import path from 'node:path';
 
@@ -17,7 +17,7 @@ const electronAPI = {
    * Callback for progress updates from the main process for starting ComfyUI.
    * @param callback
    */
-  onProgressUpdate: (callback: (update: { status: string }) => void) => {
+  onProgressUpdate: (callback: (update: { status: ProgressStatus }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
       console.info(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
       callback(value);

@@ -3,12 +3,7 @@ import ProgressOverlay from './screens/ProgressOverlay';
 import log from 'electron-log/renderer';
 import FirstTimeSetup from './screens/FirstTimeSetup';
 import { ElectronAPI } from 'src/preload';
-import { ELECTRON_BRIDGE_API } from 'src/constants';
-
-export interface ProgressUpdate {
-  status: string;
-  overwrite?: boolean;
-}
+import { ELECTRON_BRIDGE_API, ProgressStatus } from 'src/constants';
 
 const bodyStyle: React.CSSProperties = {
   fontFamily: 'Arial, sans-serif',
@@ -27,13 +22,12 @@ const bodyStyle: React.CSSProperties = {
 // after coming online the main.ts will replace the renderer with comfy's internal index.html
 const Home: React.FC = () => {
   const [showSetup, setShowSetup] = useState<boolean | null>(null);
-  const [status, setStatus] = useState('Starting...');
+  const [status, setStatus] = useState<ProgressStatus>(ProgressStatus.INITIAL_STATE);
   const [logs, setLogs] = useState<string[]>([]);
   const [defaultInstallLocation, setDefaultInstallLocation] = useState<string>('');
   const electronAPI: ElectronAPI = (window as any)[ELECTRON_BRIDGE_API];
 
-  const updateProgress = useCallback(({ status: newStatus }: ProgressUpdate) => {
-    log.info(`Setting new status: ${newStatus}`);
+  const updateProgress = useCallback(({ status: newStatus }: { status: ProgressStatus }) => {
     setStatus(newStatus);
     setLogs([]); // Clear logs when status changes
   }, []);
