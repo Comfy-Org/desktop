@@ -5137,9 +5137,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"comfyui-electron@workspace:.":
+"@comfyorg/comfyui-electron@workspace:.":
   version: 0.0.0-use.local
-  resolution: "comfyui-electron@workspace:."
+  resolution: "@comfyorg/comfyui-electron@workspace:."
   dependencies:
     "@electron/fuses": "npm:^1.8.0"
     "@electron/notarize": "npm:^2.4.0"

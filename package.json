@@ -1,5 +1,5 @@
 {
-  "name": "comfyui-electron",
+  "name": "@comfyorg/comfyui-electron",
   "productName": "ComfyUI",
   "repository": "github:comfy-org/electron",
   "copyright": "Copyright © 2024 Comfy Org",
