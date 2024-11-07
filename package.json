@@ -73,7 +73,8 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.0.0",
     "typescript": "~5.5.4",
-    "vite": "^5.0.12"
+    "vite": "^5.0.12",
+    "vite-plugin-dts": "^4.3.0"
   },
   "keywords": [],
   "author": {
