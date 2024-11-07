@@ -9,7 +9,6 @@ export const IPC_CHANNELS = {
   OPEN_DIALOG: 'open-dialog',
   FIRST_TIME_SETUP_COMPLETE: 'first-time-setup-complete',
   DEFAULT_INSTALL_LOCATION: 'default-install-location',
-  GET_PRELOAD_SCRIPT: 'get-preload-script',
   DOWNLOAD_PROGRESS: 'download-progress',
   START_DOWNLOAD: 'start-download',
   PAUSE_DOWNLOAD: 'pause-download',

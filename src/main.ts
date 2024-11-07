@@ -395,7 +395,7 @@ export const createWindow = async (): Promise<BrowserWindow> => {
       mainWindow.webContents.send(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, app.getPath('documents'));
     }
   });
-  ipcMain.handle(IPC_CHANNELS.GET_PRELOAD_SCRIPT, () => path.join(__dirname, 'preload.js'));
+
   await loadRendererIntoMainWindow();
   log.info('Renderer loaded into main window');
 
