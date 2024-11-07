@@ -11,10 +11,6 @@
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
   "packageManager": "yarn@4.5.0",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "./dist/index.d.ts"
-  ],
   "config": {
     "frontendVersion": "1.3.33",
     "comfyVersion": "0.2.7"
@@ -52,7 +48,7 @@
     "todesktop:beforeInstall": "./scripts/todesktop/beforeInstall.js",
     "typescript": "yarn run tsc",
     "vite:compile": "vite build --config vite.renderer.config.ts && vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts",
-    "vite:types": "vite build --config vite.types.config.ts"
+    "vite:types": "vite build --config vite.types.config.ts && node scripts/prepareTypes.js"
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
