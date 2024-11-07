@@ -36,19 +36,19 @@ export class VirtualEnvironment {
 
     if (process.platform === 'win32') {
       if (app.isPackaged) {
-        this.uvPath = path.join(uvFolder,'win', 'uv.exe');
+        this.uvPath = path.join(uvFolder, 'win', 'uv.exe');
       } else {
         this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv.exe');
       }
     } else if (process.platform === 'linux') {
       if (app.isPackaged) {
-        this.uvPath = path.join(uvFolder,'linux', 'uv');
+        this.uvPath = path.join(uvFolder, 'linux', 'uv');
       } else {
         this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv.exe');
       }
     } else if (process.platform === 'darwin') {
       if (app.isPackaged) {
-        this.uvPath = path.join(uvFolder,'macos', 'uv');
+        this.uvPath = path.join(uvFolder, 'macos', 'uv');
       } else {
         //this.uvPath = path.join('uv'); // Use global uv on macOS.
         this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv');

@@ -1,6 +1,7 @@
 const os = require('os');
 const fs = require('fs/promises');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 module.exports = async ({ appOutDir, packager, outDir }) => {
   /**
@@ -13,7 +14,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     * arch - number - the architecture of the app. ia32 = 0, x64 = 1, armv7l = 2, arm64 = 3, universal = 4.
   */
 
-  // The purpose of this script is to move the built python and comfy files from assets to the resource folder of the app
+  // The purpose of this script is to move comfy files from assets to the resource folder of the app
   // We can not add them to extraFiles as that is done prior to building, where we need to move them AFTER
 
   if (os.platform() === "darwin") {
@@ -22,12 +23,17 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
     const resourcePath = path.join(appPath, "Contents", "Resources");
-    const result = await fs.rm(path.join(assetPath, "ComfyUI", ".git"), { recursive: true, force: true });
-    const result3 = await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'ComfyUI_Manager', ".git"), { recursive: true, force: true });
-    const result4 = await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'DesktopSettingsExtension', ".git"), { recursive: true, force: true });
-    const result2 = await fs.cp(assetPath, resourcePath, { recursive: true });
+    // Remove these Git folders that mac's codesign is choking on. Need a more recursive way to just find all folders with '.git' and delete
+    await fs.rm(path.join(assetPath, "ComfyUI", ".git"), { recursive: true, force: true });
+    await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'ComfyUI_Manager', ".git"), { recursive: true, force: true });
+    await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'ComfyUI-Manager', ".git"), { recursive: true, force: true });
+    await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'DesktopSettingsExtension', ".git"), { recursive: true, force: true });
+    // Move rest of items to the resource folder 
+    await fs.cp(assetPath, resourcePath, { recursive: true });
+    // Remove other OS's UV
     await fs.rm(path.join(resourcePath, 'uv', 'win'), { recursive: true, force: true });
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
+   
   }
 
   if (os.platform() === 'win32') {
@@ -36,15 +42,12 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
     const resourcePath = path.join(path.dirname(appPath), "resources");
+    // Move rest of items to the resource folder 
     await fs.cp(assetPath, resourcePath, { recursive: true });
-    try {
-      await fs.rm(path.join(resourcePath, 'uv', 'macos'), { recursive: true, force: true });
-      await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
-      await fs.rm(path.join(resourcePath, 'python.tgz'), { recursive: true, force: true });
-      await fs.rm(path.join(resourcePath, 'pyhton'), { recursive: true, force: true });
-    } catch (error) {
-
-    }
-
+    // Remove other OS's UV
+    await fs.rm(path.join(resourcePath, 'uv', 'macos'), { recursive: true, force: true });
+    await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
   }
+
+  //TODO: Linux
 }
