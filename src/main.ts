@@ -21,6 +21,7 @@ import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
 import { PathHandlers } from './handlers/pathHandlers';
+import { AppInfoHandlers } from './handlers/appInfoHandlers';
 
 dotenv.config();
 
@@ -146,6 +147,8 @@ if (!gotTheLock) {
 
     try {
       createWindow();
+      new PathHandlers().registerHandlers();
+      new AppInfoHandlers().registerHandlers();
 
       ipcMain.handle(IPC_CHANNELS.OPEN_FORUM, () => {
         shell.openExternal('https://forum.comfy.org');
@@ -156,9 +159,6 @@ if (!gotTheLock) {
         return dialog.showOpenDialogSync({
           ...options,
         });
-      });
-      ipcMain.handle(IPC_CHANNELS.GET_MODEL_CONFIG_PATH, () => {
-        return getModelConfigPath();
       });
 
       ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
