@@ -1,8 +1,9 @@
-import { BrowserWindow, session, DownloadItem, ipcMain } from 'electron';
+import { session, DownloadItem, ipcMain } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
+import { AppWindow } from '../main-process/appWindow';
 
 interface Download {
   url: string;
@@ -35,9 +36,9 @@ interface DownloadState {
 export class DownloadManager {
   private static instance: DownloadManager;
   private downloads: Map<string, Download>;
-  private mainWindow: BrowserWindow;
+  private mainWindow: AppWindow;
   private modelsDirectory: string;
-  private constructor(mainWindow: BrowserWindow, modelsDirectory: string) {
+  private constructor(mainWindow: AppWindow, modelsDirectory: string) {
     this.downloads = new Map();
     this.mainWindow = mainWindow;
     this.modelsDirectory = modelsDirectory;
@@ -247,7 +248,7 @@ export class DownloadManager {
 
   private reportProgress(url: string, progress: number, status: DownloadStatus, message: string = ''): void {
     log.info(`Download progress: ${progress}, status: ${status}, message: ${message}`);
-    this.mainWindow.webContents.send(IPC_CHANNELS.DOWNLOAD_PROGRESS, {
+    this.mainWindow.send(IPC_CHANNELS.DOWNLOAD_PROGRESS, {
       url,
       progress,
       status,
@@ -255,14 +256,15 @@ export class DownloadManager {
     });
   }
 
-  public static getInstance(mainWindow: BrowserWindow, modelsDirectory: string): DownloadManager {
+  public static getInstance(mainWindow: AppWindow, modelsDirectory: string): DownloadManager {
     if (!DownloadManager.instance) {
       DownloadManager.instance = new DownloadManager(mainWindow, modelsDirectory);
+      DownloadManager.instance.registerIpcHandlers();
     }
     return DownloadManager.instance;
   }
 
-  public registerIpcHandlers() {
+  private registerIpcHandlers() {
     ipcMain.handle(IPC_CHANNELS.START_DOWNLOAD, (event, { url, path, filename }) =>
       this.startDownload(url, path, filename)
     );
