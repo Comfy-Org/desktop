@@ -11,7 +11,6 @@ on:
       - '.prettierrc'
       - '.eslintrc.json'
       - '.prettierignore'
-      - 'package.json'
 
 jobs:
   build-windows-debug:

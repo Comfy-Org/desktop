@@ -1,5 +1,5 @@
 import React from 'react';
-import { COMFY_ERROR_MESSAGE, COMFY_FINISHING_MESSAGE } from 'src/constants';
+import { ProgressMessages, ProgressStatus } from '/src/constants';
 import AnimatedLogDisplay from './AnimatedLogDisplay';
 import Linkify from 'linkify-react';
 
@@ -44,7 +44,7 @@ const logContainerStyle: React.CSSProperties = {
 };
 
 interface ProgressOverlayProps {
-  status: string;
+  status: ProgressStatus;
   logs: string[];
   openForum: () => void;
 }
@@ -79,10 +79,10 @@ const ProgressOverlay: React.FC<ProgressOverlayProps> = ({ status, logs, openFor
     <div style={outerContainerStyle}>
       <div style={containerStyle}>
         <div style={loadingTextStyle} id="loading-text">
-          <Linkify options={linkOptions}>{status}</Linkify>
+          <Linkify options={linkOptions}>{ProgressMessages[status]}</Linkify>
         </div>
         <div style={logContainerStyle}>
-          {status !== COMFY_FINISHING_MESSAGE && status !== COMFY_ERROR_MESSAGE && <AnimatedLogDisplay logs={logs} />}
+          {status !== ProgressStatus.READY && status !== ProgressStatus.ERROR && <AnimatedLogDisplay logs={logs} />}
         </div>
       </div>
     </div>

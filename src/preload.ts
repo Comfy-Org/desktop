@@ -1,5 +1,5 @@
 import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
-import { IPC_CHANNELS, ELECTRON_BRIDGE_API } from './constants';
+import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus } from './constants';
 import { DownloadStatus } from './models/DownloadManager';
 import path from 'node:path';
 
@@ -17,7 +17,7 @@ const electronAPI = {
    * Callback for progress updates from the main process for starting ComfyUI.
    * @param callback
    */
-  onProgressUpdate: (callback: (update: { status: string }) => void) => {
+  onProgressUpdate: (callback: (update: { status: ProgressStatus }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
       console.info(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
       callback(value);
@@ -56,11 +56,8 @@ const electronAPI = {
   onFirstTimeSetupComplete: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, () => callback());
   },
-  onDefaultInstallLocation: (callback: (location: string) => void) => {
-    ipcRenderer.on(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, (_event, value) => {
-      console.log(`Received ${IPC_CHANNELS.DEFAULT_INSTALL_LOCATION} event`, value);
-      callback(value);
-    });
+  getDefaultInstallLocation: (): Promise<string> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION);
   },
   /**
    * Various paths that are useful to the renderer.

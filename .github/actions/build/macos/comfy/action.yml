@@ -17,12 +17,7 @@ runs:
       run: |
         python -m pip install --upgrade pip
         pip install comfy-cli
-        cd assets
-        comfy --skip-prompt --here install --fast-deps --m-series --manager-url https://github.com/Comfy-Org/manager-core
-        cd ComfyUI
-        cd ../ 
-        comfy --here standalone  --platform macos
-        comfy standalone --rehydrate
+        yarn make:assets:macos
     - name: Unzip Sign Lib/Bin Rezip
       if: ${{inputs.sign-and-publish == 'true'}}
       shell: bash

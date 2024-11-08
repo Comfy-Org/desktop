@@ -1,6 +1,10 @@
 import * as fsPromises from 'node:fs/promises';
 import log from 'electron-log/main';
 import { stringify, parse } from 'yaml';
+import path from 'node:path';
+import { app } from 'electron';
+
+export const EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
 interface ModelPaths {
   comfyui: {
@@ -69,6 +73,10 @@ const configTemplates: Record<string, ModelPaths> = {
     },
   },
 };
+
+export async function getModelConfigPath(): Promise<string> {
+  return path.join(app.getPath('userData'), EXTRA_MODEL_CONFIG_PATH);
+}
 
 export async function createModelConfigFiles(extraModelConfigPath: string, customBasePath?: string): Promise<boolean> {
   log.info(`Creating model config files in ${extraModelConfigPath} with base path ${customBasePath}`);
