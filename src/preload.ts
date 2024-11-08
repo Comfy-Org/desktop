@@ -56,11 +56,8 @@ const electronAPI = {
   onFirstTimeSetupComplete: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, () => callback());
   },
-  onDefaultInstallLocation: (callback: (location: string) => void) => {
-    ipcRenderer.on(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, (_event, value) => {
-      console.log(`Received ${IPC_CHANNELS.DEFAULT_INSTALL_LOCATION} event`, value);
-      callback(value);
-    });
+  getDefaultInstallLocation: (): Promise<string> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION);
   },
   /**
    * Various paths that are useful to the renderer.

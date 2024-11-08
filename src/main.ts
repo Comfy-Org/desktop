@@ -390,11 +390,8 @@ export const createWindow = async (): Promise<BrowserWindow> => {
   });
 
   log.info('Loading renderer into main window');
-  mainWindow.webContents.on('did-finish-load', () => {
-    if (mainWindow) {
-      mainWindow.webContents.send(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, app.getPath('documents'));
-    }
-  });
+
+  ipcMain.handle(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, () => app.getPath('documents'));
 
   await loadRendererIntoMainWindow();
   log.info('Renderer loaded into main window');

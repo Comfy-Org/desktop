@@ -62,7 +62,7 @@ const Home: React.FC = () => {
   }, [updateProgress, addLogMessage]);
 
   useEffect(() => {
-    electronAPI.onDefaultInstallLocation((location: string) => {
+    electronAPI.getDefaultInstallLocation().then((location: string) => {
       setDefaultInstallLocation(location);
     });
   }, []);
