@@ -2,9 +2,15 @@ name: Publish All Platforms
 
 on:
   workflow_dispatch:
+  pull_request:
+    types: [closed]
 
 jobs:
   build-stage-to-todesktop:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       contains(github.event.pull_request.labels.*.name, 'Release'))
     runs-on: windows-latest
     steps:
       - name: Github checkout
