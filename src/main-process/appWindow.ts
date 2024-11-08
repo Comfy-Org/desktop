@@ -6,10 +6,10 @@ import log from 'electron-log/main';
 import { IPC_CHANNELS } from '../constants';
 
 export class AppWindow {
-  private static instance: AppWindow | null = null;
   private window: BrowserWindow;
   private store: Store<StoreType>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
+  private rendererReady: boolean = false;
 
   public constructor() {
     this.store = new Store<StoreType>();
@@ -45,7 +45,7 @@ export class AppWindow {
   }
 
   public isReady(): boolean {
-    return !this.window.webContents.isLoading();
+    return this.rendererReady;
   }
 
   public send(channel: string, data: any): void {
@@ -156,6 +156,7 @@ export class AppWindow {
 
   private sendQueuedEventsOnReady(): void {
     ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
+      this.rendererReady = true;
       log.info('Received renderer-ready message!');
       // Send all queued messages
       while (this.messageQueue.length > 0) {
