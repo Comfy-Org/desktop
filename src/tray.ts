@@ -1,6 +1,7 @@
 import path from 'path';
 import { Tray, Menu, app } from 'electron';
 import { AppWindow } from './main-process/appWindow';
+import { VirtualEnvironment } from './virtualEnvironment';
 
 export function setupTray(mainView: AppWindow): Tray {
   // Set icon for the tray

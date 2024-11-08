@@ -11,7 +11,8 @@
   "config": {
     "frontendVersion": "1.3.33",
     "comfyVersion": "0.2.7",
-    "managerCommit": "e629215c100c89a9a9d33fc03be3248069ff67ef"
+    "managerCommit": "e629215c100c89a9a9d33fc03be3248069ff67ef",
+    "uvVersion": "0.5.1"
   },
   "scripts": {
     "clean": "rimraf .vite dist out",
@@ -21,6 +22,7 @@
     "clean:slate": "yarn run clean & yarn run clean:assets & rimraf node_modules",
     "clone-settings-extension": "git clone https://github.com/Comfy-Org/DesktopSettingsExtension.git assets/ComfyUI/custom_nodes/DesktopSettingsExtension",
     "download-frontend": "node scripts/downloadFrontend.js",
+    "download-UV": "node scripts/downloadUV.js",
     "make:frontend": "yarn run download-frontend && yarn run clone-settings-extension",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",

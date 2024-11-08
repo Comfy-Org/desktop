@@ -129,13 +129,15 @@ export class VirtualEnvironment {
       },
     });
 
-    childProcess.stdout.on('data', (data) => {
-      log.info(data.toString());
-    });
+    childProcess.stdout &&
+      childProcess.stdout.on('data', (data) => {
+        log.info(data.toString());
+      });
 
-    childProcess.stderr.on('data', (data) => {
-      log.error(data.toString());
-    });
+    childProcess.stderr &&
+      childProcess.stderr.on('data', (data) => {
+        log.error(data.toString());
+      });
 
     return childProcess;
   }

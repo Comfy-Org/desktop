@@ -22,25 +22,27 @@ runs:
       shell: cmd
     - run: yarn set version --yarn-path self
       shell: cmd
+    - run: echo "uv_ver=$(npm pkg get config.uvVersion | cut -d "\"" -f 2 )" >> "$GITHUB_ENV"
+      shell: bash
     - name: Download UV Windows
       uses: dsaltares/fetch-gh-release-asset@master
       with:
         repo: 'astral-sh/uv'
-        version: 'tags/0.4.30'
+        version: 'tags/${{env.uv_ver}}'
         file: 'uv-x86_64-pc-windows-msvc.zip'
         target: './assets/uv-x86_64-pc-windows-msvc.zip'
     - name: Download UV Macos
       uses: dsaltares/fetch-gh-release-asset@master
       with:
         repo: 'astral-sh/uv'
-        version: 'tags/0.4.30'
+        version: 'tags/${{env.uv_ver}}'
         file: 'uv-aarch64-apple-darwin.tar.gz'
         target: './assets/uv-aarch64-apple-darwin.tar.gz'
     - name: Download UV Linux
       uses: dsaltares/fetch-gh-release-asset@master
       with:
         repo: 'astral-sh/uv'
-        version: 'tags/0.4.30'
+        version: 'tags/${{env.uv_ver}}'
         file: 'uv-x86_64-unknown-linux-gnu.tar.gz'
         target: './assets/uv-x86_64-unknown-linux-gnu.tar.gz'
     - name: Unpack UV
