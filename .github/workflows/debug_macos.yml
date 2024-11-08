@@ -31,10 +31,13 @@ jobs:
       - run: yarn install
       - name: Build Comfy
         uses: ./.github/actions/build/macos/comfy
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_FOR_GITHUB }}
+
       - name: Make app
         env:
           PUBLISH: false
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_FOR_GITHUB }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMFYUI_CPU_ONLY: true
         run: yarn run make
       - name: Upload Build
