@@ -299,12 +299,10 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
 }
 
 /**
- * Creates the main window. If the window already exists, it will return the existing window.
- * @param userResourcesPath The path to the user's resources.
- * @returns The main window.
+ * Creates the main application window.
  */
 export const createWindow = (): void => {
-  mainWindow = AppWindow.getInstance();
+  mainWindow = new AppWindow();
   buildMenu();
 };
 

@@ -11,7 +11,7 @@ export class AppWindow {
   private store: Store<StoreType>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
 
-  private constructor() {
+  public constructor() {
     this.store = new Store<StoreType>();
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = primaryDisplay.workAreaSize;
@@ -37,17 +37,11 @@ export class AppWindow {
       },
       autoHideMenuBar: true,
     });
-    this.setupWindowEvents();
-    this.setUpMessageEvents();
-    this.loadRenderer();
-  }
 
-  public static getInstance(): AppWindow {
-    if (!AppWindow.instance) {
-      log.info('Creating new AppWindow instance');
-      AppWindow.instance = new AppWindow();
-    }
-    return AppWindow.instance;
+    this.setupWindowEvents();
+    this.sendQueuedEventsOnReady();
+    this.setupBeforeLoadEvents();
+    this.loadRenderer();
   }
 
   public isReady(): boolean {
@@ -152,13 +146,15 @@ export class AppWindow {
       shell.openExternal(url);
       return { action: 'deny' };
     });
+  }
 
+  private setupBeforeLoadEvents(): void {
     this.window.webContents.on('did-finish-load', () => {
       this.send(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, app.getPath('documents'));
     });
   }
 
-  private setUpMessageEvents(): void {
+  private sendQueuedEventsOnReady(): void {
     ipcMain.on(IPC_CHANNELS.RENDERER_READY, () => {
       log.info('Received renderer-ready message!');
       // Send all queued messages
