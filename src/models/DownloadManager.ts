@@ -132,6 +132,8 @@ export class DownloadManager {
     if (download && download.item) {
       log.info('Cancelling download');
       download.item.cancel();
+
+      this.downloads.delete(url);
     }
   }
 
