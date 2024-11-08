@@ -34,7 +34,7 @@ jobs:
       - name: Make app
         env:
           PUBLISH: false
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_FOR_GITHUB }}
           COMFYUI_CPU_ONLY: true
         run: yarn run make
       - name: Upload Build
