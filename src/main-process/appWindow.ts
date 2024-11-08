@@ -44,7 +44,6 @@ export class AppWindow {
 
     this.setupWindowEvents();
     this.sendQueuedEventsOnReady();
-    this.setupBeforeLoadEvents();
     this.loadRenderer();
   }
 
@@ -132,12 +131,6 @@ export class AppWindow {
     this.window.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
       return { action: 'deny' };
-    });
-  }
-
-  private setupBeforeLoadEvents(): void {
-    this.window.webContents.on('did-finish-load', () => {
-      this.send(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, app.getPath('documents'));
     });
   }
 

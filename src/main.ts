@@ -152,7 +152,7 @@ if (!gotTheLock) {
       ipcMain.handle(IPC_CHANNELS.OPEN_FORUM, () => {
         shell.openExternal('https://forum.comfy.org');
       });
-
+      ipcMain.handle(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, () => app.getPath('documents'));
       ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
