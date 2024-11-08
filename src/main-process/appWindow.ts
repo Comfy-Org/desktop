@@ -71,10 +71,6 @@ export class AppWindow {
   }
 
   public onClose(callback: () => void): void {
-    if (!this.window) {
-      log.error('Trying to set onClose callback but window is not ready');
-      return;
-    }
     this.window.on('close', () => {
       callback();
       // Currently, the application quits when the window is closed for all operating systems.
@@ -83,18 +79,10 @@ export class AppWindow {
   }
 
   public loadURL(url: string): void {
-    if (!this.window) {
-      log.error('Trying to load URL but window is not ready');
-      return;
-    }
     this.window.loadURL(url);
   }
 
   public openDevTools(): void {
-    if (!this.window) {
-      log.error('Trying to open dev tools but window is not ready');
-      return;
-    }
     this.window.webContents.openDevTools();
   }
 
