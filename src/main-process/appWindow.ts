@@ -5,6 +5,10 @@ import { StoreType } from '../store';
 import log from 'electron-log/main';
 import { IPC_CHANNELS } from '../constants';
 
+/**
+ * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
+ * Closes the application when the window is closed.
+ */
 export class AppWindow {
   private window: BrowserWindow;
   private store: Store<StoreType>;
@@ -71,7 +75,11 @@ export class AppWindow {
       log.error('Trying to set onClose callback but window is not ready');
       return;
     }
-    this.window.on('close', callback);
+    this.window.on('close', () => {
+      callback();
+      // Currently, the application quits when the window is closed for all operating systems.
+      app.quit();
+    });
   }
 
   public loadURL(url: string): void {
@@ -132,15 +140,6 @@ export class AppWindow {
 
     this.window.on('resize', updateBounds);
     this.window.on('move', updateBounds);
-
-    this.window.on('close', (e: Electron.Event) => {
-      // Mac Only Behavior
-      if (process.platform === 'darwin') {
-        e.preventDefault();
-        if (this.window) this.window.hide();
-        app.dock.hide();
-      }
-    });
 
     this.window.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);

@@ -143,9 +143,6 @@ if (!gotTheLock) {
 
     try {
       createWindow();
-      mainWindow.onClose(() => {
-        app.quit();
-      });
 
       ipcMain.handle(IPC_CHANNELS.OPEN_FORUM, () => {
         shell.openExternal('https://forum.comfy.org');
