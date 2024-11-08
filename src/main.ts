@@ -36,7 +36,7 @@ let port = parseInt(process.env.COMFY_PORT || '-1');
  */
 const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
 
-let mainWindow: AppWindow;
+let appWindow: AppWindow;
 let downloadManager: DownloadManager;
 
 log.initialize();
@@ -89,9 +89,9 @@ if (!gotTheLock) {
     log.info('Received second instance message!');
     log.info(additionalData);
 
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
+    if (appWindow) {
+      if (appWindow.isMinimized()) appWindow.restore();
+      appWindow.focus();
     }
   });
 
@@ -168,7 +168,7 @@ if (!gotTheLock) {
         shell.openPath(folderPath);
       });
       ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
-        mainWindow.openDevTools();
+        appWindow.openDevTools();
       });
       ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
         return app.isPackaged;
@@ -180,7 +180,7 @@ if (!gotTheLock) {
         sendProgressUpdate(ProgressStatus.ERROR_INSTALL_PATH);
         return;
       }
-      downloadManager = DownloadManager.getInstance(mainWindow!, getModelsDirectory(basePath));
+      downloadManager = DownloadManager.getInstance(appWindow!, getModelsDirectory(basePath));
 
       port =
         port !== -1
@@ -197,7 +197,7 @@ if (!gotTheLock) {
 
         // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
         SetupTray(
-          mainWindow,
+          appWindow,
           () => {
             log.info('Resetting install location');
             fs.rmSync(modelConfigPath);
@@ -247,7 +247,7 @@ if (!gotTheLock) {
 }
 
 function loadComfyIntoMainWindow() {
-  mainWindow.loadURL(`http://${host}:${port}`);
+  appWindow.loadURL(`http://${host}:${port}`);
 }
 function restartApp({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
   function relaunchApplication(delay?: number) {
@@ -299,7 +299,7 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
  * Creates the main application window.
  */
 export const createWindow = (): void => {
-  mainWindow = new AppWindow();
+  appWindow = new AppWindow();
   buildMenu();
 };
 
@@ -413,7 +413,7 @@ const launchPythonServer = async (
 
 function sendProgressUpdate(status: ProgressStatus): void {
   log.info('Sending progress update to renderer ' + status);
-  mainWindow.send(IPC_CHANNELS.LOADING_PROGRESS, {
+  appWindow.send(IPC_CHANNELS.LOADING_PROGRESS, {
     status,
   });
 }
@@ -477,15 +477,15 @@ const spawnPython = (
     pythonProcess.stderr?.on?.('data', (data) => {
       const message = data.toString().trim();
       pythonLog.error(`stderr: ${message}`);
-      if (mainWindow) {
-        mainWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
+      if (appWindow) {
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
     pythonProcess.stdout?.on?.('data', (data) => {
       const message = data.toString().trim();
       pythonLog.info(`stdout: ${message}`);
-      if (mainWindow) {
-        mainWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
+      if (appWindow) {
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
       }
     });
   }
@@ -512,15 +512,15 @@ const spawnPythonAsync = (
       pythonProcess.stderr?.on?.('data', (data) => {
         const message = data.toString();
         log.error(message);
-        if (mainWindow) {
-          mainWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
+        if (appWindow) {
+          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
         }
       });
       pythonProcess.stdout?.on?.('data', (data) => {
         const message = data.toString();
         log.info(message);
-        if (mainWindow) {
-          mainWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
+        if (appWindow) {
+          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
         }
       });
     }
@@ -585,14 +585,14 @@ async function handleFirstTimeSetup() {
   const firstTimeSetup = isFirstTimeSetup();
   log.info('First time setup:', firstTimeSetup);
   if (firstTimeSetup) {
-    mainWindow.send(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
+    appWindow.send(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
     const selectedDirectory = await selectedInstallDirectory();
     const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
 
     const modelConfigPath = await getModelConfigPath();
     await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
   } else {
-    mainWindow.send(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
+    appWindow.send(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
 }
 
