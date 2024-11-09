@@ -35,7 +35,7 @@ on Windows: %USERPROFILE%\AppData\Roaming\{app name}\logs\main.log
 
 # Development
 
-## Setup Yarn
+## Local Server
 
 This project uses `yarn` as its package manager. If you do not already have a `yarn` binary available on your PATH, run:
 
@@ -49,6 +49,12 @@ This will install a usable `yarn` binary. Then, in the root directory of this re
 
 ```bash
 yarn install
+```
+
+Start the development server:
+
+```bash
+yarn start
 ```
 
 ## Setup Python
@@ -94,16 +100,28 @@ You can then run `start` to build/launch the code and a live buildserver that wi
 yarn start
 ```
 
-You can also build the package and/or distributables using the `package` and `make` commands:
-
-```bash
-# build the platform-dependent package
-yarn package
-```
+You can also build the package and/or distributables using the `make` command:
 
 ```bash
 # build the platform-dependent package and any distributables
 yarn make
+```
+
+# Release
+
+We use Todesktop to build and codesign our releases. To make a new release:
+
+1. Make a PR titled "v<semantic version>"
+2. Add the label "Release" (case sensitive)
+3. Merge the PR
+4. A build will automatically start and you can view it at https://app.todesktop.com
+
+
+### Publish Locally
+
+```bash
+# Authentication will be required.
+yarn publish
 ```
 
 ## Utility scripts
@@ -121,8 +139,8 @@ yarn clean:slate
 
 ## Windows
 
-x64 [Download](https://updater.comfy.org/windows/latest)
+x64 [Download](https://download.comfy.org/windows/nsis/x64)
 
 ## Mac
 
-ARM64 [Download](https://updater.comfy.org/darwin/latest)
+ARM64 [Download]()
