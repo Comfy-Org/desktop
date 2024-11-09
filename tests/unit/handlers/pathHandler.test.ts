@@ -18,8 +18,6 @@ describe('PathHandlers', () => {
   });
 
   it('should register all expected handle channels', () => {
-    handler.registerHandlers();
-
     const expectedChannelsForHandle = [IPC_CHANNELS.GET_MODEL_CONFIG_PATH, IPC_CHANNELS.GET_BASE_PATH];
 
     expectedChannelsForHandle.forEach((channel) => {

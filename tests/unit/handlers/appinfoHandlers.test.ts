@@ -16,7 +16,12 @@ describe('AppInfoHandlers', () => {
   });
 
   it('should register all expected handle channels', () => {
-    const expectedChannels = [IPC_CHANNELS.IS_PACKAGED, IPC_CHANNELS.GET_ELECTRON_VERSION];
+    const expectedChannels = [
+      IPC_CHANNELS.IS_PACKAGED,
+      IPC_CHANNELS.GET_ELECTRON_VERSION,
+      IPC_CHANNELS.OPEN_FORUM,
+      IPC_CHANNELS.DEFAULT_INSTALL_LOCATION,
+    ];
 
     expectedChannels.forEach((channel) => {
       expect(ipcMain.handle).toHaveBeenCalledWith(channel, expect.any(Function));
