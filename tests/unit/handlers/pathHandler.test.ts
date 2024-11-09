@@ -3,38 +3,35 @@ import { ipcMain } from 'electron';
 import { PathHandlers } from '../../../src/handlers/pathHandlers';
 import { IPC_CHANNELS } from '../../../src/constants';
 
-const isChannelRegistered = (channel: string): boolean => {
-  // @ts-ignore - accessing private property for testing
-  return ipcMain.listeners(channel).length > 0;
-};
+jest.mock('electron', () => ({
+  ipcMain: {
+    on: jest.fn(),
+    handle: jest.fn(),
+  },
+}));
 
-describe('IPC Handlers', () => {
+describe('PathHandlers', () => {
+  let handler: PathHandlers;
   beforeEach(() => {
-    // Clear all existing listeners before each test
-    ipcMain.removeAllListeners();
+    handler = new PathHandlers();
+    handler.registerHandlers();
   });
-  describe('PathHandlers', () => {
-    let handler: PathHandlers;
-    beforeEach(() => {
-      // Clear all existing listeners before each test
-      ipcMain.removeAllListeners();
-      handler = new PathHandlers();
-      handler.registerHandlers();
+
+  it('should register all expected handle channels', () => {
+    handler.registerHandlers();
+
+    const expectedChannelsForHandle = [IPC_CHANNELS.GET_MODEL_CONFIG_PATH, IPC_CHANNELS.GET_BASE_PATH];
+
+    expectedChannelsForHandle.forEach((channel) => {
+      expect(ipcMain.handle).toHaveBeenCalledWith(channel, expect.any(Function));
     });
+  });
 
-    it('should register all expected channels', () => {
-      handler.registerHandlers();
+  it('should register all expected on channels', () => {
+    const expectedChannelsForOn = [IPC_CHANNELS.OPEN_LOGS_PATH, IPC_CHANNELS.OPEN_PATH];
 
-      const expectedChannels = [
-        IPC_CHANNELS.GET_MODEL_CONFIG_PATH,
-        IPC_CHANNELS.GET_BASE_PATH,
-        IPC_CHANNELS.OPEN_LOGS_PATH,
-        IPC_CHANNELS.OPEN_PATH,
-      ];
-
-      expectedChannels.forEach((channel) => {
-        expect(isChannelRegistered(channel)).toBe(true);
-      });
+    expectedChannelsForOn.forEach((channel) => {
+      expect(ipcMain.on).toHaveBeenCalledWith(channel, expect.any(Function));
     });
   });
 });

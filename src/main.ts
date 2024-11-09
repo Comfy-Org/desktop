@@ -150,10 +150,6 @@ if (!gotTheLock) {
       new PathHandlers().registerHandlers();
       new AppInfoHandlers().registerHandlers();
 
-      ipcMain.handle(IPC_CHANNELS.OPEN_FORUM, () => {
-        shell.openExternal('https://forum.comfy.org');
-      });
-      ipcMain.handle(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, () => app.getPath('documents'));
       ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
@@ -565,7 +561,7 @@ function isFirstTimeSetup(): boolean {
 async function selectedInstallDirectory(): Promise<string> {
   return new Promise((resolve, reject) => {
     ipcMain.on(IPC_CHANNELS.SELECTED_DIRECTORY, (_event, value) => {
-      log.info('Directory selected:', value);
+      log.info('User selected to install ComfyUI in:', value);
       resolve(value);
     });
   });
