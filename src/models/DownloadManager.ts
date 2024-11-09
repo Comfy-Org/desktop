@@ -49,7 +49,13 @@ export class DownloadManager {
       const download = this.downloads.get(url);
 
       if (download) {
-        this.reportProgress({url, filename: download.filename, savePath: download.savePath, progress: 0, status: DownloadStatus.PENDING});
+        this.reportProgress({
+          url,
+          filename: download.filename,
+          savePath: download.savePath,
+          progress: 0,
+          status: DownloadStatus.PENDING,
+        });
         item.setSavePath(download.tempPath);
         download.item = item;
         log.info(`Setting save path to ${item.getSavePath()}`);
@@ -61,9 +67,21 @@ export class DownloadManager {
             const progress = item.getReceivedBytes() / item.getTotalBytes();
             if (item.isPaused()) {
               log.info('Download is paused');
-              this.reportProgress({url, progress, filename: download.filename, savePath: download.savePath, status: DownloadStatus.PAUSED });
+              this.reportProgress({
+                url,
+                progress,
+                filename: download.filename,
+                savePath: download.savePath,
+                status: DownloadStatus.PAUSED,
+              });
             } else {
-              this.reportProgress({url, progress, filename: download.filename, savePath: download.savePath, status: DownloadStatus.IN_PROGRESS });
+              this.reportProgress({
+                url,
+                progress,
+                filename: download.filename,
+                savePath: download.savePath,
+                status: DownloadStatus.IN_PROGRESS,
+              });
             }
           }
         });
@@ -77,12 +95,24 @@ export class DownloadManager {
               log.error(`Failed to rename downloaded file: ${error}. Deleting temp file.`);
               fs.unlinkSync(download.tempPath);
             }
-            this.reportProgress({url, filename: download.filename, savePath: download.savePath, progress: 1, status: DownloadStatus.COMPLETED});
+            this.reportProgress({
+              url,
+              filename: download.filename,
+              savePath: download.savePath,
+              progress: 1,
+              status: DownloadStatus.COMPLETED,
+            });
             this.downloads.delete(url);
           } else {
             log.info(`Download failed: ${state}`);
             const progress = item.getReceivedBytes() / item.getTotalBytes();
-            this.reportProgress({url, filename: download.filename, progress, status: DownloadStatus.ERROR, savePath: download.savePath });
+            this.reportProgress({
+              url,
+              filename: download.filename,
+              progress,
+              status: DownloadStatus.ERROR,
+              savePath: download.savePath,
+            });
           }
         });
       }
@@ -93,14 +123,28 @@ export class DownloadManager {
     const localSavePath = this.getLocalSavePath(filename, savePath);
     if (!this.isPathInModelsDirectory(localSavePath)) {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
-      this.reportProgress({url, savePath, filename, progress: 0, status: DownloadStatus.ERROR, message: 'Save path is not in models directory'});
+      this.reportProgress({
+        url,
+        savePath,
+        filename,
+        progress: 0,
+        status: DownloadStatus.ERROR,
+        message: 'Save path is not in models directory',
+      });
       return false;
     }
 
     const validationResult = this.validateSafetensorsFile(url, filename);
     if (!validationResult.isValid) {
       log.error(validationResult.error);
-      this.reportProgress({url, savePath, filename, progress:0, status:DownloadStatus.ERROR, message: validationResult.error});
+      this.reportProgress({
+        url,
+        savePath,
+        filename,
+        progress: 0,
+        status: DownloadStatus.ERROR,
+        message: validationResult.error,
+      });
       return false;
     }
 
@@ -248,7 +292,21 @@ export class DownloadManager {
     return absoluteFilePath.startsWith(absoluteModelsDir);
   }
 
-  private reportProgress({url, progress, status, savePath, filename, message = ''}: {url: string, progress: number, status: DownloadStatus, filename:string, savePath:string, message?: string}): void {
+  private reportProgress({
+    url,
+    progress,
+    status,
+    savePath,
+    filename,
+    message = '',
+  }: {
+    url: string;
+    progress: number;
+    status: DownloadStatus;
+    filename: string;
+    savePath: string;
+    message?: string;
+  }): void {
     log.info(`Download progress [${filename}]: ${progress}, status: ${status}, message: ${message}`);
     this.mainWindow.send(IPC_CHANNELS.DOWNLOAD_PROGRESS, {
       url,
@@ -256,7 +314,7 @@ export class DownloadManager {
       status,
       message,
       savePath,
-      filename
+      filename,
     });
   }
 
