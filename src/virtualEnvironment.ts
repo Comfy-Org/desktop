@@ -44,7 +44,7 @@ export class VirtualEnvironment {
       if (app.isPackaged) {
         this.uvPath = path.join(uvFolder, 'linux', 'uv');
       } else {
-        this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv.exe');
+        this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv');
       }
     } else if (process.platform === 'darwin') {
       if (app.isPackaged) {
@@ -154,11 +154,6 @@ export class VirtualEnvironment {
         reject(err);
       });
     });
-  }
-
-  async packWheels(): Promise<boolean> {
-    return false;
-    //return await pathAccessible(this.wheelsPath);
   }
 
   //TODO refactor into ComfyEnvironment class.

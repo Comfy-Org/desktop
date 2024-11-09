@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'node:child_process';
+import { ChildProcess } from 'node:child_process';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
@@ -17,8 +17,14 @@ import { getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
 import { VirtualEnvironment } from './virtualEnvironment';
 import dotenv from 'dotenv';
-import { buildMenu } from './menu/menu';
+import todesktop from '@todesktop/runtime';
+import { SetupTray } from './tray';
+import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
+import { VirtualEnvironment } from './virtualEnvironment';
+import { getModelsDirectory } from './utils';
+import { createModelConfigFiles, getModelConfigPath, readBasePathFromConfig } from './config/extra_model_config';
 import { ComfyConfigManager } from './config/comfyConfigManager';
+import { ComfySettings } from './config/comfySettings';
 import { AppWindow } from './main-process/appWindow';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
 import { PathHandlers } from './handlers/pathHandlers';
@@ -426,97 +432,6 @@ const killPythonServer = async (): Promise<void> => {
       clearTimeout(timeout);
       reject(new Error('Failed to initiate kill signal for python server'));
     }
-  });
-};
-
-const spawnPython = (
-  pythonInterpreterPath: string,
-  cmd: string[],
-  cwd: string,
-  options = { stdx: true, logFile: '' }
-) => {
-  log.info(`Spawning python process ${pythonInterpreterPath} with command: ${cmd.join(' ')} in directory: ${cwd}`);
-  const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, {
-    cwd,
-  });
-
-  if (options.stdx) {
-    log.info('Setting up python process stdout/stderr listeners');
-
-    let pythonLog = log;
-    if (options.logFile) {
-      log.info('Creating separate python log file: ', options.logFile);
-      // Rotate log files so each log file is unique to a single python run.
-      rotateLogFiles(app.getPath('logs'), options.logFile);
-      pythonLog = log.create({ logId: options.logFile });
-      pythonLog.transports.file.fileName = `${options.logFile}.log`;
-      pythonLog.transports.file.resolvePathFn = (variables) => {
-        return path.join(variables.electronDefaultDir ?? '', variables.fileName ?? '');
-      };
-    }
-
-    pythonProcess.stderr?.on?.('data', (data) => {
-      const message = data.toString().trim();
-      pythonLog.error(`stderr: ${message}`);
-      if (appWindow) {
-        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
-      }
-    });
-    pythonProcess.stdout?.on?.('data', (data) => {
-      const message = data.toString().trim();
-      pythonLog.info(`stdout: ${message}`);
-      if (appWindow) {
-        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
-      }
-    });
-  }
-
-  return pythonProcess;
-};
-
-const spawnPythonAsync = (
-  pythonInterpreterPath: string,
-  cmd: string[],
-  cwd: string,
-  options = { stdx: true }
-): Promise<{ exitCode: number | null }> => {
-  return new Promise((resolve, reject) => {
-    log.info(`Spawning python process with command: ${pythonInterpreterPath} ${cmd.join(' ')} in directory: ${cwd}`);
-    const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, { cwd });
-
-    const cleanup = () => {
-      pythonProcess.removeAllListeners();
-    };
-
-    if (options.stdx) {
-      log.info('Setting up python process stdout/stderr listeners');
-      pythonProcess.stderr?.on?.('data', (data) => {
-        const message = data.toString();
-        log.error(message);
-        if (appWindow) {
-          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
-        }
-      });
-      pythonProcess.stdout?.on?.('data', (data) => {
-        const message = data.toString();
-        log.info(message);
-        if (appWindow) {
-          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
-        }
-      });
-    }
-
-    pythonProcess.on('close', (code) => {
-      cleanup();
-      log.info(`Python process exited with code ${code}`);
-      resolve({ exitCode: code });
-    });
-
-    pythonProcess.on('error', (err) => {
-      cleanup();
-      log.error(`Failed to start Python process: ${err}`);
-      reject(err);
-    });
   });
 };
 
