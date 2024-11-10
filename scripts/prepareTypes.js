@@ -8,14 +8,11 @@ const mainPackage = require('../package.json');
 const typesPackage = {
   name: `${mainPackage.name}-types`,
   version: mainPackage.version,
+  main: './index.mjs',
   types: './index.d.ts',
-  exports: {
-    '.': {
-      types: './index.d.ts'
-    }
-  },
   files: [
-    'index.d.ts'
+    'index.d.ts',
+    'index.mjs'
   ],
   publishConfig: {
     access: 'public'
