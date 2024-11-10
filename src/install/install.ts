@@ -102,8 +102,23 @@ export class ComfyUIInstall {
     });
   }
 
-  async isValidComfyDirectory(selectedDirectory: string): Promise<{ valid: boolean; errorMessage?: string }> {
-    //TODO: Implement
-    return { valid: true };
+  public async isValidComfyDirectory(selectedDirectory: string): Promise<{ valid: boolean; errorMessage?: string }> {
+    try {
+      const files = await fs.promises.readdir(selectedDirectory);
+
+      if (files.includes('ComfyUI')) {
+        return {
+          valid: false,
+          errorMessage: 'A ComfyUI installation already exists in this directory. Please choose another location.',
+        };
+      }
+
+      return { valid: true };
+    } catch (error) {
+      return {
+        valid: false,
+        errorMessage: 'Unable to access the selected directory. Please ensure you have proper permissions.',
+      };
+    }
   }
 }
