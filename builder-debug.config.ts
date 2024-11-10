@@ -22,6 +22,7 @@ const debugConfig: Configuration = {
     icon: './assets/UI/Comfy_Logo_x256.png',
     target: 'appimage',
   },
+  asarUnpack: ['**/node_modules/node-pty/**/*'],
 };
 
 export default debugConfig;

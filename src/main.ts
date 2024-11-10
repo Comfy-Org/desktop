@@ -19,6 +19,7 @@ import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
+import Terminal from './terminal';
 
 dotenv.config();
 
@@ -195,6 +196,8 @@ if (!gotTheLock) {
               throw err;
             });
 
+      Terminal.init(appWindow, path.join(appResourcesPath, 'ComfyUI'));
+
       if (!useExternalServer) {
         sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
         const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
@@ -248,6 +251,18 @@ if (!gotTheLock) {
         return null;
       }
     });
+  });
+
+  ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
+    Terminal.write(command);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
+    Terminal.resize(cols, rows);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, (_event) => {
+    return Terminal.restore();
   });
 }
 

@@ -24,6 +24,10 @@ export const IPC_CHANNELS = {
   OPEN_LOGS_PATH: 'open-logs-path',
   OPEN_DEV_TOOLS: 'open-dev-tools',
   OPEN_FORUM: 'open-forum',
+  TERMINAL_WRITE: "execute-terminal-command",
+  TERMINAL_RESIZE: "resize-terminal",
+  TERMINAL_RESTORE: "restore-terminal",
+  TERMINAL_ON_OUTPUT: 'terminal-output',
 } as const;
 
 export enum ProgressStatus {
