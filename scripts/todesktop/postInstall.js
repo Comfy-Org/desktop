@@ -47,8 +47,10 @@ async function postInstall() {
     // Remove python stuff
     await fs.rm(path.join('./assets', 'python'), { recursive: true, force: true });
     await fs.rm(path.join('./assets', 'python.tgz'), { force: true });
-    (await fs.readdir(path.join('./assets'))).forEach(async (tgzFile) => {
-      if (path.extname(tgzFile) == '.tar.gz') await fs.rm(path.join('./assets', tgzFile));
+    fs.readdirSync(path.join('./assets')).forEach((tgzFile) => {
+      if (tgzFile.endsWith('.gz')) {
+        fs.rmSync(path.join('./assets', tgzFile));
+      }
     });
 
 };
