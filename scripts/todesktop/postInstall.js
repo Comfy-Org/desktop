@@ -2,7 +2,7 @@ const { spawnSync } = require("child_process");
 const path = require("path");
 const os = require('os');
 const process = require("process");
-//const fs = require('fs-extra');
+const fs = require('fs-extra');
 
 async function postInstall() {
     const firstInstallOnToDesktopServers =
@@ -43,6 +43,14 @@ async function postInstall() {
     }
 
     //TODO: Linux
+
+    // Remove python stuff
+    await fs.rm(path.join('./assets', 'python'), { recursive: true, force: true });
+    await fs.rm(path.join('./assets', 'python.tgz'), { force: true });
+    (await fs.readdir(path.join('./assets'))).forEach(async (tgzFile) => {
+      if (path.extname(tgzFile) == '.tar.gz') await fs.rm(path.join('./assets', tgzFile));
+    });
+
 };
 
 postInstall();
