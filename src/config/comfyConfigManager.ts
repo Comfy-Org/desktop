@@ -4,6 +4,9 @@ import log from 'electron-log/main';
 
 export type DirectoryStructure = (string | DirectoryStructure)[];
 
+/**
+ * Responsible for creating the ComfyUI directory structure.
+ */
 export class ComfyConfigManager {
   private static readonly DEFAULT_DIRECTORIES: DirectoryStructure = [
     'custom_nodes',

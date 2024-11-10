@@ -4,12 +4,12 @@ import axios from 'axios';
 import path from 'node:path';
 import { SetupTray } from './tray';
 import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
-import { createModelConfigFiles, getModelConfigPath, readBasePathFromConfig } from './config/extra_model_config';
+import { getModelConfigPath } from './config/extra_model_config';
 import todesktop from '@todesktop/runtime';
 import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
@@ -17,11 +17,11 @@ import { getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
-import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
 import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
+import { ComfyUIInstall } from './install/install';
 
 dotenv.config();
 
@@ -157,13 +157,8 @@ if (!gotTheLock) {
         });
       });
 
-      ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
-        appWindow.openDevTools();
-      });
-      ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
-        return isFirstTimeSetup();
-      });
-      await handleFirstTimeSetup();
+      const install = ComfyUIInstall.get(appWindow);
+      install.install();
       const basePath = await getBasePath();
       const pythonInstallPath = await getPythonInstallPath();
       if (!basePath || !pythonInstallPath) {
@@ -550,38 +545,6 @@ function findAvailablePort(startPort: number, endPort: number): Promise<number> 
 
     tryPort(startPort);
   });
-}
-/**
- * Check if the user has completed the first time setup wizard.
- * This means the extra_models_config.yaml file exists in the user's data directory.
- */
-function isFirstTimeSetup(): boolean {
-  const extraModelsConfigPath = getModelConfigPath();
-  return !fs.existsSync(extraModelsConfigPath);
-}
-
-async function selectedInstallDirectory(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    ipcMain.on(IPC_CHANNELS.SELECTED_DIRECTORY, (_event, value) => {
-      log.info('User selected to install ComfyUI in:', value);
-      resolve(value);
-    });
-  });
-}
-
-async function handleFirstTimeSetup() {
-  const firstTimeSetup = isFirstTimeSetup();
-  log.info('First time setup:', firstTimeSetup);
-  if (firstTimeSetup) {
-    appWindow.send(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
-    const selectedDirectory = await selectedInstallDirectory();
-    const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
-
-    const modelConfigPath = getModelConfigPath();
-    await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
-  } else {
-    appWindow.send(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
-  }
 }
 
 /**
