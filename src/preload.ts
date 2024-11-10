@@ -141,6 +141,12 @@ const electronAPI = {
       extras,
     });
   },
+  /**
+   * Check if the user has completed the first time setup wizard.
+   */
+  isFirstTimeSetup: (): Promise<boolean> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.IS_FIRST_TIME_SETUP);
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;

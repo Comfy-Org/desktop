@@ -160,7 +160,9 @@ if (!gotTheLock) {
       ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
         appWindow.openDevTools();
       });
-
+      ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
+        return isFirstTimeSetup();
+      });
       await handleFirstTimeSetup();
       const basePath = await getBasePath();
       const pythonInstallPath = await getPythonInstallPath();

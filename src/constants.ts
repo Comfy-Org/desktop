@@ -24,6 +24,7 @@ export const IPC_CHANNELS = {
   OPEN_LOGS_PATH: 'open-logs-path',
   OPEN_DEV_TOOLS: 'open-dev-tools',
   OPEN_FORUM: 'open-forum',
+  IS_FIRST_TIME_SETUP: 'is-first-time-setup',
 } as const;
 
 export enum ProgressStatus {
