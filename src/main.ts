@@ -558,21 +558,12 @@ function isFirstTimeSetup(): boolean {
   return !fs.existsSync(extraModelsConfigPath);
 }
 
-async function selectedInstallDirectory(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    ipcMain.on(IPC_CHANNELS.SELECTED_DIRECTORY, (_event, value) => {
-      log.info('User selected to install ComfyUI in:', value);
-      resolve(value);
-    });
-  });
-}
-
 async function handleFirstTimeSetup() {
   const firstTimeSetup = isFirstTimeSetup();
   log.info('First time setup:', firstTimeSetup);
   if (firstTimeSetup) {
     appWindow.send(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
-    const selectedDirectory = await selectedInstallDirectory();
+    const selectedDirectory = '';
     const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
 
     const modelConfigPath = getModelConfigPath();

@@ -66,13 +66,6 @@ const electronAPI = {
   onShowSelectDirectory: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());
   },
-  /**
-   * Callback for when the user clicks the "Select Directory" button in the setup wizard.
-   * @param callback
-   */
-  selectSetupDirectory: (directory: string) => {
-    ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
-  },
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);
   },

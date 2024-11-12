@@ -29,7 +29,6 @@ const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onComplete, initialPath
   const handleInstall = () => {
     if (selectedPath) {
       log.info('Installing to directory', selectedPath);
-      electronAPI.selectSetupDirectory(selectedPath);
       onComplete(selectedPath);
     } else {
       log.error('No directory selected for installation');
