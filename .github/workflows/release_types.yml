@@ -22,7 +22,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: yarn install
       - run: yarn run vite:types
-      - run: yarn install && yarn publish --access public
+      - run: yarn install && yarn npm publish --access public
         working-directory: ./dist
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
