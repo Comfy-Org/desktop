@@ -3,15 +3,6 @@ name: Build App Macos Debug
 on:
   workflow_dispatch:
   workflow_call:
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - '.github/**'
-      - '.prettierrc'
-      - '.eslintrc.json'
-      - '.prettierignore'
-      - 'package.json'
 
 jobs:
   build-macos-debug:

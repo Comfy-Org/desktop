@@ -3,14 +3,6 @@ name: Build App Windows Debug
 on:
   workflow_dispatch:
   workflow_call:
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - '.github/**'
-      - '.prettierrc'
-      - '.eslintrc.json'
-      - '.prettierignore'
 
 jobs:
   build-windows-debug:
