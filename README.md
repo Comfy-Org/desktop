@@ -17,13 +17,14 @@ The app uses our electron update server hosted at https://updater.comfy.org.
 
 ## Application Files
 
-### Electron 
+### Electron
 
 The desktop application comes bundled with:
+
 - ComfyUI source code
 - ComfyUI-Manager
 - Electron, Chromium binaries, and node modules
-  
+
 These are placed here by the installer:
 
 On Windows: `%APPDATA%\Roaming\ComfyUI` and `%APPDATA%\Local\comfyui-electron-updater`
