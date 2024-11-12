@@ -7,17 +7,15 @@ import { app } from 'electron';
 export class VirtualEnvironment {
   readonly venvRootPath: string;
   readonly venvPath: string;
-  readonly venvName: string;
   readonly pythonVersion: string;
   readonly uvPath: string;
   readonly requirementsCompiledPath: string;
   readonly cacheDir: string;
   readonly pythonInterpreterPath: string;
 
-  constructor(venvPath: string, venvName: string = 'ComfyUI-uv', pythonVersion: string = '3.12.4') {
+  constructor(venvPath: string, pythonVersion: string = '3.12.4') {
     this.venvRootPath = venvPath;
-    this.venvPath = path.join(venvPath, venvName);
-    this.venvName = venvName;
+    this.venvPath = path.join(venvPath, '.venv'); // uv defaults to .venv
     this.pythonVersion = pythonVersion;
     this.cacheDir = path.join(venvPath, 'uv-cache');
     this.requirementsCompiledPath = app.isPackaged
@@ -28,35 +26,20 @@ export class VirtualEnvironment {
         ? path.join(this.venvPath, 'Scripts', 'python.exe')
         : path.join(this.venvPath, 'bin', 'python');
 
-    // Set platform-specific paths
-    // uv will be in assets/uv on Windows and use the global uv on macOS and Linux
-    // uv executable is not codesigned, so we need to use the global one on macOS and Linux
-
-    const uvFolder = path.join(process.resourcesPath, 'uv');
+    const uvFolder = app.isPackaged
+      ? path.join(process.resourcesPath, 'uv')
+      : path.join(app.getAppPath(), 'assets', 'uv');
 
     if (process.platform === 'win32') {
-      if (app.isPackaged) {
-        this.uvPath = path.join(uvFolder, 'win', 'uv.exe');
-      } else {
-        this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv.exe');
-      }
+      this.uvPath = path.join(uvFolder, 'win', 'uv.exe');
     } else if (process.platform === 'linux') {
-      if (app.isPackaged) {
-        this.uvPath = path.join(uvFolder, 'linux', 'uv');
-      } else {
-        this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv');
-      }
+      this.uvPath = path.join(uvFolder, 'linux', 'uv');
     } else if (process.platform === 'darwin') {
-      if (app.isPackaged) {
-        this.uvPath = path.join(uvFolder, 'macos', 'uv');
-      } else {
-        //this.uvPath = path.join('uv'); // Use global uv on macOS.
-        this.uvPath = path.join(app.getAppPath(), 'assets', 'uv', 'uv');
-      }
+      this.uvPath = path.join(uvFolder, 'macos', 'uv');
     } else {
       throw new Error(`Unsupported platform: ${process.platform}`);
     }
-    log.info(`Using uv at ${this.uvPath}, and created virtual environment at ${this.venvPath}`);
+    log.info(`Using uv at ${this.uvPath}`);
   }
 
   async exists(): Promise<boolean> {
@@ -70,10 +53,10 @@ export class VirtualEnvironment {
         return;
       }
 
-      log.info(`Creating virtual environment at ${this.venvPath}`);
+      log.info(`Creating virtual environment at ${this.venvPath} with python ${this.pythonVersion}`);
 
       // Create virtual environment using uv
-      const args = ['venv', '--python', this.pythonVersion, this.venvName];
+      const args = ['venv', '--python', this.pythonVersion];
       const { exitCode } = await this.runUvCommandAsync(args);
 
       if (exitCode !== 0) {
@@ -106,12 +89,8 @@ export class VirtualEnvironment {
   }
 
   runUvCommand(args: string[]): ChildProcess {
-    log.info(
-      `Running uv command: ${this.uvPath} ${args.join(' ')} in ${this.venvRootPath}, with cache dir ${this.cacheDir}`
-    );
     return this.runCommand(this.uvPath, args, {
       UV_CACHE_DIR: this.cacheDir,
-      UV_HOME: this.cacheDir,
       UV_TOOL_DIR: this.cacheDir,
       UV_TOOL_BIN_DIR: this.cacheDir,
       UV_PYTHON_INSTALL_DIR: this.cacheDir,
@@ -158,7 +137,6 @@ export class VirtualEnvironment {
 
   //TODO refactor into ComfyEnvironment class.
   async installRequirements(): Promise<void> {
-    // install python pkgs from wheels if packed in bundle, otherwise just use requirements.compiled
     const installCmd = ['pip', 'install', '-r', this.requirementsCompiledPath, '--index-strategy', 'unsafe-best-match'];
 
     const { exitCode } = await this.runUvCommandAsync(installCmd);

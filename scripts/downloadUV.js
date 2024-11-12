@@ -25,29 +25,27 @@ const options = {
 }
 
 async function downloadUV() {
-
-    const allFlag = process.argv[2];
-    const baseDownloadURL = `https://github.com/astral-sh/uv/releases/download/${uvVer}/`;
-    if (allFlag)
-    {
-        if (allFlag === 'all') {
-            await downloadAndExtract(baseDownloadURL, options.win32);
-            await downloadAndExtract(baseDownloadURL, options.darwin);
-            await downloadAndExtract(baseDownloadURL, options.linux);
-            return;
-        }
-        if (allFlag === 'none') {
-            return;
-        }
-    }
-
-    const uvDownloaded = fs.existsSync(path.join('./assets', 'uv'));
-    if (!uvDownloaded) {
-        await downloadAndExtract(baseDownloadURL, options[os.platform()]);
-        return;
-    }
-    console.log('< UV Folder Exists, Skipping >');
-
+  const baseDownloadURL = `https://github.com/astral-sh/uv/releases/download/${uvVer}/`;
+  const uvDownloaded = fs.existsSync(path.join('./assets', 'uv'));
+  if (!uvDownloaded) {
+      await downloadAndExtract(baseDownloadURL, options[os.platform()]);
+      return;
+  }
+  
+  console.log('< UV Folder Exists, Skipping >');
+  const allFlag = process.argv[2];
+  if (allFlag)
+  {
+      if (allFlag === 'all') {
+          await downloadAndExtract(baseDownloadURL, options.win32);
+          await downloadAndExtract(baseDownloadURL, options.darwin);
+          await downloadAndExtract(baseDownloadURL, options.linux);
+          return;
+      }
+      if (allFlag === 'none') {
+          return;
+      }
+  }
 };
 
 async function downloadAndExtract(baseURL, options) {
@@ -76,7 +74,7 @@ async function downloadAndExtract(baseURL, options) {
         "strip-components": 1
     });
     await fs.unlink(zipFilePath);
-    console.log(`<FINISHED DOWNLOAD AND EXTRACT UV ${uvOutputFolderName} >`);
+    console.log(`FINISHED DOWNLOAD AND EXTRACT UV ${uvOutputFolderName}`);
 }
 
 //** Download and Extract UV. Default uses OS.Platfrom. Add 'all' will download all. Add 'none' will skip */
