@@ -20,9 +20,14 @@ jobs:
         with:
           node-version: lts/*
           registry-url: 'https://registry.npmjs.org'
-      - run: yarn install
-      - run: yarn run vite:types
-      - run: yarn install && yarn npm publish --access public
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install
+      - name: Build types
+        run: yarn run vite:types
+      - name: Publish package
+        run: yarn install && yarn npm publish --access public
         working-directory: ./dist
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
