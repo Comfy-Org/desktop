@@ -10,7 +10,8 @@
   "packageManager": "yarn@4.5.0",
   "config": {
     "frontendVersion": "1.3.33",
-    "comfyVersion": "0.2.7"
+    "comfyVersion": "0.2.7",
+    "managerCommit": "cfdb687db3a7d2554f4f0e1f982ad9fffb3c4f2e"
   },
   "scripts": {
     "clean": "rimraf .vite dist out",

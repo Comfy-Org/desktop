@@ -9,6 +9,8 @@ function makeAssets(gpuFlag) {
     `comfy-cli --skip-prompt --here install --version ${pkg.config.comfyVersion} --fast-deps`,
     gpuFlag,
     '--manager-url https://github.com/Comfy-Org/manager-core',
+    '--manager-commit',
+    pkg.config.managerCommit,
     '&&',
     'comfy-cli --here standalone',
     '&&',
