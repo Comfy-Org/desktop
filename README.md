@@ -27,11 +27,9 @@ The desktop application comes bundled with:
 
 These are placed here by the installer:
 
-_Windows_
+**Windows**
 
 Bundled Resources: `%APPDATA%\Local\Programs\comfyui-electron`
-
-## add image
 
 ![screenshot of resources directory](https://github.com/user-attachments/assets/0e1d4a9a-7b7e-4536-ad4b-9e6123873706)
 
@@ -39,11 +37,11 @@ User files are stored here: `%APPDATA%\Roaming\ComfyUI`
 
 Automatic Updates: `%APPDATA%\Local\comfyui-electron-updater`
 
-_macOS_
+**macOS**
 
 `~/Library/Application Support/ComfyUI`
 
-_Linux_
+**Linux**
 
 `~/.config/ComfyUI`
 
