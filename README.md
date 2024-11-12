@@ -85,12 +85,6 @@ This will install a usable `yarn` binary. Then, in the root directory of this re
 yarn install
 ```
 
-Start the development server:
-
-```bash
-yarn start
-```
-
 ## Setup Python
 
 Make sure you have python 3.12+ installed. It is recommended to setup a virtual environment to run the python code.
@@ -117,7 +111,7 @@ With the python environment activated, install comfy-cli:
 pip install comfy-cli
 ```
 
-## Building/running
+## Building/Running
 
 First, initialize the application resources by running `make:assets:<gpu>`:
 
@@ -126,7 +120,11 @@ First, initialize the application resources by running `make:assets:<gpu>`:
 yarn make:assets:[amd|cpu|nvidia|macos]
 ```
 
-This command will install ComfyUI under `assets`, as well ComfyUI-Manager, and the frontend [extension](https://github.com/Comfy-Org/DesktopSettingsExtension) responsible for electron settings menu.
+This command will install ComfyUI under `assets`, as well ComfyUI-Manager, and the frontend [extension](https://github.com/Comfy-Org/DesktopSettingsExtension) responsible for electron settings menu. The exact versions of each package is defined in `package.json`.
+
+Second, you need to install `uv`. This will be bundled with the distributable, but we also need it locally.
+
+`yarn download:uv`
 
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
 
