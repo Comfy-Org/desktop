@@ -16,12 +16,11 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'ReleaseTypes')
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - name: Use Node.js 20.x
+        uses: JP250552/setup-node@feature/corepack
         with:
-          node-version: lts/*
-          registry-url: 'https://registry.npmjs.org'
-      - name: Enable Corepack
-        run: corepack enable
+          node-version: '20.x'
+          corepack: true
       - name: Install dependencies
         run: yarn install
       - name: Build types
