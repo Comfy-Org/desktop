@@ -28,6 +28,7 @@ export const IPC_CHANNELS = {
   TERMINAL_RESIZE: "resize-terminal",
   TERMINAL_RESTORE: "restore-terminal",
   TERMINAL_ON_OUTPUT: 'terminal-output',
+  IS_FIRST_TIME_SETUP: 'is-first-time-setup',
 } as const;
 
 export enum ProgressStatus {

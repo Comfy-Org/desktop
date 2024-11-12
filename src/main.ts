@@ -20,6 +20,9 @@ import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
 import Terminal from './terminal';
+import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
+import { PathHandlers } from './handlers/pathHandlers';
+import { AppInfoHandlers } from './handlers/appInfoHandlers';
 
 dotenv.config();
 
@@ -140,47 +143,30 @@ if (!gotTheLock) {
       log.error('Error getting GPU info: ', e);
     });
 
-  // This method will be called when Electron has finished
-  // initialization and is ready to create browser windows.
-  // Some APIs can only be used after this event occurs.
-
   app.on('ready', async () => {
     log.info('App ready');
 
     try {
       createWindow();
+      new PathHandlers().registerHandlers();
+      new AppInfoHandlers().registerHandlers();
 
-      ipcMain.handle(IPC_CHANNELS.OPEN_FORUM, () => {
-        shell.openExternal('https://forum.comfy.org');
-      });
-      ipcMain.handle(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, () => app.getPath('documents'));
       ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
           ...options,
         });
       });
-      ipcMain.on(IPC_CHANNELS.OPEN_LOGS_PATH, () => {
-        shell.openPath(app.getPath('logs'));
-      });
-      ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, () => {
-        return basePath;
-      });
-      ipcMain.handle(IPC_CHANNELS.GET_MODEL_CONFIG_PATH, () => {
-        return modelConfigPath;
-      });
-      ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string) => {
-        log.info(`Opening path: ${folderPath}`);
-        shell.openPath(folderPath);
-      });
+
       ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
         appWindow.openDevTools();
       });
-      ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
-        return app.isPackaged;
+      ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
+        return isFirstTimeSetup();
       });
       await handleFirstTimeSetup();
-      const { appResourcesPath, pythonInstallPath, modelConfigPath, basePath } = await determineResourcesPaths();
+      const basePath = await getBasePath();
+      const pythonInstallPath = await getPythonInstallPath();
       if (!basePath || !pythonInstallPath) {
         log.error('ERROR: Base path not found!');
         sendProgressUpdate(ProgressStatus.ERROR_INSTALL_PATH);
@@ -196,6 +182,7 @@ if (!gotTheLock) {
               throw err;
             });
 
+      const appResourcesPath = await getAppResourcesPath();
       Terminal.init(appWindow, path.join(appResourcesPath, 'ComfyUI'));
 
       if (!useExternalServer) {
@@ -204,6 +191,7 @@ if (!gotTheLock) {
         await pythonEnvironment.setup();
 
         // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
+        const modelConfigPath = getModelConfigPath();
         SetupTray(
           appWindow,
           () => {
@@ -235,10 +223,6 @@ if (!gotTheLock) {
         }
       }
     );
-
-    ipcMain.handle(IPC_CHANNELS.GET_ELECTRON_VERSION, () => {
-      return app.getVersion();
-    });
 
     ipcMain.handle(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, async (_event, { error, extras }): Promise<string | null> => {
       try {
@@ -587,15 +571,14 @@ function findAvailablePort(startPort: number, endPort: number): Promise<number> 
  * This means the extra_models_config.yaml file exists in the user's data directory.
  */
 function isFirstTimeSetup(): boolean {
-  const userDataPath = app.getPath('userData');
-  const extraModelsConfigPath = path.join(userDataPath, 'extra_models_config.yaml');
+  const extraModelsConfigPath = getModelConfigPath();
   return !fs.existsSync(extraModelsConfigPath);
 }
 
 async function selectedInstallDirectory(): Promise<string> {
   return new Promise((resolve, reject) => {
     ipcMain.on(IPC_CHANNELS.SELECTED_DIRECTORY, (_event, value) => {
-      log.info('Directory selected:', value);
+      log.info('User selected to install ComfyUI in:', value);
       resolve(value);
     });
   });
@@ -609,40 +592,11 @@ async function handleFirstTimeSetup() {
     const selectedDirectory = await selectedInstallDirectory();
     const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
 
-    const modelConfigPath = await getModelConfigPath();
+    const modelConfigPath = getModelConfigPath();
     await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
   } else {
     appWindow.send(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
-}
-
-export async function determineResourcesPaths(): Promise<{
-  pythonInstallPath: string | null;
-  appResourcesPath: string;
-  modelConfigPath: string;
-  basePath: string | null;
-}> {
-  const modelConfigPath = await getModelConfigPath();
-  const basePath = await readBasePathFromConfig(modelConfigPath);
-  const appResourcePath = process.resourcesPath;
-
-  if (!app.isPackaged) {
-    return {
-      // development: install python to in-tree assets dir
-      pythonInstallPath: path.join(app.getAppPath(), 'assets'),
-      appResourcesPath: path.join(app.getAppPath(), 'assets'),
-      modelConfigPath,
-      basePath,
-    };
-  }
-
-  // TODO(robinhuang): Look for extra models yaml file and use that as the userResourcesPath if it exists.
-  return {
-    pythonInstallPath: basePath, // Provide fallback
-    appResourcesPath: appResourcePath,
-    modelConfigPath,
-    basePath,
-  };
 }
 
 /**

@@ -116,7 +116,6 @@ We use Todesktop to build and codesign our releases. To make a new release:
 3. Merge the PR
 4. A build will automatically start and you can view it at https://app.todesktop.com
 
-
 ### Publish Locally
 
 ```bash
