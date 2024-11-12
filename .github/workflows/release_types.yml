@@ -26,7 +26,7 @@ jobs:
       - name: Build types
         run: yarn run vite:types
       - name: Publish package
-        run: yarn install && yarn npm publish --access public
+        run: npm publish --access public
         working-directory: ./dist
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
