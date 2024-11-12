@@ -12,6 +12,20 @@ const openFolder = async (folderPath: string) => {
   ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
 };
 
+export interface MigrationItem {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export interface InstallOptions {
+  installPath: string;
+  autoUpdate: boolean;
+  allowMetrics: boolean;
+  migrationSourcePath?: string;
+  migrationItemIds?: string[];
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -147,6 +161,55 @@ const electronAPI = {
   isFirstTimeSetup: (): Promise<boolean> => {
     return ipcRenderer.invoke(IPC_CHANNELS.IS_FIRST_TIME_SETUP);
   },
+  // TODO(robinjhuang): Implement these methods.
+  // Currently, they are mocked.
+  /**
+   * Get the system paths for the application.
+   */
+  getSystemPaths: () =>
+    Promise.resolve({
+      appData: 'C:/Users/username/AppData/Roaming',
+      appPath: 'C:/Program Files/comfyui-electron/resources/app',
+      defaultInstallPath: 'C:/Users/username/comfyui-electron',
+    }),
+  /**
+   * Validate the install path for the application. Check whether the path is valid
+   * and writable. The disk should have enough free space to install the application.
+   */
+  validateInstallPath: (path: string) => {
+    if (path === 'bad') {
+      return { isValid: false, error: 'Bad path!' };
+    }
+    return { isValid: true };
+  },
+  /**
+   * Get the migration items for the application.
+   */
+  migrationItems: (): Promise<MigrationItem[]> =>
+    Promise.resolve([
+      {
+        id: 'user_files',
+        label: 'User Files',
+        description: 'Settings and user-created workflows',
+      },
+    ]),
+  /**
+   * Validate whether the given path is a valid ComfyUI source path.
+   */
+  validateComfyUISource: (path: string) => {
+    if (path === 'bad') {
+      return { isValid: false, error: 'Bad path!' };
+    }
+    return { isValid: true };
+  },
+  /**
+   * Show a directory picker dialog and return the selected path.
+   */
+  showDirectoryPicker: () => Promise.resolve('C:/Users/username/comfyui-electron/1'),
+  /**
+   * Install ComfyUI with given options.
+   */
+  installComfyUI: (installOptions: InstallOptions) => Promise.resolve(),
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
