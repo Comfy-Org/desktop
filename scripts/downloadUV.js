@@ -25,15 +25,9 @@ const options = {
 }
 
 async function downloadUV() {
-  const baseDownloadURL = `https://github.com/astral-sh/uv/releases/download/${uvVer}/`;
-  const uvDownloaded = fs.existsSync(path.join('./assets', 'uv'));
-  if (!uvDownloaded) {
-      await downloadAndExtract(baseDownloadURL, options[os.platform()]);
-      return;
-  }
   
-  console.log('< UV Folder Exists, Skipping >');
   const allFlag = process.argv[2];
+  const baseDownloadURL = `https://github.com/astral-sh/uv/releases/download/${uvVer}/`;
   if (allFlag)
   {
       if (allFlag === 'all') {
@@ -46,6 +40,14 @@ async function downloadUV() {
           return;
       }
   }
+
+  const uvDownloaded = fs.existsSync(path.join('./assets', 'uv'));
+  if (!uvDownloaded) {
+      await downloadAndExtract(baseDownloadURL, options[os.platform()]);
+      return;
+  }
+  console.log('< UV Folder Exists, Skipping >');
+
 };
 
 async function downloadAndExtract(baseURL, options) {
