@@ -3,6 +3,7 @@ import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 import { getModelConfigPath } from '../config/extra_model_config';
 import { getBasePath } from '../install/resourcePaths';
+import type { SystemPaths } from '../preload';
 
 export class PathHandlers {
   constructor() {}
@@ -23,6 +24,14 @@ export class PathHandlers {
     ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string): void => {
       log.info(`Opening path: ${folderPath}`);
       shell.openPath(folderPath);
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GET_SYSTEM_PATHS, (): SystemPaths => {
+      return {
+        appData: app.getPath('appData'),
+        appPath: app.getAppPath(),
+        defaultInstallPath: app.getPath('documents'),
+      };
     });
   }
 }

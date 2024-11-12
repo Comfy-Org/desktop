@@ -26,6 +26,12 @@ export interface InstallOptions {
   migrationItemIds?: string[];
 }
 
+export interface SystemPaths {
+  appData: string;
+  appPath: string;
+  defaultInstallPath: string;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -164,17 +170,12 @@ const electronAPI = {
   isFirstTimeSetup: (): Promise<boolean> => {
     return ipcRenderer.invoke(IPC_CHANNELS.IS_FIRST_TIME_SETUP);
   },
-  // TODO(robinjhuang): Implement these methods.
-  // Currently, they are mocked.
   /**
    * Get the system paths for the application.
    */
-  getSystemPaths: () =>
-    Promise.resolve({
-      appData: 'C:/Users/username/AppData/Roaming',
-      appPath: 'C:/Program Files/comfyui-electron/resources/app',
-      defaultInstallPath: 'C:/Users/username/comfyui-electron',
-    }),
+  getSystemPaths: (): Promise<SystemPaths> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_SYSTEM_PATHS);
+  },
   /**
    * Validate the install path for the application. Check whether the path is valid
    * and writable. The disk should have enough free space to install the application.
