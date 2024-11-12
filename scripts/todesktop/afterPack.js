@@ -33,6 +33,8 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     // Remove other OS's UV
     await fs.rm(path.join(resourcePath, 'uv', 'win'), { recursive: true, force: true });
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
+    await fs.chmod(path.join(resourcePath, 'uv', 'macos', 'uv'), '755');
+    await fs.chmod(path.join(resourcePath, 'uv', 'macos', 'uvx'), '755');
    
   }
 
