@@ -15,22 +15,43 @@ We publish updates in line with the stable releases of ComfyUI.
 
 The app uses our electron update server hosted at https://updater.comfy.org.
 
-## ComfyUI Files
+## Application Files
 
-ComfyUI files like models, inputs, outputs, custom_nodes and saved workflows are placed here:
+### Electron 
 
-Windows: `%USERPROFILE%/ComfyUI/...`
+The desktop application comes bundled with:
+- ComfyUI source code
+- ComfyUI-Manager
+- Electron, Chromium binaries, and node modules
+  
+These are placed here by the installer:
 
-Mac: `~/Library/Application Support/ComfyUI`
+On Windows: `%APPDATA%\Roaming\ComfyUI` and `%APPDATA%\Local\comfyui-electron-updater`
 
-## Logs
+On macOS: `~/Library/Application Support/ComfyUI`
 
-We use electron-log to log everything to a local file.
+On Linux: `~/.config/ComfyUI`
+
+### ComfyUI
+
+You will also be asked to select a location to store ComfyUI files like models, inputs, outputs, custom_nodes and saved workflows.
+
+An `extra_model_config.yaml` is created to store the paths to this directory. You can edit it to add additional model paths that you want to use.
+
+On Windows: `%APPDATA%\Roaming\ComfyUI\extra_model_config.yaml`
+
+On macOS: `~/Library/Application Support/ComfyUI/extra_model_config.yaml`
+
+On Linux: `~/.config/ComfyUI/extra_model_config.yaml`
+
+### Logs
+
+We use electron-log to log everything. Electron main process logs are in `main.log`, and ComfyUI server logs are in `comfyui_<date>.log`.
 
 ```
-on Linux: ~/.config/{app name}/logs/main.log
-on macOS: ~/Library/Logs/{app name}/main.log
-on Windows: %USERPROFILE%\AppData\Roaming\{app name}\logs\main.log
+on Linux: ~/.config/{app name}/logs
+on macOS: ~/Library/Logs/{app name}
+on Windows: %AppData%\Roaming\{app name}\logs
 ```
 
 # Development
