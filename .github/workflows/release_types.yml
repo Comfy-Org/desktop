@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - "package.json"
+      - 'package.json'
 
 jobs:
   publish:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
-          registry-url: "https://registry.npmjs.org"
+          registry-url: 'https://registry.npmjs.org'
       - run: yarn install
       - run: yarn run vite:types
       - run: yarn install && yarn npm publish --access public
