@@ -63,9 +63,6 @@ const electronAPI = {
   reinstall: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.REINSTALL);
   },
-  onShowSelectDirectory: (callback: () => void) => {
-    ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());
-  },
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);
   },

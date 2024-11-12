@@ -562,7 +562,6 @@ async function handleFirstTimeSetup() {
   const firstTimeSetup = isFirstTimeSetup();
   log.info('First time setup:', firstTimeSetup);
   if (firstTimeSetup) {
-    appWindow.send(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
     const selectedDirectory = '';
     const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
 

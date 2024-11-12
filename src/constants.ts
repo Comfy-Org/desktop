@@ -5,7 +5,6 @@ export const IPC_CHANNELS = {
   RESTART_APP: 'restart-app',
   REINSTALL: 'reinstall',
   LOG_MESSAGE: 'log-message',
-  SHOW_SELECT_DIRECTORY: 'show-select-directory',
   OPEN_DIALOG: 'open-dialog',
   FIRST_TIME_SETUP_COMPLETE: 'first-time-setup-complete',
   DEFAULT_INSTALL_LOCATION: 'default-install-location',

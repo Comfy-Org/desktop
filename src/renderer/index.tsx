@@ -42,11 +42,6 @@ const Home: React.FC = () => {
     log.info(`Sending ready event from renderer`);
     electronAPI.sendReady();
 
-    electronAPI.onShowSelectDirectory(() => {
-      log.info('Showing select directory');
-      setShowSetup(true);
-    });
-
     electronAPI.onFirstTimeSetupComplete(() => {
       log.info('First time setup complete');
       setShowSetup(false);
