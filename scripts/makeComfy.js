@@ -1,5 +1,6 @@
 const { execSync } = require('child_process');
 const pkg = require('../package.json');
+const fs = require('fs');
 
 function makeAssets(gpuFlag) {
   const baseCommand = [
@@ -14,12 +15,17 @@ function makeAssets(gpuFlag) {
     'yarn run make:frontend'
   ].join(' ');
 
-  // Special case for macOS which needs additional checks
   if (gpuFlag === '--m-series') {
-    return execSync(`${baseCommand} && ../scripts/checkAssetsMacos.sh python`, { stdio: 'inherit' });
+    execSync(`${baseCommand} && ../scripts/checkAssetsMacos.sh python`, { stdio: 'inherit' });
+  } else {
+    execSync(baseCommand, { stdio: 'inherit' });
   }
-
-  execSync(baseCommand, { stdio: 'inherit' });
+  
+  // Rename custom_nodes/ComfyUI-Manager to manager-core
+  if (!fs.existsSync('assets/ComfyUI/custom_nodes/ComfyUI-Manager')) {
+    throw new Error('ComfyUI-Manager not found');
+  }
+  fs.renameSync('./assets/ComfyUI/custom_nodes/ComfyUI-Manager', './assets/ComfyUI/custom_nodes/manager-core');
 }
 
 // Get GPU flag from command line argument
