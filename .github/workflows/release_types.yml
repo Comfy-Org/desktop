@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: '20.x'
           corepack: true
+          registry-url: 'https://registry.npmjs.org'
       - name: Install dependencies
         run: yarn install
       - name: Build types
