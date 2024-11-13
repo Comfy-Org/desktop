@@ -167,11 +167,8 @@ const electronAPI = {
    * Validate the install path for the application. Check whether the path is valid
    * and writable. The disk should have enough free space to install the application.
    */
-  validateInstallPath: (path: string) => {
-    if (path === 'bad') {
-      return { isValid: false, error: 'Bad path!' };
-    }
-    return { isValid: true };
+  validateInstallPath: (path: string): Promise<{ isValid: boolean; error?: string }> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_INSTALL_PATH, path);
   },
   /**
    * Get the migration items for the application.

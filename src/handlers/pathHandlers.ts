@@ -4,8 +4,12 @@ import log from 'electron-log/main';
 import { getModelConfigPath } from '../config/extra_model_config';
 import { getBasePath } from '../install/resourcePaths';
 import type { SystemPaths } from '../preload';
+import fs from 'fs';
+import checkDiskSpace from 'check-disk-space';
 
 export class PathHandlers {
+  static readonly REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
+
   constructor() {}
 
   registerHandlers() {
@@ -33,5 +37,45 @@ export class PathHandlers {
         defaultInstallPath: app.getPath('documents'),
       };
     });
+
+    /**
+     * Validate the install path for the application. Check whether the path is valid
+     * and writable. The disk should have enough free space to install the application.
+     */
+    ipcMain.handle(
+      IPC_CHANNELS.VALIDATE_INSTALL_PATH,
+      async (event, path: string): Promise<{ isValid: boolean; error?: string }> => {
+        try {
+          // Check if path exists
+          if (!fs.existsSync(path)) {
+            return { isValid: false, error: 'Path does not exist' };
+          }
+
+          // Check if path is writable
+          try {
+            fs.accessSync(path, fs.constants.W_OK);
+          } catch (err) {
+            return { isValid: false, error: 'Path is not writable' };
+          }
+
+          // Check available disk space (require at least 10GB free)
+          const space = await checkDiskSpace(path);
+          if (space.free < PathHandlers.REQUIRED_SPACE) {
+            return {
+              isValid: false,
+              error: 'Insufficient disk space. At least 10GB of free space is required.',
+            };
+          }
+
+          return { isValid: true };
+        } catch (error) {
+          log.error('Error validating install path:', error);
+          return {
+            isValid: false,
+            error: 'Failed to validate install path: ' + error,
+          };
+        }
+      }
+    );
   }
 }

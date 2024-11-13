@@ -24,6 +24,7 @@ export const IPC_CHANNELS = {
   OPEN_FORUM: 'open-forum',
   IS_FIRST_TIME_SETUP: 'is-first-time-setup',
   GET_SYSTEM_PATHS: 'get-system-paths',
+  VALIDATE_INSTALL_PATH: 'validate-install-path',
 } as const;
 
 export enum ProgressStatus {
