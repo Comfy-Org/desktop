@@ -46,7 +46,8 @@
     "todesktop:beforeInstall": "./scripts/todesktop/beforeInstall.js",
     "typescript": "yarn run tsc",
     "vite:compile": "vite build --config vite.renderer.config.ts && vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts",
-    "vite:types": "vite build --config vite.types.config.ts && node scripts/prepareTypes.js"
+    "vite:types": "vite build --config vite.types.config.ts && node scripts/prepareTypes.js",
+    "release:types": "node scripts/releaseTypes.js"
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
