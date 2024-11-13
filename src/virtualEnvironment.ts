@@ -12,15 +12,25 @@ export class VirtualEnvironment {
   readonly requirementsCompiledPath: string;
   readonly cacheDir: string;
   readonly pythonInterpreterPath: string;
+  readonly comfyUIRequirementsPath: string;
+  readonly comfyUIManagerRequirementsPath: string;
 
   constructor(venvPath: string, pythonVersion: string = '3.12.4') {
     this.venvRootPath = venvPath;
     this.venvPath = path.join(venvPath, '.venv'); // uv defaults to .venv
+    const resourcesPath = app.isPackaged ? path.join(process.resourcesPath) : path.join(app.getAppPath(), 'assets');
+    this.comfyUIRequirementsPath = path.join(resourcesPath, 'ComfyUI', 'requirements.txt');
+    this.comfyUIManagerRequirementsPath = path.join(
+      resourcesPath,
+      'ComfyUI',
+      'custom_nodes',
+      'manager-core',
+      'requirements.txt'
+    );
+
     this.pythonVersion = pythonVersion;
     this.cacheDir = path.join(venvPath, 'uv-cache');
-    this.requirementsCompiledPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'requirements.compiled')
-      : path.join(path.join(app.getAppPath(), 'assets'), 'requirements.compiled');
+    this.requirementsCompiledPath = path.join(resourcesPath, 'requirements.compiled');
     this.pythonInterpreterPath =
       process.platform === 'win32'
         ? path.join(this.venvPath, 'Scripts', 'python.exe')
@@ -141,7 +151,35 @@ export class VirtualEnvironment {
 
     const { exitCode } = await this.runUvCommandAsync(installCmd);
     if (exitCode !== 0) {
-      throw new Error(`Failed to install requirements: exit code ${exitCode}`);
+      log.error(
+        `Failed to install requirements.compiled: exit code ${exitCode}. Falling back to installing requirements.txt`
+      );
+
+      await this.installComfyUIRequirements();
+      await this.installComfyUIManagerRequirements();
+    }
+  }
+
+  private async installComfyUIRequirements(): Promise<void> {
+    log.info(`Installing ComfyUI requirements from ${this.comfyUIRequirementsPath}`);
+    const installCmd = ['pip', 'install', '-r', this.comfyUIRequirementsPath];
+
+    if (process.platform === 'win32') {
+      installCmd.push('--index-url', 'https://download.pytorch.org/whl/cu121');
+    }
+
+    const { exitCode } = await this.runUvCommandAsync(installCmd);
+    if (exitCode !== 0) {
+      throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
+    }
+  }
+
+  private async installComfyUIManagerRequirements(): Promise<void> {
+    log.info(`Installing ComfyUIManager requirements from ${this.comfyUIManagerRequirementsPath}`);
+    const installCmd = ['pip', 'install', '-r', this.comfyUIManagerRequirementsPath];
+    const { exitCode } = await this.runUvCommandAsync(installCmd);
+    if (exitCode !== 0) {
+      throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
     }
   }
 
