@@ -27,6 +27,7 @@ export const IPC_CHANNELS = {
   VALIDATE_INSTALL_PATH: 'validate-install-path',
   VALIDATE_COMFYUI_SOURCE: 'validate-comfyui-source',
   SHOW_DIRECTORY_PICKER: 'show-directory-picker',
+  INSTALL_COMFYUI: 'install-comfyui',
 } as const;
 
 export enum ProgressStatus {

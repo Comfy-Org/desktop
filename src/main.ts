@@ -22,6 +22,7 @@ import { AppWindow } from './main-process/appWindow';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
 import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
+import { InstallOptions } from './preload';
 
 dotenv.config();
 
@@ -164,7 +165,15 @@ if (!gotTheLock) {
       ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
         return isFirstTimeSetup();
       });
-      await handleFirstTimeSetup();
+      ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
+        // Non-blocking call. The renderer will navigate to /server-start and show install progress.
+        handleInstall(installOptions);
+      });
+
+      // Loading renderer when all handlers are registered to ensure all event listeners are set up.
+      const urlPath = isFirstTimeSetup() ? 'welcome' : 'server-start';
+      await appWindow.loadRenderer(urlPath);
+
       const basePath = await getBasePath();
       const pythonInstallPath = await getPythonInstallPath();
       if (!basePath || !pythonInstallPath) {
@@ -558,16 +567,12 @@ function isFirstTimeSetup(): boolean {
   return !fs.existsSync(extraModelsConfigPath);
 }
 
-async function handleFirstTimeSetup() {
-  const firstTimeSetup = isFirstTimeSetup();
-  log.info('First time setup:', firstTimeSetup);
-  if (firstTimeSetup) {
-    const selectedDirectory = '';
-    const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
+async function handleInstall(installOptions: InstallOptions) {
+  const selectedDirectory = '';
+  const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
 
-    const modelConfigPath = getModelConfigPath();
-    await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
-  }
+  const modelConfigPath = getModelConfigPath();
+  await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
 }
 
 /**

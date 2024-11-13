@@ -179,7 +179,9 @@ const electronAPI = {
   /**
    * Install ComfyUI with given options.
    */
-  installComfyUI: (installOptions: InstallOptions) => Promise.resolve(),
+  installComfyUI: (installOptions: InstallOptions) => {
+    ipcRenderer.send(IPC_CHANNELS.INSTALL_COMFYUI, installOptions);
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
