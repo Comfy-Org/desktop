@@ -17,6 +17,9 @@ try {
   const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'))
   const newVersion = packageJson.version
 
+  // Commit the version bump
+  execSync(`git commit -am "Bump version ${newVersion}"`, { stdio: 'inherit' })
+
   // Create the PR
   console.log('Creating PR...')
   execSync(
