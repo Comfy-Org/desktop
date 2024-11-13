@@ -1,4 +1,4 @@
-import { app, ipcMain, shell } from 'electron';
+import { app, dialog, ipcMain, shell } from 'electron';
 import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 import { getModelConfigPath } from '../config/extra_model_config';
@@ -91,5 +91,12 @@ export class PathHandlers {
         };
       }
     );
+
+    ipcMain.handle(IPC_CHANNELS.SHOW_DIRECTORY_PICKER, async (): Promise<string> => {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory'],
+      });
+      return result.filePaths[0];
+    });
   }
 }

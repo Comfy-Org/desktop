@@ -173,7 +173,9 @@ const electronAPI = {
   /**
    * Show a directory picker dialog and return the selected path.
    */
-  showDirectoryPicker: () => Promise.resolve('C:/Users/username/comfyui-electron/1'),
+  showDirectoryPicker: (): Promise<string> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.SHOW_DIRECTORY_PICKER);
+  },
   /**
    * Install ComfyUI with given options.
    */
