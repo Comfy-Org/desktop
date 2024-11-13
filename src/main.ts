@@ -175,8 +175,7 @@ if (!gotTheLock) {
       await appWindow.loadRenderer(urlPath);
 
       const basePath = await getBasePath();
-      const pythonInstallPath = await getPythonInstallPath();
-      if (!basePath || !pythonInstallPath) {
+      if (!basePath) {
         log.error('ERROR: Base path not found!');
         sendProgressUpdate(ProgressStatus.ERROR_INSTALL_PATH);
         return;
@@ -194,6 +193,7 @@ if (!gotTheLock) {
       if (!useExternalServer) {
         sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
         const appResourcesPath = await getAppResourcesPath();
+        const pythonInstallPath = (await getPythonInstallPath())!;
         const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
         await pythonEnvironment.setup();
         const modelConfigPath = getModelConfigPath();
