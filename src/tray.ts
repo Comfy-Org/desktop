@@ -5,7 +5,7 @@ import log from 'electron-log/main';
 import { PythonEnvironment } from './pythonEnvironment';
 import { AppWindow } from './main-process/appWindow';
 
-export function SetupTray(mainView: AppWindow, reinstall: () => void, pythonEnvironment: PythonEnvironment): Tray {
+export function SetupTray(mainView: AppWindow, pythonEnvironment: PythonEnvironment): Tray {
   // Set icon for the tray
   // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
   const trayImage = path.join(
@@ -49,11 +49,6 @@ export function SetupTray(mainView: AppWindow, reinstall: () => void, pythonEnvi
           app.dock.hide();
         }
       },
-    },
-    { type: 'separator' },
-    {
-      label: 'Reset Install Location',
-      click: () => reinstall(),
     },
     { type: 'separator' },
     {

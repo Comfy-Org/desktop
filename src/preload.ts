@@ -54,6 +54,9 @@ const electronAPI = {
     console.log('Sending restarting app message to main process with custom message: ', customMessage);
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
+  reinstall: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.REINSTALL);
+  },
   onShowSelectDirectory: (callback: () => void) => {
     ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());
   },

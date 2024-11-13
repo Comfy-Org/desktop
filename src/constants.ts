@@ -3,6 +3,7 @@ export const IPC_CHANNELS = {
   IS_PACKAGED: 'is-packaged',
   RENDERER_READY: 'renderer-ready',
   RESTART_APP: 'restart-app',
+  REINSTALL: 'reinstall',
   LOG_MESSAGE: 'log-message',
   SHOW_SELECT_DIRECTORY: 'show-select-directory',
   SELECTED_DIRECTORY: 'selected-directory',

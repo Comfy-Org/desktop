@@ -189,15 +189,7 @@ if (!gotTheLock) {
 
         // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
         const modelConfigPath = getModelConfigPath();
-        SetupTray(
-          appWindow,
-          () => {
-            log.info('Resetting install location');
-            fs.rmSync(modelConfigPath);
-            restartApp();
-          },
-          pythonEnvironment
-        );
+        SetupTray(appWindow, pythonEnvironment);
         sendProgressUpdate(ProgressStatus.STARTING_SERVER);
         await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
       } else {
@@ -220,6 +212,13 @@ if (!gotTheLock) {
         }
       }
     );
+
+    ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
+      log.info('Reinstalling...');
+      const modelConfigPath = getModelConfigPath();
+      fs.rmSync(modelConfigPath);
+      restartApp();
+    });
 
     ipcMain.handle(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, async (_event, { error, extras }): Promise<string | null> => {
       try {
