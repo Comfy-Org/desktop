@@ -71,3 +71,29 @@ export const ELECTRON_BRIDGE_API = 'electronAPI';
 
 export const SENTRY_URL_ENDPOINT =
   'https://942cadba58d247c9cab96f45221aa813@o4507954455314432.ingest.us.sentry.io/4508007940685824';
+
+export interface MigrationItem {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export const MigrationItems: MigrationItem[] = [
+  {
+    id: 'user_files',
+    label: 'User Files',
+    description: 'Settings and user-created workflows',
+  },
+  {
+    id: 'models',
+    label: 'Models',
+    description: 'Reference model files from existing ComfyUI installations. (No copy)',
+  },
+  // TODO: Decide whether we want to auto-migrate custom nodes, and install their dependencies.
+  // huchenlei: This is a very essential thing for migration experience.
+  // {
+  //   id: 'custom_nodes',
+  //   label: 'Custom Nodes',
+  //   description: 'Reference custom node files from existing ComfyUI installations. (No copy)',
+  // },
+] as const;

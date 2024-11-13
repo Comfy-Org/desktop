@@ -12,12 +12,6 @@ const openFolder = async (folderPath: string) => {
   ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
 };
 
-export interface MigrationItem {
-  id: string;
-  label: string;
-  description: string;
-}
-
 export interface InstallOptions {
   installPath: string;
   autoUpdate: boolean;
@@ -170,17 +164,6 @@ const electronAPI = {
   validateInstallPath: (path: string): Promise<{ isValid: boolean; error?: string }> => {
     return ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_INSTALL_PATH, path);
   },
-  /**
-   * Get the migration items for the application.
-   */
-  migrationItems: (): Promise<MigrationItem[]> =>
-    Promise.resolve([
-      {
-        id: 'user_files',
-        label: 'User Files',
-        description: 'Settings and user-created workflows',
-      },
-    ]),
   /**
    * Validate whether the given path is a valid ComfyUI source path.
    */
