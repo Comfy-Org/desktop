@@ -1,5 +1,5 @@
-import { execSync } from 'child_process'
-import { readFileSync } from 'fs'
+const { execSync } = require('child_process')
+const { readFileSync } = require('fs')
 
 try {
   // Create a new branch with version-bump prefix
