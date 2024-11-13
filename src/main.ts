@@ -2,14 +2,14 @@ import { spawn, ChildProcess } from 'node:child_process';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
-import { SetupTray } from './tray';
+import { setupTray } from './tray';
 import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
-import { createModelConfigFiles, getModelConfigPath, readBasePathFromConfig } from './config/extra_model_config';
+import { createModelConfigFiles, getModelConfigPath } from './config/extra_model_config';
 import todesktop from '@todesktop/runtime';
 import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
@@ -148,6 +148,7 @@ if (!gotTheLock) {
 
     try {
       createWindow();
+      setupTray(appWindow);
       new PathHandlers().registerHandlers();
       new AppInfoHandlers().registerHandlers();
 
@@ -189,18 +190,7 @@ if (!gotTheLock) {
         sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
         const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
         await pythonEnvironment.setup();
-
-        // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
         const modelConfigPath = getModelConfigPath();
-        SetupTray(
-          appWindow,
-          () => {
-            log.info('Resetting install location');
-            fs.rmSync(modelConfigPath);
-            restartApp();
-          },
-          pythonEnvironment
-        );
         sendProgressUpdate(ProgressStatus.STARTING_SERVER);
         await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
       } else {
@@ -223,6 +213,13 @@ if (!gotTheLock) {
         }
       }
     );
+
+    ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
+      log.info('Reinstalling...');
+      const modelConfigPath = getModelConfigPath();
+      fs.rmSync(modelConfigPath);
+      restartApp();
+    });
 
     ipcMain.handle(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, async (_event, { error, extras }): Promise<string | null> => {
       try {
