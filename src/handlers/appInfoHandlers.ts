@@ -15,9 +15,6 @@ export class AppInfoHandlers {
       return app.getVersion();
     });
 
-    ipcMain.handle(IPC_CHANNELS.OPEN_FORUM, () => {
-      shell.openExternal('https://forum.comfy.org');
-    });
     ipcMain.handle(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, () => app.getPath('documents'));
   }
 }

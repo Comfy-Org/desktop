@@ -19,7 +19,6 @@ describe('AppInfoHandlers', () => {
     const expectedChannels = [
       IPC_CHANNELS.IS_PACKAGED,
       IPC_CHANNELS.GET_ELECTRON_VERSION,
-      IPC_CHANNELS.OPEN_FORUM,
       IPC_CHANNELS.DEFAULT_INSTALL_LOCATION,
     ];
 

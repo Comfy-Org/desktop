@@ -21,7 +21,6 @@ export const IPC_CHANNELS = {
   OPEN_PATH: 'open-path',
   OPEN_LOGS_PATH: 'open-logs-path',
   OPEN_DEV_TOOLS: 'open-dev-tools',
-  OPEN_FORUM: 'open-forum',
   IS_FIRST_TIME_SETUP: 'is-first-time-setup',
   GET_SYSTEM_PATHS: 'get-system-paths',
   VALIDATE_INSTALL_PATH: 'validate-install-path',
