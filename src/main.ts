@@ -554,6 +554,7 @@ function findAvailablePort(startPort: number, endPort: number): Promise<number> 
  */
 function isFirstTimeSetup(): boolean {
   const extraModelsConfigPath = getModelConfigPath();
+  log.info(`Checking if first time setup is complete. Extra models config path: ${extraModelsConfigPath}`);
   return !fs.existsSync(extraModelsConfigPath);
 }
 

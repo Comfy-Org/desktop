@@ -1,15 +1,13 @@
 import type { ConfigEnv, UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
-import { getBuildConfig, getBuildDefine, external, pluginHotRestart } from './vite.base.config';
+import { getBuildConfig, external, pluginHotRestart } from './vite.base.config';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { version } from './package.json';
-import { resolve } from 'node:path';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
-  const forgeEnv = env as ConfigEnv<'build'>;
-  const { forgeConfigSelf } = forgeEnv;
-  //const define = getBuildDefine(forgeEnv);
+  const forgeEnv = env as ConfigEnv;
+
   const config: UserConfig = {
     build: {
       outDir: '.vite/build',
@@ -22,6 +20,7 @@ export default defineConfig((env) => {
         external,
       },
       sourcemap: true,
+      minify: false,
     },
     plugins: [
       pluginHotRestart('restart'),
