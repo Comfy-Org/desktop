@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+    {
+      "label": "Start Vite Dev Server",
+      "type": "shell",
+      "command": "yarn start",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^.*$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "App ready.*"
+        }
+      }
+    }
+  ]
+}

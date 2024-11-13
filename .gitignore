@@ -103,6 +103,8 @@ comfyui
 *.code-workspace
 .history
 .vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 
 # built assets
 assets/ComfyUI

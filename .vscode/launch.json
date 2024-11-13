@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Main Process",
+      "type": "node",
+      "request": "attach",
+      "port": 9223,
+      "cwd": "${workspaceFolder}",
+      "outputCapture": "std",
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/src/**",
+        "${workspaceFolder}/.vite/**",
+        "!**/node_modules/**"
+      ],
+      "preLaunchTask": "Start Vite Dev Server",
+      "autoAttachChildProcesses": true,
+      "env": {
+        "ELECTRON_ENABLE_LOGGING": "true",
+        "ELECTRON_ENABLE_STACK_DUMPING": "true",
+        "NODE_DEBUG": "true"
+      },
+      "outFiles": [
+        "${workspaceFolder}/.vite/**/*.js",
+        "${workspaceFolder}/.vite/**/*.js.map"
+      ]
+    }
+  ]
+}

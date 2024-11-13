@@ -43,7 +43,7 @@ function setupMainPackageWatcher({ resolvedUrls }) {
 					}
 
 					/** Spawn new electron process */
-					electronApp = spawn(String(electronPath), ['.'], {
+					electronApp = spawn(String(electronPath), ['--inspect=9223', '.'], {
 						stdio: 'inherit',
 					});
 
