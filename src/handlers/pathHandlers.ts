@@ -6,6 +6,7 @@ import { getBasePath } from '../install/resourcePaths';
 import type { SystemPaths } from '../preload';
 import fs from 'fs';
 import checkDiskSpace from 'check-disk-space';
+import { ComfyConfigManager } from '../config/comfyConfigManager';
 
 export class PathHandlers {
   static readonly REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
@@ -75,6 +76,19 @@ export class PathHandlers {
             error: 'Failed to validate install path: ' + error,
           };
         }
+      }
+    );
+    /**
+     * Validate whether the given path is a valid ComfyUI source path.
+     */
+    ipcMain.handle(
+      IPC_CHANNELS.VALIDATE_COMFYUI_SOURCE,
+      async (event, path: string): Promise<{ isValid: boolean; error?: string }> => {
+        const isValid = ComfyConfigManager.isComfyUIDirectory(path);
+        return {
+          isValid,
+          error: isValid ? undefined : 'Invalid ComfyUI source path',
+        };
       }
     );
   }

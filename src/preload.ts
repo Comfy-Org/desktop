@@ -167,11 +167,8 @@ const electronAPI = {
   /**
    * Validate whether the given path is a valid ComfyUI source path.
    */
-  validateComfyUISource: (path: string) => {
-    if (path === 'bad') {
-      return { isValid: false, error: 'Bad path!' };
-    }
-    return { isValid: true };
+  validateComfyUISource: (path: string): Promise<{ isValid: boolean; error?: string }> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_COMFYUI_SOURCE, path);
   },
   /**
    * Show a directory picker dialog and return the selected path.

@@ -25,6 +25,7 @@ export const IPC_CHANNELS = {
   IS_FIRST_TIME_SETUP: 'is-first-time-setup',
   GET_SYSTEM_PATHS: 'get-system-paths',
   VALIDATE_INSTALL_PATH: 'validate-install-path',
+  VALIDATE_COMFYUI_SOURCE: 'validate-comfyui-source',
 } as const;
 
 export enum ProgressStatus {
