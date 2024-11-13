@@ -2,7 +2,7 @@ import { spawn, ChildProcess } from 'node:child_process';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
-import { SetupTray } from './tray';
+import { setupTray } from './tray';
 import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
@@ -147,6 +147,7 @@ if (!gotTheLock) {
 
     try {
       createWindow();
+      setupTray(appWindow);
       new PathHandlers().registerHandlers();
       new AppInfoHandlers().registerHandlers();
 
@@ -189,7 +190,6 @@ if (!gotTheLock) {
 
         // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
         const modelConfigPath = getModelConfigPath();
-        SetupTray(appWindow, pythonEnvironment);
         sendProgressUpdate(ProgressStatus.STARTING_SERVER);
         await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
       } else {
