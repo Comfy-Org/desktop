@@ -106,9 +106,11 @@ export class AppWindow {
   }
 
   public async loadRenderer(urlPath: string = ''): Promise<void> {
-    if (process.env.VITE_DEV_SERVER_URL) {
-      log.info('Loading Vite Dev Server');
-      await this.window.loadURL(process.env.VITE_DEV_SERVER_URL + '/' + urlPath);
+    if (process.env.DEV_SERVER_URL) {
+      const url = `${process.env.DEV_SERVER_URL}/${urlPath}`;
+
+      log.info(`Loading development server ${url}`);
+      await this.window.loadURL(url);
       this.window.webContents.openDevTools();
     } else {
       const appResourcesPath = await getAppResourcesPath();

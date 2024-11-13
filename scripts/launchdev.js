@@ -11,12 +11,8 @@ const logLevel = 'warn'
 /**
  * Setup watcher for `main` package
  * On file changed it totally re-launch electron app.
- * @param {import('vite').ViteDevServer} watchServer Renderer watch server instance.
- * Needs to set up `VITE_DEV_SERVER_URL` environment variable from {@link import('vite').ViteDevServer.resolvedUrls}
  */
-function setupMainPackageWatcher({ resolvedUrls }) {
-	process.env.VITE_DEV_SERVER_URL = resolvedUrls.local[0];
-
+function setupMainPackageWatcher() {
 	/** @type {ChildProcess | null} */
 	let electronApp = null;
 
