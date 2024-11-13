@@ -5,7 +5,7 @@ import { getModelConfigPath } from '../config/extra_model_config';
 import { getBasePath } from '../install/resourcePaths';
 import type { SystemPaths } from '../preload';
 import fs from 'fs';
-import checkDiskSpace from 'check-disk-space';
+import si from 'systeminformation';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 
 export class PathHandlers {
@@ -60,8 +60,9 @@ export class PathHandlers {
           }
 
           // Check available disk space (require at least 10GB free)
-          const space = await checkDiskSpace(path);
-          if (space.free < PathHandlers.REQUIRED_SPACE) {
+          const disks = await si.fsSize();
+          const disk = disks.find((disk) => path.startsWith(disk.mount));
+          if (disk && disk.available < PathHandlers.REQUIRED_SPACE) {
             return {
               isValid: false,
               error: 'Insufficient disk space. At least 10GB of free space is required.',
