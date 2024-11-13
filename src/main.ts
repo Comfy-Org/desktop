@@ -187,8 +187,6 @@ if (!gotTheLock) {
         const appResourcesPath = await getAppResourcesPath();
         const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
         await pythonEnvironment.setup();
-
-        // TODO: Make tray setup more flexible here as not all actions depend on the python environment.
         const modelConfigPath = getModelConfigPath();
         sendProgressUpdate(ProgressStatus.STARTING_SERVER);
         await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
