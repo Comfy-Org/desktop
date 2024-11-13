@@ -14,7 +14,5 @@ export class AppInfoHandlers {
     ipcMain.handle(IPC_CHANNELS.GET_ELECTRON_VERSION, () => {
       return app.getVersion();
     });
-
-    ipcMain.handle(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION, () => app.getPath('documents'));
   }
 }

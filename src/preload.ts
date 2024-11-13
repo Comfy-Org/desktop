@@ -60,9 +60,6 @@ const electronAPI = {
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);
   },
-  getDefaultInstallLocation: (): Promise<string> => {
-    return ipcRenderer.invoke(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION);
-  },
   /**
    * Various paths that are useful to the renderer.
    * - Base path: The base path of the application.
