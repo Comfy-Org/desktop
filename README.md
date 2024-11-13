@@ -1,5 +1,7 @@
 # comfyui-electron
 
+[![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
+
 # Overview
 
 This electron app is the simplest way to use [ComfyUI](https://github.com/comfyanonymous/ComfyUI) comes bundled with a few things:

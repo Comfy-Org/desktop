@@ -13,4 +13,9 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   verbose: true,
+  collectCoverage: true,
+  coverageReporters: [
+    "text",
+    "cobertura"
+  ]
 };
