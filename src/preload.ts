@@ -1,6 +1,6 @@
-import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus } from './constants';
-import { DownloadStatus } from './models/DownloadManager';
+import { DownloadState, DownloadStatus } from './models/DownloadManager';
 import path from 'node:path';
 
 /**
@@ -137,7 +137,7 @@ const electronAPI = {
     deleteModel: (filename: string, path: string): Promise<boolean> => {
       return ipcRenderer.invoke(IPC_CHANNELS.DELETE_MODEL, { filename, path });
     },
-    getAllDownloads: (): Promise<DownloadItem[]> => {
+    getAllDownloads: (): Promise<DownloadState[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);
     },
   },

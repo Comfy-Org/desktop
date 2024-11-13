@@ -5,7 +5,7 @@ import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 import { AppWindow } from '../main-process/appWindow';
 
-interface Download {
+export interface Download {
   url: string;
   filename: string;
   tempPath: string; // Temporary filename until the download is complete.
@@ -21,7 +21,7 @@ export enum DownloadStatus {
   ERROR = 'error',
   CANCELLED = 'cancelled',
 }
-interface DownloadState {
+export interface DownloadState {
   url: string;
   filename: string;
   state: DownloadStatus;
