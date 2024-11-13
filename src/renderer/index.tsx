@@ -41,11 +41,6 @@ const Home: React.FC = () => {
 
     log.info(`Sending ready event from renderer`);
     electronAPI.sendReady();
-
-    electronAPI.onFirstTimeSetupComplete(() => {
-      log.info('First time setup complete');
-      setShowSetup(false);
-    });
   }, []);
 
   useEffect(() => {

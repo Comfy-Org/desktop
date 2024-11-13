@@ -66,9 +66,6 @@ const electronAPI = {
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);
   },
-  onFirstTimeSetupComplete: (callback: () => void) => {
-    ipcRenderer.on(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, () => callback());
-  },
   getDefaultInstallLocation: (): Promise<string> => {
     return ipcRenderer.invoke(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION);
   },

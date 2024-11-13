@@ -567,8 +567,6 @@ async function handleFirstTimeSetup() {
 
     const modelConfigPath = getModelConfigPath();
     await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
-  } else {
-    appWindow.send(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
   }
 }
 
