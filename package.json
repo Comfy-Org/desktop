@@ -24,7 +24,7 @@
     "clone-settings-extension": "git clone https://github.com/Comfy-Org/DesktopSettingsExtension.git assets/ComfyUI/custom_nodes/DesktopSettingsExtension",
     "download:uv": "node scripts/downloadUV.js",
     "download-frontend": "node scripts/downloadFrontend.js",
-    "make-frontend": "yarn run download:frontend && yarn run clone-settings-extension",
+    "make:frontend": "yarn run download-frontend && yarn run clone-settings-extension",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "lint": "eslint --ext .ts,.tsx .",
