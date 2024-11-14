@@ -41,14 +41,6 @@ const knownModelKeys = [
   'custom_nodes',
 ] as const;
 
-const commonPaths = knownModelKeys.reduce(
-  (acc, key) => {
-    acc[key] = `models/${key}/`;
-    return acc;
-  },
-  {} as Record<string, string>
-);
-
 type ModelPaths = Record<string, string>;
 
 /**
@@ -57,21 +49,22 @@ type ModelPaths = Record<string, string>;
 export class ComfyServerConfig {
   static readonly EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
+  private static readonly commonPaths = this.getBaseModelPathsFromRepoPath('');
   private static readonly configTemplates: Record<string, ModelPaths> = {
     win32: {
       is_default: 'true',
       base_path: '%USERPROFILE%/comfyui-electron',
-      ...commonPaths,
+      ...this.commonPaths,
     },
     darwin: {
       is_default: 'true',
       base_path: '~/Library/Application Support/ComfyUI',
-      ...commonPaths,
+      ...this.commonPaths,
     },
     linux: {
       is_default: 'true',
       base_path: '~/.config/ComfyUI',
-      ...commonPaths,
+      ...this.commonPaths,
     },
   } as const;
 
@@ -140,6 +133,19 @@ export class ComfyServerConfig {
       log.error(`Error reading config file ${configPath}:`, error);
       return null;
     }
+  }
+
+  public static async getConfigFromRepoPath(repoPath: string): Promise<Record<string, ModelPaths>> {
+    const configPath = path.join(repoPath, ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH);
+    const config = (await this.readConfigFile(configPath)) ?? {};
+    return config;
+  }
+
+  public static getBaseModelPathsFromRepoPath(repoPath: string): ModelPaths {
+    return knownModelKeys.reduce((acc, key) => {
+      acc[key] = path.join(repoPath, 'models', key) + path.sep;
+      return acc;
+    }, {} as ModelPaths);
   }
 
   /**
