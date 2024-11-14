@@ -28,58 +28,6 @@ export function getBuildConfig(env: ConfigEnv<'build'>): UserConfig {
   };
 }
 
-export function getDefineKeys(names: string[]) {
-  const define: { [name: string]: VitePluginRuntimeKeys } = {};
-
-  return names.reduce((acc, name) => {
-    const NAME = name.toUpperCase();
-    const keys: VitePluginRuntimeKeys = {
-      VITE_DEV_SERVER_URL: `${NAME}_VITE_DEV_SERVER_URL`,
-      VITE_NAME: `${NAME}_VITE_NAME`,
-    };
-
-    return { ...acc, [name]: keys };
-  }, define);
-}
-
-export function getBuildDefine(env: ConfigEnv<'build'>) {
-  const { command, forgeConfig } = env;
-  const names = forgeConfig.renderer.filter(({ name }) => name != null).map(({ name }) => name!);
-  const defineKeys = getDefineKeys(names);
-  const define = Object.entries(defineKeys).reduce(
-    (acc, [name, keys]) => {
-      const { VITE_DEV_SERVER_URL, VITE_NAME } = keys;
-      const def = {
-        [VITE_DEV_SERVER_URL]: command === 'serve' ? JSON.stringify(process.env[VITE_DEV_SERVER_URL]) : undefined,
-        [VITE_NAME]: JSON.stringify(name),
-      };
-      return { ...acc, ...def };
-    },
-    {} as Record<string, any>
-  );
-
-  return define;
-}
-
-export function pluginExposeRenderer(name: string): Plugin {
-  const { VITE_DEV_SERVER_URL } = getDefineKeys([name])[name];
-
-  return {
-    name: '@electron-forge/plugin-vite:expose-renderer',
-    configureServer(server) {
-      process.viteDevServers ??= {};
-      // Expose server for preload scripts hot reload.
-      process.viteDevServers[name] = server;
-
-      server.httpServer?.once('listening', () => {
-        const addressInfo = server.httpServer!.address() as AddressInfo;
-        // Expose env constant for main process use.
-        process.env[VITE_DEV_SERVER_URL] = `http://localhost:${addressInfo?.port}`;
-      });
-    },
-  };
-}
-
 export function pluginHotRestart(command: 'reload' | 'restart'): Plugin {
   return {
     name: '@electron-forge/plugin-vite:hot-restart',

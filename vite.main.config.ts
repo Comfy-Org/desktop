@@ -39,10 +39,6 @@ export default defineConfig((env) => {
       VITE_NAME: JSON.stringify('COMFY'),
       'process.env.COMFYUI_CPU_ONLY': `"${process.env.COMFYUI_CPU_ONLY}"`,
       'process.env.PUBLISH': `"${process.env.PUBLISH}"`,
-      ...(env.command !== 'build' && {
-        VITE_DEV_SERVER_URL: JSON.stringify('http://localhost:5173/'),
-        MAIN_WINDOW_VITE_DEV_SERVER_URL: JSON.stringify('http://localhost:5173/'),
-      }),
     },
     resolve: {
       // Load the Node.js entry.
