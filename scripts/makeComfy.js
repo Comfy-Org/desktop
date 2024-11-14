@@ -17,11 +17,8 @@ function makeAssets(gpuFlag) {
     'yarn run make:frontend'
   ].join(' ');
 
-  if (gpuFlag === '--m-series') {
-    execSync(`${baseCommand} && ../scripts/checkAssetsMacos.sh python`, { stdio: 'inherit' });
-  } else {
-    execSync(baseCommand, { stdio: 'inherit' });
-  }
+  
+  execSync(baseCommand, { stdio: 'inherit' });
   
   // Rename custom_nodes/ComfyUI-Manager to manager-core
   if (!fs.existsSync('assets/ComfyUI/custom_nodes/ComfyUI-Manager')) {
