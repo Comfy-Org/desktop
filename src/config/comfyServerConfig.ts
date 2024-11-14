@@ -74,10 +74,9 @@ export class ComfyServerConfig {
    * The path to the extra_models_config.yaml file. The config file is used for ComfyUI core to determine search paths
    * for models and custom nodes.
    */
-  public static readonly configPath: string = path.join(
-    app.getPath('userData'),
-    ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH
-  );
+  public static get configPath(): string {
+    return path.join(app.getPath('userData'), ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH);
+  }
 
   /**
    * Get the base config for the current operating system.
