@@ -4,13 +4,55 @@ import yaml from 'yaml';
 import path from 'node:path';
 import { app } from 'electron';
 
-interface ModelPaths {
-  comfyui: {
-    base_path: string;
-    is_default: boolean;
-    [key: string]: string | boolean;
-  };
-}
+const knownModelKeys = [
+  'checkpoints',
+  'classifiers',
+  'clip',
+  'clip_vision',
+  'configs',
+  'controlnet',
+  'diffusers',
+  'diffusion_models',
+  'embeddings',
+  'gligen',
+  'hypernetworks',
+  'loras',
+  'photomaker',
+  'style_models',
+  'unet',
+  'upscale_models',
+  'vae',
+  'vae_approx',
+  // TODO(robinhuang): Remove when we have a better way to specify base model paths.
+  'animatediff_models',
+  'animatediff_motion_lora',
+  'animatediff_video_formats',
+  'ipadapter',
+  'liveportrait',
+  'insightface',
+  'layerstyle',
+  'LLM',
+  'Joy_caption',
+  'sams',
+  'blip',
+  'CogVideo',
+  'xlabs',
+  'instantid',
+  'custom_nodes',
+] as const;
+
+const commonPaths = knownModelKeys.reduce(
+  (acc, key) => {
+    acc[key] = `models/${key}/`;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+type ModelPaths = {
+  base_path: string;
+  [key: string]: string;
+};
 
 /**
  * The ComfyServerConfig class is used to manage the configuration for the ComfyUI server.
@@ -18,63 +60,18 @@ interface ModelPaths {
 export class ComfyServerConfig {
   private static readonly EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
-  private static readonly commonPaths = {
-    is_default: true,
-    checkpoints: 'models/checkpoints/',
-    classifiers: 'models/classifiers/',
-    clip: 'models/clip/',
-    clip_vision: 'models/clip_vision/',
-    configs: 'models/configs/',
-    controlnet: 'models/controlnet/',
-    diffusers: 'models/diffusers/',
-    diffusion_models: 'models/diffusion_models/',
-    embeddings: 'models/embeddings/',
-    gligen: 'models/gligen/',
-    hypernetworks: 'models/hypernetworks/',
-    loras: 'models/loras/',
-    photomaker: 'models/photomaker/',
-    style_models: 'models/style_models/',
-    unet: 'models/unet/',
-    upscale_models: 'models/upscale_models/',
-    vae: 'models/vae/',
-    vae_approx: 'models/vae_approx/',
-    // TODO(robinhuang): Remove when we have a better way to specify base model paths.
-    animatediff_models: 'models/animatediff_models/',
-    animatediff_motion_lora: 'models/animatediff_motion_lora/',
-    animatediff_video_formats: 'models/animatediff_video_formats/',
-    ipadapter: 'models/ipadapter/',
-    liveportrait: 'models/liveportrait/',
-    insightface: 'models/insightface/',
-    layerstyle: 'models/layerstyle/',
-    LLM: 'models/LLM/',
-    Joy_caption: 'models/Joy_caption/',
-    sams: 'models/sams/',
-    blip: 'models/blip/',
-    CogVideo: 'models/CogVideo/',
-    xlabs: 'models/xlabs/',
-    instantid: 'models/instantid/',
-    // End custom node model directories.
-    custom_nodes: 'custom_nodes/',
-  } as const;
-
   private static readonly configTemplates: Record<string, ModelPaths> = {
     win32: {
-      comfyui: {
-        base_path: '%USERPROFILE%/comfyui-electron',
-        ...this.commonPaths,
-      },
+      base_path: '%USERPROFILE%/comfyui-electron',
+      ...commonPaths,
     },
     darwin: {
-      comfyui: {
-        base_path: '~/Library/Application Support/ComfyUI',
-        ...this.commonPaths,
-      },
+      base_path: '~/Library/Application Support/ComfyUI',
+      ...commonPaths,
     },
     linux: {
-      comfyui: {
-        base_path: '~/.config/ComfyUI',
-        ...this.commonPaths,
-      },
+      base_path: '~/.config/ComfyUI',
+      ...commonPaths,
     },
   } as const;
 
@@ -90,7 +87,7 @@ export class ComfyServerConfig {
   /**
    * Get the base config for the current operating system.
    */
-  public static getBaseConfig(): ModelPaths | null {
+  static getBaseConfig(): ModelPaths | null {
     for (const [operatingSystem, modelPathConfig] of Object.entries(this.configTemplates)) {
       if (operatingSystem === process.platform) {
         return modelPathConfig;
@@ -101,22 +98,29 @@ export class ComfyServerConfig {
   /**
    * Generate the content for the extra_model_paths.yaml file.
    */
-  private static generateConfigFileContent(modelPathConfig: ModelPaths): string {
-    const modelConfigYaml = yaml.stringify(modelPathConfig, { lineWidth: -1 });
+  static generateConfigFileContent(modelPathConfig: ModelPaths): string {
+    const modelConfigYaml = yaml.stringify({ comfyui: modelPathConfig }, { lineWidth: -1 });
     return `# ComfyUI extra_model_paths.yaml for ${process.platform}\n${modelConfigYaml}`;
   }
 
-  private static mergeConfig(baseConfig: ModelPaths, customConfig: ModelPaths): ModelPaths {
-    return {
-      ...baseConfig,
-      comfyui: {
-        ...baseConfig.comfyui,
-        ...customConfig.comfyui,
-      },
-    };
+  static mergeConfig(baseConfig: ModelPaths, customConfig: ModelPaths): ModelPaths {
+    const mergedConfig: ModelPaths = { ...baseConfig };
+
+    for (const [key, customPath] of Object.entries(customConfig)) {
+      if (key in baseConfig) {
+        // Concatenate paths if key exists in both configs
+        // Order here matters, as ComfyUI searches for models in the order they are listed.
+        mergedConfig[key] = baseConfig[key] + '\n' + customPath;
+      } else {
+        // Use custom path directly if key only exists in custom config
+        mergedConfig[key] = customPath;
+      }
+    }
+
+    return mergedConfig;
   }
 
-  private static async writeConfigFile(configFilePath: string, content: string): Promise<boolean> {
+  static async writeConfigFile(configFilePath: string, content: string): Promise<boolean> {
     try {
       await fsPromises.writeFile(configFilePath, content, 'utf8');
       log.info(`Created extra_model_paths.yaml at ${configFilePath}`);

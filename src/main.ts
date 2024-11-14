@@ -474,10 +474,7 @@ async function handleInstall(installOptions: InstallOptions) {
   const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(installOptions.installPath);
   const modelConfigPath = ComfyServerConfig.configPath;
   await ComfyServerConfig.createConfigFile(modelConfigPath, {
-    comfyui: {
-      base_path: actualComfyDirectory,
-      is_default: true,
-    },
+    base_path: actualComfyDirectory,
   });
 }
 
