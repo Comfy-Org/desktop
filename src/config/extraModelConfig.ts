@@ -6,7 +6,7 @@ import { app } from 'electron';
 
 export const EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
-interface ModelPaths {
+export interface ModelPaths {
   comfyui: {
     base_path: string;
     is_default: boolean;
@@ -51,7 +51,7 @@ const commonPaths = {
   instantid: 'models/instantid/',
   // End custom node model directories.
   custom_nodes: 'custom_nodes/',
-};
+} as const;
 
 const configTemplates: Record<string, ModelPaths> = {
   win32: {
@@ -72,7 +72,7 @@ const configTemplates: Record<string, ModelPaths> = {
       ...commonPaths,
     },
   },
-};
+} as const;
 
 export function getModelConfigPath(): string {
   return path.join(app.getPath('userData'), EXTRA_MODEL_CONFIG_PATH);
