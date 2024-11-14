@@ -52,11 +52,7 @@ export class VirtualEnvironment {
     log.info(`Using uv at ${this.uvPath}`);
   }
 
-  async exists(): Promise<boolean> {
-    return await pathAccessible(this.venvPath);
-  }
-
-  async create(): Promise<void> {
+  public async create(): Promise<void> {
     try {
       if (await this.exists()) {
         log.info(`Virtual environment already exists at ${this.venvPath}`);
@@ -79,13 +75,50 @@ export class VirtualEnvironment {
       throw error;
     }
   }
+
+  public async installRequirements(): Promise<void> {
+    const installCmd = ['pip', 'install', '-r', this.requirementsCompiledPath, '--index-strategy', 'unsafe-best-match'];
+
+    const { exitCode } = await this.runUvCommandAsync(installCmd);
+    if (exitCode !== 0) {
+      log.error(
+        `Failed to install requirements.compiled: exit code ${exitCode}. Falling back to installing requirements.txt`
+      );
+
+      await this.installComfyUIRequirements();
+      await this.installComfyUIManagerRequirements();
+    }
+  }
+
   /**
-   * Automatically appends uv to the front of every command.
-   * @param command
+   * Runs a python command using the virtual environment's python interpreter.
    * @param args
    * @returns
    */
-  async runUvCommandAsync(args: string[]): Promise<{ exitCode: number | null }> {
+  public runPythonCommand(args: string[]): ChildProcess {
+    const pythonInterpreterPath =
+      process.platform === 'win32'
+        ? path.join(this.venvPath, 'Scripts', 'python.exe')
+        : path.join(this.venvPath, 'bin', 'python');
+
+    return this.runCommand(pythonInterpreterPath, args);
+  }
+
+  /**
+   * Runs a python command using the virtual environment's python interpreter and returns a promise with the exit code.
+   * @param args
+   * @returns
+   */
+  public async runPythonCommandAsync(args: string[]): Promise<{ exitCode: number | null }> {
+    return this.runCommandAsync(this.pythonInterpreterPath, args);
+  }
+
+  /**
+   * Runs a uv command with the virtual environment set to this instance's venv and returns a promise with the exit code.
+   * @param args
+   * @returns
+   */
+  public async runUvCommandAsync(args: string[]): Promise<{ exitCode: number | null }> {
     return new Promise((resolve, reject) => {
       const childProcess = this.runUvCommand(args);
       childProcess.on('close', (code) => {
@@ -98,7 +131,12 @@ export class VirtualEnvironment {
     });
   }
 
-  runUvCommand(args: string[]): ChildProcess {
+  /**
+   * Runs a uv command with the virtual environment set to this instance's venv.
+   * @param args
+   * @returns
+   */
+  public runUvCommand(args: string[]): ChildProcess {
     const childProcess = this.runCommand(this.uvPath, args, {
       UV_CACHE_DIR: this.cacheDir,
       UV_TOOL_DIR: this.cacheDir,
@@ -120,7 +158,7 @@ export class VirtualEnvironment {
     return childProcess;
   }
 
-  runCommand(command: string, args: string[], env?: any): ChildProcess {
+  private runCommand(command: string, args: string[], env?: any): ChildProcess {
     log.info(`Running command: ${command} ${args.join(' ')} in ${this.venvRootPath}`);
     const childProcess: ChildProcess = spawn(command, args, {
       cwd: this.venvRootPath,
@@ -133,7 +171,7 @@ export class VirtualEnvironment {
     return childProcess;
   }
 
-  async runCommandAsync(command: string, args: string[], env?: any): Promise<{ exitCode: number | null }> {
+  private async runCommandAsync(command: string, args: string[], env?: any): Promise<{ exitCode: number | null }> {
     return new Promise((resolve, reject) => {
       const childProcess = this.runCommand(command, args, env);
 
@@ -145,21 +183,6 @@ export class VirtualEnvironment {
         reject(err);
       });
     });
-  }
-
-  //TODO refactor into ComfyEnvironment class.
-  async installRequirements(): Promise<void> {
-    const installCmd = ['pip', 'install', '-r', this.requirementsCompiledPath, '--index-strategy', 'unsafe-best-match'];
-
-    const { exitCode } = await this.runUvCommandAsync(installCmd);
-    if (exitCode !== 0) {
-      log.error(
-        `Failed to install requirements.compiled: exit code ${exitCode}. Falling back to installing requirements.txt`
-      );
-
-      await this.installComfyUIRequirements();
-      await this.installComfyUIManagerRequirements();
-    }
   }
 
   private async installComfyUIRequirements(): Promise<void> {
@@ -185,16 +208,7 @@ export class VirtualEnvironment {
     }
   }
 
-  runPythonCommand(args: string[]): ChildProcess {
-    const pythonInterpreterPath =
-      process.platform === 'win32'
-        ? path.join(this.venvPath, 'Scripts', 'python.exe')
-        : path.join(this.venvPath, 'bin', 'python');
-
-    return this.runCommand(pythonInterpreterPath, args);
-  }
-
-  async runPythonCommandAsync(args: string[]): Promise<{ exitCode: number | null }> {
-    return this.runCommandAsync(this.pythonInterpreterPath, args);
+  private async exists(): Promise<boolean> {
+    return await pathAccessible(this.venvPath);
   }
 }

@@ -341,7 +341,6 @@ const launchPythonServer = async (
 
     log.info(`Starting ComfyUI using port ${port}.`);
 
-    // Launch with python command, since Manager uses the same process to install dependencies.
     comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd);
     const comfyUILog = log.create({ logId: 'comfyui' });
     comfyUILog.transports.file.fileName = 'comfyui.log';
