@@ -11,25 +11,18 @@ import * as net from 'net';
 import { graphics } from 'systeminformation';
 import { createModelConfigFiles, getModelConfigPath } from './config/extra_model_config';
 import todesktop from '@todesktop/runtime';
-import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
 import { getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
-import { VirtualEnvironment } from './virtualEnvironment';
 import dotenv from 'dotenv';
-import todesktop from '@todesktop/runtime';
-import { SetupTray } from './tray';
-import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
-import { VirtualEnvironment } from './virtualEnvironment';
-import { getModelsDirectory } from './utils';
-import { createModelConfigFiles, getModelConfigPath, readBasePathFromConfig } from './config/extra_model_config';
+import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
-import { ComfySettings } from './config/comfySettings';
 import { AppWindow } from './main-process/appWindow';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
 import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { InstallOptions } from './preload';
+import { VirtualEnvironment } from './virtualEnvironment';
 
 dotenv.config();
 
@@ -323,7 +316,7 @@ const launchPythonServer = async (
     // Server has been started outside the app, so attach to it.
     return loadComfyIntoMainWindow();
   }
-
+  rotateLogFiles(app.getPath('logs'), 'comfyui');
   return new Promise<void>(async (resolve, reject) => {
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
     const userDirectoryPath = path.join(basePath, 'user');
@@ -495,11 +488,12 @@ async function serverStart() {
   if (!useExternalServer) {
     sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
     const appResourcesPath = await getAppResourcesPath();
-    const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
-    await pythonEnvironment.setup();
+    const virtualEnvironment = new VirtualEnvironment(basePath);
+    await virtualEnvironment.create();
+    await virtualEnvironment.installRequirements();
     const modelConfigPath = getModelConfigPath();
     sendProgressUpdate(ProgressStatus.STARTING_SERVER);
-    await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
+    await launchPythonServer(virtualEnvironment, appResourcesPath, modelConfigPath, basePath);
   } else {
     sendProgressUpdate(ProgressStatus.READY);
     loadComfyIntoMainWindow();
