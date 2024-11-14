@@ -343,6 +343,17 @@ const launchPythonServer = async (
 
     // Launch with python command, since Manager uses the same process to install dependencies.
     comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd);
+    const comfyUILog = log.create({ logId: 'comfyui' });
+    comfyUILog.transports.file.fileName = 'comfyui.log';
+    comfyServerProcess.stdout?.on('data', (data) => {
+      comfyUILog.info(data.toString());
+      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data.toString());
+    });
+
+    comfyServerProcess.stderr?.on('data', (data) => {
+      comfyUILog.error(data.toString());
+      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data.toString());
+    });
 
     comfyServerProcess.on('error', (err) => {
       log.error(`Failed to start ComfyUI: ${err}`);
@@ -468,6 +479,7 @@ async function handleInstall(installOptions: InstallOptions) {
 }
 
 async function serverStart() {
+  log.info('Server start');
   const basePath = await getBasePath();
   const pythonInstallPath = await getPythonInstallPath();
   if (!basePath || !pythonInstallPath) {

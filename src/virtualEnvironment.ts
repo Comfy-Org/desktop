@@ -99,23 +99,12 @@ export class VirtualEnvironment {
   }
 
   runUvCommand(args: string[]): ChildProcess {
-    return this.runCommand(this.uvPath, args, {
+    const childProcess = this.runCommand(this.uvPath, args, {
       UV_CACHE_DIR: this.cacheDir,
       UV_TOOL_DIR: this.cacheDir,
       UV_TOOL_BIN_DIR: this.cacheDir,
       UV_PYTHON_INSTALL_DIR: this.cacheDir,
       VIRTUAL_ENV: this.venvPath,
-    });
-  }
-
-  runCommand(command: string, args: string[], env?: any): ChildProcess {
-    log.info(`Running command: ${command} ${args.join(' ')} in ${this.venvRootPath}`);
-    const childProcess: ChildProcess = spawn(command, args, {
-      cwd: this.venvRootPath,
-      env: {
-        ...process.env,
-        ...env,
-      },
     });
 
     childProcess.stdout &&
@@ -127,6 +116,19 @@ export class VirtualEnvironment {
       childProcess.stderr.on('data', (data) => {
         log.error(data.toString());
       });
+
+    return childProcess;
+  }
+
+  runCommand(command: string, args: string[], env?: any): ChildProcess {
+    log.info(`Running command: ${command} ${args.join(' ')} in ${this.venvRootPath}`);
+    const childProcess: ChildProcess = spawn(command, args, {
+      cwd: this.venvRootPath,
+      env: {
+        ...process.env,
+        ...env,
+      },
+    });
 
     return childProcess;
   }

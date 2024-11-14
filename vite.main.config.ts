@@ -24,14 +24,16 @@ export default defineConfig((env) => {
     },
     plugins: [
       pluginHotRestart('restart'),
-      sentryVitePlugin({
-        org: 'comfy-org',
-        project: 'electron',
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-        release: {
-          name: version,
-        },
-      }),
+      process.env.NODE_ENV === 'production'
+        ? sentryVitePlugin({
+            org: 'comfy-org',
+            project: 'electron',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            release: {
+              name: version,
+            },
+          })
+        : undefined,
     ],
     define: {
       VITE_NAME: JSON.stringify('COMFY'),

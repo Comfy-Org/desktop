@@ -147,7 +147,7 @@ export class AppWindow {
         const message = this.messageQueue.shift();
         if (message) {
           log.info('Sending queued message ', message.channel);
-          this.send(message.channel, message.data);
+          this.window.webContents.send(message.channel, message.data);
         }
       }
     });
