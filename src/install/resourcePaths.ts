@@ -1,10 +1,10 @@
 import { app } from 'electron';
-import { getModelConfigPath, readBasePathFromConfig } from '../config/extraModelConfig';
+import { ComfyServerConfig } from '../config/comfyServerConfig';
 import path from 'path';
 
 export async function getBasePath(): Promise<string | null> {
-  const modelConfigPath = getModelConfigPath();
-  return readBasePathFromConfig(modelConfigPath);
+  const modelConfigPath = ComfyServerConfig.configPath;
+  return ComfyServerConfig.readBasePathFromConfig(modelConfigPath);
 }
 
 export async function getPythonInstallPath(): Promise<string | null> {
