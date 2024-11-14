@@ -49,27 +49,27 @@ const commonPaths = knownModelKeys.reduce(
   {} as Record<string, string>
 );
 
-type ModelPaths = {
-  base_path: string;
-  [key: string]: string;
-};
+type ModelPaths = Record<string, string>;
 
 /**
  * The ComfyServerConfig class is used to manage the configuration for the ComfyUI server.
  */
 export class ComfyServerConfig {
-  private static readonly EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
+  static readonly EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
   private static readonly configTemplates: Record<string, ModelPaths> = {
     win32: {
+      is_default: 'true',
       base_path: '%USERPROFILE%/comfyui-electron',
       ...commonPaths,
     },
     darwin: {
+      is_default: 'true',
       base_path: '~/Library/Application Support/ComfyUI',
       ...commonPaths,
     },
     linux: {
+      is_default: 'true',
       base_path: '~/.config/ComfyUI',
       ...commonPaths,
     },
@@ -98,8 +98,8 @@ export class ComfyServerConfig {
   /**
    * Generate the content for the extra_model_paths.yaml file.
    */
-  static generateConfigFileContent(modelPathConfig: ModelPaths): string {
-    const modelConfigYaml = yaml.stringify({ comfyui: modelPathConfig }, { lineWidth: -1 });
+  static generateConfigFileContent(modelPathConfigs: Record<string, ModelPaths>): string {
+    const modelConfigYaml = yaml.stringify(modelPathConfigs, { lineWidth: -1 });
     return `# ComfyUI extra_model_paths.yaml for ${process.platform}\n${modelConfigYaml}`;
   }
 
@@ -131,10 +131,28 @@ export class ComfyServerConfig {
     }
   }
 
+  public static async readConfigFile(configPath: string): Promise<Record<string, ModelPaths> | null> {
+    try {
+      const fileContent = await fsPromises.readFile(configPath, 'utf8');
+      const config = yaml.parse(fileContent);
+      return config;
+    } catch (error) {
+      log.error(`Error reading config file ${configPath}:`, error);
+      return null;
+    }
+  }
+
   /**
    * Create the extra_model_paths.yaml file in the given destination path with the given custom config.
+   * @param destinationPath - The path to the destination file.
+   * @param customConfig - The custom config to merge with the base config.
+   * @param extraConfigs - The extra configs such as paths from A1111.
    */
-  public static async createConfigFile(destinationPath: string, customConfig: ModelPaths): Promise<boolean> {
+  public static async createConfigFile(
+    destinationPath: string,
+    customConfig: ModelPaths,
+    extraConfigs: Record<string, ModelPaths>
+  ): Promise<boolean> {
     log.info(`Creating model config files in ${destinationPath}`);
     try {
       const baseConfig = this.getBaseConfig();
@@ -142,7 +160,11 @@ export class ComfyServerConfig {
         log.error('No base config found');
         return false;
       }
-      const configContent = this.generateConfigFileContent(this.mergeConfig(baseConfig, customConfig));
+      const comfyuiConfig = this.mergeConfig(baseConfig, customConfig);
+      const configContent = this.generateConfigFileContent({
+        ...extraConfigs,
+        comfyui: comfyuiConfig,
+      });
       return await this.writeConfigFile(destinationPath, configContent);
     } catch (error) {
       log.error('Error creating model config files:', error);

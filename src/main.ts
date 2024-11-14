@@ -471,11 +471,28 @@ function isFirstTimeSetup(): boolean {
 }
 
 async function handleInstall(installOptions: InstallOptions) {
+  const migrationSource = installOptions.migrationSourcePath;
+  const migrationItemIds = new Set<string>(installOptions.migrationItemIds ?? []);
+
   const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(installOptions.installPath);
-  const modelConfigPath = ComfyServerConfig.configPath;
-  await ComfyServerConfig.createConfigFile(modelConfigPath, {
-    base_path: actualComfyDirectory,
-  });
+
+  const migrationServerConfig =
+    migrationSource && migrationItemIds.has('models')
+      ? ((await ComfyServerConfig.readConfigFile(
+          path.join(migrationSource, ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH)
+        )) ?? {})
+      : {};
+  migrationServerConfig['comfyui'] ??= {};
+  migrationServerConfig['comfyui']['base_path'] = actualComfyDirectory;
+  // Do not migrate custom nodes as we currently don't have a way to install their dependencies.
+  if ('custom_nodes' in migrationServerConfig['comfyui']) {
+    delete migrationServerConfig['comfyui']['custom_nodes'];
+  }
+  await ComfyServerConfig.createConfigFile(
+    ComfyServerConfig.configPath,
+    migrationServerConfig['comfyui'],
+    migrationServerConfig
+  );
 }
 
 async function serverStart() {
