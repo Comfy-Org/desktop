@@ -9,7 +9,7 @@ import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import * as net from 'net';
 import { graphics } from 'systeminformation';
-import { createModelConfigFiles, getModelConfigPath } from './config/extra_model_config';
+import { createModelConfigFiles, getModelConfigPath } from './config/extraModelConfig';
 import todesktop from '@todesktop/runtime';
 import { DownloadManager } from './models/DownloadManager';
 import { getModelsDirectory } from './utils';

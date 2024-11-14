@@ -1,7 +1,7 @@
 import { app, dialog, ipcMain, shell } from 'electron';
 import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
-import { getModelConfigPath } from '../config/extra_model_config';
+import { getModelConfigPath } from '../config/extraModelConfig';
 import { getBasePath } from '../install/resourcePaths';
 import type { SystemPaths } from '../preload';
 import fs from 'fs';
