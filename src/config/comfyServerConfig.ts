@@ -1,6 +1,6 @@
 import * as fsPromises from 'node:fs/promises';
 import log from 'electron-log/main';
-import { stringify, parse } from 'yaml';
+import yaml from 'yaml';
 import path from 'node:path';
 import { app } from 'electron';
 
@@ -12,6 +12,9 @@ interface ModelPaths {
   };
 }
 
+/**
+ * The ComfyServerConfig class is used to manage the configuration for the ComfyUI server.
+ */
 export class ComfyServerConfig {
   private static readonly EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
@@ -84,28 +87,59 @@ export class ComfyServerConfig {
     ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH
   );
 
-  public static async createModelConfigFiles(extraModelConfigPath: string, customBasePath?: string): Promise<boolean> {
-    log.info(`Creating model config files in ${extraModelConfigPath} with base path ${customBasePath}`);
-    try {
-      for (const [platform, config] of Object.entries(this.configTemplates)) {
-        if (platform !== process.platform) {
-          continue;
-        }
-
-        log.info(`Creating model config files for ${platform}`);
-
-        if (customBasePath) {
-          config.comfyui.base_path = customBasePath;
-        }
-
-        const yamlContent = stringify(config, { lineWidth: -1 });
-        const fileContent = `# ComfyUI extra_model_paths.yaml for ${platform}\n${yamlContent}`;
-        await fsPromises.writeFile(extraModelConfigPath, fileContent, 'utf8');
-        log.info(`Created extra_model_paths.yaml at ${extraModelConfigPath}`);
-        return true;
+  /**
+   * Get the base config for the current operating system.
+   */
+  public static getBaseConfig(): ModelPaths | null {
+    for (const [operatingSystem, modelPathConfig] of Object.entries(this.configTemplates)) {
+      if (operatingSystem === process.platform) {
+        return modelPathConfig;
       }
-      log.info(`No model config files created for platform ${process.platform}`);
+    }
+    return null;
+  }
+  /**
+   * Generate the content for the extra_model_paths.yaml file.
+   */
+  private static generateConfigFileContent(modelPathConfig: ModelPaths): string {
+    const modelConfigYaml = yaml.stringify(modelPathConfig, { lineWidth: -1 });
+    return `# ComfyUI extra_model_paths.yaml for ${process.platform}\n${modelConfigYaml}`;
+  }
+
+  private static mergeConfig(baseConfig: ModelPaths, customConfig: ModelPaths): ModelPaths {
+    return {
+      ...baseConfig,
+      comfyui: {
+        ...baseConfig.comfyui,
+        ...customConfig.comfyui,
+      },
+    };
+  }
+
+  private static async writeConfigFile(configFilePath: string, content: string): Promise<boolean> {
+    try {
+      await fsPromises.writeFile(configFilePath, content, 'utf8');
+      log.info(`Created extra_model_paths.yaml at ${configFilePath}`);
+      return true;
+    } catch (error) {
+      log.error('Error writing config file:', error);
       return false;
+    }
+  }
+
+  /**
+   * Create the extra_model_paths.yaml file in the given destination path with the given custom config.
+   */
+  public static async createConfigFile(destinationPath: string, customConfig: ModelPaths): Promise<boolean> {
+    log.info(`Creating model config files in ${destinationPath}`);
+    try {
+      const baseConfig = this.getBaseConfig();
+      if (!baseConfig) {
+        log.error('No base config found');
+        return false;
+      }
+      const configContent = this.generateConfigFileContent(this.mergeConfig(baseConfig, customConfig));
+      return await this.writeConfigFile(destinationPath, configContent);
     } catch (error) {
       log.error('Error creating model config files:', error);
       return false;
@@ -115,7 +149,7 @@ export class ComfyServerConfig {
   public static async readBasePathFromConfig(configPath: string): Promise<string | null> {
     try {
       const fileContent = await fsPromises.readFile(configPath, 'utf8');
-      const config = parse(fileContent);
+      const config = yaml.parse(fileContent);
 
       if (config?.comfyui?.base_path) {
         return config.comfyui.base_path;

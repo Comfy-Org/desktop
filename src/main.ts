@@ -473,7 +473,12 @@ function isFirstTimeSetup(): boolean {
 async function handleInstall(installOptions: InstallOptions) {
   const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(installOptions.installPath);
   const modelConfigPath = ComfyServerConfig.configPath;
-  await ComfyServerConfig.createModelConfigFiles(modelConfigPath, actualComfyDirectory);
+  await ComfyServerConfig.createConfigFile(modelConfigPath, {
+    comfyui: {
+      base_path: actualComfyDirectory,
+      is_default: true,
+    },
+  });
 }
 
 async function serverStart() {
