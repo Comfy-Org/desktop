@@ -340,18 +340,17 @@ const launchPythonServer = async (
     ];
 
     log.info(`Starting ComfyUI using port ${port}.`);
-
-    comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd);
     const comfyUILog = log.create({ logId: 'comfyui' });
     comfyUILog.transports.file.fileName = 'comfyui.log';
-    comfyServerProcess.stdout?.on('data', (data) => {
-      comfyUILog.info(data.toString());
-      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data.toString());
-    });
-
-    comfyServerProcess.stderr?.on('data', (data) => {
-      comfyUILog.error(data.toString());
-      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data.toString());
+    comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd, {
+      onStdout: (data) => {
+        comfyUILog.info(data);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+      onStderr: (data) => {
+        comfyUILog.error(data);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
     });
 
     comfyServerProcess.on('error', (err) => {
@@ -499,9 +498,18 @@ async function serverStart() {
   if (!useExternalServer) {
     sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
     const appResourcesPath = await getAppResourcesPath();
+    appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Creating Python environment...`);
     const virtualEnvironment = new VirtualEnvironment(basePath);
-    await virtualEnvironment.create();
-    await virtualEnvironment.installRequirements();
+    await virtualEnvironment.create({
+      onStdout: (data) => {
+        log.info(data);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+      onStderr: (data) => {
+        log.error(data);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+    });
     const modelConfigPath = getModelConfigPath();
     sendProgressUpdate(ProgressStatus.STARTING_SERVER);
     await launchPythonServer(virtualEnvironment, appResourcesPath, modelConfigPath, basePath);

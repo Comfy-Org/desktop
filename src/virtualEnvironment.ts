@@ -4,6 +4,14 @@ import log from 'electron-log/main';
 import { pathAccessible } from './utils';
 import { app } from 'electron';
 
+type ProcessCallbacks = {
+  onStdout?: (data: string) => void;
+  onStderr?: (data: string) => void;
+};
+
+/**
+ * Manages a virtual Python environment using uv.
+ */
 export class VirtualEnvironment {
   readonly venvRootPath: string;
   readonly venvPath: string;
@@ -52,7 +60,7 @@ export class VirtualEnvironment {
     log.info(`Using uv at ${this.uvPath}`);
   }
 
-  public async create(): Promise<void> {
+  public async create(callbacks?: ProcessCallbacks): Promise<void> {
     try {
       if (await this.exists()) {
         log.info(`Virtual environment already exists at ${this.venvPath}`);
@@ -63,7 +71,7 @@ export class VirtualEnvironment {
 
       // Create virtual environment using uv
       const args = ['venv', '--python', this.pythonVersion];
-      const { exitCode } = await this.runUvCommandAsync(args);
+      const { exitCode } = await this.runUvCommandAsync(args, callbacks);
 
       if (exitCode !== 0) {
         throw new Error(`Failed to create virtual environment: exit code ${exitCode}`);
@@ -74,19 +82,21 @@ export class VirtualEnvironment {
       log.error(`Error creating virtual environment: ${error}`);
       throw error;
     }
+
+    await this.installRequirements(callbacks);
   }
 
-  public async installRequirements(): Promise<void> {
+  public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     const installCmd = ['pip', 'install', '-r', this.requirementsCompiledPath, '--index-strategy', 'unsafe-best-match'];
 
-    const { exitCode } = await this.runUvCommandAsync(installCmd);
+    const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
       log.error(
         `Failed to install requirements.compiled: exit code ${exitCode}. Falling back to installing requirements.txt`
       );
 
-      await this.installComfyUIRequirements();
-      await this.installComfyUIManagerRequirements();
+      await this.installComfyUIRequirements(callbacks);
+      await this.installComfyUIManagerRequirements(callbacks);
     }
   }
 
@@ -95,13 +105,13 @@ export class VirtualEnvironment {
    * @param args
    * @returns
    */
-  public runPythonCommand(args: string[]): ChildProcess {
+  public runPythonCommand(args: string[], callbacks?: ProcessCallbacks): ChildProcess {
     const pythonInterpreterPath =
       process.platform === 'win32'
         ? path.join(this.venvPath, 'Scripts', 'python.exe')
         : path.join(this.venvPath, 'bin', 'python');
 
-    return this.runCommand(pythonInterpreterPath, args);
+    return this.runCommand(pythonInterpreterPath, args, {}, callbacks);
   }
 
   /**
@@ -109,8 +119,11 @@ export class VirtualEnvironment {
    * @param args
    * @returns
    */
-  public async runPythonCommandAsync(args: string[]): Promise<{ exitCode: number | null }> {
-    return this.runCommandAsync(this.pythonInterpreterPath, args);
+  public async runPythonCommandAsync(
+    args: string[],
+    callbacks?: ProcessCallbacks
+  ): Promise<{ exitCode: number | null }> {
+    return this.runCommandAsync(this.pythonInterpreterPath, args, {}, callbacks);
   }
 
   /**
@@ -118,9 +131,9 @@ export class VirtualEnvironment {
    * @param args
    * @returns
    */
-  public async runUvCommandAsync(args: string[]): Promise<{ exitCode: number | null }> {
+  public async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
     return new Promise((resolve, reject) => {
-      const childProcess = this.runUvCommand(args);
+      const childProcess = this.runUvCommand(args, callbacks);
       childProcess.on('close', (code) => {
         resolve({ exitCode: code });
       });
@@ -136,29 +149,27 @@ export class VirtualEnvironment {
    * @param args
    * @returns
    */
-  public runUvCommand(args: string[]): ChildProcess {
-    const childProcess = this.runCommand(this.uvPath, args, {
-      UV_CACHE_DIR: this.cacheDir,
-      UV_TOOL_DIR: this.cacheDir,
-      UV_TOOL_BIN_DIR: this.cacheDir,
-      UV_PYTHON_INSTALL_DIR: this.cacheDir,
-      VIRTUAL_ENV: this.venvPath,
-    });
-
-    childProcess.stdout &&
-      childProcess.stdout.on('data', (data) => {
-        log.info(data.toString());
-      });
-
-    childProcess.stderr &&
-      childProcess.stderr.on('data', (data) => {
-        log.error(data.toString());
-      });
-
-    return childProcess;
+  public runUvCommand(args: string[], callbacks?: ProcessCallbacks): ChildProcess {
+    return this.runCommand(
+      this.uvPath,
+      args,
+      {
+        UV_CACHE_DIR: this.cacheDir,
+        UV_TOOL_DIR: this.cacheDir,
+        UV_TOOL_BIN_DIR: this.cacheDir,
+        UV_PYTHON_INSTALL_DIR: this.cacheDir,
+        VIRTUAL_ENV: this.venvPath,
+      },
+      callbacks
+    );
   }
 
-  private runCommand(command: string, args: string[], env?: any): ChildProcess {
+  private runCommand(
+    command: string,
+    args: string[],
+    env: Record<string, string>,
+    callbacks?: ProcessCallbacks
+  ): ChildProcess {
     log.info(`Running command: ${command} ${args.join(' ')} in ${this.venvRootPath}`);
     const childProcess: ChildProcess = spawn(command, args, {
       cwd: this.venvRootPath,
@@ -168,12 +179,29 @@ export class VirtualEnvironment {
       },
     });
 
+    if (callbacks) {
+      childProcess.stdout?.on('data', (data) => {
+        console.log(data.toString());
+        callbacks.onStdout?.(data.toString());
+      });
+
+      childProcess.stderr?.on('data', (data) => {
+        console.log(data.toString());
+        callbacks.onStderr?.(data.toString());
+      });
+    }
+
     return childProcess;
   }
 
-  private async runCommandAsync(command: string, args: string[], env?: any): Promise<{ exitCode: number | null }> {
+  private async runCommandAsync(
+    command: string,
+    args: string[],
+    env: Record<string, string>,
+    callbacks?: ProcessCallbacks
+  ): Promise<{ exitCode: number | null }> {
     return new Promise((resolve, reject) => {
-      const childProcess = this.runCommand(command, args, env);
+      const childProcess = this.runCommand(command, args, env, callbacks);
 
       childProcess.on('close', (code) => {
         resolve({ exitCode: code });
@@ -185,7 +213,7 @@ export class VirtualEnvironment {
     });
   }
 
-  private async installComfyUIRequirements(): Promise<void> {
+  private async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUI requirements from ${this.comfyUIRequirementsPath}`);
     const installCmd = ['pip', 'install', '-r', this.comfyUIRequirementsPath];
 
@@ -193,16 +221,16 @@ export class VirtualEnvironment {
       installCmd.push('--index-url', 'https://download.pytorch.org/whl/cu121');
     }
 
-    const { exitCode } = await this.runUvCommandAsync(installCmd);
+    const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
       throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
     }
   }
 
-  private async installComfyUIManagerRequirements(): Promise<void> {
+  private async installComfyUIManagerRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUIManager requirements from ${this.comfyUIManagerRequirementsPath}`);
     const installCmd = ['pip', 'install', '-r', this.comfyUIManagerRequirementsPath];
-    const { exitCode } = await this.runUvCommandAsync(installCmd);
+    const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
       throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
     }
