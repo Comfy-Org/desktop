@@ -198,4 +198,36 @@ export class ComfyServerConfig {
       return null;
     }
   }
+
+  /**
+   * Get the config for the migration source (Existing ComfyUI instance).
+   * @param migrationSource - The path to the migration source.
+   * @param migrationItemIds - The item ids to migrate.
+   */
+  public static async getMigrationConfig(
+    migrationSource?: string,
+    migrationItemIds: Set<string> = new Set()
+  ): Promise<Record<string, ModelPaths>> {
+    if (!migrationSource || !migrationItemIds.has('models')) {
+      return {};
+    }
+    // The yaml file exited in migration source repo.
+    const migrationServerConfig = await ComfyServerConfig.getConfigFromRepoPath(migrationSource);
+
+    // The model paths in the migration source repo.
+    const migrationComfyConfig = migrationSource
+      ? ComfyServerConfig.getBaseModelPathsFromRepoPath(migrationSource)
+      : {};
+
+    // The overall paths to add to the config file.
+    const comfyuiConfig = ComfyServerConfig.mergeConfig(migrationServerConfig['comfyui'] ?? {}, migrationComfyConfig);
+    // Do not migrate custom nodes as we currently don't have a way to install their dependencies.
+    if ('custom_nodes' in comfyuiConfig) {
+      delete comfyuiConfig['custom_nodes'];
+    }
+    return {
+      ...migrationServerConfig,
+      comfyui: comfyuiConfig,
+    };
+  }
 }

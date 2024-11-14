@@ -476,24 +476,12 @@ async function handleInstall(installOptions: InstallOptions) {
 
   const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(installOptions.installPath);
 
-  // The yaml file exited in migration source repo.
-  const migrationServerConfig =
-    migrationSource && migrationItemIds.has('models')
-      ? await ComfyServerConfig.getConfigFromRepoPath(migrationSource)
-      : {};
-
-  // The model paths in the migration source repo.
-  const migrationComfyConfig = migrationSource ? ComfyServerConfig.getBaseModelPathsFromRepoPath(migrationSource) : {};
-
-  // The overall paths to add to the config file.
-  const comfyuiConfig = ComfyServerConfig.mergeConfig(migrationServerConfig['comfyui'] ?? {}, migrationComfyConfig);
+  const { comfyui: comfyuiConfig, ...extraConfigs } = await ComfyServerConfig.getMigrationConfig(
+    migrationSource,
+    migrationItemIds
+  );
   comfyuiConfig['base_path'] = actualComfyDirectory;
-  // Do not migrate custom nodes as we currently don't have a way to install their dependencies.
-  if ('custom_nodes' in comfyuiConfig) {
-    delete comfyuiConfig['custom_nodes'];
-  }
-
-  await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, comfyuiConfig, migrationServerConfig);
+  await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, comfyuiConfig, extraConfigs);
 }
 
 async function serverStart() {
