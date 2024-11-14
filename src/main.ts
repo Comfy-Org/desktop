@@ -167,8 +167,7 @@ if (!gotTheLock) {
       });
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
         // Non-blocking call. The renderer will navigate to /server-start and show install progress.
-        handleInstall(installOptions);
-        serverStart();
+        handleInstall(installOptions).then(serverStart);
       });
 
       // Loading renderer when all handlers are registered to ensure all event listeners are set up.

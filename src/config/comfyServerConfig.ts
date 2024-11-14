@@ -38,7 +38,6 @@ const knownModelKeys = [
   'CogVideo',
   'xlabs',
   'instantid',
-  'custom_nodes',
 ] as const;
 
 type ModelPaths = Record<string, string>;
@@ -47,23 +46,26 @@ type ModelPaths = Record<string, string>;
  * The ComfyServerConfig class is used to manage the configuration for the ComfyUI server.
  */
 export class ComfyServerConfig {
+  // The name of the default config file.
+  static readonly COMFYUI_DEFAULT_CONFIG_NAME = 'extra_model_paths.yaml';
+  // The path to the extra_models_config.yaml file used by the Electron desktop app.
   static readonly EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
-  private static readonly commonPaths = this.getBaseModelPathsFromRepoPath('');
+  private static readonly commonPaths = {
+    ...this.getBaseModelPathsFromRepoPath(''),
+    custom_nodes: 'custom_nodes/',
+  };
   private static readonly configTemplates: Record<string, ModelPaths> = {
     win32: {
       is_default: 'true',
-      base_path: '%USERPROFILE%/comfyui-electron',
       ...this.commonPaths,
     },
     darwin: {
       is_default: 'true',
-      base_path: '~/Library/Application Support/ComfyUI',
       ...this.commonPaths,
     },
     linux: {
       is_default: 'true',
-      base_path: '~/.config/ComfyUI',
       ...this.commonPaths,
     },
   } as const;
@@ -136,7 +138,7 @@ export class ComfyServerConfig {
   }
 
   public static async getConfigFromRepoPath(repoPath: string): Promise<Record<string, ModelPaths>> {
-    const configPath = path.join(repoPath, ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH);
+    const configPath = path.join(repoPath, ComfyServerConfig.COMFYUI_DEFAULT_CONFIG_NAME);
     const config = (await this.readConfigFile(configPath)) ?? {};
     return config;
   }
