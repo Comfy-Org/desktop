@@ -89,32 +89,10 @@ describe('ComfyConfigManager', () => {
     it('should create new config file when none exists', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
-      ComfyConfigManager.createComfyConfigFile('/fake/path', false);
+      ComfyConfigManager.createComfyConfigFile('/fake/path');
 
       expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
       expect(fs.renameSync).not.toHaveBeenCalled();
-    });
-
-    it('should backup existing config file when overwrite is true', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path: string) => {
-        return path === '/user/default/comfy.settings.json';
-      });
-
-      ComfyConfigManager.createComfyConfigFile('/user/default', true);
-
-      expect(fs.renameSync).toHaveBeenCalledTimes(1);
-      expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle backup failure gracefully', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.renameSync as jest.Mock).mockImplementation(() => {
-        throw new Error('Backup failed');
-      });
-
-      ComfyConfigManager.createComfyConfigFile('/fake/path', true);
-
-      expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
   });
 

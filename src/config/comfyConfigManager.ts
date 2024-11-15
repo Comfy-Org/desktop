@@ -60,22 +60,11 @@ export class ComfyConfigManager {
     }
     this.createComfyDirectories(localComfyDirectory);
     const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');
-    this.createComfyConfigFile(userSettingsPath, true);
+    this.createComfyConfigFile(userSettingsPath);
   }
 
-  public static createComfyConfigFile(userSettingsPath: string, overwrite: boolean = false): void {
+  public static createComfyConfigFile(userSettingsPath: string): void {
     const configFilePath = path.join(userSettingsPath, 'comfy.settings.json');
-
-    if (fs.existsSync(configFilePath) && overwrite) {
-      const backupFilePath = path.join(userSettingsPath, 'old_comfy.settings.json');
-      try {
-        fs.renameSync(configFilePath, backupFilePath);
-        log.info(`Renaming existing user settings file to: ${backupFilePath}`);
-      } catch (error) {
-        log.error(`Failed to backup existing user settings file: ${error}`);
-        return;
-      }
-    }
 
     try {
       fs.writeFileSync(configFilePath, JSON.stringify(this.DEFAULT_CONFIG, null, 2));
