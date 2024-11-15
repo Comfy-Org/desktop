@@ -13,7 +13,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": ".*",
-          "endsPattern": "App ready.*"
+          "endsPattern": "Debugger listening on"
         }
       }
     }
