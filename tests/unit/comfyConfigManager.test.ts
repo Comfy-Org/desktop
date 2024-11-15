@@ -33,9 +33,7 @@ describe('ComfyConfigManager', () => {
         return true;
       });
 
-      const result = ComfyConfigManager.setUpComfyUI('/some/base/path/ComfyUI');
-
-      expect(result).toBe('/some/base/path/ComfyUI');
+      ComfyConfigManager.setUpComfyUI('/some/base/path/ComfyUI');
     });
   });
 
