@@ -55,9 +55,8 @@ export class ComfyConfigManager {
   };
 
   public static setUpComfyUI(localComfyDirectory: string): string {
-    localComfyDirectory = path.join(localComfyDirectory, 'ComfyUI');
-    if (this.isComfyUIDirectory(localComfyDirectory)) {
-      throw new Error(`Selected directory ${localComfyDirectory} already contains ComfyUI/`);
+    if (fs.existsSync(localComfyDirectory)) {
+      throw new Error(`Selected directory ${localComfyDirectory} already exists`);
     }
     this.createComfyDirectories(localComfyDirectory);
     const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');

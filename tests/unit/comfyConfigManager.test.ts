@@ -20,33 +20,20 @@ describe('ComfyConfigManager', () => {
   });
 
   describe('setUpComfyUI', () => {
-    it('should use existing directory when it contains ComfyUI structure', () => {
-      // Mock isComfyUIDirectory to return true for the input path
-      (fs.existsSync as jest.Mock).mockImplementation((path: string) => {
-        const requiredDirs = [
-          '/existing/ComfyUI/models',
-          '/existing/ComfyUI/input',
-          '/existing/ComfyUI/user',
-          '/existing/ComfyUI/output',
-          '/existing/ComfyUI/custom_nodes',
-        ];
-        return requiredDirs.includes(path);
-      });
-
-      const result = ComfyConfigManager.setUpComfyUI('/existing/ComfyUI');
-
-      expect(result).toBe('/existing/ComfyUI');
+    it('should reject existing directory when it contains ComfyUI structure', () => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      expect(() => ComfyConfigManager.setUpComfyUI('/existing/ComfyUI')).toThrow();
     });
 
     it('should create ComfyUI subdirectory when it is missing', () => {
       (fs.existsSync as jest.Mock).mockImplementationOnce((path: string) => {
-        if (path === '/some/base/path/ComfyUI') {
+        if (['/some/base/path/ComfyUI'].includes(path)) {
           return false;
         }
         return true;
       });
 
-      const result = ComfyConfigManager.setUpComfyUI('/some/base/path');
+      const result = ComfyConfigManager.setUpComfyUI('/some/base/path/ComfyUI');
 
       expect(result).toBe('/some/base/path/ComfyUI');
     });

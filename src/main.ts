@@ -473,7 +473,7 @@ async function handleInstall(installOptions: InstallOptions) {
   const migrationSource = installOptions.migrationSourcePath;
   const migrationItemIds = new Set<string>(installOptions.migrationItemIds ?? []);
 
-  const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(installOptions.installPath);
+  const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(path.join(installOptions.installPath, 'ComfyUI'));
 
   const { comfyui: comfyuiConfig, ...extraConfigs } = await ComfyServerConfig.getMigrationConfig(
     migrationSource,
