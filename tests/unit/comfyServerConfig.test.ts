@@ -141,7 +141,9 @@ comfyui:
   describe('getMigrationConfig', () => {
     it('should return empty object when no migration source is provided', async () => {
       const result = await ComfyServerConfig.getMigrationConfig(undefined);
-      expect(result).toEqual({});
+      expect(result).toEqual({
+        comfyui: {},
+      });
     });
 
     it('should merge configs and remove custom_nodes when migration source is provided', async () => {
