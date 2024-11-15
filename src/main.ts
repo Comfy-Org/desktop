@@ -7,12 +7,11 @@ import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
-import * as net from 'net';
 import { graphics } from 'systeminformation';
 import { ComfyServerConfig } from './config/comfyServerConfig';
 import todesktop from '@todesktop/runtime';
 import { DownloadManager } from './models/DownloadManager';
-import { getModelsDirectory } from './utils';
+import { findAvailablePort, getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
@@ -439,29 +438,6 @@ const killPythonServer = async (): Promise<void> => {
   });
 };
 
-function findAvailablePort(startPort: number, endPort: number): Promise<number> {
-  return new Promise((resolve, reject) => {
-    function tryPort(port: number) {
-      if (port > endPort) {
-        reject(new Error('No available ports found'));
-        return;
-      }
-
-      const server = net.createServer();
-      server.listen(port, host, () => {
-        server.once('close', () => {
-          resolve(port);
-        });
-        server.close();
-      });
-      server.on('error', () => {
-        tryPort(port + 1);
-      });
-    }
-
-    tryPort(startPort);
-  });
-}
 /**
  * Check if the user has completed the first time setup wizard.
  * This means the extra_models_config.yaml file exists in the user's data directory.
@@ -501,7 +477,7 @@ async function serverStart() {
   port =
     port !== -1
       ? port
-      : await findAvailablePort(8000, 9999).catch((err) => {
+      : await findAvailablePort(host, 8000, 9999).catch((err) => {
           log.error(`ERROR: Failed to find available port: ${err}`);
           throw err;
         });
