@@ -26,7 +26,6 @@ import { VirtualEnvironment } from './virtualEnvironment';
 dotenv.config();
 
 let comfyServerProcess: ChildProcess | null = null;
-let isRestarting: boolean = false; // Prevents double restarts TODO(robinhuang): Remove this once we have a better way to handle restarts. https://github.com/Comfy-Org/electron/issues/149
 
 /** The host to use for the ComfyUI server. */
 const host = process.env.COMFY_HOST || '127.0.0.1';
@@ -223,7 +222,6 @@ function loadComfyIntoMainWindow() {
 }
 function restartApp({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
   function relaunchApplication(delay?: number) {
-    isRestarting = true;
     if (delay) {
       log.info('Relaunching application in ', delay, 'ms');
       setTimeout(() => {
@@ -237,10 +235,6 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
   }
 
   log.info('Attempting to restart app with custom message: ', customMessage);
-  if (isRestarting) {
-    log.info('Already quitting, skipping restart');
-    return;
-  }
 
   if (!customMessage) {
     log.info('Skipping confirmation, restarting immediately');
