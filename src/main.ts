@@ -45,12 +45,15 @@ let downloadManager: DownloadManager;
 
 log.initialize();
 
+// TODO: Load settings from user specified basePath.
+// https://github.com/Comfy-Org/electron/issues/259
 const comfySettings = new ComfySettings(app.getPath('documents'));
+comfySettings.loadSettings();
 
 todesktop.init({
   customLogger: log,
   updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
-  autoUpdater: comfySettings.autoUpdate,
+  autoUpdater: comfySettings.get('Comfy-Desktop.AutoUpdate'),
 });
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
@@ -103,7 +106,7 @@ if (!gotTheLock) {
     dsn: SENTRY_URL_ENDPOINT,
     autoSessionTracking: false,
     async beforeSend(event, hint) {
-      if (event.extra?.comfyUIExecutionError || comfySettings.sendCrashStatistics) {
+      if (event.extra?.comfyUIExecutionError || comfySettings.get('Comfy-Desktop.SendCrashStatistics')) {
         return event;
       }
 
