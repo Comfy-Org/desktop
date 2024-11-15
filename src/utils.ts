@@ -1,6 +1,7 @@
 import * as net from 'net';
 import * as fsPromises from 'node:fs/promises';
 import path from 'node:path';
+import fs from 'fs';
 
 export async function pathAccessible(path: string): Promise<boolean> {
   try {
@@ -37,4 +38,19 @@ export function findAvailablePort(host: string, startPort: number, endPort: numb
 
     tryPort(startPort);
   });
+}
+
+/**
+ * Rotate old log files by adding a timestamp to the end of the file.
+ * @param logDir The directory to rotate the logs in.
+ * @param baseName The base name of the log file.
+ */
+export function rotateLogFiles(logDir: string, baseName: string) {
+  const currentLogPath = path.join(logDir, `${baseName}.log`);
+  if (fs.existsSync(currentLogPath)) {
+    const stats = fs.statSync(currentLogPath);
+    const timestamp = stats.birthtime.toISOString().replace(/[:.]/g, '-');
+    const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
+    fs.renameSync(currentLogPath, newLogPath);
+  }
 }

@@ -11,7 +11,7 @@ import { graphics } from 'systeminformation';
 import { ComfyServerConfig } from './config/comfyServerConfig';
 import todesktop from '@todesktop/runtime';
 import { DownloadManager } from './models/DownloadManager';
-import { findAvailablePort, getModelsDirectory } from './utils';
+import { findAvailablePort, getModelsDirectory, rotateLogFiles } from './utils';
 import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
@@ -498,18 +498,3 @@ async function serverStart() {
     loadComfyIntoMainWindow();
   }
 }
-
-/**
- * Rotate old log files by adding a timestamp to the end of the file.
- * @param logDir The directory to rotate the logs in.
- * @param baseName The base name of the log file.
- */
-const rotateLogFiles = (logDir: string, baseName: string) => {
-  const currentLogPath = path.join(logDir, `${baseName}.log`);
-  if (fs.existsSync(currentLogPath)) {
-    const stats = fs.statSync(currentLogPath);
-    const timestamp = stats.birthtime.toISOString().replace(/[:.]/g, '-');
-    const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
-    fs.renameSync(currentLogPath, newLogPath);
-  }
-};
