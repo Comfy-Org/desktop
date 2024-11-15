@@ -4,6 +4,12 @@ on:
   pull_request:
     branches:
       - 'main'
+    paths-ignore:
+      - '.github/**'
+      - '.prettierrc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'README.md'
   push:
     branches:
       - 'main'
@@ -12,7 +18,6 @@ on:
       - '.prettierrc'
       - '.eslintrc.json'
       - '.prettierignore'
-      - 'package.json'
       - 'README.md'
 
 jobs:
