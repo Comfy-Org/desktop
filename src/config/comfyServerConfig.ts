@@ -210,7 +210,9 @@ export class ComfyServerConfig {
     migrationItemIds: Set<string> = new Set()
   ): Promise<Record<string, ModelPaths>> {
     if (!migrationSource || !migrationItemIds.has('models')) {
-      return {};
+      return {
+        comfyui: {},
+      };
     }
     // The yaml file exited in migration source repo.
     const migrationServerConfig = await ComfyServerConfig.getConfigFromRepoPath(migrationSource);
