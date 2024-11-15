@@ -13,7 +13,7 @@ type ComfySettingsData = Partial<typeof DEFAULT_SETTINGS>;
  * ComfySettings is a class that loads settings from the comfy.settings.json file.
  */
 export class ComfySettings {
-  private filePath: string;
+  public readonly filePath: string;
   private settings: ComfySettingsData = DEFAULT_SETTINGS;
 
   constructor(basePath: string) {
