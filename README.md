@@ -144,6 +144,16 @@ You can also build the package and/or distributables using the `make` command:
 yarn make
 ```
 
+### Debugger
+
+There are helpful debug launch scripts for VSCode / Cursor under `.vscode/launch.json`. It will start the dev server as defined in `.vscode/tasks.json`. Then attach the debugger.
+
+This can be used simply by pressing `F5` in VSCode or VSCode derivative.
+
+**Troubleshooting**
+
+If you run into issues with node, you might want to check which node version is being used in the debug terminal. Sometimes your system node is used because it's on the PATH. We recommend you uninstalling system node and use [nvm](https://github.com/nvm-sh/nvm) to manage node versions.
+
 # Release
 
 We use Todesktop to build and codesign our distributables. To make a new release:
