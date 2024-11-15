@@ -7,6 +7,7 @@ import type { SystemPaths } from '../preload';
 import fs from 'fs';
 import si from 'systeminformation';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
+import path from 'path';
 
 export class PathHandlers {
   static readonly REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
@@ -45,23 +46,29 @@ export class PathHandlers {
      */
     ipcMain.handle(
       IPC_CHANNELS.VALIDATE_INSTALL_PATH,
-      async (event, path: string): Promise<{ isValid: boolean; error?: string }> => {
+      async (event, inputPath: string): Promise<{ isValid: boolean; error?: string }> => {
         try {
           // Check if path exists
-          if (!fs.existsSync(path)) {
+          if (!fs.existsSync(inputPath)) {
             return { isValid: false, error: 'Path does not exist' };
+          }
+
+          // Check if `path/ComfyUI` exists
+          // We are going to create a ComfyUI directory in the selected path
+          if (fs.existsSync(path.join(inputPath, 'ComfyUI'))) {
+            return { isValid: false, error: 'Path already contains ComfyUI/' };
           }
 
           // Check if path is writable
           try {
-            fs.accessSync(path, fs.constants.W_OK);
+            fs.accessSync(inputPath, fs.constants.W_OK);
           } catch (err) {
             return { isValid: false, error: 'Path is not writable' };
           }
 
           // Check available disk space (require at least 10GB free)
           const disks = await si.fsSize();
-          const disk = disks.find((disk) => path.startsWith(disk.mount));
+          const disk = disks.find((disk) => inputPath.startsWith(disk.mount));
           if (disk && disk.available < PathHandlers.REQUIRED_SPACE) {
             return {
               isValid: false,

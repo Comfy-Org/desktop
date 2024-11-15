@@ -55,13 +55,10 @@ export class ComfyConfigManager {
   };
 
   public static setUpComfyUI(localComfyDirectory: string): string {
-    if (!this.isComfyUIDirectory(localComfyDirectory)) {
-      log.info(
-        `Selected directory ${localComfyDirectory} is not a ComfyUI directory. Appending ComfyUI to install path.`
-      );
-      localComfyDirectory = path.join(localComfyDirectory, 'ComfyUI');
+    localComfyDirectory = path.join(localComfyDirectory, 'ComfyUI');
+    if (this.isComfyUIDirectory(localComfyDirectory)) {
+      throw new Error(`Selected directory ${localComfyDirectory} already contains ComfyUI/`);
     }
-
     this.createComfyDirectories(localComfyDirectory);
     const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');
     this.createComfyConfigFile(userSettingsPath, true);
