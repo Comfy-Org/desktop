@@ -248,7 +248,7 @@ if (!gotTheLock) {
 }
 
 function loadComfyIntoMainWindow() {
-  appWindow.loadURL(`http://localhost:${5174}`);
+  appWindow.loadURL(`http://${host}:${port}`);
 }
 function restartApp({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
   function relaunchApplication(delay?: number) {
@@ -365,8 +365,8 @@ const launchPythonServer = async (
       '--output-directory',
       outputDirectoryPath,
       ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
-      // '--front-end-root',
-      // path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app'),
+      '--front-end-root',
+      path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app'),
       '--extra-model-paths-config',
       modelConfigPath,
       '--port',
