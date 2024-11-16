@@ -17,7 +17,7 @@ import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
-import Terminal from './terminal';
+import { Terminal } from './terminal';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
 import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
@@ -41,6 +41,7 @@ const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
 
 let appWindow: AppWindow;
 let downloadManager: DownloadManager;
+let terminal: Terminal;
 
 log.initialize();
 
@@ -177,7 +178,7 @@ if (!gotTheLock) {
       const urlPath = firstTimeSetup ? 'welcome' : 'server-start';
       await appWindow.loadRenderer(urlPath);
 
-      Terminal.init(appWindow, path.join(await getAppResourcesPath(), 'ComfyUI'));
+      terminal = new Terminal(appWindow, path.join(await getAppResourcesPath(), 'ComfyUI'));
 
       if (!firstTimeSetup) {
         await serverStart();
@@ -220,15 +221,15 @@ if (!gotTheLock) {
   });
 
   ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
-    Terminal.write(command);
+    terminal.write(command);
   });
 
   ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
-    Terminal.resize(cols, rows);
+    terminal.resize(cols, rows);
   });
 
   ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, (_event) => {
-    return Terminal.restore();
+    return terminal.restore();
   });
 }
 

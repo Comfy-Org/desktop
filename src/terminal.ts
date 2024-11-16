@@ -3,7 +3,7 @@ import * as pty from 'node-pty';
 import { AppWindow } from './main-process/appWindow';
 import { IPC_CHANNELS } from './constants';
 
-class Terminal {
+export class Terminal {
   #pty: pty.IPty | undefined;
   #window: AppWindow | undefined;
   #cwd: string | undefined;
@@ -21,7 +21,7 @@ class Terminal {
     return this.#window;
   }
 
-  init(window: AppWindow, cwd: string) {
+  constructor(window: AppWindow, cwd: string) {
     this.#window = window;
     this.#cwd = cwd;
   }
@@ -65,5 +65,3 @@ class Terminal {
     return instance;
   }
 }
-
-export default new Terminal();
