@@ -4,16 +4,29 @@ on:
   pull_request:
     branches:
       - 'main'
+    paths-ignore:
+      - '.prettierrc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'README.md'
+      - 'husky/**'
+      - '.vscode/**'
+      - 'scripts/**'
+      - '.gitignore'
+      - 'todesktop.json'
   push:
     branches:
       - 'main'
     paths-ignore:
-      - '.github/**'
       - '.prettierrc'
       - '.eslintrc.json'
       - '.prettierignore'
-      - 'package.json'
       - 'README.md'
+      - 'husky/**'
+      - '.vscode/**'
+      - 'scripts/**'
+      - '.gitignore'
+      - 'todesktop.json'
 
 jobs:
   build-windows-debug-all:

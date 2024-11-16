@@ -22,6 +22,8 @@ runs:
       shell: cmd
     - run: yarn set version --yarn-path self
       shell: cmd
+    - run: yarn run download:uv all
+      shell: powershell
     - name: Make app
       shell: powershell
       env:

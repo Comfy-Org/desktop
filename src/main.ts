@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'node:child_process';
+import { ChildProcess } from 'node:child_process';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
@@ -7,13 +7,11 @@ import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
-import * as net from 'net';
 import { graphics } from 'systeminformation';
-import { createModelConfigFiles, getModelConfigPath } from './config/extra_model_config';
+import { ComfyServerConfig } from './config/comfyServerConfig';
 import todesktop from '@todesktop/runtime';
-import { PythonEnvironment } from './pythonEnvironment';
 import { DownloadManager } from './models/DownloadManager';
-import { getModelsDirectory } from './utils';
+import { findAvailablePort, getModelsDirectory, rotateLogFiles } from './utils';
 import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
 import { buildMenu } from './menu/menu';
@@ -23,11 +21,12 @@ import Terminal from './terminal';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
 import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
+import { InstallOptions } from './preload';
+import { VirtualEnvironment } from './virtualEnvironment';
 
 dotenv.config();
 
 let comfyServerProcess: ChildProcess | null = null;
-let isRestarting: boolean = false; // Prevents double restarts TODO(robinhuang): Remove this once we have a better way to handle restarts. https://github.com/Comfy-Org/electron/issues/149
 
 /** The host to use for the ComfyUI server. */
 const host = process.env.COMFY_HOST || '127.0.0.1';
@@ -45,12 +44,15 @@ let downloadManager: DownloadManager;
 
 log.initialize();
 
+// TODO: Load settings from user specified basePath.
+// https://github.com/Comfy-Org/electron/issues/259
 const comfySettings = new ComfySettings(app.getPath('documents'));
+comfySettings.loadSettings();
 
 todesktop.init({
   customLogger: log,
   updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
-  autoUpdater: comfySettings.autoUpdate,
+  autoUpdater: comfySettings.get('Comfy-Desktop.AutoUpdate'),
 });
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
@@ -103,7 +105,7 @@ if (!gotTheLock) {
     dsn: SENTRY_URL_ENDPOINT,
     autoSessionTracking: false,
     async beforeSend(event, hint) {
-      if (event.extra?.comfyUIExecutionError || comfySettings.sendCrashStatistics) {
+      if (event.extra?.comfyUIExecutionError || comfySettings.get('Comfy-Desktop.SendCrashStatistics')) {
         return event;
       }
 
@@ -165,37 +167,20 @@ if (!gotTheLock) {
       ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
         return isFirstTimeSetup();
       });
-      await handleFirstTimeSetup();
-      const basePath = await getBasePath();
-      const pythonInstallPath = await getPythonInstallPath();
-      if (!basePath || !pythonInstallPath) {
-        log.error('ERROR: Base path not found!');
-        sendProgressUpdate(ProgressStatus.ERROR_INSTALL_PATH);
-        return;
-      }
-      downloadManager = DownloadManager.getInstance(appWindow!, getModelsDirectory(basePath));
+      ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
+        // Non-blocking call. The renderer will navigate to /server-start and show install progress.
+        handleInstall(installOptions).then(serverStart);
+      });
 
-      port =
-        port !== -1
-          ? port
-          : await findAvailablePort(8000, 9999).catch((err) => {
-              log.error(`ERROR: Failed to find available port: ${err}`);
-              throw err;
-            });
+      // Loading renderer when all handlers are registered to ensure all event listeners are set up.
+      const firstTimeSetup = isFirstTimeSetup();
+      const urlPath = firstTimeSetup ? 'welcome' : 'server-start';
+      await appWindow.loadRenderer(urlPath);
 
-      const appResourcesPath = await getAppResourcesPath();
-      Terminal.init(appWindow, path.join(appResourcesPath, 'ComfyUI'));
+      Terminal.init(appWindow, path.join(await getAppResourcesPath(), 'ComfyUI'));
 
-      if (!useExternalServer) {
-        sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
-        const pythonEnvironment = new PythonEnvironment(pythonInstallPath, appResourcesPath, spawnPythonAsync);
-        await pythonEnvironment.setup();
-        const modelConfigPath = getModelConfigPath();
-        sendProgressUpdate(ProgressStatus.STARTING_SERVER);
-        await launchPythonServer(pythonEnvironment.pythonInterpreterPath, appResourcesPath, modelConfigPath, basePath);
-      } else {
-        sendProgressUpdate(ProgressStatus.READY);
-        loadComfyIntoMainWindow();
+      if (!firstTimeSetup) {
+        await serverStart();
       }
     } catch (error) {
       log.error(error);
@@ -216,7 +201,7 @@ if (!gotTheLock) {
 
     ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
       log.info('Reinstalling...');
-      const modelConfigPath = getModelConfigPath();
+      const modelConfigPath = ComfyServerConfig.configPath;
       fs.rmSync(modelConfigPath);
       restartApp();
     });
@@ -252,7 +237,6 @@ function loadComfyIntoMainWindow() {
 }
 function restartApp({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
   function relaunchApplication(delay?: number) {
-    isRestarting = true;
     if (delay) {
       log.info('Relaunching application in ', delay, 'ms');
       setTimeout(() => {
@@ -266,10 +250,6 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
   }
 
   log.info('Attempting to restart app with custom message: ', customMessage);
-  if (isRestarting) {
-    log.info('Already quitting, skipping restart');
-    return;
-  }
 
   if (!customMessage) {
     log.info('Skipping confirmation, restarting immediately');
@@ -335,7 +315,7 @@ let currentWaitTime = 0;
 let spawnServerTimeout: NodeJS.Timeout | null = null;
 
 const launchPythonServer = async (
-  pythonInterpreterPath: string,
+  virtualEnvironment: VirtualEnvironment,
   appResourcesPath: string,
   modelConfigPath: string,
   basePath: string
@@ -346,11 +326,7 @@ const launchPythonServer = async (
     // Server has been started outside the app, so attach to it.
     return loadComfyIntoMainWindow();
   }
-
-  log.info(
-    `Launching Python server with port ${port}. python path: ${pythonInterpreterPath}, app resources path: ${appResourcesPath}, model config path: ${modelConfigPath}, base path: ${basePath}`
-  );
-
+  rotateLogFiles(app.getPath('logs'), 'comfyui');
   return new Promise<void>(async (resolve, reject) => {
     const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
     const userDirectoryPath = path.join(basePath, 'user');
@@ -374,10 +350,32 @@ const launchPythonServer = async (
     ];
 
     log.info(`Starting ComfyUI using port ${port}.`);
+    const comfyUILog = log.create({ logId: 'comfyui' });
+    comfyUILog.transports.file.fileName = 'comfyui.log';
+    comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd, {
+      onStdout: (data) => {
+        comfyUILog.info(data);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+      onStderr: (data) => {
+        comfyUILog.error(data);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+    });
 
-    comfyServerProcess = spawnPython(pythonInterpreterPath, comfyMainCmd, path.dirname(scriptPath), {
-      logFile: 'comfyui',
-      stdx: true,
+    comfyServerProcess.on('error', (err) => {
+      log.error(`Failed to start ComfyUI: ${err}`);
+      reject(err);
+    });
+
+    comfyServerProcess.on('exit', (code, signal) => {
+      if (code !== 0) {
+        log.error(`Python process exited with code ${code} and signal ${signal}`);
+        reject(new Error(`Python process exited with code ${code} and signal ${signal}`));
+      } else {
+        log.info(`Python process exited successfully with code ${code}`);
+        resolve();
+      }
     });
 
     const checkInterval = 1000; // Check every 1 second
@@ -449,164 +447,69 @@ const killPythonServer = async (): Promise<void> => {
   });
 };
 
-const spawnPython = (
-  pythonInterpreterPath: string,
-  cmd: string[],
-  cwd: string,
-  options = { stdx: true, logFile: '' }
-) => {
-  log.info(`Spawning python process ${pythonInterpreterPath} with command: ${cmd.join(' ')} in directory: ${cwd}`);
-  const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, {
-    cwd,
-  });
-
-  if (options.stdx) {
-    log.info('Setting up python process stdout/stderr listeners');
-
-    let pythonLog = log;
-    if (options.logFile) {
-      log.info('Creating separate python log file: ', options.logFile);
-      // Rotate log files so each log file is unique to a single python run.
-      rotateLogFiles(app.getPath('logs'), options.logFile);
-      pythonLog = log.create({ logId: options.logFile });
-      pythonLog.transports.file.fileName = `${options.logFile}.log`;
-      pythonLog.transports.file.resolvePathFn = (variables) => {
-        return path.join(variables.electronDefaultDir ?? '', variables.fileName ?? '');
-      };
-    }
-
-    pythonProcess.stderr?.on?.('data', (data) => {
-      const message = data.toString().trim();
-      pythonLog.error(`stderr: ${message}`);
-      if (appWindow) {
-        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
-      }
-    });
-    pythonProcess.stdout?.on?.('data', (data) => {
-      const message = data.toString().trim();
-      pythonLog.info(`stdout: ${message}`);
-      if (appWindow) {
-        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
-      }
-    });
-  }
-
-  return pythonProcess;
-};
-
-const spawnPythonAsync = (
-  pythonInterpreterPath: string,
-  cmd: string[],
-  cwd: string,
-  options = { stdx: true }
-): Promise<{ exitCode: number | null }> => {
-  return new Promise((resolve, reject) => {
-    log.info(`Spawning python process with command: ${pythonInterpreterPath} ${cmd.join(' ')} in directory: ${cwd}`);
-    const pythonProcess: ChildProcess = spawn(pythonInterpreterPath, cmd, { cwd });
-
-    const cleanup = () => {
-      pythonProcess.removeAllListeners();
-    };
-
-    if (options.stdx) {
-      log.info('Setting up python process stdout/stderr listeners');
-      pythonProcess.stderr?.on?.('data', (data) => {
-        const message = data.toString();
-        log.error(message);
-        if (appWindow) {
-          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
-        }
-      });
-      pythonProcess.stdout?.on?.('data', (data) => {
-        const message = data.toString();
-        log.info(message);
-        if (appWindow) {
-          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, message);
-        }
-      });
-    }
-
-    pythonProcess.on('close', (code) => {
-      cleanup();
-      log.info(`Python process exited with code ${code}`);
-      resolve({ exitCode: code });
-    });
-
-    pythonProcess.on('error', (err) => {
-      cleanup();
-      log.error(`Failed to start Python process: ${err}`);
-      reject(err);
-    });
-  });
-};
-
-function findAvailablePort(startPort: number, endPort: number): Promise<number> {
-  return new Promise((resolve, reject) => {
-    function tryPort(port: number) {
-      if (port > endPort) {
-        reject(new Error('No available ports found'));
-        return;
-      }
-
-      const server = net.createServer();
-      server.listen(port, host, () => {
-        server.once('close', () => {
-          resolve(port);
-        });
-        server.close();
-      });
-      server.on('error', () => {
-        tryPort(port + 1);
-      });
-    }
-
-    tryPort(startPort);
-  });
-}
 /**
  * Check if the user has completed the first time setup wizard.
  * This means the extra_models_config.yaml file exists in the user's data directory.
  */
 function isFirstTimeSetup(): boolean {
-  const extraModelsConfigPath = getModelConfigPath();
+  const extraModelsConfigPath = ComfyServerConfig.configPath;
+  log.info(`Checking if first time setup is complete. Extra models config path: ${extraModelsConfigPath}`);
   return !fs.existsSync(extraModelsConfigPath);
 }
 
-async function selectedInstallDirectory(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    ipcMain.on(IPC_CHANNELS.SELECTED_DIRECTORY, (_event, value) => {
-      log.info('User selected to install ComfyUI in:', value);
-      resolve(value);
+async function handleInstall(installOptions: InstallOptions) {
+  const migrationSource = installOptions.migrationSourcePath;
+  const migrationItemIds = new Set<string>(installOptions.migrationItemIds ?? []);
+
+  const actualComfyDirectory = path.join(installOptions.installPath, 'ComfyUI');
+  ComfyConfigManager.setUpComfyUI(actualComfyDirectory);
+
+  const { comfyui: comfyuiConfig, ...extraConfigs } = await ComfyServerConfig.getMigrationConfig(
+    migrationSource,
+    migrationItemIds
+  );
+  comfyuiConfig['base_path'] = actualComfyDirectory;
+  await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, comfyuiConfig, extraConfigs);
+}
+
+async function serverStart() {
+  log.info('Server start');
+  const basePath = await getBasePath();
+  const pythonInstallPath = await getPythonInstallPath();
+  if (!basePath || !pythonInstallPath) {
+    log.error('ERROR: Base path not found!');
+    sendProgressUpdate(ProgressStatus.ERROR_INSTALL_PATH);
+    return;
+  }
+  downloadManager = DownloadManager.getInstance(appWindow!, getModelsDirectory(basePath));
+
+  port =
+    port !== -1
+      ? port
+      : await findAvailablePort(host, 8000, 9999).catch((err) => {
+          log.error(`ERROR: Failed to find available port: ${err}`);
+          throw err;
+        });
+
+  if (!useExternalServer) {
+    sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
+    const appResourcesPath = await getAppResourcesPath();
+    appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Creating Python environment...`);
+    const virtualEnvironment = new VirtualEnvironment(basePath);
+    await virtualEnvironment.create({
+      onStdout: (data) => {
+        log.info(data);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+      onStderr: (data) => {
+        log.error(data);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
     });
-  });
-}
-
-async function handleFirstTimeSetup() {
-  const firstTimeSetup = isFirstTimeSetup();
-  log.info('First time setup:', firstTimeSetup);
-  if (firstTimeSetup) {
-    appWindow.send(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, null);
-    const selectedDirectory = await selectedInstallDirectory();
-    const actualComfyDirectory = ComfyConfigManager.setUpComfyUI(selectedDirectory);
-
-    const modelConfigPath = getModelConfigPath();
-    await createModelConfigFiles(modelConfigPath, actualComfyDirectory);
+    sendProgressUpdate(ProgressStatus.STARTING_SERVER);
+    await launchPythonServer(virtualEnvironment, appResourcesPath, ComfyServerConfig.configPath, basePath);
   } else {
-    appWindow.send(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, null);
+    sendProgressUpdate(ProgressStatus.READY);
+    loadComfyIntoMainWindow();
   }
 }
-
-/**
- * Rotate old log files by adding a timestamp to the end of the file.
- * @param logDir The directory to rotate the logs in.
- * @param baseName The base name of the log file.
- */
-const rotateLogFiles = (logDir: string, baseName: string) => {
-  const currentLogPath = path.join(logDir, `${baseName}.log`);
-  if (fs.existsSync(currentLogPath)) {
-    const stats = fs.statSync(currentLogPath);
-    const timestamp = stats.birthtime.toISOString().replace(/[:.]/g, '-');
-    const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
-    fs.renameSync(currentLogPath, newLogPath);
-  }
-};

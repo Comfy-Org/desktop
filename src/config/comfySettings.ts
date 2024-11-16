@@ -2,60 +2,38 @@ import * as fs from 'fs';
 import * as path from 'path';
 import log from 'electron-log/main';
 
-interface ComfySettingsData {
-  'Comfy-Desktop.AutoUpdate'?: boolean;
-  'Comfy-Desktop.SendCrashStatistics'?: boolean;
-  [key: string]: any;
-}
+const DEFAULT_SETTINGS = {
+  'Comfy-Desktop.AutoUpdate': true,
+  'Comfy-Desktop.SendCrashStatistics': true,
+} as const;
+
+type ComfySettingsData = Partial<typeof DEFAULT_SETTINGS>;
 
 /**
  * ComfySettings is a class that loads settings from the comfy.settings.json file.
  */
 export class ComfySettings {
-  private filePath: string;
-  private settings: ComfySettingsData;
+  public readonly filePath: string;
+  private settings: ComfySettingsData = DEFAULT_SETTINGS;
 
-  constructor(settingsPath: string) {
-    this.filePath = path.join(settingsPath, 'user', 'default', 'comfy.settings.json');
-    this.settings = this.loadSettings();
+  constructor(basePath: string) {
+    this.filePath = path.join(basePath, 'user', 'default', 'comfy.settings.json');
   }
 
-  private loadSettings(): ComfySettingsData {
+  public loadSettings() {
     if (!fs.existsSync(this.filePath)) {
-      log.info(`Settings file ${this.filePath} does not exist`);
-      return {};
+      log.info(`Settings file ${this.filePath} does not exist. Using default settings.`);
+      return;
     }
-    try {
-      const fileContent = fs.readFileSync(this.filePath, 'utf-8');
-      return JSON.parse(fileContent);
-    } catch (error) {
-      log.error(`Failed to load settings from ${this.filePath}:`, error);
-      return {};
-    }
+    const fileContent = fs.readFileSync(this.filePath, 'utf-8');
+    this.settings = JSON.parse(fileContent);
   }
 
-  get autoUpdate(): boolean {
-    return this.settings['Comfy-Desktop.AutoUpdate'] ?? true;
+  get<K extends keyof ComfySettingsData>(key: K): ComfySettingsData[K] {
+    return this.settings[key] ?? DEFAULT_SETTINGS[key];
   }
 
-  get sendCrashStatistics(): boolean {
-    return this.settings['Comfy-Desktop.SendCrashStatistics'] ?? true;
-  }
-
-  public reload(): void {
-    this.settings = this.loadSettings();
-  }
-
-  public getAllDesktopSettings(): Record<string, any> {
-    return Object.entries(this.settings)
-      .filter(([key]) => key.startsWith('Comfy-Desktop.'))
-      .reduce(
-        (acc, [key, value]) => {
-          const settingName = key.replace('Comfy-Desktop.', '');
-          acc[settingName] = value;
-          return acc;
-        },
-        {} as Record<string, any>
-      );
+  set<K extends keyof ComfySettingsData>(key: K, value: ComfySettingsData[K]) {
+    this.settings[key] = value;
   }
 }

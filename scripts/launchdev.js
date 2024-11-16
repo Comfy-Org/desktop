@@ -1,4 +1,4 @@
-const {build, createServer} =  require('vite');
+const {build} =  require('vite');
 const electronPath = require('electron');
 const {spawn} = require('child_process');
 
@@ -11,12 +11,8 @@ const logLevel = 'warn'
 /**
  * Setup watcher for `main` package
  * On file changed it totally re-launch electron app.
- * @param {import('vite').ViteDevServer} watchServer Renderer watch server instance.
- * Needs to set up `VITE_DEV_SERVER_URL` environment variable from {@link import('vite').ViteDevServer.resolvedUrls}
  */
-function setupMainPackageWatcher({ resolvedUrls }) {
-	process.env.VITE_DEV_SERVER_URL = resolvedUrls.local[0];
-
+function setupMainPackageWatcher() {
 	/** @type {ChildProcess | null} */
 	let electronApp = null;
 
@@ -43,7 +39,7 @@ function setupMainPackageWatcher({ resolvedUrls }) {
 					}
 
 					/** Spawn new electron process */
-					electronApp = spawn(String(electronPath), ['.'], {
+					electronApp = spawn(String(electronPath), ['--inspect=9223', '.'], {
 						stdio: 'inherit',
 					});
 
@@ -58,10 +54,8 @@ function setupMainPackageWatcher({ resolvedUrls }) {
 /**
  * Setup watcher for `preload` package
  * On file changed it reload web page.
- * @param {import('vite').ViteDevServer} watchServer Renderer watch server instance.
- * Required to access the web socket of the page. By sending the `full-reload` command to the socket, it reloads the web page.
  */
-function setupPreloadPackageWatcher({ws}) {
+function setupPreloadPackageWatcher() {
 	return build({
 		mode,
 		logLevel,
@@ -76,31 +70,13 @@ function setupPreloadPackageWatcher({ws}) {
 		plugins: [
 			{
 				name: 'reload-page-on-preload-package-change',
-				writeBundle() {
-					ws.send({
-						type: 'full-reload',
-					});
-				},
+				writeBundle() {},
 			},
 		],
 	});
 }
 
-/**
- * Dev server for Renderer package
- * This must be the first,
- * because the {@link setupMainPackageWatcher} and {@link setupPreloadPackageWatcher}
- * depend on the dev server properties
- */
-
 (async () => {
-const rendererWatchServer = await createServer({
-	mode,
-	logLevel,
-	configFile: 'vite.renderer.config.ts',
-}).then(s => s.listen());
-
-await setupPreloadPackageWatcher(rendererWatchServer);
-await setupMainPackageWatcher(rendererWatchServer);
-
+	await setupPreloadPackageWatcher();
+	await setupMainPackageWatcher();
 })();

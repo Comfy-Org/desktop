@@ -54,33 +54,17 @@ export class ComfyConfigManager {
     'Comfy.Workflow.ShowMissingModelsWarning': true,
   };
 
-  public static setUpComfyUI(localComfyDirectory: string): string {
-    if (!this.isComfyUIDirectory(localComfyDirectory)) {
-      log.info(
-        `Selected directory ${localComfyDirectory} is not a ComfyUI directory. Appending ComfyUI to install path.`
-      );
-      localComfyDirectory = path.join(localComfyDirectory, 'ComfyUI');
+  public static setUpComfyUI(localComfyDirectory: string) {
+    if (fs.existsSync(localComfyDirectory)) {
+      throw new Error(`Selected directory ${localComfyDirectory} already exists`);
     }
-
     this.createComfyDirectories(localComfyDirectory);
     const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');
-    this.createComfyConfigFile(userSettingsPath, true);
-    return localComfyDirectory;
+    this.createComfyConfigFile(userSettingsPath);
   }
 
-  public static createComfyConfigFile(userSettingsPath: string, overwrite: boolean = false): void {
+  public static createComfyConfigFile(userSettingsPath: string): void {
     const configFilePath = path.join(userSettingsPath, 'comfy.settings.json');
-
-    if (fs.existsSync(configFilePath) && overwrite) {
-      const backupFilePath = path.join(userSettingsPath, 'old_comfy.settings.json');
-      try {
-        fs.renameSync(configFilePath, backupFilePath);
-        log.info(`Renaming existing user settings file to: ${backupFilePath}`);
-      } catch (error) {
-        log.error(`Failed to backup existing user settings file: ${error}`);
-        return;
-      }
-    }
 
     try {
       fs.writeFileSync(configFilePath, JSON.stringify(this.DEFAULT_CONFIG, null, 2));

@@ -20,35 +20,20 @@ describe('ComfyConfigManager', () => {
   });
 
   describe('setUpComfyUI', () => {
-    it('should use existing directory when it contains ComfyUI structure', () => {
-      // Mock isComfyUIDirectory to return true for the input path
-      (fs.existsSync as jest.Mock).mockImplementation((path: string) => {
-        const requiredDirs = [
-          '/existing/ComfyUI/models',
-          '/existing/ComfyUI/input',
-          '/existing/ComfyUI/user',
-          '/existing/ComfyUI/output',
-          '/existing/ComfyUI/custom_nodes',
-        ];
-        return requiredDirs.includes(path);
-      });
-
-      const result = ComfyConfigManager.setUpComfyUI('/existing/ComfyUI');
-
-      expect(result).toBe('/existing/ComfyUI');
+    it('should reject existing directory when it contains ComfyUI structure', () => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      expect(() => ComfyConfigManager.setUpComfyUI('/existing/ComfyUI')).toThrow();
     });
 
     it('should create ComfyUI subdirectory when it is missing', () => {
       (fs.existsSync as jest.Mock).mockImplementationOnce((path: string) => {
-        if (path === '/some/base/path/ComfyUI') {
+        if (['/some/base/path/ComfyUI'].includes(path)) {
           return false;
         }
         return true;
       });
 
-      const result = ComfyConfigManager.setUpComfyUI('/some/base/path');
-
-      expect(result).toBe('/some/base/path/ComfyUI');
+      ComfyConfigManager.setUpComfyUI('/some/base/path/ComfyUI');
     });
   });
 
@@ -104,32 +89,10 @@ describe('ComfyConfigManager', () => {
     it('should create new config file when none exists', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
-      ComfyConfigManager.createComfyConfigFile('/fake/path', false);
+      ComfyConfigManager.createComfyConfigFile('/fake/path');
 
       expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
       expect(fs.renameSync).not.toHaveBeenCalled();
-    });
-
-    it('should backup existing config file when overwrite is true', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path: string) => {
-        return path === '/user/default/comfy.settings.json';
-      });
-
-      ComfyConfigManager.createComfyConfigFile('/user/default', true);
-
-      expect(fs.renameSync).toHaveBeenCalledTimes(1);
-      expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle backup failure gracefully', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.renameSync as jest.Mock).mockImplementation(() => {
-        throw new Error('Backup failed');
-      });
-
-      ComfyConfigManager.createComfyConfigFile('/fake/path', true);
-
-      expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
   });
 

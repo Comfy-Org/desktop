@@ -1,9 +1,4 @@
 import { expect, jest, describe, it } from '@jest/globals';
-import { createWindow } from '../../src/main';
-import { BrowserWindow } from 'electron';
-
-global.MAIN_WINDOW_VITE_DEV_SERVER_URL = 'http://localhost:5173';
-global.MAIN_WINDOW_VITE_NAME = 'index.html';
 
 jest.mock('node:path', () => ({
   join: jest.fn((...args) => {

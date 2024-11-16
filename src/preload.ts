@@ -1,6 +1,6 @@
-import { contextBridge, DownloadItem, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus } from './constants';
-import { DownloadStatus } from './models/DownloadManager';
+import { DownloadState, DownloadStatus } from './models/DownloadManager';
 import path from 'node:path';
 
 /**
@@ -12,18 +12,18 @@ const openFolder = async (folderPath: string) => {
   ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
 };
 
-export interface MigrationItem {
-  id: string;
-  label: string;
-  description: string;
-}
-
 export interface InstallOptions {
   installPath: string;
   autoUpdate: boolean;
   allowMetrics: boolean;
   migrationSourcePath?: string;
   migrationItemIds?: string[];
+}
+
+export interface SystemPaths {
+  appData: string;
+  appPath: string;
+  defaultInstallPath: string;
 }
 
 const electronAPI = {
@@ -57,24 +57,8 @@ const electronAPI = {
   reinstall: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.REINSTALL);
   },
-  onShowSelectDirectory: (callback: () => void) => {
-    ipcRenderer.on(IPC_CHANNELS.SHOW_SELECT_DIRECTORY, () => callback());
-  },
-  /**
-   * Callback for when the user clicks the "Select Directory" button in the setup wizard.
-   * @param callback
-   */
-  selectSetupDirectory: (directory: string) => {
-    ipcRenderer.send(IPC_CHANNELS.SELECTED_DIRECTORY, directory);
-  },
   openDialog: (options: Electron.OpenDialogOptions) => {
     return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);
-  },
-  onFirstTimeSetupComplete: (callback: () => void) => {
-    ipcRenderer.on(IPC_CHANNELS.FIRST_TIME_SETUP_COMPLETE, () => callback());
-  },
-  getDefaultInstallLocation: (): Promise<string> => {
-    return ipcRenderer.invoke(IPC_CHANNELS.DEFAULT_INSTALL_LOCATION);
   },
   /**
    * Various paths that are useful to the renderer.
@@ -100,9 +84,6 @@ const electronAPI = {
   openModelConfig: async () => {
     const modelConfigPath = await electronAPI.getModelConfigPath();
     ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, modelConfigPath);
-  },
-  openForum: () => {
-    ipcRenderer.invoke(IPC_CHANNELS.OPEN_FORUM);
   },
   /**
    * Open the developer tools window.
@@ -137,7 +118,7 @@ const electronAPI = {
     deleteModel: (filename: string, path: string): Promise<boolean> => {
       return ipcRenderer.invoke(IPC_CHANNELS.DELETE_MODEL, { filename, path });
     },
-    getAllDownloads: (): Promise<DownloadItem[]> => {
+    getAllDownloads: (): Promise<DownloadState[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_ALL_DOWNLOADS);
     },
   },
@@ -198,55 +179,37 @@ const electronAPI = {
   isFirstTimeSetup: (): Promise<boolean> => {
     return ipcRenderer.invoke(IPC_CHANNELS.IS_FIRST_TIME_SETUP);
   },
-  // TODO(robinjhuang): Implement these methods.
-  // Currently, they are mocked.
   /**
    * Get the system paths for the application.
    */
-  getSystemPaths: () =>
-    Promise.resolve({
-      appData: 'C:/Users/username/AppData/Roaming',
-      appPath: 'C:/Program Files/comfyui-electron/resources/app',
-      defaultInstallPath: 'C:/Users/username/comfyui-electron',
-    }),
+  getSystemPaths: (): Promise<SystemPaths> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.GET_SYSTEM_PATHS);
+  },
   /**
    * Validate the install path for the application. Check whether the path is valid
    * and writable. The disk should have enough free space to install the application.
    */
-  validateInstallPath: (path: string) => {
-    if (path === 'bad') {
-      return { isValid: false, error: 'Bad path!' };
-    }
-    return { isValid: true };
+  validateInstallPath: (path: string): Promise<{ isValid: boolean; error?: string }> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_INSTALL_PATH, path);
   },
-  /**
-   * Get the migration items for the application.
-   */
-  migrationItems: (): Promise<MigrationItem[]> =>
-    Promise.resolve([
-      {
-        id: 'user_files',
-        label: 'User Files',
-        description: 'Settings and user-created workflows',
-      },
-    ]),
   /**
    * Validate whether the given path is a valid ComfyUI source path.
    */
-  validateComfyUISource: (path: string) => {
-    if (path === 'bad') {
-      return { isValid: false, error: 'Bad path!' };
-    }
-    return { isValid: true };
+  validateComfyUISource: (path: string): Promise<{ isValid: boolean; error?: string }> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_COMFYUI_SOURCE, path);
   },
   /**
    * Show a directory picker dialog and return the selected path.
    */
-  showDirectoryPicker: () => Promise.resolve('C:/Users/username/comfyui-electron/1'),
+  showDirectoryPicker: (): Promise<string> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.SHOW_DIRECTORY_PICKER);
+  },
   /**
    * Install ComfyUI with given options.
    */
-  installComfyUI: (installOptions: InstallOptions) => Promise.resolve(),
+  installComfyUI: (installOptions: InstallOptions) => {
+    ipcRenderer.send(IPC_CHANNELS.INSTALL_COMFYUI, installOptions);
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;

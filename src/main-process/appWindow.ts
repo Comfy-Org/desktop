@@ -4,6 +4,7 @@ import Store from 'electron-store';
 import { StoreType } from '../store';
 import log from 'electron-log/main';
 import { IPC_CHANNELS } from '../constants';
+import { getAppResourcesPath } from '../install/resourcePaths';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
@@ -44,7 +45,6 @@ export class AppWindow {
 
     this.setupWindowEvents();
     this.sendQueuedEventsOnReady();
-    this.loadRenderer();
   }
 
   public isReady(): boolean {
@@ -105,13 +105,17 @@ export class AppWindow {
     this.window.focus();
   }
 
-  private async loadRenderer(): Promise<void> {
-    if (process.env.VITE_DEV_SERVER_URL) {
-      log.info('Loading Vite Dev Server');
-      await this.window.loadURL(process.env.VITE_DEV_SERVER_URL);
+  public async loadRenderer(urlPath: string = ''): Promise<void> {
+    if (process.env.DEV_SERVER_URL) {
+      const url = `${process.env.DEV_SERVER_URL}/${urlPath}`;
+
+      log.info(`Loading development server ${url}`);
+      await this.window.loadURL(url);
       this.window.webContents.openDevTools();
     } else {
-      this.window.loadFile(path.join(__dirname, `../renderer/index.html`));
+      const appResourcesPath = await getAppResourcesPath();
+      const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
+      this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
     }
   }
 
@@ -142,8 +146,8 @@ export class AppWindow {
       while (this.messageQueue.length > 0) {
         const message = this.messageQueue.shift();
         if (message) {
-          log.info('Sending queued message ', message.channel);
-          this.send(message.channel, message.data);
+          log.info('Sending queued message ', message.channel, message.data);
+          this.window.webContents.send(message.channel, message.data);
         }
       }
     });
