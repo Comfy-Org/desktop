@@ -72,6 +72,12 @@ on Windows: %AppData%\Roaming\{app name}\logs
 
 ## NPM Dependencies
 
+### Node
+
+We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage node versions. This project uses node v20.x.
+
+### Yarn
+
 This project uses `yarn` as its package manager. If you do not already have a `yarn` binary available on your PATH, run:
 
 ```bash
@@ -149,10 +155,6 @@ yarn make
 There are helpful debug launch scripts for VSCode / Cursor under `.vscode/launch.json`. It will start the dev server as defined in `.vscode/tasks.json`. Then attach the debugger.
 
 This can be used simply by pressing `F5` in VSCode or VSCode derivative.
-
-**Troubleshooting**
-
-If you run into issues with node, you might want to check which node version is being used in the debug terminal. Sometimes your system node is used because it's on the PATH. We recommend you uninstalling system node and use [nvm](https://github.com/nvm-sh/nvm) to manage node versions.
 
 # Release
 
