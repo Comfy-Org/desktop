@@ -40,6 +40,7 @@
     "postinstall": "node ./scripts/todesktop/postInstall.js",
     "prepare": "husky",
     "publish": "yarn run vite:compile && todesktop build --async",
+    "reset-install": "node scripts/resetInstall.js",
     "sign": "node debug/sign.js",
     "start": "node ./scripts/launchdev.js",
     "test:e2e": "npx playwright test",
