@@ -19,11 +19,8 @@ import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { InstallOptions } from './preload';
 import { VirtualEnvironment } from './virtualEnvironment';
-import waitOn from 'wait-on';
 
 dotenv.config();
-
-let comfyServerProcess: ChildProcess | null = null;
 
 /** The host to use for the ComfyUI server. */
 const host = process.env.COMFY_HOST || '127.0.0.1';
@@ -67,7 +64,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', async () => {
   try {
     log.info('Before-quit: Killing Python server');
-    await killPythonServer();
+    // await killPythonServer();
   } catch (error) {
     // Server did NOT exit properly
     log.error('Python server did not exit properly');
@@ -258,141 +255,12 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
     });
 }
 
-const isComfyServerReady = async (host: string, port: number): Promise<boolean> => {
-  try {
-    await waitOn({
-      resources: [`http://${host}:${port}/queue`],
-      timeout: 5000, // 5 seconds timeout
-      interval: 1000, // Check every second
-    });
-    log.info(`Server is ready at http://${host}:${port}/queue`);
-    return true;
-  } catch (error) {
-    log.error(`Server not ready at http://${host}:${port}/queue: ${error}`);
-    return false;
-  }
-};
-
-const launchPythonServer = async (
-  virtualEnvironment: VirtualEnvironment,
-  appResourcesPath: string,
-  modelConfigPath: string,
-  basePath: string
-) => {
-  const isServerRunning = await isComfyServerReady(host, port);
-  if (isServerRunning) {
-    log.info('Python server is already running. Attaching to it.');
-    // Server has been started outside the app, so attach to it.
-    return loadComfyIntoMainWindow();
-  }
-  rotateLogFiles(app.getPath('logs'), 'comfyui');
-  return new Promise<void>(async (resolve, reject) => {
-    const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
-    const userDirectoryPath = path.join(basePath, 'user');
-    const inputDirectoryPath = path.join(basePath, 'input');
-    const outputDirectoryPath = path.join(basePath, 'output');
-    const comfyMainCmd = [
-      scriptPath,
-      '--user-directory',
-      userDirectoryPath,
-      '--input-directory',
-      inputDirectoryPath,
-      '--output-directory',
-      outputDirectoryPath,
-      ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
-      '--front-end-root',
-      path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app'),
-      '--extra-model-paths-config',
-      modelConfigPath,
-      '--port',
-      port.toString(),
-    ];
-
-    log.info(`Starting ComfyUI using port ${port}.`);
-    const comfyUILog = log.create({ logId: 'comfyui' });
-    comfyUILog.transports.file.fileName = 'comfyui.log';
-    comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd, {
-      onStdout: (data) => {
-        comfyUILog.info(data);
-        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-      },
-      onStderr: (data) => {
-        comfyUILog.error(data);
-        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-      },
-    });
-
-    comfyServerProcess.on('error', (err) => {
-      log.error(`Failed to start ComfyUI: ${err}`);
-      reject(err);
-    });
-
-    comfyServerProcess.on('exit', (code, signal) => {
-      if (code !== 0) {
-        log.error(`Python process exited with code ${code} and signal ${signal}`);
-        reject(new Error(`Python process exited with code ${code} and signal ${signal}`));
-      } else {
-        log.info(`Python process exited successfully with code ${code}`);
-        resolve();
-      }
-    });
-
-    try {
-      await waitOn({
-        resources: [`http://${host}:${port}/queue`],
-        timeout: 120000, // 120 seconds timeout
-        interval: 1000, // Check every second
-      });
-
-      sendProgressUpdate(ProgressStatus.READY);
-      log.info('Python server is ready');
-
-      //For now just replace the source of the main window to the python server
-      setTimeout(() => loadComfyIntoMainWindow(), 1000);
-      resolve();
-    } catch (error) {
-      log.error('Server failed to start:', error);
-      reject('Python Server Failed To Start Within Timeout.');
-    }
-  });
-};
-
 function sendProgressUpdate(status: ProgressStatus): void {
   log.info('Sending progress update to renderer ' + status);
   appWindow.send(IPC_CHANNELS.LOADING_PROGRESS, {
     status,
   });
 }
-
-const killPythonServer = async (): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    if (!comfyServerProcess) {
-      resolve();
-      return;
-    }
-
-    log.info('Killing ComfyUI python server.');
-    // Set up a timeout in case the process doesn't exit
-    const timeout = setTimeout(() => {
-      reject(new Error('Timeout: Python server did not exit within 10 seconds'));
-    }, 10000);
-
-    // Listen for the 'exit' event
-    comfyServerProcess.once('exit', (code, signal) => {
-      clearTimeout(timeout);
-      log.info(`Python server exited with code ${code} and signal ${signal}`);
-      comfyServerProcess = null;
-      resolve();
-    });
-
-    // Attempt to kill the process
-    const result = comfyServerProcess.kill();
-    if (!result) {
-      clearTimeout(timeout);
-      reject(new Error('Failed to initiate kill signal for python server'));
-    }
-  });
-};
 
 /**
  * Check if the user has completed the first time setup wizard.
@@ -440,7 +308,7 @@ async function serverStart() {
 
   if (!useExternalServer) {
     sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
-    const appResourcesPath = await getAppResourcesPath();
+    const appResourcesPath = getAppResourcesPath();
     appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Creating Python environment...`);
     const virtualEnvironment = new VirtualEnvironment(basePath);
     await virtualEnvironment.create({
@@ -454,7 +322,7 @@ async function serverStart() {
       },
     });
     sendProgressUpdate(ProgressStatus.STARTING_SERVER);
-    await launchPythonServer(virtualEnvironment, appResourcesPath, ComfyServerConfig.configPath, basePath);
+    // await launchPythonServer(virtualEnvironment, appResourcesPath, ComfyServerConfig.configPath, basePath);
   } else {
     sendProgressUpdate(ProgressStatus.READY);
     loadComfyIntoMainWindow();
