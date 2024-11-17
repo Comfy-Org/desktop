@@ -3,6 +3,8 @@ import { spawn, ChildProcess } from 'node:child_process';
 import log from 'electron-log/main';
 import { pathAccessible } from './utils';
 import { app } from 'electron';
+import * as pty from 'node-pty';
+import * as os from 'os';
 
 type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -22,6 +24,28 @@ export class VirtualEnvironment {
   readonly pythonInterpreterPath: string;
   readonly comfyUIRequirementsPath: string;
   readonly comfyUIManagerRequirementsPath: string;
+  uvPty: pty.IPty | undefined;
+
+  get uvPtyInstance() {
+    if (!this.uvPty) {
+      const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+      this.uvPty = pty.spawn(shell, [], {
+        handleFlowControl: false,
+        conptyInheritCursor: false,
+        name: 'comfyui-uv-terminal',
+        cwd: this.venvRootPath,
+        env: {
+          ...(process.env as Record<string, string>),
+          UV_CACHE_DIR: this.cacheDir,
+          UV_TOOL_DIR: this.cacheDir,
+          UV_TOOL_BIN_DIR: this.cacheDir,
+          UV_PYTHON_INSTALL_DIR: this.cacheDir,
+          VIRTUAL_ENV: this.venvPath,
+        },
+      });
+    }
+    return this.uvPty;
+  }
 
   constructor(venvPath: string, pythonVersion: string = '3.12.4') {
     this.venvRootPath = venvPath;
@@ -132,36 +156,45 @@ export class VirtualEnvironment {
    * @returns
    */
   public async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
-    return new Promise((resolve, reject) => {
-      const childProcess = this.runUvCommand(args, callbacks);
-      childProcess.on('close', (code) => {
-        resolve({ exitCode: code });
-      });
-
-      childProcess.on('error', (err) => {
-        reject(err);
-      });
-    });
+    return this.runPtyCommandAsync(`${this.uvPath} ${args.map((a) => `"${a}"`).join(' ')}`, callbacks?.onStdout);
   }
 
-  /**
-   * Runs a uv command with the virtual environment set to this instance's venv.
-   * @param args
-   * @returns
-   */
-  public runUvCommand(args: string[], callbacks?: ProcessCallbacks): ChildProcess {
-    return this.runCommand(
-      this.uvPath,
-      args,
-      {
-        UV_CACHE_DIR: this.cacheDir,
-        UV_TOOL_DIR: this.cacheDir,
-        UV_TOOL_BIN_DIR: this.cacheDir,
-        UV_PYTHON_INSTALL_DIR: this.cacheDir,
-        VIRTUAL_ENV: this.venvPath,
-      },
-      callbacks
-    );
+  private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
+    const id = new Date().valueOf();
+    return new Promise((res) => {
+      const endMarker = `--end-${id}:`;
+      const input = `${command}; echo "${endMarker}$?"`;
+      this.uvPtyInstance.onData((data) => {
+        const lines = data.split('\n');
+        for (const line of lines) {
+          const clean = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '');
+          if (clean.startsWith(endMarker)) {
+            const exit = clean.substring(endMarker.length).trim();
+            let exitCode: number;
+            if (exit === 'True') {
+              exitCode = 0;
+            } else if (exit === 'False') {
+              exitCode = -999;
+            } else {
+              exitCode = parseInt(exit);
+              if (isNaN(exitCode)) {
+                console.warn('Unable to parse exit code:', exit);
+                exitCode = 1;
+              }
+            }
+            res({
+              exitCode,
+            });
+            break;
+          }
+          console.log(clean);
+        }
+        // TODO: Update frontend to use xtermjs
+        // console.log(data);
+        onData?.(data);
+      });
+      this.uvPtyInstance.write(`${input}\r\n`);
+    });
   }
 
   private runCommand(
