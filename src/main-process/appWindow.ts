@@ -3,7 +3,7 @@ import path from 'node:path';
 import Store from 'electron-store';
 import { StoreType } from '../store';
 import log from 'electron-log/main';
-import { IPC_CHANNELS } from '../constants';
+import { IPC_CHANNELS, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
 /**
@@ -79,8 +79,8 @@ export class AppWindow {
     });
   }
 
-  public loadURL(url: string): void {
-    this.window.loadURL(url);
+  public loadComfyUI(serverArgs: ServerArgs) {
+    this.window.loadURL(`http://${serverArgs.host}:${serverArgs.port}`);
   }
 
   public openDevTools(): void {
