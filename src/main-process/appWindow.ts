@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu } from 'electron';
+import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { StoreType } from '../store';
@@ -46,6 +46,7 @@ export class AppWindow {
     this.setupWindowEvents();
     this.sendQueuedEventsOnReady();
     this.setupTray();
+    this.buildMenu();
   }
 
   public isReady(): boolean {
@@ -205,5 +206,36 @@ export class AppWindow {
 
     // If we want to make it more dynamic return tray so we can access it later
     return tray;
+  }
+
+  buildMenu() {
+    const menu = Menu.getApplicationMenu();
+    if (menu) {
+      const aboutMenuItem = {
+        label: 'About ComfyUI',
+        click: () => {
+          dialog.showMessageBox({
+            title: 'About',
+            message: `ComfyUI v${app.getVersion()}`,
+            detail: 'Created by Comfy Org\nCopyright © 2024',
+            buttons: ['OK'],
+          });
+        },
+      };
+      const helpMenuItem = menu.items.find((item) => item.role === 'help');
+      if (helpMenuItem && helpMenuItem.submenu) {
+        helpMenuItem.submenu.append(new MenuItem(aboutMenuItem));
+        Menu.setApplicationMenu(menu);
+      } else {
+        // If there's no Help menu, add one
+        menu.append(
+          new MenuItem({
+            label: 'Help',
+            submenu: [aboutMenuItem],
+          })
+        );
+        Menu.setApplicationMenu(menu);
+      }
+    }
   }
 }

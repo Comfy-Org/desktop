@@ -13,7 +13,6 @@ import { DownloadManager } from './models/DownloadManager';
 import { findAvailablePort, getModelsDirectory, rotateLogFiles } from './utils';
 import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
-import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
 import { getAppResourcesPath, getBasePath, getPythonInstallPath } from './install/resourcePaths';
@@ -147,7 +146,7 @@ if (!gotTheLock) {
     log.info('App ready');
 
     try {
-      createWindow();
+      appWindow = new AppWindow();
       new PathHandlers().registerHandlers();
       new AppInfoHandlers().registerHandlers();
 
@@ -258,14 +257,6 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
       }
     });
 }
-
-/**
- * Creates the main application window.
- */
-export const createWindow = (): void => {
-  appWindow = new AppWindow();
-  buildMenu();
-};
 
 const isComfyServerReady = async (host: string, port: number): Promise<boolean> => {
   const url = `http://${host}:${port}/queue`;
