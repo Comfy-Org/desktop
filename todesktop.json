@@ -20,5 +20,8 @@
   "filesForDistribution": ["!assets/**", "!dist/**", "!src/**", "!scripts/**", "!.yarn/**", "!.yarnrc.yml"],
   "mac": {
     "additionalBinariesToSign": ["./assets/uv/macos/uv", "./assets/uv/macos/uvx"]
+  },
+  "windows": {
+    "nsisInclude": "./scripts/installer.nsi"
   }
 }
