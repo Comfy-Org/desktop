@@ -1,6 +1,5 @@
 import { ChildProcess } from 'node:child_process';
 import fs from 'fs';
-import axios from 'axios';
 import path from 'node:path';
 import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
 import { app, dialog, ipcMain } from 'electron';
@@ -20,6 +19,7 @@ import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { InstallOptions } from './preload';
 import { VirtualEnvironment } from './virtualEnvironment';
+import waitOn from 'wait-on';
 
 dotenv.config();
 
@@ -259,34 +259,19 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
 }
 
 const isComfyServerReady = async (host: string, port: number): Promise<boolean> => {
-  const url = `http://${host}:${port}/queue`;
-
   try {
-    const response = await axios.get(url, {
+    await waitOn({
+      resources: [`http://${host}:${port}/queue`],
       timeout: 5000, // 5 seconds timeout
+      interval: 1000, // Check every second
     });
-
-    if (response.status >= 200 && response.status < 300) {
-      log.info(`Server responded with status ${response.status} at ${url}`);
-      return true;
-    } else {
-      log.warn(`Server responded with status ${response.status} at ${url}`);
-      return false;
-    }
+    log.info(`Server is ready at http://${host}:${port}/queue`);
+    return true;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      log.error(`Failed to connect to server at ${url}: ${error.message}`);
-    } else {
-      log.error(`Unexpected error when checking server at ${url}: ${error}`);
-    }
+    log.error(`Server not ready at http://${host}:${port}/queue: ${error}`);
     return false;
   }
 };
-
-// Launch Python Server Variables
-const maxFailWait: number = 120 * 1000; // 120seconds
-let currentWaitTime = 0;
-let spawnServerTimeout: NodeJS.Timeout | null = null;
 
 const launchPythonServer = async (
   virtualEnvironment: VirtualEnvironment,
@@ -352,35 +337,23 @@ const launchPythonServer = async (
       }
     });
 
-    const checkInterval = 1000; // Check every 1 second
+    try {
+      await waitOn({
+        resources: [`http://${host}:${port}/queue`],
+        timeout: 120000, // 120 seconds timeout
+        interval: 1000, // Check every second
+      });
 
-    const checkServerReady = async (): Promise<void> => {
-      currentWaitTime += 1000;
-      if (currentWaitTime > maxFailWait) {
-        //Something has gone wrong and we need to backout.
-        if (spawnServerTimeout) {
-          clearTimeout(spawnServerTimeout);
-        }
-        reject('Python Server Failed To Start Within Timeout.');
-      }
-      const isReady = await isComfyServerReady(host, port);
-      if (isReady) {
-        sendProgressUpdate(ProgressStatus.READY);
-        log.info('Python server is ready');
+      sendProgressUpdate(ProgressStatus.READY);
+      log.info('Python server is ready');
 
-        //For now just replace the source of the main window to the python server
-        setTimeout(() => loadComfyIntoMainWindow(), 1000);
-        if (spawnServerTimeout) {
-          clearTimeout(spawnServerTimeout);
-        }
-        return resolve();
-      } else {
-        log.info('Ping failed. Retrying...');
-        spawnServerTimeout = setTimeout(checkServerReady, checkInterval);
-      }
-    };
-
-    checkServerReady();
+      //For now just replace the source of the main window to the python server
+      setTimeout(() => loadComfyIntoMainWindow(), 1000);
+      resolve();
+    } catch (error) {
+      log.error('Server failed to start:', error);
+      reject('Python Server Failed To Start Within Timeout.');
+    }
   });
 };
 
