@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, app, shell, ipcMain } from 'electron';
+import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { StoreType } from '../store';
@@ -45,6 +45,7 @@ export class AppWindow {
 
     this.setupWindowEvents();
     this.sendQueuedEventsOnReady();
+    this.setupTray();
   }
 
   public isReady(): boolean {
@@ -151,5 +152,58 @@ export class AppWindow {
         }
       }
     });
+  }
+
+  setupTray() {
+    // Set icon for the tray
+    // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
+    const trayImage = path.join(
+      app.isPackaged ? process.resourcesPath : './assets',
+      'UI',
+      process.platform === 'darwin' ? 'Comfy_Logo_x16_BW.png' : 'Comfy_Logo_x32.png'
+    );
+    let tray = new Tray(trayImage);
+
+    tray.setToolTip('ComfyUI');
+
+    // For Mac you can have a separate icon when you press.
+    // The current design language for Mac Eco System is White or Black icon then when you click it is in color
+    if (process.platform === 'darwin') {
+      tray.setPressedImage(path.join(app.isPackaged ? process.resourcesPath : './assets', 'UI', 'Comfy_Logo_x16.png'));
+    }
+
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Show Comfy Window',
+        click: () => {
+          this.show();
+          // Mac Only
+          if (process.platform === 'darwin') {
+            app.dock.show();
+          }
+        },
+      },
+      {
+        label: 'Quit Comfy',
+        click: () => {
+          app.quit();
+        },
+      },
+      {
+        label: 'Hide',
+        click: () => {
+          this.hide();
+          // Mac Only
+          if (process.platform === 'darwin') {
+            app.dock.hide();
+          }
+        },
+      },
+    ]);
+
+    tray.setContextMenu(contextMenu);
+
+    // If we want to make it more dynamic return tray so we can access it later
+    return tray;
   }
 }

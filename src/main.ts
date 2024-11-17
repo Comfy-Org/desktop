@@ -2,7 +2,6 @@ import { ChildProcess } from 'node:child_process';
 import fs from 'fs';
 import axios from 'axios';
 import path from 'node:path';
-import { setupTray } from './tray';
 import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
@@ -149,7 +148,6 @@ if (!gotTheLock) {
 
     try {
       createWindow();
-      setupTray(appWindow);
       new PathHandlers().registerHandlers();
       new AppInfoHandlers().registerHandlers();
 
