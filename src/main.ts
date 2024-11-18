@@ -289,7 +289,7 @@ async function serverStart() {
   const targetPort = process.env.COMFY_PORT ? parseInt(process.env.COMFY_PORT) : DEFAULT_SERVER_ARGS.port;
   const port = await findAvailablePort(host, targetPort, targetPort + 1000);
   const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
-  const extraServerArgs: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { '--cpu-only': '' } : {};
+  const extraServerArgs: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { '--cpu': '' } : {};
 
   if (!useExternalServer) {
     sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
