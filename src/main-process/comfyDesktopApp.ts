@@ -3,7 +3,7 @@ import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
 import todesktop from '@todesktop/runtime';
-import { IPC_CHANNELS, ProgressStatus, SENTRY_URL_ENDPOINT, ServerArgs } from '../constants';
+import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { ComfySettings } from '../config/comfySettings';
 import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
@@ -33,9 +33,7 @@ export class ComfyDesktopApp {
     this.comfySettings.loadSettings();
     this.registerIPCHandlers();
     this.initializeTodesktop();
-    // TODO(huchenlei): Figure out why sentry is blocking the app from starting
-    // this.initializeSentry();
-    // await this.setupGPUContext();
+    await this.setupGPUContext();
   }
 
   initializeTodesktop(): void {
@@ -44,33 +42,6 @@ export class ComfyDesktopApp {
       customLogger: log,
       updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
       autoUpdater: this.comfySettings.get('Comfy-Desktop.AutoUpdate'),
-    });
-  }
-
-  initializeSentry() {
-    log.debug('Initializing Sentry');
-    Sentry.init({
-      dsn: SENTRY_URL_ENDPOINT,
-      autoSessionTracking: false,
-      beforeSend: async (event, hint) => {
-        if (event.extra?.comfyUIExecutionError || this.comfySettings.get('Comfy-Desktop.SendCrashStatistics')) {
-          return event;
-        }
-
-        const { response } = await dialog.showMessageBox({
-          title: 'Send Crash Statistics',
-          message: `Would you like to send crash statistics to the team?`,
-          buttons: ['Always send crash reports', 'Do not send crash report'],
-        });
-
-        return response === 0 ? event : null;
-      },
-      integrations: [
-        Sentry.childProcessIntegration({
-          breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
-          events: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
-        }),
-      ],
     });
   }
 

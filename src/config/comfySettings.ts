@@ -2,12 +2,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import log from 'electron-log/main';
 
-const DEFAULT_SETTINGS = {
+const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.AutoUpdate': true,
   'Comfy-Desktop.SendCrashStatistics': true,
-};
+} as const;
 
-type ComfySettingsData = Partial<typeof DEFAULT_SETTINGS>;
+export interface ComfySettingsData {
+  'Comfy-Desktop.AutoUpdate': boolean;
+  'Comfy-Desktop.SendCrashStatistics': boolean;
+}
 
 /**
  * ComfySettings is a class that loads settings from the comfy.settings.json file.
