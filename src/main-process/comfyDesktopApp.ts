@@ -3,7 +3,7 @@ import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
 import todesktop from '@todesktop/runtime';
-import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ServerArgs } from '../constants';
+import { IPC_CHANNELS, ProgressStatus, SENTRY_URL_ENDPOINT, ServerArgs } from '../constants';
 import { ComfySettings } from '../config/comfySettings';
 import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
@@ -170,10 +170,12 @@ export class ComfyDesktopApp {
         log.error(error);
       }
     });
-
     log.info('Server start');
+    this.appWindow.loadRenderer('server-start');
+
     DownloadManager.getInstance(this.appWindow!, getModelsDirectory(this.basePath));
-    this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Creating Python environment...`);
+
+    this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
     const virtualEnvironment = new VirtualEnvironment(this.basePath);
     await virtualEnvironment.create({
       onStdout: (data) => {
@@ -185,8 +187,9 @@ export class ComfyDesktopApp {
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     });
+
+    this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);
-    this.appWindow.loadRenderer('server-start');
     await this.comfyServer.start();
   }
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 import Store from 'electron-store';
 import { StoreType } from '../store';
 import log from 'electron-log/main';
-import { IPC_CHANNELS, ServerArgs } from '../constants';
+import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
 /**
@@ -44,6 +44,7 @@ export class AppWindow {
     });
 
     this.setupWindowEvents();
+    this.setupAppEvents();
     this.sendQueuedEventsOnReady();
     this.setupTray();
     this.buildMenu();
@@ -69,6 +70,16 @@ export class AppWindow {
 
     // Send current message
     this.window.webContents.send(channel, data);
+  }
+
+  /**
+   * Report progress of server start.
+   * @param status - The status of the server start progress.
+   */
+  sendServerStartProgress(status: ProgressStatus): void {
+    this.send(IPC_CHANNELS.LOADING_PROGRESS, {
+      status,
+    });
   }
 
   public onClose(callback: () => void): void {
@@ -137,6 +148,16 @@ export class AppWindow {
     this.window.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
       return { action: 'deny' };
+    });
+  }
+
+  private setupAppEvents(): void {
+    app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+      log.info('Received second instance message!');
+      log.info(additionalData);
+
+      if (this.isMinimized()) this.restore();
+      this.focus();
     });
   }
 

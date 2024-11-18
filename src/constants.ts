@@ -50,10 +50,6 @@ export enum ProgressStatus {
    * Ending state. General error state.
    */
   ERROR = 'error',
-  /**
-   * Error state. Installation path does not exist.
-   */
-  ERROR_INSTALL_PATH = 'error-install-path',
 }
 
 export const ProgressMessages = {
@@ -63,7 +59,6 @@ export const ProgressMessages = {
   [ProgressStatus.READY]: 'Finishing...',
   [ProgressStatus.ERROR]:
     'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the Help menu. Please report issues to: https://forum.comfy.org',
-  [ProgressStatus.ERROR_INSTALL_PATH]: 'Installation path does not exist. Please reset the installation location.',
 } as const;
 
 export type IPCChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
