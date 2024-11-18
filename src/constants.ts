@@ -103,7 +103,7 @@ export const DEFAULT_SERVER_ARGS = {
   /** The host to use for the ComfyUI server. */
   host: '127.0.0.1',
   /** The port to use for the ComfyUI server. */
-  port: 8188,
+  port: 8000,
   /**
    * Whether to use an external server instead of starting one locally.
    * Only effective if COMFY_PORT is set.
