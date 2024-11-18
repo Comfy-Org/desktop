@@ -3,6 +3,10 @@
 
 ${UnStrStr}
 
+Section "WriteUninstaller"
+    WriteUninstaller $INSTDIR\uninstaller.exe
+SectionEnd
+
 Section uninstall
   ClearErrors
   FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
