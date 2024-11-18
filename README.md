@@ -165,7 +165,7 @@ npx electron-rebuild
 or if that fails
 
 ```
-yarn install -D electron-rebuild
+yarn install -D @electron/rebuild
 rm -rf node_modules
 rm yarn.lock
 yarn install
