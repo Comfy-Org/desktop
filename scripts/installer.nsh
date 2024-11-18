@@ -18,8 +18,8 @@ Section uninstall
       StrCpy $2 $1 1024 10 ; Strip off first 10 characters (base_path:)
 
       ; $2 now contains value of base_path
-      RMDir "$2\.venv"
-      RMDir "$2\uv-cache"
+      RMDir /r "$2\.venv"
+      RMDir /r "$2\uv-cache"
     ${EndIf}
     FileRead $0 $line
   ${LoopUntil} 1 = 0
