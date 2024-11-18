@@ -1,15 +1,15 @@
 !include 'LogicLib.nsh'
 
-!define StrStr "!insertmacro StrStr"
+!define UnStrStr "!insertmacro UnStrStr"
  
-!macro StrStr ResultVar String SubString
+!macro UnStrStr ResultVar String SubString
   Push `${String}`
   Push `${SubString}`
-  Call StrStr
+  Call UnStrStr
   Pop `${ResultVar}`
 !macroend
  
-Function StrStr
+Function UnStrStr
 /*After this point:
   ------------------------------------------
   $R0 = SubString (input)
@@ -69,7 +69,7 @@ Section uninstall
   var /global line
   FileRead $0 $line
   ${DoUntil} ${Errors}
-    ${StrStr} $1 $line "base_path:" ; Find base_path prefix in the line
+    ${UnStrStr} $1 $line "base_path:" ; Find base_path prefix in the line
     ${If} $1 != ""
       StrCpy $2 $1 1024 10 ; Strip off first 10 characters (base_path:)
 
