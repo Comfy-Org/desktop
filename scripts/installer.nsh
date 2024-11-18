@@ -1,4 +1,5 @@
 !include 'LogicLib.nsh'
+!include "StrFunc.nsh"
 
 ${UnStrStr}
 
