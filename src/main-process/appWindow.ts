@@ -1,9 +1,9 @@
-import { BrowserWindow, screen, app, shell, ipcMain } from 'electron';
+import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { StoreType } from '../store';
 import log from 'electron-log/main';
-import { IPC_CHANNELS } from '../constants';
+import { IPC_CHANNELS, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
 /**
@@ -45,6 +45,8 @@ export class AppWindow {
 
     this.setupWindowEvents();
     this.sendQueuedEventsOnReady();
+    this.setupTray();
+    this.buildMenu();
   }
 
   public isReady(): boolean {
@@ -77,8 +79,8 @@ export class AppWindow {
     });
   }
 
-  public loadURL(url: string): void {
-    this.window.loadURL(url);
+  public loadComfyUI(serverArgs: ServerArgs) {
+    this.window.loadURL(`http://${serverArgs.host}:${serverArgs.port}`);
   }
 
   public openDevTools(): void {
@@ -151,5 +153,89 @@ export class AppWindow {
         }
       }
     });
+  }
+
+  setupTray() {
+    // Set icon for the tray
+    // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
+    const trayImage = path.join(
+      app.isPackaged ? process.resourcesPath : './assets',
+      'UI',
+      process.platform === 'darwin' ? 'Comfy_Logo_x16_BW.png' : 'Comfy_Logo_x32.png'
+    );
+    let tray = new Tray(trayImage);
+
+    tray.setToolTip('ComfyUI');
+
+    // For Mac you can have a separate icon when you press.
+    // The current design language for Mac Eco System is White or Black icon then when you click it is in color
+    if (process.platform === 'darwin') {
+      tray.setPressedImage(path.join(app.isPackaged ? process.resourcesPath : './assets', 'UI', 'Comfy_Logo_x16.png'));
+    }
+
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Show Comfy Window',
+        click: () => {
+          this.show();
+          // Mac Only
+          if (process.platform === 'darwin') {
+            app.dock.show();
+          }
+        },
+      },
+      {
+        label: 'Quit Comfy',
+        click: () => {
+          app.quit();
+        },
+      },
+      {
+        label: 'Hide',
+        click: () => {
+          this.hide();
+          // Mac Only
+          if (process.platform === 'darwin') {
+            app.dock.hide();
+          }
+        },
+      },
+    ]);
+
+    tray.setContextMenu(contextMenu);
+
+    // If we want to make it more dynamic return tray so we can access it later
+    return tray;
+  }
+
+  buildMenu() {
+    const menu = Menu.getApplicationMenu();
+    if (menu) {
+      const aboutMenuItem = {
+        label: 'About ComfyUI',
+        click: () => {
+          dialog.showMessageBox({
+            title: 'About',
+            message: `ComfyUI v${app.getVersion()}`,
+            detail: 'Created by Comfy Org\nCopyright © 2024',
+            buttons: ['OK'],
+          });
+        },
+      };
+      const helpMenuItem = menu.items.find((item) => item.role === 'help');
+      if (helpMenuItem && helpMenuItem.submenu) {
+        helpMenuItem.submenu.append(new MenuItem(aboutMenuItem));
+        Menu.setApplicationMenu(menu);
+      } else {
+        // If there's no Help menu, add one
+        menu.append(
+          new MenuItem({
+            label: 'Help',
+            submenu: [aboutMenuItem],
+          })
+        );
+        Menu.setApplicationMenu(menu);
+      }
+    }
   }
 }

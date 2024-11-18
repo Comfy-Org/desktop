@@ -102,3 +102,20 @@ export const MigrationItems: MigrationItem[] = [
   //   description: 'Reference custom node files from existing ComfyUI installations. (No copy)',
   // },
 ] as const;
+
+export const DEFAULT_SERVER_ARGS = {
+  /** The host to use for the ComfyUI server. */
+  host: '127.0.0.1',
+  /** The port to use for the ComfyUI server. */
+  port: 8000,
+  /**
+   * Whether to use an external server instead of starting one locally.
+   * Only effective if COMFY_PORT is set.
+   * Note: currently used for testing only.
+   */
+  useExternalServer: false,
+  // Extra arguments to pass to the ComfyUI server.
+  extraServerArgs: {} as Record<string, string>,
+};
+
+export type ServerArgs = typeof DEFAULT_SERVER_ARGS;

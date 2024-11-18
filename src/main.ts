@@ -1,9 +1,6 @@
-import { ChildProcess } from 'node:child_process';
 import fs from 'fs';
-import axios from 'axios';
 import path from 'node:path';
-import { setupTray } from './tray';
-import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
+import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus, ServerArgs, DEFAULT_SERVER_ARGS } from './constants';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
@@ -11,10 +8,9 @@ import { graphics } from 'systeminformation';
 import { ComfyServerConfig } from './config/comfyServerConfig';
 import todesktop from '@todesktop/runtime';
 import { DownloadManager } from './models/DownloadManager';
-import { findAvailablePort, getModelsDirectory, rotateLogFiles } from './utils';
+import { findAvailablePort, getModelsDirectory } from './utils';
 import { ComfySettings } from './config/comfySettings';
 import dotenv from 'dotenv';
-import { buildMenu } from './menu/menu';
 import { ComfyConfigManager } from './config/comfyConfigManager';
 import { AppWindow } from './main-process/appWindow';
 import { Terminal } from './terminal';
@@ -23,23 +19,12 @@ import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { InstallOptions } from './preload';
 import { VirtualEnvironment } from './virtualEnvironment';
+import { ComfyServer } from './main-process/comfyServer';
 
 dotenv.config();
 
-let comfyServerProcess: ChildProcess | null = null;
-
-/** The host to use for the ComfyUI server. */
-const host = process.env.COMFY_HOST || '127.0.0.1';
-/** The port to use for the ComfyUI server. */
-let port = parseInt(process.env.COMFY_PORT || '-1');
-/**
- * Whether to use an external server instead of starting one locally.
- * Only effective if COMFY_PORT is set.
- * Note: currently used for testing only.
- */
-const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
-
 let appWindow: AppWindow;
+let comfyServer: ComfyServer | null = null;
 let downloadManager: DownloadManager;
 let terminal: Terminal;
 
@@ -71,7 +56,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', async () => {
   try {
     log.info('Before-quit: Killing Python server');
-    await killPythonServer();
+    await comfyServer?.kill();
   } catch (error) {
     // Server did NOT exit properly
     log.error('Python server did not exit properly');
@@ -150,8 +135,7 @@ if (!gotTheLock) {
     log.info('App ready');
 
     try {
-      createWindow();
-      setupTray(appWindow);
+      appWindow = new AppWindow();
       new PathHandlers().registerHandlers();
       new AppInfoHandlers().registerHandlers();
 
@@ -233,9 +217,6 @@ if (!gotTheLock) {
   });
 }
 
-function loadComfyIntoMainWindow() {
-  appWindow.loadURL(`http://${host}:${port}`);
-}
 function restartApp({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
   function relaunchApplication(delay?: number) {
     if (delay) {
@@ -277,176 +258,12 @@ function restartApp({ customMessage, delay }: { customMessage?: string; delay?: 
     });
 }
 
-/**
- * Creates the main application window.
- */
-export const createWindow = (): void => {
-  appWindow = new AppWindow();
-  buildMenu();
-};
-
-const isComfyServerReady = async (host: string, port: number): Promise<boolean> => {
-  const url = `http://${host}:${port}/queue`;
-
-  try {
-    const response = await axios.get(url, {
-      timeout: 5000, // 5 seconds timeout
-    });
-
-    if (response.status >= 200 && response.status < 300) {
-      log.info(`Server responded with status ${response.status} at ${url}`);
-      return true;
-    } else {
-      log.warn(`Server responded with status ${response.status} at ${url}`);
-      return false;
-    }
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      log.error(`Failed to connect to server at ${url}: ${error.message}`);
-    } else {
-      log.error(`Unexpected error when checking server at ${url}: ${error}`);
-    }
-    return false;
-  }
-};
-
-// Launch Python Server Variables
-const maxFailWait: number = 120 * 1000; // 120seconds
-let currentWaitTime = 0;
-let spawnServerTimeout: NodeJS.Timeout | null = null;
-
-const launchPythonServer = async (
-  virtualEnvironment: VirtualEnvironment,
-  appResourcesPath: string,
-  modelConfigPath: string,
-  basePath: string
-) => {
-  const isServerRunning = await isComfyServerReady(host, port);
-  if (isServerRunning) {
-    log.info('Python server is already running. Attaching to it.');
-    // Server has been started outside the app, so attach to it.
-    return loadComfyIntoMainWindow();
-  }
-  rotateLogFiles(app.getPath('logs'), 'comfyui');
-  return new Promise<void>(async (resolve, reject) => {
-    const scriptPath = path.join(appResourcesPath, 'ComfyUI', 'main.py');
-    const userDirectoryPath = path.join(basePath, 'user');
-    const inputDirectoryPath = path.join(basePath, 'input');
-    const outputDirectoryPath = path.join(basePath, 'output');
-    const comfyMainCmd = [
-      scriptPath,
-      '--user-directory',
-      userDirectoryPath,
-      '--input-directory',
-      inputDirectoryPath,
-      '--output-directory',
-      outputDirectoryPath,
-      ...(process.env.COMFYUI_CPU_ONLY === 'true' ? ['--cpu'] : []),
-      '--front-end-root',
-      path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app'),
-      '--extra-model-paths-config',
-      modelConfigPath,
-      '--port',
-      port.toString(),
-    ];
-
-    log.info(`Starting ComfyUI using port ${port}.`);
-    const comfyUILog = log.create({ logId: 'comfyui' });
-    comfyUILog.transports.file.fileName = 'comfyui.log';
-    comfyServerProcess = virtualEnvironment.runPythonCommand(comfyMainCmd, {
-      onStdout: (data) => {
-        comfyUILog.info(data);
-        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-      },
-      onStderr: (data) => {
-        comfyUILog.error(data);
-        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-      },
-    });
-
-    comfyServerProcess.on('error', (err) => {
-      log.error(`Failed to start ComfyUI: ${err}`);
-      reject(err);
-    });
-
-    comfyServerProcess.on('exit', (code, signal) => {
-      if (code !== 0) {
-        log.error(`Python process exited with code ${code} and signal ${signal}`);
-        reject(new Error(`Python process exited with code ${code} and signal ${signal}`));
-      } else {
-        log.info(`Python process exited successfully with code ${code}`);
-        resolve();
-      }
-    });
-
-    const checkInterval = 1000; // Check every 1 second
-
-    const checkServerReady = async (): Promise<void> => {
-      currentWaitTime += 1000;
-      if (currentWaitTime > maxFailWait) {
-        //Something has gone wrong and we need to backout.
-        if (spawnServerTimeout) {
-          clearTimeout(spawnServerTimeout);
-        }
-        reject('Python Server Failed To Start Within Timeout.');
-      }
-      const isReady = await isComfyServerReady(host, port);
-      if (isReady) {
-        sendProgressUpdate(ProgressStatus.READY);
-        log.info('Python server is ready');
-
-        //For now just replace the source of the main window to the python server
-        setTimeout(() => loadComfyIntoMainWindow(), 1000);
-        if (spawnServerTimeout) {
-          clearTimeout(spawnServerTimeout);
-        }
-        return resolve();
-      } else {
-        log.info('Ping failed. Retrying...');
-        spawnServerTimeout = setTimeout(checkServerReady, checkInterval);
-      }
-    };
-
-    checkServerReady();
-  });
-};
-
 function sendProgressUpdate(status: ProgressStatus): void {
   log.info('Sending progress update to renderer ' + status);
   appWindow.send(IPC_CHANNELS.LOADING_PROGRESS, {
     status,
   });
 }
-
-const killPythonServer = async (): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    if (!comfyServerProcess) {
-      resolve();
-      return;
-    }
-
-    log.info('Killing ComfyUI python server.');
-    // Set up a timeout in case the process doesn't exit
-    const timeout = setTimeout(() => {
-      reject(new Error('Timeout: Python server did not exit within 10 seconds'));
-    }, 10000);
-
-    // Listen for the 'exit' event
-    comfyServerProcess.once('exit', (code, signal) => {
-      clearTimeout(timeout);
-      log.info(`Python server exited with code ${code} and signal ${signal}`);
-      comfyServerProcess = null;
-      resolve();
-    });
-
-    // Attempt to kill the process
-    const result = comfyServerProcess.kill();
-    if (!result) {
-      clearTimeout(timeout);
-      reject(new Error('Failed to initiate kill signal for python server'));
-    }
-  });
-};
 
 /**
  * Check if the user has completed the first time setup wizard.
@@ -484,17 +301,14 @@ async function serverStart() {
   }
   downloadManager = DownloadManager.getInstance(appWindow!, getModelsDirectory(basePath));
 
-  port =
-    port !== -1
-      ? port
-      : await findAvailablePort(host, 8000, 9999).catch((err) => {
-          log.error(`ERROR: Failed to find available port: ${err}`);
-          throw err;
-        });
+  const host = process.env.COMFY_HOST || DEFAULT_SERVER_ARGS.host;
+  const targetPort = process.env.COMFY_PORT ? parseInt(process.env.COMFY_PORT) : DEFAULT_SERVER_ARGS.port;
+  const port = await findAvailablePort(host, targetPort, targetPort + 1000);
+  const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
+  const extraServerArgs: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { '--cpu': '' } : {};
 
   if (!useExternalServer) {
     sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
-    const appResourcesPath = await getAppResourcesPath();
     appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Creating Python environment...`);
     const virtualEnvironment = new VirtualEnvironment(basePath);
     await virtualEnvironment.create({
@@ -508,9 +322,14 @@ async function serverStart() {
       },
     });
     sendProgressUpdate(ProgressStatus.STARTING_SERVER);
-    await launchPythonServer(virtualEnvironment, appResourcesPath, ComfyServerConfig.configPath, basePath);
+    const serverArgs: ServerArgs = { host, port, useExternalServer, extraServerArgs };
+    comfyServer = new ComfyServer(basePath, serverArgs, virtualEnvironment, appWindow);
+    await comfyServer.start();
+    sendProgressUpdate(ProgressStatus.READY);
+    appWindow.loadComfyUI(serverArgs);
   } else {
     sendProgressUpdate(ProgressStatus.READY);
-    loadComfyIntoMainWindow();
+    // Use target port here because we are using an external server.
+    appWindow.loadComfyUI({ host, port: targetPort, useExternalServer, extraServerArgs });
   }
 }

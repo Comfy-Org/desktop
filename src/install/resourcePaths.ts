@@ -12,10 +12,10 @@ export async function getPythonInstallPath(): Promise<string | null> {
     return path.join(app.getAppPath(), 'assets');
   }
 
-  return getBasePath();
+  return await getBasePath();
 }
 
-export async function getAppResourcesPath(): Promise<string> {
+export function getAppResourcesPath(): string {
   if (!app.isPackaged) {
     return path.join(app.getAppPath(), 'assets');
   }
