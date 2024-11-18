@@ -7,9 +7,11 @@ import { AppWindow } from './main-process/appWindow';
 import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
+import { LevelOption } from 'electron-log';
 
 dotenv.config();
 log.initialize();
+log.transports.file.level = (process.env.LOG_LEVEL as LevelOption) ?? 'info';
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -46,8 +48,9 @@ if (!gotTheLock) {
 
     try {
       const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
-      const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
+      await comfyDesktopApp.initialize();
 
+      const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
       const host = process.env.COMFY_HOST || DEFAULT_SERVER_ARGS.host;
       const targetPort = process.env.COMFY_PORT ? parseInt(process.env.COMFY_PORT) : DEFAULT_SERVER_ARGS.port;
       const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);

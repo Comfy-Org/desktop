@@ -33,11 +33,13 @@ export class ComfyDesktopApp {
     this.comfySettings.loadSettings();
     this.registerIPCHandlers();
     this.initializeTodesktop();
-    await this.initializeSentry();
-    await this.setupGPUContext();
+    // TODO(huchenlei): Figure out why sentry is blocking the app from starting
+    // this.initializeSentry();
+    // await this.setupGPUContext();
   }
 
   initializeTodesktop(): void {
+    log.debug('Initializing todesktop');
     todesktop.init({
       customLogger: log,
       updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
@@ -45,7 +47,8 @@ export class ComfyDesktopApp {
     });
   }
 
-  async initializeSentry(): Promise<void> {
+  initializeSentry() {
+    log.debug('Initializing Sentry');
     Sentry.init({
       dsn: SENTRY_URL_ENDPOINT,
       autoSessionTracking: false,
@@ -72,6 +75,7 @@ export class ComfyDesktopApp {
   }
 
   async setupGPUContext(): Promise<void> {
+    log.debug('Setting up GPU context');
     try {
       const graphicsInfo = await graphics();
       const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
