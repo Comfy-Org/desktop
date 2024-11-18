@@ -3,7 +3,7 @@ import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
 import todesktop from '@todesktop/runtime';
-import { IPC_CHANNELS, SENTRY_URL_ENDPOINT } from '../constants';
+import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ServerArgs } from '../constants';
 import { ComfySettings } from '../config/comfySettings';
 import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
@@ -12,6 +12,9 @@ import fs from 'fs';
 import { InstallOptions } from '../preload';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 import path from 'path';
+import { getModelsDirectory } from '../utils';
+import { DownloadManager } from '../models/DownloadManager';
+import { VirtualEnvironment } from '../virtualEnvironment';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
@@ -22,8 +25,12 @@ export class ComfyDesktopApp {
     public appWindow: AppWindow
   ) {}
 
+  get pythonInstallPath() {
+    return app.isPackaged ? this.basePath : path.join(app.getAppPath(), 'assets');
+  }
+
   public async initialize(): Promise<void> {
-    this.registerAppHandlers();
+    this.comfySettings.loadSettings();
     this.registerIPCHandlers();
     this.initializeTodesktop();
     await this.initializeSentry();
@@ -83,22 +90,6 @@ export class ComfyDesktopApp {
     } catch (e) {
       log.error('Error getting GPU info: ', e);
     }
-  }
-
-  registerAppHandlers(): void {
-    app.on('before-quit', async () => {
-      if (!this.comfyServer) {
-        return;
-      }
-
-      try {
-        log.info('Before-quit: Killing Python server');
-        await this.comfyServer.kill();
-      } catch (error) {
-        log.error('Python server did not exit properly');
-        log.error(error);
-      }
-    });
   }
 
   registerIPCHandlers(): void {
@@ -163,6 +154,51 @@ export class ComfyDesktopApp {
         resolve(basePath);
       });
     });
+  }
+
+  async startComfyServer(serverArgs: ServerArgs) {
+    app.on('before-quit', async () => {
+      if (!this.comfyServer) {
+        return;
+      }
+
+      try {
+        log.info('Before-quit: Killing Python server');
+        await this.comfyServer.kill();
+      } catch (error) {
+        log.error('Python server did not exit properly');
+        log.error(error);
+      }
+    });
+
+    log.info('Server start');
+    DownloadManager.getInstance(this.appWindow!, getModelsDirectory(this.basePath));
+    this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Creating Python environment...`);
+    const virtualEnvironment = new VirtualEnvironment(this.basePath);
+    await virtualEnvironment.create({
+      onStdout: (data) => {
+        log.info(data);
+        this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+      onStderr: (data) => {
+        log.error(data);
+        this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+    });
+    this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);
+    this.appWindow.loadRenderer('server-start');
+    await this.comfyServer.start();
+  }
+
+  static async create(appWindow: AppWindow): Promise<ComfyDesktopApp> {
+    const basePath = ComfyServerConfig.exists()
+      ? await ComfyServerConfig.readBasePathFromConfig(ComfyServerConfig.configPath)
+      : await this.install(appWindow);
+
+    if (!basePath) {
+      throw new Error(`Base path not found! ${ComfyServerConfig.configPath} is probably corrupted.`);
+    }
+    return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow);
   }
 
   uninstall(): void {

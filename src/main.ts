@@ -146,7 +146,6 @@ if (!gotTheLock) {
 }
 
 function sendProgressUpdate(status: ProgressStatus): void {
-  log.info('Sending progress update to renderer ' + status);
   appWindow.send(IPC_CHANNELS.LOADING_PROGRESS, {
     status,
   });
@@ -186,7 +185,7 @@ async function serverStart() {
     sendProgressUpdate(ProgressStatus.ERROR_INSTALL_PATH);
     return;
   }
-  downloadManager = DownloadManager.getInstance(appWindow!, getModelsDirectory(basePath));
+  DownloadManager.getInstance(appWindow!, getModelsDirectory(basePath));
 
   const host = process.env.COMFY_HOST || DEFAULT_SERVER_ARGS.host;
   const targetPort = process.env.COMFY_PORT ? parseInt(process.env.COMFY_PORT) : DEFAULT_SERVER_ARGS.port;
@@ -209,7 +208,7 @@ async function serverStart() {
       },
     });
     sendProgressUpdate(ProgressStatus.STARTING_SERVER);
-    const serverArgs: ServerArgs = { host, port, useExternalServer, extraServerArgs };
+    const serverArgs: ServerArgs = { host, port, extraServerArgs };
     comfyServer = new ComfyServer(basePath, serverArgs, virtualEnvironment, appWindow);
     await comfyServer.start();
     sendProgressUpdate(ProgressStatus.READY);
@@ -217,6 +216,14 @@ async function serverStart() {
   } else {
     sendProgressUpdate(ProgressStatus.READY);
     // Use target port here because we are using an external server.
-    appWindow.loadComfyUI({ host, port: targetPort, useExternalServer, extraServerArgs });
+    appWindow.loadComfyUI({ host, port: targetPort, extraServerArgs });
   }
 }
+
+// TODO(huchenlei): Move all env var field that injected from caller.
+/**
+ * Whether to use an external server instead of starting one locally.
+ * Only effective if COMFY_PORT is set.
+ * Note: currently used for testing only.
+ */
+const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';

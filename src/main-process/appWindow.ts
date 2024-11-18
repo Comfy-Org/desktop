@@ -115,7 +115,7 @@ export class AppWindow {
       await this.window.loadURL(url);
       this.window.webContents.openDevTools();
     } else {
-      const appResourcesPath = await getAppResourcesPath();
+      const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
       this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
     }
