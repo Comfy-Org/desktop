@@ -100,8 +100,15 @@ export const MigrationItems: MigrationItem[] = [
 ] as const;
 
 export const DEFAULT_SERVER_ARGS = {
+  /** The host to use for the ComfyUI server. */
   host: '127.0.0.1',
+  /** The port to use for the ComfyUI server. */
   port: 8188,
+  /**
+   * Whether to use an external server instead of starting one locally.
+   * Only effective if COMFY_PORT is set.
+   * Note: currently used for testing only.
+   */
   useExternalServer: false,
   // Extra arguments to pass to the ComfyUI server.
   extraServerArgs: {} as Record<string, string>,

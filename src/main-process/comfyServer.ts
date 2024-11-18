@@ -74,11 +74,13 @@ export class ComfyServer {
       Object.entries({
         ...this.serverArgs.extraServerArgs,
         ...this.coreLaunchArgs,
-      }).flat()
+      })
+        .flat()
+        .filter((value: string) => !!value)
     );
   }
 
-  async launchPythonServer() {
+  async start() {
     rotateLogFiles(app.getPath('logs'), 'comfyui');
     return new Promise<void>(async (resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });
@@ -128,7 +130,7 @@ export class ComfyServer {
     });
   }
 
-  async killPythonServer() {
+  async kill() {
     return new Promise<void>((resolve, reject) => {
       if (!this.comfyServerProcess) {
         log.info('No python server process to kill');

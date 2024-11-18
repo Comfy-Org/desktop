@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'node:path';
-import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus } from './constants';
+import { IPC_CHANNELS, SENTRY_URL_ENDPOINT, ProgressStatus, ServerArgs, DEFAULT_SERVER_ARGS } from './constants';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
@@ -18,10 +18,12 @@ import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { InstallOptions } from './preload';
 import { VirtualEnvironment } from './virtualEnvironment';
+import { ComfyServer } from './main-process/comfyServer';
 
 dotenv.config();
 
 let appWindow: AppWindow;
+let comfyServer: ComfyServer | null = null;
 let downloadManager: DownloadManager;
 
 log.initialize();
@@ -52,7 +54,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', async () => {
   try {
     log.info('Before-quit: Killing Python server');
-    // await killPythonServer();
+    await comfyServer?.kill();
   } catch (error) {
     // Server did NOT exit properly
     log.error('Python server did not exit properly');
@@ -272,17 +274,6 @@ async function handleInstall(installOptions: InstallOptions) {
   await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, comfyuiConfig, extraConfigs);
 }
 
-/** The host to use for the ComfyUI server. */
-const host = process.env.COMFY_HOST || '127.0.0.1';
-/** The port to use for the ComfyUI server. */
-let port = parseInt(process.env.COMFY_PORT || '-1');
-/**
- * Whether to use an external server instead of starting one locally.
- * Only effective if COMFY_PORT is set.
- * Note: currently used for testing only.
- */
-const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
-
 async function serverStart() {
   log.info('Server start');
   const basePath = await getBasePath();
@@ -294,13 +285,11 @@ async function serverStart() {
   }
   downloadManager = DownloadManager.getInstance(appWindow!, getModelsDirectory(basePath));
 
-  port =
-    port !== -1
-      ? port
-      : await findAvailablePort(host, 8000, 9999).catch((err) => {
-          log.error(`ERROR: Failed to find available port: ${err}`);
-          throw err;
-        });
+  const host = process.env.COMFY_HOST || DEFAULT_SERVER_ARGS.host;
+  const targetPort = process.env.COMFY_PORT ? parseInt(process.env.COMFY_PORT) : DEFAULT_SERVER_ARGS.port;
+  const port = await findAvailablePort(host, targetPort, targetPort + 1000);
+  const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
+  const extraServerArgs: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { '--cpu-only': '' } : {};
 
   if (!useExternalServer) {
     sendProgressUpdate(ProgressStatus.PYTHON_SETUP);
@@ -317,9 +306,14 @@ async function serverStart() {
       },
     });
     sendProgressUpdate(ProgressStatus.STARTING_SERVER);
-    // await launchPythonServer(virtualEnvironment, appResourcesPath, ComfyServerConfig.configPath, basePath);
+    const serverArgs: ServerArgs = { host, port, useExternalServer, extraServerArgs };
+    comfyServer = new ComfyServer(basePath, serverArgs, virtualEnvironment, appWindow);
+    await comfyServer.start();
+    sendProgressUpdate(ProgressStatus.READY);
+    appWindow.loadComfyUI(serverArgs);
   } else {
     sendProgressUpdate(ProgressStatus.READY);
-    // loadComfyIntoMainWindow();
+    // Use target port here because we are using an external server.
+    appWindow.loadComfyUI({ host, port: targetPort, useExternalServer, extraServerArgs });
   }
 }
