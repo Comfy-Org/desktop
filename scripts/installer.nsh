@@ -22,4 +22,6 @@ ${UnStrStr}
 
   FileClose $0
   Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
+
+  WriteUninstaller "uninstall.exe"
 !macroend
