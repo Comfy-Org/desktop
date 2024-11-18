@@ -17,6 +17,7 @@ export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
 
   constructor(
+    public basePath: string,
     public comfySettings: ComfySettings,
     public appWindow: AppWindow
   ) {}
@@ -116,6 +117,9 @@ export class ComfyDesktopApp {
       }
     );
 
+    ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, async (): Promise<string> => {
+      return this.basePath;
+    });
     ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
       return !ComfyServerConfig.exists();
     });
