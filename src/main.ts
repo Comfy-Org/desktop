@@ -136,7 +136,6 @@ if (!gotTheLock) {
       appWindow = new AppWindow();
       new PathHandlers().registerHandlers();
       new AppInfoHandlers().registerHandlers();
-
       ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
         log.info('Open dialog');
         return dialog.showOpenDialogSync({
@@ -144,12 +143,6 @@ if (!gotTheLock) {
         });
       });
 
-      ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
-        appWindow.openDevTools();
-      });
-      ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
-        return isFirstTimeSetup();
-      });
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
         // Non-blocking call. The renderer will navigate to /server-start and show install progress.
         handleInstall(installOptions).then(serverStart);
@@ -167,79 +160,7 @@ if (!gotTheLock) {
       log.error(error);
       sendProgressUpdate(ProgressStatus.ERROR);
     }
-
-    ipcMain.on(
-      IPC_CHANNELS.RESTART_APP,
-      (event, { customMessage, delay }: { customMessage?: string; delay?: number }) => {
-        log.info('Received restart app message!');
-        if (customMessage) {
-          restartApp({ customMessage, delay });
-        } else {
-          restartApp({ delay });
-        }
-      }
-    );
-
-    ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
-      log.info('Reinstalling...');
-      const modelConfigPath = ComfyServerConfig.configPath;
-      fs.rmSync(modelConfigPath);
-      restartApp();
-    });
-
-    ipcMain.handle(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, async (_event, { error, extras }): Promise<string | null> => {
-      try {
-        return Sentry.captureMessage(error, {
-          level: 'error',
-          extra: { ...extras, comfyUIExecutionError: true },
-        });
-      } catch (err) {
-        log.error('Failed to send error to Sentry:', err);
-        return null;
-      }
-    });
   });
-}
-
-function restartApp({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
-  function relaunchApplication(delay?: number) {
-    if (delay) {
-      log.info('Relaunching application in ', delay, 'ms');
-      setTimeout(() => {
-        app.relaunch();
-        app.quit();
-      }, delay);
-    } else {
-      app.relaunch();
-      app.quit();
-    }
-  }
-
-  log.info('Attempting to restart app with custom message: ', customMessage);
-
-  if (!customMessage) {
-    log.info('Skipping confirmation, restarting immediately');
-    return relaunchApplication(delay);
-  }
-
-  dialog
-    .showMessageBox({
-      type: 'question',
-      buttons: ['Yes', 'No'],
-      defaultId: 0,
-      title: 'Restart ComfyUI',
-      message: customMessage || 'Are you sure you want to restart ComfyUI?',
-      detail: 'The application will close and restart automatically.',
-    })
-    .then(({ response }) => {
-      if (response === 0) {
-        // "Yes" was clicked
-        log.info('User confirmed restart');
-        relaunchApplication(delay);
-      } else {
-        log.info('User cancelled restart');
-      }
-    });
 }
 
 function sendProgressUpdate(status: ProgressStatus): void {
