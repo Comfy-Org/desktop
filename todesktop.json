@@ -22,6 +22,6 @@
     "additionalBinariesToSign": ["./assets/uv/macos/uv", "./assets/uv/macos/uvx"]
   },
   "windows": {
-    "nsisInclude": "./scripts/installer.nsi"
+    "nsisInclude": "./scripts/installer.nsh"
   }
 }
