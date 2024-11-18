@@ -51,24 +51,6 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('before-quit', async () => {
-  try {
-    log.info('Before-quit: Killing Python server');
-    await comfyServer?.kill();
-  } catch (error) {
-    // Server did NOT exit properly
-    log.error('Python server did not exit properly');
-    log.error(error);
-  }
-
-  app.exit();
-});
-
-app.on('quit', () => {
-  log.info('Quitting ComfyUI');
-  app.exit();
-});
-
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {

@@ -5,7 +5,7 @@ import log from 'electron-log/main';
 const DEFAULT_SETTINGS = {
   'Comfy-Desktop.AutoUpdate': true,
   'Comfy-Desktop.SendCrashStatistics': true,
-} as const;
+};
 
 type ComfySettingsData = Partial<typeof DEFAULT_SETTINGS>;
 

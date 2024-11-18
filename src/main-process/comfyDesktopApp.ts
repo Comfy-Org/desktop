@@ -7,19 +7,23 @@ import { IPC_CHANNELS, SENTRY_URL_ENDPOINT } from '../constants';
 import { ComfySettings } from '../config/comfySettings';
 import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
-import { DownloadManager } from '../models/DownloadManager';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'fs';
+import { InstallOptions } from '../preload';
+import { ComfyConfigManager } from '../config/comfyConfigManager';
+import path from 'path';
 
 export class ComfyDesktopApp {
+  public comfyServer: ComfyServer | null = null;
+
   constructor(
     public comfySettings: ComfySettings,
-    public appWindow: AppWindow,
-    public comfyServer: ComfyServer,
-    public downloadManager: DownloadManager
+    public appWindow: AppWindow
   ) {}
 
   public async initialize(): Promise<void> {
+    this.registerAppHandlers();
+    this.registerIPCHandlers();
     this.initializeTodesktop();
     await this.initializeSentry();
     await this.setupGPUContext();
@@ -80,6 +84,22 @@ export class ComfyDesktopApp {
     }
   }
 
+  registerAppHandlers(): void {
+    app.on('before-quit', async () => {
+      if (!this.comfyServer) {
+        return;
+      }
+
+      try {
+        log.info('Before-quit: Killing Python server');
+        await this.comfyServer.kill();
+      } catch (error) {
+        log.error('Python server did not exit properly');
+        log.error(error);
+      }
+    });
+  }
+
   registerIPCHandlers(): void {
     ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
       this.appWindow.openDevTools();
@@ -113,6 +133,31 @@ export class ComfyDesktopApp {
         log.error('Failed to send error to Sentry:', err);
         return null;
       }
+    });
+  }
+
+  /**
+   * Install ComfyUI and return the base path.
+   */
+  static async install(appWindow: AppWindow): Promise<string> {
+    await appWindow.loadRenderer('welcome');
+    return new Promise<string>((resolve) => {
+      ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
+        const migrationSource = installOptions.migrationSourcePath;
+        const migrationItemIds = new Set<string>(installOptions.migrationItemIds ?? []);
+
+        const basePath = path.join(installOptions.installPath, 'ComfyUI');
+        ComfyConfigManager.setUpComfyUI(basePath);
+
+        const { comfyui: comfyuiConfig, ...extraConfigs } = await ComfyServerConfig.getMigrationConfig(
+          migrationSource,
+          migrationItemIds
+        );
+        comfyuiConfig['base_path'] = basePath;
+        await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, comfyuiConfig, extraConfigs);
+
+        resolve(basePath);
+      });
     });
   }
 
