@@ -121,7 +121,7 @@ export class AppWindow {
   public async loadRenderer(urlPath: string = ''): Promise<void> {
     if (process.env.DEV_SERVER_URL) {
       const url = `${process.env.DEV_SERVER_URL}/${urlPath}`;
-
+      this.rendererReady = true; // TODO: Look into why dev server ready event is not being sent to main process.
       log.info(`Loading development server ${url}`);
       await this.window.loadURL(url);
       this.window.webContents.openDevTools();
