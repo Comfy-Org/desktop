@@ -75,7 +75,6 @@ if (!gotTheLock) {
         ...options,
       });
     });
-
     try {
       const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
       await comfyDesktopApp.initialize();
@@ -90,7 +89,6 @@ if (!gotTheLock) {
       if (!useExternalServer) {
         await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
       }
-
       appWindow.sendServerStartProgress(ProgressStatus.READY);
       appWindow.loadComfyUI({ host, port, extraServerArgs });
     } catch (error) {

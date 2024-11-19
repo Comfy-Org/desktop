@@ -15,15 +15,20 @@ import { getModelsDirectory } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
+import { Terminal } from '../terminal';
+import { getAppResourcesPath } from '../install/resourcePaths';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
+  private terminal: Terminal;
 
   constructor(
     public basePath: string,
     public comfySettings: ComfySettings,
     public appWindow: AppWindow
-  ) {}
+  ) {
+    this.terminal = new Terminal(this.appWindow, getAppResourcesPath());
+  }
 
   get pythonInstallPath() {
     return app.isPackaged ? this.basePath : path.join(app.getAppPath(), 'assets');
@@ -103,6 +108,18 @@ export class ComfyDesktopApp {
         log.error('Failed to send error to Sentry:', err);
         return null;
       }
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
+      this.terminal.write(command);
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
+      this.terminal.resize(cols, rows);
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, (_event) => {
+      return this.terminal.restore();
     });
   }
 

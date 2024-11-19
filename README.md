@@ -150,6 +150,28 @@ You can also build the package and/or distributables using the `make` command:
 yarn make
 ```
 
+If you get an error similar to:
+
+```
+The module '/electron/node_modules/node-pty/build/Release/pty.node' was compiled against a different Node.js version using NODE_MODULE_VERSION 115. This version of Node.js requires NODE_MODULE_VERSION 125. Please try re-compiling or re-installing the module (for instance, using `npm rebuild` or `npm install`).
+```
+
+You will need to rebuild the node-pty using [electron-rebuild](https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules), for example:
+
+```
+npx electron-rebuild
+```
+
+or if that fails
+
+```
+yarn install -D @electron/rebuild
+rm -rf node_modules
+rm yarn.lock
+yarn install
+electron-rebuild
+```
+
 ### Debugger
 
 There are helpful debug launch scripts for VSCode / Cursor under `.vscode/launch.json`. It will start the dev server as defined in `.vscode/tasks.json`. Then attach the debugger.
