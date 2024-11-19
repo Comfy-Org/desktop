@@ -78,7 +78,7 @@ if (!gotTheLock) {
     try {
       const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
       await comfyDesktopApp.initialize();
-      alwaysSendCrashReports = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendCrashStatistics');
+      alwaysSendCrashReports = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics');
 
       const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
       const host = process.env.COMFY_HOST || DEFAULT_SERVER_ARGS.host;

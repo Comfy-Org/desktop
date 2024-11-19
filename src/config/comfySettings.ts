@@ -4,12 +4,12 @@ import log from 'electron-log/main';
 
 const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.AutoUpdate': true,
-  'Comfy-Desktop.SendCrashStatistics': true,
+  'Comfy-Desktop.SendStatistics': true,
 } as const;
 
 export interface ComfySettingsData {
   'Comfy-Desktop.AutoUpdate': boolean;
-  'Comfy-Desktop.SendCrashStatistics': boolean;
+  'Comfy-Desktop.SendStatistics': boolean;
 }
 
 /**
