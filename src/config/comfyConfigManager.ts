@@ -47,31 +47,11 @@ export class ComfyConfigManager {
     ],
   ];
 
-  private static readonly DEFAULT_CONFIG = {
-    'Comfy.ColorPalette': 'dark',
-    'Comfy.UseNewMenu': 'Top',
-    'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
-    'Comfy.Workflow.ShowMissingModelsWarning': true,
-  };
-
   public static setUpComfyUI(localComfyDirectory: string) {
     if (fs.existsSync(localComfyDirectory)) {
       throw new Error(`Selected directory ${localComfyDirectory} already exists`);
     }
     this.createComfyDirectories(localComfyDirectory);
-    const userSettingsPath = path.join(localComfyDirectory, 'user', 'default');
-    this.createComfyConfigFile(userSettingsPath);
-  }
-
-  public static createComfyConfigFile(userSettingsPath: string): void {
-    const configFilePath = path.join(userSettingsPath, 'comfy.settings.json');
-
-    try {
-      fs.writeFileSync(configFilePath, JSON.stringify(this.DEFAULT_CONFIG, null, 2));
-      log.info(`Created new ComfyUI config file at: ${configFilePath}`);
-    } catch (error) {
-      log.error(`Failed to create new ComfyUI config file: ${error}`);
-    }
   }
 
   public static isComfyUIDirectory(directory: string): boolean {

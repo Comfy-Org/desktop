@@ -2,14 +2,19 @@ import * as fs from 'fs';
 import * as path from 'path';
 import log from 'electron-log/main';
 
-const DEFAULT_SETTINGS: ComfySettingsData = {
+export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.AutoUpdate': true,
   'Comfy-Desktop.SendStatistics': true,
+  'Comfy.ColorPalette': 'dark',
+  'Comfy.UseNewMenu': 'Top',
+  'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
+  'Comfy.Workflow.ShowMissingModelsWarning': true,
 } as const;
 
 export interface ComfySettingsData {
   'Comfy-Desktop.AutoUpdate': boolean;
   'Comfy-Desktop.SendStatistics': boolean;
+  [key: string]: unknown;
 }
 
 /**

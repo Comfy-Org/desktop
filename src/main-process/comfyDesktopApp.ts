@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
 import todesktop from '@todesktop/runtime';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
-import { ComfySettings } from '../config/comfySettings';
+import { ComfySettings, DEFAULT_SETTINGS } from '../config/comfySettings';
 import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
@@ -134,8 +134,21 @@ export class ComfyDesktopApp {
         const migrationItemIds = new Set<string>(installOptions.migrationItemIds ?? []);
 
         const basePath = path.join(installOptions.installPath, 'ComfyUI');
+        // Setup folder structures.
         ComfyConfigManager.setUpComfyUI(basePath);
 
+        // Setup comfy.settings.json file
+        const settings = {
+          ...DEFAULT_SETTINGS,
+          'Comfy-Desktop.AutoUpdate': installOptions.autoUpdate,
+          'Comfy-Desktop.SendStatistics': installOptions.allowMetrics,
+        };
+        const settingsJson = JSON.stringify(settings, null, 2);
+        const settingsPath = path.join(basePath, 'user', 'default', 'comfy.settings.json');
+        fs.writeFileSync(settingsPath, settingsJson);
+        log.info(`Wrote settings to ${settingsPath}: ${settingsJson}`);
+
+        // Setup extra_model_paths.yaml file
         const { comfyui: comfyuiConfig, ...extraConfigs } = await ComfyServerConfig.getMigrationConfig(
           migrationSource,
           migrationItemIds
