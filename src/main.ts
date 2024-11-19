@@ -5,7 +5,6 @@ import * as Sentry from '@sentry/electron/main';
 import { findAvailablePort } from './utils';
 import dotenv from 'dotenv';
 import { AppWindow } from './main-process/appWindow';
-import { Terminal } from './terminal';
 import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
@@ -66,7 +65,7 @@ if (!gotTheLock) {
     log.debug('App ready');
 
     const appWindow = new AppWindow();
-    
+
     // Register basic handlers that are necessary during app's installation.
     new PathHandlers().registerHandlers();
     new AppInfoHandlers().registerHandlers();
@@ -76,19 +75,6 @@ if (!gotTheLock) {
         ...options,
       });
     });
-    terminal = new Terminal(appWindow, path.join(await getAppResourcesPath(), 'ComfyUI'));
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
-      terminal.write(command);
-    });
-
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
-      terminal.resize(cols, rows);
-    });
-
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, (_event) => {
-      return terminal.restore();
-    });
-    
     try {
       const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
       await comfyDesktopApp.initialize();
