@@ -139,40 +139,6 @@ const electronAPI = {
       extras,
     });
   },
-  Terminal: {
-    /**
-     * Writes the data to the terminal
-     * @param data The command to execute
-     */
-    write: (data: string): Promise<string> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_WRITE, data);
-    },
-    /**
-     * Resizes the terminal
-     * @param data The command to execute
-     */
-    resize: (cols: number, rows: number): Promise<void> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_RESIZE, cols, rows);
-    },
-    /**
-     * Gets the data required to restore the terminal
-     * @param data The command to execute
-     */
-    restore: (): Promise<{ buffer: string[]; pos: { x: number; y: number } }> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_RESTORE);
-    },
-    /**
-     * Callback for terminal output messages
-     * @param callback The output handler
-     */
-    onOutput: (callback: (message: string) => void) => {
-      const handler = (_event: Electron.IpcRendererEvent, value: string) => {
-        callback(value);
-      };
-      ipcRenderer.on(IPC_CHANNELS.TERMINAL_ON_OUTPUT, handler);
-      return () => ipcRenderer.off(IPC_CHANNELS.TERMINAL_ON_OUTPUT, handler);
-    },
-  },
   /**
    * Check if the user has completed the first time setup wizard.
    */

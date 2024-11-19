@@ -470,7 +470,6 @@ __metadata:
   dependencies:
     "@electron/fuses": "npm:^1.8.0"
     "@electron/notarize": "npm:^2.4.0"
-    "@electron/rebuild": "npm:^3.7.1"
     "@electron/windows-sign": "npm:^1.1.3"
     "@playwright/test": "npm:^1.47.2"
     "@sentry/electron": "npm:^5.4.0"
@@ -498,7 +497,6 @@ __metadata:
     husky: "npm:^9.1.6"
     jest: "npm:^29.7.0"
     lint-staged: "npm:^15.2.10"
-    node-pty: "npm:^1.0.0"
     prettier: "npm:^3.3.3"
     rimraf: "npm:^6.0.1"
     systeminformation: "npm:^5.23.5"
@@ -578,26 +576,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electron/node-gyp@git+https://github.com/electron/node-gyp.git#06b29aafb7708acef8b3669835c8a7857ebc92d2":
-  version: 10.2.0-electron.1
-  resolution: "@electron/node-gyp@https://github.com/electron/node-gyp.git#commit=06b29aafb7708acef8b3669835c8a7857ebc92d2"
-  dependencies:
-    env-paths: "npm:^2.2.0"
-    exponential-backoff: "npm:^3.1.1"
-    glob: "npm:^8.1.0"
-    graceful-fs: "npm:^4.2.6"
-    make-fetch-happen: "npm:^10.2.1"
-    nopt: "npm:^6.0.0"
-    proc-log: "npm:^2.0.1"
-    semver: "npm:^7.3.5"
-    tar: "npm:^6.2.1"
-    which: "npm:^2.0.2"
-  bin:
-    node-gyp: ./bin/node-gyp.js
-  checksum: 10c0/e8c97bb5347bf0871312860010b70379069359bf05a6beb9e4d898d0831f9f8447f35b887a86d5241989e804813cf72054327928da38714a6102f791e802c8d9
-  languageName: node
-  linkType: hard
-
 "@electron/notarize@npm:2.5.0, @electron/notarize@npm:^2.4.0":
   version: 2.5.0
   resolution: "@electron/notarize@npm:2.5.0"
@@ -647,31 +625,6 @@ __metadata:
   bin:
     electron-rebuild: lib/cli.js
   checksum: 10c0/7d72ea5a0ab656b356cfe300ccdfdb25c06292a31e1729142243460aebe1a9b4c2a50469c6fb114b756575f8713a0532ec6b128e16eb944e8df446a5786ec581
-  languageName: node
-  linkType: hard
-
-"@electron/rebuild@npm:^3.7.1":
-  version: 3.7.1
-  resolution: "@electron/rebuild@npm:3.7.1"
-  dependencies:
-    "@electron/node-gyp": "git+https://github.com/electron/node-gyp.git#06b29aafb7708acef8b3669835c8a7857ebc92d2"
-    "@malept/cross-spawn-promise": "npm:^2.0.0"
-    chalk: "npm:^4.0.0"
-    debug: "npm:^4.1.1"
-    detect-libc: "npm:^2.0.1"
-    fs-extra: "npm:^10.0.0"
-    got: "npm:^11.7.0"
-    node-abi: "npm:^3.45.0"
-    node-api-version: "npm:^0.2.0"
-    node-gyp: "npm:latest"
-    ora: "npm:^5.1.0"
-    read-binary-file-arch: "npm:^1.0.6"
-    semver: "npm:^7.3.5"
-    tar: "npm:^6.0.5"
-    yargs: "npm:^17.0.1"
-  bin:
-    electron-rebuild: lib/cli.js
-  checksum: 10c0/ef498ec1eb6d2870f4331dd53d84132a4fb7d2ef6a0058854731d3261fc0af3e2c8549c1c268801b7c2c9e93519b22d67b2a4fe7ed0136214100980801e2a372
   languageName: node
   linkType: hard
 
@@ -9411,7 +9364,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"make-fetch-happen@npm:^10.0.3, make-fetch-happen@npm:^10.2.1":
+"make-fetch-happen@npm:^10.0.3":
   version: 10.2.1
   resolution: "make-fetch-happen@npm:10.2.1"
   dependencies:
@@ -9869,7 +9822,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.14.0, nan@npm:^2.17.0":
+"nan@npm:^2.14.0":
   version: 2.22.0
   resolution: "nan@npm:2.22.0"
   dependencies:
@@ -10010,16 +9963,6 @@ __metadata:
   version: 0.4.0
   resolution: "node-int64@npm:0.4.0"
   checksum: 10c0/a6a4d8369e2f2720e9c645255ffde909c0fbd41c92ea92a5607fc17055955daac99c1ff589d421eee12a0d24e99f7bfc2aabfeb1a4c14742f6c099a51863f31a
-  languageName: node
-  linkType: hard
-
-"node-pty@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "node-pty@npm:1.0.0"
-  dependencies:
-    nan: "npm:^2.17.0"
-    node-gyp: "npm:latest"
-  checksum: 10c0/c308686826eb2f7616735f4c71e6e41ff630346b14319972dbdf9711640bc6975ce21eab66a47b7ce9a88c70308fe81bfd9840127388d5fa26c52afbad255871
   languageName: node
   linkType: hard
 
@@ -10781,13 +10724,6 @@ __metadata:
     ansi-styles: "npm:^5.0.0"
     react-is: "npm:^18.0.0"
   checksum: 10c0/edc5ff89f51916f036c62ed433506b55446ff739358de77207e63e88a28ca2894caac6e73dcb68166a606e51c8087d32d400473e6a9fdd2dbe743f46c9c0276f
-  languageName: node
-  linkType: hard
-
-"proc-log@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "proc-log@npm:2.0.1"
-  checksum: 10c0/701c501429775ce34cec28ef6a1c976537274b42917212fb8a5975ebcecb0a85612907fd7f99ff28ff4c2112bb84a0f4322fc9b9e1e52a8562fcbb1d5b3ce608
   languageName: node
   linkType: hard
 
