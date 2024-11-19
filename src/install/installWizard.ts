@@ -30,22 +30,39 @@ export class InstallWizard {
   }
 
   public async install() {
+    this.initializeUserFiles();
+    // Setup the ComfyUI folder structure.
     ComfyConfigManager.setUpComfyUI(this.basePath);
     this.initializeSettings();
     await this.initializeModelPaths();
   }
 
   /**
+   * Copy user files from migration source to the new ComfyUI folder.
+   */
+  public initializeUserFiles() {
+    if (!this.shouldMigrateUserFiles) {
+      return;
+    }
+    // Copy user files from migration source to the new ComfyUI folder.
+    const userFilesDir = path.join(this.migrationSource!, 'user');
+    fs.cpSync(userFilesDir, this.basePath, { recursive: true });
+  }
+
+  /**
    * Setup comfy.settings.json file
    */
   public initializeSettings() {
+    const settingsPath = path.join(this.basePath, 'user', 'default', 'comfy.settings.json');
+    const existingSettings = fs.existsSync(settingsPath) ? JSON.parse(fs.readFileSync(settingsPath, 'utf8')) : {};
+
     const settings = {
       ...DEFAULT_SETTINGS,
+      ...existingSettings,
       'Comfy-Desktop.AutoUpdate': this.installOptions.autoUpdate,
       'Comfy-Desktop.SendStatistics': this.installOptions.allowMetrics,
     };
     const settingsJson = JSON.stringify(settings, null, 2);
-    const settingsPath = path.join(this.basePath, 'user', 'default', 'comfy.settings.json');
     fs.writeFileSync(settingsPath, settingsJson);
     log.info(`Wrote settings to ${settingsPath}: ${settingsJson}`);
   }
