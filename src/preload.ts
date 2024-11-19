@@ -101,9 +101,7 @@ const electronAPI = {
     ipcRenderer.send(IPC_CHANNELS.OPEN_DEV_TOOLS);
   },
   DownloadManager: {
-    onDownloadProgress: (
-      callback: (progress: DownloadProgressUpdate) => void
-    ) => {
+    onDownloadProgress: (callback: (progress: DownloadProgressUpdate) => void) => {
       ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_event, progress) => callback(progress));
     },
     startDownload: (url: string, path: string, filename: string): Promise<boolean> => {
