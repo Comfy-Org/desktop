@@ -30,7 +30,7 @@ Bundled Resources: `%APPDATA%\Local\Programs\comfyui-electron`
 
 ![screenshot of resources directory](https://github.com/user-attachments/assets/0e1d4a9a-7b7e-4536-ad4b-9e6123873706)
 
-User files are stored here: `%APPDATA%\Roaming\ComfyUI`
+User files are stored here: `%APPDATA%\ComfyUI`
 
 Automatic Updates: `%APPDATA%\Local\comfyui-electron-updater`
 
@@ -52,7 +52,7 @@ ComfyUI will also write files to disk as you use it. You will also be asked to s
 
 An `extra_model_config.yaml` is created to tell ComfyUI where to look for these files. You can edit this file to do things like add additional model files to the search path.
 
-On Windows: `%APPDATA%\Roaming\ComfyUI\extra_model_config.yaml`
+On Windows: `%APPDATA%\ComfyUI\extra_model_config.yaml`
 
 On macOS: `~/Library/Application Support/ComfyUI/extra_model_config.yaml`
 
@@ -65,7 +65,7 @@ We use electron-log to log everything. Electron main process logs are in `main.l
 ```
 on Linux: ~/.config/{app name}/logs
 on macOS: ~/Library/Logs/{app name}
-on Windows: %AppData%\Roaming\{app name}\logs
+on Windows: %AppData%\{app name}\logs
 ```
 
 # Development

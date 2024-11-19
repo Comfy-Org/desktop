@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import log from 'electron-log/main';
 import yaml from 'yaml';
@@ -76,6 +77,10 @@ export class ComfyServerConfig {
    */
   public static get configPath(): string {
     return path.join(app.getPath('userData'), ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH);
+  }
+
+  public static exists(): boolean {
+    return fs.existsSync(this.configPath);
   }
 
   /**
