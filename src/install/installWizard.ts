@@ -30,9 +30,9 @@ export class InstallWizard {
   }
 
   public async install() {
-    this.initializeUserFiles();
     // Setup the ComfyUI folder structure.
     ComfyConfigManager.setUpComfyUI(this.basePath);
+    this.initializeUserFiles();
     this.initializeSettings();
     await this.initializeModelPaths();
   }
@@ -45,8 +45,9 @@ export class InstallWizard {
       return;
     }
     // Copy user files from migration source to the new ComfyUI folder.
-    const userFilesDir = path.join(this.migrationSource!, 'user');
-    fs.cpSync(userFilesDir, this.basePath, { recursive: true });
+    const srcUserFilesDir = path.join(this.migrationSource!, 'user');
+    const destUserFilesDir = path.join(this.basePath, 'user');
+    fs.cpSync(srcUserFilesDir, destUserFilesDir, { recursive: true });
   }
 
   /**
