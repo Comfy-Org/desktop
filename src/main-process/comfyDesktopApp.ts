@@ -4,17 +4,17 @@ import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
 import todesktop from '@todesktop/runtime';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
-import { ComfySettings, DEFAULT_SETTINGS } from '../config/comfySettings';
+import { ComfySettings } from '../config/comfySettings';
 import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'fs';
 import { InstallOptions } from '../preload';
-import { ComfyConfigManager } from '../config/comfyConfigManager';
 import path from 'path';
 import { getModelsDirectory } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
+import { InstallWizard } from '../install/installWizard';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
@@ -113,33 +113,9 @@ export class ComfyDesktopApp {
     await appWindow.loadRenderer('welcome');
     return new Promise<string>((resolve) => {
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
-        const migrationSource = installOptions.migrationSourcePath;
-        const migrationItemIds = new Set<string>(installOptions.migrationItemIds ?? []);
-
-        const basePath = path.join(installOptions.installPath, 'ComfyUI');
-        // Setup folder structures.
-        ComfyConfigManager.setUpComfyUI(basePath);
-
-        // Setup comfy.settings.json file
-        const settings = {
-          ...DEFAULT_SETTINGS,
-          'Comfy-Desktop.AutoUpdate': installOptions.autoUpdate,
-          'Comfy-Desktop.SendStatistics': installOptions.allowMetrics,
-        };
-        const settingsJson = JSON.stringify(settings, null, 2);
-        const settingsPath = path.join(basePath, 'user', 'default', 'comfy.settings.json');
-        fs.writeFileSync(settingsPath, settingsJson);
-        log.info(`Wrote settings to ${settingsPath}: ${settingsJson}`);
-
-        // Setup extra_model_paths.yaml file
-        const { comfyui: comfyuiConfig, ...extraConfigs } = await ComfyServerConfig.getMigrationConfig(
-          migrationSource,
-          migrationItemIds
-        );
-        comfyuiConfig['base_path'] = basePath;
-        await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, comfyuiConfig, extraConfigs);
-
-        resolve(basePath);
+        const installWizard = new InstallWizard(installOptions);
+        await installWizard.install();
+        resolve(installWizard.basePath);
       });
     });
   }
