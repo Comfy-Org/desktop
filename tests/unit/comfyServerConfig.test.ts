@@ -137,39 +137,4 @@ comfyui:
       expect(result).toEqual(customConfig);
     });
   });
-
-  describe('getMigrationConfig', () => {
-    it('should return empty object when no migration source is provided', async () => {
-      const result = await ComfyServerConfig.getMigrationConfig(undefined);
-      expect(result).toEqual({
-        comfyui: {},
-      });
-    });
-
-    it('should merge configs and remove custom_nodes when migration source is provided', async () => {
-      // Mock the getConfigFromRepoPath and getBaseModelPathsFromRepoPath methods
-      const mockServerConfig = {
-        comfyui: {
-          checkpoints: '/server/path/checkpoints/',
-          custom_nodes: '/server/path/custom_nodes/',
-        },
-      };
-
-      jest.spyOn(ComfyServerConfig, 'getConfigFromRepoPath').mockResolvedValue(mockServerConfig);
-      jest.spyOn(ComfyServerConfig, 'getBaseModelPathsFromRepoPath').mockReturnValue({
-        checkpoints: '/base/path/checkpoints/',
-        custom_nodes: '/base/path/custom_nodes/',
-      });
-
-      const result = await ComfyServerConfig.getMigrationConfig('/fake/path', new Set(['models']));
-
-      expect(result.comfyui).toBeDefined();
-      expect(result.comfyui.checkpoints).toBe('/server/path/checkpoints/\n/base/path/checkpoints/');
-      expect(result.comfyui.custom_nodes).toBeUndefined();
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-  });
 });

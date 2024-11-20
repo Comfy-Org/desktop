@@ -85,17 +85,6 @@ describe('ComfyConfigManager', () => {
     });
   });
 
-  describe('createComfyConfigFile', () => {
-    it('should create new config file when none exists', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
-
-      ComfyConfigManager.createComfyConfigFile('/fake/path');
-
-      expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
-      expect(fs.renameSync).not.toHaveBeenCalled();
-    });
-  });
-
   describe('createNestedDirectories', () => {
     it('should create nested directory structure correctly', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);

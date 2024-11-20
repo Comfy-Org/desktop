@@ -54,10 +54,6 @@ export enum ProgressStatus {
    * Ending state. General error state.
    */
   ERROR = 'error',
-  /**
-   * Error state. Installation path does not exist.
-   */
-  ERROR_INSTALL_PATH = 'error-install-path',
 }
 
 export const ProgressMessages = {
@@ -67,7 +63,6 @@ export const ProgressMessages = {
   [ProgressStatus.READY]: 'Finishing...',
   [ProgressStatus.ERROR]:
     'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the Help menu. Please report issues to: https://forum.comfy.org',
-  [ProgressStatus.ERROR_INSTALL_PATH]: 'Installation path does not exist. Please reset the installation location.',
 } as const;
 
 export type IPCChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
@@ -102,3 +97,14 @@ export const MigrationItems: MigrationItem[] = [
   //   description: 'Reference custom node files from existing ComfyUI installations. (No copy)',
   // },
 ] as const;
+
+export const DEFAULT_SERVER_ARGS = {
+  /** The host to use for the ComfyUI server. */
+  host: '127.0.0.1',
+  /** The port to use for the ComfyUI server. */
+  port: 8000,
+  // Extra arguments to pass to the ComfyUI server.
+  extraServerArgs: {} as Record<string, string>,
+};
+
+export type ServerArgs = typeof DEFAULT_SERVER_ARGS;

@@ -26,6 +26,15 @@ export interface SystemPaths {
   defaultInstallPath: string;
 }
 
+export interface DownloadProgressUpdate {
+  url: string;
+  filename: string;
+  savePath: string;
+  progress: number;
+  status: DownloadStatus;
+  message?: string;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -92,14 +101,7 @@ const electronAPI = {
     ipcRenderer.send(IPC_CHANNELS.OPEN_DEV_TOOLS);
   },
   DownloadManager: {
-    onDownloadProgress: (
-      callback: (progress: {
-        url: string;
-        progress_percentage: number;
-        status: DownloadStatus;
-        message?: string;
-      }) => void
-    ) => {
+    onDownloadProgress: (callback: (progress: DownloadProgressUpdate) => void) => {
       ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_event, progress) => callback(progress));
     },
     startDownload: (url: string, path: string, filename: string): Promise<boolean> => {
