@@ -32,7 +32,7 @@ export class VirtualEnvironment {
       this.uvPty = pty.spawn(shell, [], {
         handleFlowControl: false,
         conptyInheritCursor: false,
-        name: 'comfyui-uv-terminal',
+        name: 'xterm-256color',
         cwd: this.venvRootPath,
         env: {
           ...(process.env as Record<string, string>),

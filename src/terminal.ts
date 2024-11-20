@@ -50,7 +50,7 @@ export class Terminal {
     const instance = pty.spawn(shell, [], {
       handleFlowControl: false,
       conptyInheritCursor: false,
-      name: 'comfyui-terminal',
+      name: 'xterm-256color',
       cols: this.size.cols,
       rows: this.size.rows,
       cwd: this.#cwd,
