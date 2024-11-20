@@ -88,8 +88,17 @@ export class VirtualEnvironment {
     try {
       await this.createEnvironment(callbacks);
     } finally {
-      this.uvPty?.kill();
-      this.uvPty = undefined;
+      if (this.uvPty) {
+        // If we have a pty instance then we need to kill it on a delay
+        // else you may get an EPIPE error on reading the stream if it is
+        // reading/writing as you kill it
+        const pty = this.uvPty;
+        this.uvPty = undefined;
+        pty.pause();
+        setTimeout(() => {
+          this.uvPty?.kill();
+        }, 100);
+      }
     }
   }
 
@@ -194,10 +203,10 @@ export class VirtualEnvironment {
                 exitCode = -998;
               }
             }
+            dataReader.dispose();
             res({
               exitCode,
             });
-            dataReader.dispose();
             break;
           }
         }
