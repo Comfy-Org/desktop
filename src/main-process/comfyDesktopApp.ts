@@ -103,6 +103,9 @@ export class ComfyDesktopApp {
         return Sentry.captureMessage(error, {
           level: 'error',
           extra: { ...extras, comfyUIExecutionError: true },
+          tags: {
+            comfyorigin: 'core',
+          },
         });
       } catch (err) {
         log.error('Failed to send error to Sentry:', err);
