@@ -175,6 +175,8 @@ yarn make
 yarn make --windows
 ```
 
+### Troubleshooting
+
 If you get an error similar to:
 
 ```
@@ -197,11 +199,34 @@ yarn install
 electron-rebuild
 ```
 
+#### Missing libraries
+
+You may get errors reporting that the build is unable to find e.g. `libnss3.so` if `electron` prerequisites are not included in your distro. Find the correct package for your distro and install.
+
+`apt` example:
+
+```
+apt-get install libnss3
+```
+
 ### Debugger
 
 There are helpful debug launch scripts for VSCode / Cursor under `.vscode/launch.json`. It will start the dev server as defined in `.vscode/tasks.json`. Then attach the debugger.
 
 This can be used simply by pressing `F5` in VSCode or VSCode derivative.
+
+The launch environment can be customised, e.g. add a `"linux"` section to source your `~/.profile` (and other interactive config) when debugging in linux:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "linux": { "options": { "shell": { "args": ["-ci"] } } }
+    }
+  ]
+}
+```
 
 # Release
 
