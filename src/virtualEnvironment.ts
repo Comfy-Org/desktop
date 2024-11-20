@@ -86,6 +86,15 @@ export class VirtualEnvironment {
 
   public async create(callbacks?: ProcessCallbacks): Promise<void> {
     try {
+      await this.createEnvironment(callbacks);
+    } finally {
+      this.uvPty?.kill();
+      this.uvPty = undefined;
+    }
+  }
+
+  private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
+    try {
       if (await this.exists()) {
         log.info(`Virtual environment already exists at ${this.venvPath}`);
         return;
