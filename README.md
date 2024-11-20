@@ -156,7 +156,9 @@ This command will install ComfyUI under `assets`, as well ComfyUI-Manager, and t
 
 Second, you need to install `uv`. This will be bundled with the distributable, but we also need it locally.
 
-`yarn download:uv`
+```bash
+yarn download:uv
+```
 
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
 
