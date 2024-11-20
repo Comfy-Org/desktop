@@ -163,34 +163,35 @@ export class VirtualEnvironment {
     const id = new Date().valueOf();
     return new Promise((res) => {
       const endMarker = `--end-${id}:`;
-      const input = `${command}; echo "${endMarker}$?"`;
-      this.uvPtyInstance.onData((data) => {
+      const input = `clear; ${command}; echo "${endMarker}$?"`;
+      const dataReader = this.uvPtyInstance.onData((data) => {
         const lines = data.split('\n');
         for (const line of lines) {
+          // Remove ansi sequences to see if this the exit marker
           const clean = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '');
           if (clean.startsWith(endMarker)) {
             const exit = clean.substring(endMarker.length).trim();
             let exitCode: number;
+            // Powershell outputs True / False for success
             if (exit === 'True') {
               exitCode = 0;
             } else if (exit === 'False') {
               exitCode = -999;
             } else {
+              // Bash should output a number
               exitCode = parseInt(exit);
               if (isNaN(exitCode)) {
                 console.warn('Unable to parse exit code:', exit);
-                exitCode = 1;
+                exitCode = -998;
               }
             }
             res({
               exitCode,
             });
+            dataReader.dispose();
             break;
           }
-          console.log(clean);
         }
-        // TODO: Update frontend to use xtermjs
-        // console.log(data);
         onData?.(data);
       });
       this.uvPtyInstance.write(`${input}\r\n`);
