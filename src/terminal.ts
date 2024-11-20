@@ -7,6 +7,7 @@ export class Terminal {
   #pty: pty.IPty | undefined;
   #window: AppWindow | undefined;
   #cwd: string | undefined;
+  #uvPath: string | undefined;
 
   readonly sessionBuffer: string[] = [];
   readonly size = { cols: 80, rows: 30 };
@@ -21,9 +22,10 @@ export class Terminal {
     return this.#window;
   }
 
-  constructor(window: AppWindow, cwd: string) {
+  constructor(window: AppWindow, cwd: string, uvPath: string) {
     this.#window = window;
     this.#cwd = cwd;
+    this.#uvPath = uvPath;
   }
 
   write(data: string) {
@@ -55,6 +57,14 @@ export class Terminal {
       rows: this.size.rows,
       cwd: this.#cwd,
     });
+
+    if (process.platform === 'win32') {
+      // PowerShell function
+      instance.write(`function pip { & "${this.#uvPath}" pip $args }\r\n`);
+    } else {
+      // Bash/Zsh alias
+      instance.write(`alias pip='"${this.#uvPath}" pip'\r\n`);
+    }
 
     instance.onData((data) => {
       this.sessionBuffer.push(data);
