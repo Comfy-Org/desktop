@@ -31,6 +31,8 @@ export class AppWindow {
       title: 'ComfyUI',
       width: storedWidth,
       height: storedHeight,
+      minWidth: 480,
+      minHeight: 360,
       x: storedX,
       y: storedY,
       webPreferences: {
