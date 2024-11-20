@@ -8,7 +8,6 @@ function makeAssets(gpuFlag) {
     '&&',
     `comfy-cli --skip-prompt --here install --version ${pkg.config.comfyVersion} --fast-deps`,
     gpuFlag,
-    '--manager-url https://github.com/Comfy-Org/manager-core',
     '--manager-commit',
     pkg.config.managerCommit,
     '&&',
@@ -19,12 +18,6 @@ function makeAssets(gpuFlag) {
 
   
   execSync(baseCommand, { stdio: 'inherit' });
-  
-  // Rename custom_nodes/ComfyUI-Manager to manager-core
-  if (!fs.existsSync('assets/ComfyUI/custom_nodes/ComfyUI-Manager')) {
-    throw new Error('ComfyUI-Manager not found');
-  }
-  fs.renameSync('./assets/ComfyUI/custom_nodes/ComfyUI-Manager', './assets/ComfyUI/custom_nodes/manager-core');
 }
 
 // Get GPU flag from command line argument

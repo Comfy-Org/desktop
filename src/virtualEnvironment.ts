@@ -56,7 +56,7 @@ export class VirtualEnvironment {
       resourcesPath,
       'ComfyUI',
       'custom_nodes',
-      'manager-core',
+      'ComfyUI-Manager',
       'requirements.txt'
     );
 

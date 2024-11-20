@@ -7,7 +7,7 @@
 This electron app is the simplest way to use [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and comes bundled with a few things:
 
 - Stable version of ComfyUI from [releases](https://github.com/comfyanonymous/ComfyUI/releases)
-- comfyui [manager-core](https://github.com/Comfy-Org/manager-core)
+- [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager)
 - [uv](https://github.com/astral-sh/uv)
 
 On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager, and the uv executable.
