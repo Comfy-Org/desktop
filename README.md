@@ -171,6 +171,8 @@ You can also build the package and/or distributables using the `make` command:
 ```bash
 # build the platform-dependent package and any distributables
 yarn make
+# build cross-platform, e.g. windows from linux
+yarn make --windows
 ```
 
 If you get an error similar to:
