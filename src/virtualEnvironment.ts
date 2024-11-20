@@ -32,7 +32,7 @@ export class VirtualEnvironment {
       this.uvPty = pty.spawn(shell, [], {
         handleFlowControl: false,
         conptyInheritCursor: false,
-        name: 'xterm-256color',
+        name: 'xterm',
         cwd: this.venvRootPath,
         env: {
           ...(process.env as Record<string, string>),
