@@ -482,7 +482,6 @@ __metadata:
     "@types/electron-squirrel-startup": "npm:^1.0.2"
     "@types/jest": "npm:^29.5.13"
     "@types/node": "npm:^22.5.0"
-    "@types/node-abi": "npm:^3"
     "@types/tar": "npm:6.1.13"
     "@types/wait-on": "npm:^5.3.4"
     "@typescript-eslint/eslint-plugin": "npm:^5.0.0"
@@ -499,7 +498,6 @@ __metadata:
     husky: "npm:^9.1.6"
     jest: "npm:^29.7.0"
     lint-staged: "npm:^15.2.10"
-    node-abi: "npm:^3.71.0"
     node-pty: "npm:^1.0.0"
     prettier: "npm:^3.3.3"
     rimraf: "npm:^6.0.1"
@@ -3429,13 +3427,6 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/3cf279e7db05d56c0544532a4380b9079f579092379a04c8138bd5cf88dda5b31208ac2d23ce7dbf4e3a3f43aaeed44e72f9f19f726518f308efe95a7435619a
-  languageName: node
-  linkType: hard
-
-"@types/node-abi@npm:^3":
-  version: 3.0.3
-  resolution: "@types/node-abi@npm:3.0.3"
-  checksum: 10c0/17346e74b39a163f58659ecb65fe243570e0ca20369f80eba500a692a3f6c954c7ef63cc24eb8ec240ce8b4753f2802c060f2387dfe5769d72a6e1b6905c0b7c
   languageName: node
   linkType: hard
 
@@ -9926,7 +9917,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-abi@npm:^3.45.0, node-abi@npm:^3.71.0":
+"node-abi@npm:^3.45.0":
   version: 3.71.0
   resolution: "node-abi@npm:3.71.0"
   dependencies:
