@@ -19,12 +19,17 @@ export class AppWindow {
   public constructor() {
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = primaryDisplay.workAreaSize;
+    const { store } = this;
+
+    if (!store) {
+      // TODO: Store should never be undefined.  Handle gracefully / fail fast.
+    }
 
     // Retrieve stored window size, or use default if not available
-    const storedWidth = this.store?.get('windowWidth', width) ?? width;
-    const storedHeight = this.store?.get('windowHeight', height) ?? height;
-    const storedX = this.store?.get('windowX');
-    const storedY = this.store?.get('windowY');
+    const storedWidth = store.get('windowWidth', width) ?? width;
+    const storedHeight = store.get('windowHeight', height) ?? height;
+    const storedX = store.get('windowX');
+    const storedY = store.get('windowY');
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
@@ -43,6 +48,8 @@ export class AppWindow {
       },
       autoHideMenuBar: true,
     });
+
+    if (store.get('windowMaximized')) this.window.maximize();
 
     this.setupWindowEvents();
     this.setupAppEvents();
@@ -134,6 +141,12 @@ export class AppWindow {
   private setupWindowEvents(): void {
     const updateBounds = () => {
       if (!this.window) return;
+
+      // If maximized, do not update position / size.
+      const isMaximized = this.window.isMaximized();
+      this.store.set('windowMaximized', isMaximized);
+      if (isMaximized) return;
+
       const { width, height, x, y } = this.window.getBounds();
       this.store.set('windowWidth', width);
       this.store.set('windowHeight', height);

@@ -3,4 +3,5 @@ export type StoreType = {
   windowHeight: number;
   windowX: number | undefined;
   windowY: number | undefined;
+  windowMaximized?: boolean;
 };
