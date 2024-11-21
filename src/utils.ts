@@ -20,7 +20,7 @@ export function findAvailablePort(host: string, startPort: number, endPort: numb
   return new Promise((resolve, reject) => {
     function tryPort(port: number) {
       if (port > endPort) {
-        reject(new Error('No available ports found'));
+        reject(new Error(`No available ports found between ${startPort} and ${endPort}`));
         return;
       }
 

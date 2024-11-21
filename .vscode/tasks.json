@@ -5,6 +5,9 @@
       "label": "Start Vite Dev Server",
       "type": "shell",
       "command": "yarn start",
+      "linux": {
+        "options": { "shell": { "args": ["-ci"] } }
+      },
       "isBackground": true,
       "problemMatcher": {
         "pattern": {

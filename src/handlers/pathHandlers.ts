@@ -2,7 +2,6 @@ import { app, dialog, ipcMain, shell } from 'electron';
 import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
-import { getBasePath } from '../install/resourcePaths';
 import type { SystemPaths } from '../preload';
 import fs from 'fs';
 import si from 'systeminformation';
@@ -21,10 +20,6 @@ export class PathHandlers {
 
     ipcMain.handle(IPC_CHANNELS.GET_MODEL_CONFIG_PATH, (): string => {
       return ComfyServerConfig.configPath;
-    });
-
-    ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, async (): Promise<string | null> => {
-      return getBasePath();
     });
 
     ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string): void => {

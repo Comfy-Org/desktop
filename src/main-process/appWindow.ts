@@ -3,7 +3,7 @@ import path from 'node:path';
 import Store from 'electron-store';
 import { StoreType } from '../store';
 import log from 'electron-log/main';
-import { IPC_CHANNELS } from '../constants';
+import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
 /**
@@ -31,6 +31,8 @@ export class AppWindow {
       title: 'ComfyUI',
       width: storedWidth,
       height: storedHeight,
+      minWidth: 480,
+      minHeight: 360,
       x: storedX,
       y: storedY,
       webPreferences: {
@@ -44,6 +46,7 @@ export class AppWindow {
     });
 
     this.setupWindowEvents();
+    this.setupAppEvents();
     this.sendQueuedEventsOnReady();
     this.setupTray();
     this.buildMenu();
@@ -71,6 +74,16 @@ export class AppWindow {
     this.window.webContents.send(channel, data);
   }
 
+  /**
+   * Report progress of server start.
+   * @param status - The status of the server start progress.
+   */
+  sendServerStartProgress(status: ProgressStatus): void {
+    this.send(IPC_CHANNELS.LOADING_PROGRESS, {
+      status,
+    });
+  }
+
   public onClose(callback: () => void): void {
     this.window.on('close', () => {
       callback();
@@ -79,8 +92,8 @@ export class AppWindow {
     });
   }
 
-  public loadURL(url: string): void {
-    this.window.loadURL(url);
+  public loadComfyUI(serverArgs: ServerArgs) {
+    this.window.loadURL(`http://${serverArgs.host}:${serverArgs.port}`);
   }
 
   public openDevTools(): void {
@@ -110,12 +123,12 @@ export class AppWindow {
   public async loadRenderer(urlPath: string = ''): Promise<void> {
     if (process.env.DEV_SERVER_URL) {
       const url = `${process.env.DEV_SERVER_URL}/${urlPath}`;
-
+      this.rendererReady = true; // TODO: Look into why dev server ready event is not being sent to main process.
       log.info(`Loading development server ${url}`);
       await this.window.loadURL(url);
       this.window.webContents.openDevTools();
     } else {
-      const appResourcesPath = await getAppResourcesPath();
+      const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
       this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
     }
@@ -137,6 +150,16 @@ export class AppWindow {
     this.window.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
       return { action: 'deny' };
+    });
+  }
+
+  private setupAppEvents(): void {
+    app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+      log.info('Received second instance message!');
+      log.info(additionalData);
+
+      if (this.isMinimized()) this.restore();
+      this.focus();
     });
   }
 

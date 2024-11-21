@@ -26,6 +26,15 @@ export interface SystemPaths {
   defaultInstallPath: string;
 }
 
+export interface DownloadProgressUpdate {
+  url: string;
+  filename: string;
+  savePath: string;
+  progress: number;
+  status: DownloadStatus;
+  message?: string;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -92,14 +101,7 @@ const electronAPI = {
     ipcRenderer.send(IPC_CHANNELS.OPEN_DEV_TOOLS);
   },
   DownloadManager: {
-    onDownloadProgress: (
-      callback: (progress: {
-        url: string;
-        progress_percentage: number;
-        status: DownloadStatus;
-        message?: string;
-      }) => void
-    ) => {
+    onDownloadProgress: (callback: (progress: DownloadProgressUpdate) => void) => {
       ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_event, progress) => callback(progress));
     },
     startDownload: (url: string, path: string, filename: string): Promise<boolean> => {
@@ -138,6 +140,40 @@ const electronAPI = {
       error: error,
       extras,
     });
+  },
+  Terminal: {
+    /**
+     * Writes the data to the terminal
+     * @param data The command to execute
+     */
+    write: (data: string): Promise<string> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_WRITE, data);
+    },
+    /**
+     * Resizes the terminal
+     * @param data The command to execute
+     */
+    resize: (cols: number, rows: number): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_RESIZE, cols, rows);
+    },
+    /**
+     * Gets the data required to restore the terminal
+     * @param data The command to execute
+     */
+    restore: (): Promise<{ buffer: string[]; pos: { x: number; y: number } }> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_RESTORE);
+    },
+    /**
+     * Callback for terminal output messages
+     * @param callback The output handler
+     */
+    onOutput: (callback: (message: string) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, value: string) => {
+        callback(value);
+      };
+      ipcRenderer.on(IPC_CHANNELS.TERMINAL_ON_OUTPUT, handler);
+      return () => ipcRenderer.off(IPC_CHANNELS.TERMINAL_ON_OUTPUT, handler);
+    },
   },
   /**
    * Check if the user has completed the first time setup wizard.

@@ -30,7 +30,7 @@ Bundled Resources: `%APPDATA%\Local\Programs\comfyui-electron`
 
 ![screenshot of resources directory](https://github.com/user-attachments/assets/0e1d4a9a-7b7e-4536-ad4b-9e6123873706)
 
-User files are stored here: `%APPDATA%\Roaming\ComfyUI`
+User files are stored here: `%APPDATA%\ComfyUI`
 
 Automatic Updates: `%APPDATA%\Local\comfyui-electron-updater`
 
@@ -52,7 +52,7 @@ ComfyUI will also write files to disk as you use it. You will also be asked to s
 
 An `extra_model_config.yaml` is created to tell ComfyUI where to look for these files. You can edit this file to do things like add additional model files to the search path.
 
-On Windows: `%APPDATA%\Roaming\ComfyUI\extra_model_config.yaml`
+On Windows: `%APPDATA%\ComfyUI\extra_model_config.yaml`
 
 On macOS: `~/Library/Application Support/ComfyUI/extra_model_config.yaml`
 
@@ -65,16 +65,55 @@ We use electron-log to log everything. Electron main process logs are in `main.l
 ```
 on Linux: ~/.config/{app name}/logs
 on macOS: ~/Library/Logs/{app name}
-on Windows: %AppData%\Roaming\{app name}\logs
+on Windows: %AppData%\{app name}\logs
 ```
 
 # Development
+
+## Setup Python
+
+Make sure you have python 3.12+ installed. It is recommended to setup a virtual environment.
+
+Linux/MacOS:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+Windows:
+
+```powershell
+py -3.12 -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+## Windows
+
+### Visual Studio
+
+Visual studio 2019 or later with the Desktop C++ workload is required for `node-gyp`. See the `node-gyp` [windows installation notes](https://github.com/nodejs/node-gyp#on-windows). Also requires the `spectre-mitigated` libraries, found in the individual components section of the VS installer.
+
+Confirmed working:
+
+- Visual Studio Community 2022 - 17.12.1
+- Desktop development with C++ workload
+- MSVC v143 x64 spectre-mitigated libraries (Latest / v14.42-17.12)
 
 ## NPM Dependencies
 
 ### Node
 
 We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage node versions. This project uses node v20.x.
+
+#### Windows
+
+Microsoft recommends [nvm-windows](https://github.com/coreybutler/nvm-windows) on their [Node.js on Windows page](https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows#install-nvm-windows-nodejs-and-npm).
+
+```ps1
+nvm install 20
+nvm use 20
+```
 
 ### Yarn
 
@@ -95,24 +134,6 @@ yarn install
 ## ComfyUI Assets
 
 Before you can start the electron application, you need to download the ComfyUI source code and other things that are usually bundled with the application. We use [comfy-cli](https://github.com/Comfy-Org/comfy-cli) to install everything.
-
-### Setup Python
-
-Make sure you have python 3.12+ installed. It is recommended to setup a virtual environment.
-
-Linux/MacOS:
-
-```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-Windows:
-
-```powershell
-py -3.12 -m venv venv
-.\venv\Scripts\Activate.ps1
-```
 
 ### Install comfy-cli
 
@@ -135,7 +156,9 @@ This command will install ComfyUI under `assets`, as well ComfyUI-Manager, and t
 
 Second, you need to install `uv`. This will be bundled with the distributable, but we also need it locally.
 
-`yarn download:uv`
+```bash
+yarn download:uv
+```
 
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
 
@@ -148,6 +171,42 @@ You can also build the package and/or distributables using the `make` command:
 ```bash
 # build the platform-dependent package and any distributables
 yarn make
+# build cross-platform, e.g. windows from linux
+yarn make --windows
+```
+
+### Troubleshooting
+
+If you get an error similar to:
+
+```
+The module '/electron/node_modules/node-pty/build/Release/pty.node' was compiled against a different Node.js version using NODE_MODULE_VERSION 115. This version of Node.js requires NODE_MODULE_VERSION 125. Please try re-compiling or re-installing the module (for instance, using `npm rebuild` or `npm install`).
+```
+
+You will need to rebuild the node-pty using [electron-rebuild](https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules), for example:
+
+```
+npx electron-rebuild
+```
+
+or if that fails
+
+```
+yarn install -D @electron/rebuild
+rm -rf node_modules
+rm yarn.lock
+yarn install
+electron-rebuild
+```
+
+#### Missing libraries
+
+You may get errors reporting that the build is unable to find e.g. `libnss3.so` if `electron` prerequisites are not included in your distro. Find the correct package for your distro and install.
+
+`apt` example:
+
+```
+apt-get install libnss3
 ```
 
 ### Debugger
@@ -155,6 +214,19 @@ yarn make
 There are helpful debug launch scripts for VSCode / Cursor under `.vscode/launch.json`. It will start the dev server as defined in `.vscode/tasks.json`. Then attach the debugger.
 
 This can be used simply by pressing `F5` in VSCode or VSCode derivative.
+
+The launch environment can be customised, e.g. add a `"linux"` section to source your `~/.profile` (and other interactive config) when debugging in linux:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "linux": { "options": { "shell": { "args": ["-ci"] } } }
+    }
+  ]
+}
+```
 
 # Release
 
