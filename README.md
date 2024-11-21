@@ -106,7 +106,6 @@ Confirmed working:
   - Check the boxes for the Spectre-mitigated libraries that match your project's architecture (x86 and/or x64)
   - ![image](https://github.com/user-attachments/assets/0829db3d-84b7-48e8-9d13-c72c35169a05)
 
-
 Look for "MSVC v143 - VS 2022 C++ x64/x86 Spectre-mitigated libs"
 If you're using other toolsets, you may need their corresponding Spectre-mitigated libraries as well
 
@@ -173,7 +172,7 @@ yarn download:uv
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
 
 ```bash
-deactivate # Deactivate your existing python env to avoid influencing the 
+deactivate # Deactivate your existing python env to avoid influencing the
 yarn start
 ```
 
