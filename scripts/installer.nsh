@@ -16,7 +16,17 @@ ${UnStrStr}
     SetErrorLevel 2
     Quit
   ${endif}
+!macroend
 
+!macro customUnInstallCheck
+  !insertmacro customUnInstallCheckCommon
+!macroend
+
+!macro customUnInstallCheckCurrentUser
+  !insertmacro customUnInstallCheckCommon
+!macroend
+
+!macro customUnInstall
   ClearErrors
   FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
   var /global line
@@ -35,12 +45,4 @@ ${UnStrStr}
 
   FileClose $0
   Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
-!macroend
-
-!macro customUnInstallCheck
-  !insertmacro customUnInstallCheckCommon
-!macroend
-
-!macro customUnInstallCheckCurrentUser
-  !insertmacro customUnInstallCheckCommon
 !macroend
