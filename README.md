@@ -99,6 +99,16 @@ Confirmed working:
 - Visual Studio Community 2022 - 17.12.1
 - Desktop development with C++ workload
 - MSVC v143 x64 spectre-mitigated libraries (Latest / v14.42-17.12)
+  - Open the Visual Studio Installer
+  - Click "Modify" on your Visual Studio 2022 Community installation
+  - Go to the "Individual Components" tab
+  - Search for "Spectre"
+  - Check the boxes for the Spectre-mitigated libraries that match your project's architecture (x86 and/or x64)
+  - ![image](https://github.com/user-attachments/assets/0829db3d-84b7-48e8-9d13-c72c35169a05)
+
+
+Look for "MSVC v143 - VS 2022 C++ x64/x86 Spectre-mitigated libs"
+If you're using other toolsets, you may need their corresponding Spectre-mitigated libraries as well
 
 ## NPM Dependencies
 
