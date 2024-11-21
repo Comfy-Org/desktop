@@ -16,21 +16,7 @@ ${UnStrStr}
     SetErrorLevel 2
     Quit
   ${endif}
-!macroend
 
-!macro customUnInstallCheck
-  !insertmacro customUnInstallCheckCommon
-!macroend
-
-!macro customUnInstallCheckCurrentUser
-  !insertmacro customUnInstallCheckCommon
-!macroend
-
-Section "WriteUninstaller"
-    WriteUninstaller $INSTDIR\uninstaller.exe
-SectionEnd
-
-Section Uninstall
   ClearErrors
   FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
   var /global line
@@ -49,4 +35,12 @@ Section Uninstall
 
   FileClose $0
   Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
-SectionEnd
+!macroend
+
+!macro customUnInstallCheck
+  !insertmacro customUnInstallCheckCommon
+!macroend
+
+!macro customUnInstallCheckCurrentUser
+  !insertmacro customUnInstallCheckCommon
+!macroend
