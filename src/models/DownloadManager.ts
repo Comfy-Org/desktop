@@ -3,7 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
-import { AppWindow } from '../main-process/appWindow';
+import type { AppWindow } from '../main-process/appWindow';
+import { DownloadStatus } from '../main_types';
 
 export interface Download {
   url: string;
@@ -13,14 +14,6 @@ export interface Download {
   item: DownloadItem | null;
 }
 
-export enum DownloadStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  PAUSED = 'paused',
-  ERROR = 'error',
-  CANCELLED = 'cancelled',
-}
 export interface DownloadState {
   url: string;
   filename: string;

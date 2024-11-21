@@ -108,3 +108,12 @@ export const DEFAULT_SERVER_ARGS = {
 };
 
 export type ServerArgs = typeof DEFAULT_SERVER_ARGS;
+
+export enum DownloadStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  PAUSED = 'paused',
+  ERROR = 'error',
+  CANCELLED = 'cancelled',
+}

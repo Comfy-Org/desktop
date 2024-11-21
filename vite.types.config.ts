@@ -13,6 +13,7 @@ export default defineConfig({
     rollupOptions: {
       external: ['electron'],
     },
+    minify: false,
   },
   plugins: [
     dts({
