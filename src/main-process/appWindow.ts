@@ -11,12 +11,13 @@ import { getAppResourcesPath } from '../install/resourcePaths';
  * Closes the application when the window is closed.
  */
 export class AppWindow {
-  public store: Store<StoreType> = new Store<StoreType>();
   private window: BrowserWindow;
+  private store: Store<StoreType>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
 
   public constructor() {
+    this.store = new Store<StoreType>();
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = primaryDisplay.workAreaSize;
     const { store } = this;
