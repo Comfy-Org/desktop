@@ -50,3 +50,7 @@ ${UnStrStr}
 Section "WriteUninstaller"
     WriteUninstaller $INSTDIR\uninstaller.exe
 SectionEnd
+
+Section Uninstall
+  ${customUnInstall}
+SectionEnd
