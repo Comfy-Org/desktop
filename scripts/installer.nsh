@@ -1,7 +1,7 @@
 !include 'LogicLib.nsh'
 !include "StrFunc.nsh"
 
-${UnStrStr}
+
 
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
@@ -26,7 +26,9 @@ ${UnStrStr}
   !insertmacro customUnInstallCheckCommon
 !macroend
 
-!ifndef BUILD_UNINSTALLER
+!ifdef BUILD_UNINSTALLER
+  ${UnStrStr}
+
   !macro customRemoveFiles
     ClearErrors
     FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
