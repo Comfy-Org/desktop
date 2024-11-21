@@ -119,6 +119,11 @@ export class VirtualEnvironment {
         throw new Error(`Failed to create virtual environment: exit code ${exitCode}`);
       }
 
+      const { exitCode: ensurepipExitCode } = await this.runPythonCommandAsync(['-m', 'ensurepip', '--upgrade']);
+      if (ensurepipExitCode !== 0) {
+        throw new Error(`Failed to upgrade pip: exit code ${ensurepipExitCode}`);
+      }
+
       log.info(`Successfully created virtual environment at ${this.venvPath}`);
     } catch (error) {
       log.error(`Error creating virtual environment: ${error}`);
