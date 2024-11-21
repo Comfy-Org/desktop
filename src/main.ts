@@ -34,6 +34,7 @@ let alwaysSendCrashReports = false;
 Sentry.init({
   dsn: SENTRY_URL_ENDPOINT,
   autoSessionTracking: false,
+  enabled: process.env.SENTRY_ENABLED === 'true' || app.isPackaged,
   beforeSend: async (event, hint) => {
     if (event.extra?.comfyUIExecutionError || alwaysSendCrashReports) {
       return event;

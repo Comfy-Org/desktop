@@ -4,3 +4,4 @@ dist
 assets
 .vite
 scripts
+.env_*
