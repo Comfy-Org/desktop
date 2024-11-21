@@ -22,7 +22,7 @@ export interface ComfySettingsData {
  */
 export class ComfySettings {
   public readonly filePath: string;
-  private settings: ComfySettingsData = DEFAULT_SETTINGS;
+  private settings: ComfySettingsData = structuredClone(DEFAULT_SETTINGS);
 
   constructor(basePath: string) {
     this.filePath = path.join(basePath, 'user', 'default', 'comfy.settings.json');
