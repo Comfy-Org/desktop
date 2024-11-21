@@ -163,6 +163,7 @@ yarn download:uv
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
 
 ```bash
+deactivate # Deactivate your existing python env to avoid influencing the 
 yarn start
 ```
 
