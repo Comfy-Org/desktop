@@ -30,7 +30,7 @@ Section "WriteUninstaller"
     WriteUninstaller $INSTDIR\uninstaller.exe
 SectionEnd
 
-!macro customUnInstall
+Section Uninstall
   ClearErrors
   FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
   var /global line
@@ -49,4 +49,4 @@ SectionEnd
 
   FileClose $0
   Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
-!macroend
+SectionEnd
