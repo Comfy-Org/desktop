@@ -1,3 +1,5 @@
+!define BUILD_UNINSTALLER
+
 !include 'LogicLib.nsh'
 !include "StrFunc.nsh"
 
