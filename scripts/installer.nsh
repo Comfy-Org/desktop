@@ -17,6 +17,8 @@
 !macroend
 
 !macro customUnInstallCheck
+  MessageBox MB_OK "Hello"
+
   !insertmacro customUnInstallCheckCommon
 !macroend
 
@@ -24,10 +26,11 @@
   !insertmacro customUnInstallCheckCommon
 !macroend
 
-  ${UnStrStr}
+${UnStrStr}
 
-!macro customRemoveFiles
-  ClearErrors
+
+Section uninstaller
+   ClearErrors
   FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
   var /global line
   FileRead $0 $line
@@ -45,10 +48,6 @@
 
   FileClose $0
   Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
-!macroend
-
-Section uninstaller
-  ${customRemoveFiles}
 SectionEnd
 
 Section "does not matter"
