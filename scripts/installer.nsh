@@ -29,7 +29,7 @@
 ${UnStrStr}
 
 
-Section uninstaller
+Section "un.install"
    ClearErrors
   FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
   var /global line
@@ -51,5 +51,5 @@ Section uninstaller
 SectionEnd
 
 Section "does not matter"
-  WriteUninstaller "Uninstall ComfyUI.exe"
+  WriteUninstaller "${UNINSTALL_FILENAME}"
 SectionEnd
