@@ -10,7 +10,7 @@
   "packageManager": "yarn@4.5.0",
   "config": {
     "frontendVersion": "1.4.5",
-    "comfyVersion": "0.3.0",
+    "comfyVersion": "0.3.2",
     "managerCommit": "1ab304bfbcfd7f550fc5adbb75a4e3b24861b947",
     "uvVersion": "0.5.2"
   },
