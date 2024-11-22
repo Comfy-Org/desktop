@@ -35,7 +35,7 @@
 
     FileRead $0 $line
 
-    StrCpy $prefix "base_path:"
+    StrCpy $prefix "base_path: " ; Space at the end is important to strip away correct number of letters
     StrLen $prefixLength $prefix
     StrCpy $prefixFirstLetter $prefix 1
     
@@ -68,8 +68,8 @@
         StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
 
         ; $3 now contains value of base_path
-        RMDir /r "$3\.venv"
-        RMDir /r "$3\uv-cache"
+        RMDir /r /REBOOTOK "$3\.venv"
+        RMDir /r /REBOOTOK "$3\uv-cache"
 
         ${ExitDo} ; No need to continue, break the cycle
       ${EndIf}
