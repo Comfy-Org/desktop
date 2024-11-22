@@ -26,7 +26,7 @@
 !macro customRemoveFiles
   ${ifNot} ${isUpdated}
     ClearErrors
-    FileOpen $0 "$APPDATA\ComfyUI\extra_model_config.yaml" r
+    FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
     var /global line
     var /global lineLength
     var /global prefix
