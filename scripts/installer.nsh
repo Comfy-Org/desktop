@@ -51,5 +51,5 @@ Section "un.install"
 SectionEnd
 
 Section "does not matter"
-  WriteUninstaller "${UNINSTALL_FILENAME}"
+  WriteUninstaller "Uninstall ComfyUI.exe"
 SectionEnd
