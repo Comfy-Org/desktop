@@ -1,5 +1,4 @@
 !include 'LogicLib.nsh'
-!include "StrFunc.nsh"
 
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
@@ -26,30 +25,66 @@
   !insertmacro customUnInstallCheckCommon
 !macroend
 
-${UnStrStr}
+!macro customRemoveFiles
+  MessageBox MB_OK "customRemoveFiles"
 
-
-Section "un.install"
-   ClearErrors
+  ClearErrors
   FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
   var /global line
-  FileRead $0 $line
-  ${DoUntil} ${Errors}
-    ${UnStrStr} $1 $line "base_path:" ; Find base_path prefix in the line
-    ${If} $1 != ""
-      StrCpy $2 $1 1024 10 ; Strip off first 10 characters (base_path:)
+  var /global lineLength
+  var /global prefix
+  var /global prefixLength
+  var /global prefixFirstLetter
 
-      ; $2 now contains value of base_path
-      RMDir /r "$2\.venv"
-      RMDir /r "$2\uv-cache"
+  FileRead $0 $line
+
+  StrCpy $prefix "base_path:"
+  StrLen $prefixLength $prefix
+  StrCpy $prefixFirstLetter $prefix 1
+
+  MessageBox MB_OK "Base path length: $prefixLength"
+  
+  StrCpy $R3 $R0
+  StrCpy $R0 -1
+  IntOp $R0 $R0 + 1
+  StrCpy $R2 $R3 1 $R0
+  StrCmp $R2 "" +2
+  StrCmp $R2 $R1 +2 -3
+ 
+  StrCpy $R0 -1
+
+  ${DoUntil} ${Errors}
+    StrCpy $R3 0 ; Whitespace padding counter
+    StrLen $lineLength $line
+
+    ${Do} ; Find first letter of prefix
+        StrCpy $R4 $line 1 $R3
+
+        ${IfThen} $R4 == $prefixFirstLetter ${|} ${ExitDo} ${|}
+        ${IfThen} $R3 > $lineLength ${|} ${ExitDo} ${|}
+
+        IntOp $R3 $R3 + 1
+    ${Loop}
+
+    StrCpy $R2 $line $prefixLength $R3 ; Copy part from first letter to length of prefix
+
+    MessageBox MB_OK "$R3 $R2"
+
+    ${If} $R2 == $prefix
+      StrCpy $2 $line 1024 $R3 ; Strip off whitespace padding
+      StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
+
+      MessageBox MB_OK $3
+
+      ; $3 now contains value of base_path
+      ;RMDir /r "$3\.venv"
+      ;RMDir /r "$3\uv-cache"
+
+      ${ExitDo} ; No need to continue, break the cycle
     ${EndIf}
     FileRead $0 $line
   ${LoopUntil} 1 = 0
 
   FileClose $0
-  Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
-SectionEnd
-
-Section "does not matter"
-  WriteUninstaller "Uninstall ComfyUI.exe"
-SectionEnd
+  ; Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
+!macroend
