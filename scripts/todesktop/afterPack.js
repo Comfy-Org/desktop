@@ -25,7 +25,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const resourcePath = path.join(appPath, "Contents", "Resources");
     // Remove these Git folders that mac's codesign is choking on. Need a more recursive way to just find all folders with '.git' and delete
     await fs.rm(path.join(assetPath, "ComfyUI", ".git"), { recursive: true, force: true });
-    await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'manager-core', ".git"), { recursive: true, force: true });
+    await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'ComfyUI-Manager', ".git"), { recursive: true, force: true });
     await fs.rm(path.join(assetPath, "ComfyUI", 'custom_nodes', 'DesktopSettingsExtension', ".git"), { recursive: true, force: true });
     // Move rest of items to the resource folder 
     await fs.cp(assetPath, resourcePath, { recursive: true });

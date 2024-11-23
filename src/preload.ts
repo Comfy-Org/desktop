@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus } from './constants';
-import { DownloadState, DownloadStatus } from './models/DownloadManager';
+import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus, DownloadStatus } from './constants';
+import type { DownloadState } from './models/DownloadManager';
 import path from 'node:path';
 
 /**

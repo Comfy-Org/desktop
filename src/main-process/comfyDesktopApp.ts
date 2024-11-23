@@ -20,15 +20,13 @@ import { getAppResourcesPath } from '../install/resourcePaths';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
-  private terminal: Terminal;
+  private terminal: Terminal | null = null; // Only created after server starts.
 
   constructor(
     public basePath: string,
     public comfySettings: ComfySettings,
     public appWindow: AppWindow
-  ) {
-    this.terminal = new Terminal(this.appWindow, getAppResourcesPath());
-  }
+  ) {}
 
   get pythonInstallPath() {
     return app.isPackaged ? this.basePath : path.join(app.getAppPath(), 'assets');
@@ -47,6 +45,22 @@ export class ComfyDesktopApp {
       customLogger: log,
       updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
       autoUpdater: this.comfySettings.get('Comfy-Desktop.AutoUpdate'),
+    });
+  }
+
+  private initializeTerminal(virtualEnvironment: VirtualEnvironment) {
+    this.terminal = new Terminal(this.appWindow, this.basePath, virtualEnvironment.uvPath);
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
+      this.terminal?.write(command);
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
+      this.terminal?.resize(cols, rows);
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, (_event) => {
+      return this.terminal?.restore();
     });
   }
 
@@ -112,18 +126,6 @@ export class ComfyDesktopApp {
         return null;
       }
     });
-
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
-      this.terminal.write(command);
-    });
-
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
-      this.terminal.resize(cols, rows);
-    });
-
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, (_event) => {
-      return this.terminal.restore();
-    });
   }
 
   /**
@@ -175,6 +177,7 @@ export class ComfyDesktopApp {
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);
     await this.comfyServer.start();
+    this.initializeTerminal(virtualEnvironment);
   }
 
   static async create(appWindow: AppWindow): Promise<ComfyDesktopApp> {

@@ -56,7 +56,7 @@ export class VirtualEnvironment {
       resourcesPath,
       'ComfyUI',
       'custom_nodes',
-      'manager-core',
+      'ComfyUI-Manager',
       'requirements.txt'
     );
 
@@ -117,6 +117,11 @@ export class VirtualEnvironment {
 
       if (exitCode !== 0) {
         throw new Error(`Failed to create virtual environment: exit code ${exitCode}`);
+      }
+
+      const { exitCode: ensurepipExitCode } = await this.runPythonCommandAsync(['-m', 'ensurepip', '--upgrade']);
+      if (ensurepipExitCode !== 0) {
+        throw new Error(`Failed to upgrade pip: exit code ${ensurepipExitCode}`);
       }
 
       log.info(`Successfully created virtual environment at ${this.venvPath}`);

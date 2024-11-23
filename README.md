@@ -7,7 +7,7 @@
 This electron app is the simplest way to use [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and comes bundled with a few things:
 
 - Stable version of ComfyUI from [releases](https://github.com/comfyanonymous/ComfyUI/releases)
-- comfyui [manager-core](https://github.com/Comfy-Org/manager-core)
+- [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager)
 - [uv](https://github.com/astral-sh/uv)
 
 On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager, and the uv executable.
@@ -99,6 +99,15 @@ Confirmed working:
 - Visual Studio Community 2022 - 17.12.1
 - Desktop development with C++ workload
 - MSVC v143 x64 spectre-mitigated libraries (Latest / v14.42-17.12)
+  - Open the Visual Studio Installer
+  - Click "Modify" on your Visual Studio 2022 Community installation
+  - Go to the "Individual Components" tab
+  - Search for "Spectre"
+  - Check the boxes for the Spectre-mitigated libraries that match your project's architecture (x86 and/or x64)
+  - ![image](https://github.com/user-attachments/assets/0829db3d-84b7-48e8-9d13-c72c35169a05)
+
+Look for "MSVC v143 - VS 2022 C++ x64/x86 Spectre-mitigated libs"
+If you're using other toolsets, you may need their corresponding Spectre-mitigated libraries as well
 
 ## NPM Dependencies
 
@@ -163,6 +172,7 @@ yarn download:uv
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
 
 ```bash
+deactivate # Deactivate your existing python env to avoid influencing the
 yarn start
 ```
 

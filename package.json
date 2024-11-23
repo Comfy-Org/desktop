@@ -3,15 +3,15 @@
   "productName": "ComfyUI",
   "repository": "github:comfy-org/electron",
   "copyright": "Copyright © 2024 Comfy Org",
-  "version": "0.3.3",
+  "version": "0.3.8",
   "homepage": "https://comfy.org",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
   "packageManager": "yarn@4.5.0",
   "config": {
-    "frontendVersion": "1.4.4",
-    "comfyVersion": "0.2.7",
-    "managerCommit": "e629215c100c89a9a9d33fc03be3248069ff67ef",
+    "frontendVersion": "1.4.5",
+    "comfyVersion": "0.3.2",
+    "managerCommit": "1ab304bfbcfd7f550fc5adbb75a4e3b24861b947",
     "uvVersion": "0.5.2"
   },
   "scripts": {

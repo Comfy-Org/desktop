@@ -7,6 +7,7 @@ export class Terminal {
   #pty: pty.IPty | undefined;
   #window: AppWindow | undefined;
   #cwd: string | undefined;
+  #uvPath: string | undefined;
 
   readonly sessionBuffer: string[] = [];
   readonly size = { cols: 80, rows: 30 };
@@ -21,9 +22,10 @@ export class Terminal {
     return this.#window;
   }
 
-  constructor(window: AppWindow, cwd: string) {
+  constructor(window: AppWindow, cwd: string, uvPath: string) {
     this.#window = window;
     this.#cwd = cwd;
+    this.#uvPath = uvPath;
   }
 
   write(data: string) {
@@ -46,7 +48,7 @@ export class Terminal {
   #createPty() {
     const window = this.window;
     // TODO: does this want to be a setting?
-    const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+    const shell = this.#getDefaultShell();
     const instance = pty.spawn(shell, [], {
       handleFlowControl: false,
       conptyInheritCursor: false,
@@ -56,6 +58,14 @@ export class Terminal {
       cwd: this.#cwd,
     });
 
+    if (process.platform === 'win32') {
+      // PowerShell function
+      instance.write(`function pip { & "${this.#uvPath}" pip $args }\r\n`);
+    } else {
+      // Bash/Zsh alias
+      instance.write(`alias pip='"${this.#uvPath}" pip'\r\n`);
+    }
+
     instance.onData((data) => {
       this.sessionBuffer.push(data);
       window.send(IPC_CHANNELS.TERMINAL_ON_OUTPUT, data);
@@ -63,5 +73,16 @@ export class Terminal {
     });
 
     return instance;
+  }
+
+  #getDefaultShell(): string {
+    switch (os.platform()) {
+      case 'win32':
+        return 'powershell.exe';
+      case 'darwin':
+        return 'zsh';
+      default: // Linux and others
+        return 'bash';
+    }
   }
 }
