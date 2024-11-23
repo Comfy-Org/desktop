@@ -141,7 +141,7 @@ export class VirtualEnvironment {
       log.error(
         `Failed to install requirements.compiled: exit code ${exitCode}. Falling back to installing requirements.txt`
       );
-
+      await this.installPytorch(callbacks);
       await this.installComfyUIRequirements(callbacks);
       await this.installComfyUIManagerRequirements(callbacks);
     }
@@ -270,7 +270,7 @@ export class VirtualEnvironment {
     });
   }
 
-  private async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
+  private async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
     if (process.platform === 'win32') {
       log.info('Installing PyTorch CUDA 12.1');
       await this.runUvCommandAsync(
@@ -293,6 +293,9 @@ export class VirtualEnvironment {
         [
           'pip',
           'install',
+          '-U',
+          '--prerelease',
+          'allow',
           'torch',
           'torchvision',
           'torchaudio',
@@ -302,6 +305,8 @@ export class VirtualEnvironment {
         callbacks
       );
     }
+  }
+  private async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUI requirements from ${this.comfyUIRequirementsPath}`);
     const installCmd = ['pip', 'install', '-r', this.comfyUIRequirementsPath];
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
