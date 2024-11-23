@@ -77,7 +77,8 @@ export class ComfyServer {
       })
         .map(([key, value]) => [`--${key}`, value])
         .flat()
-        .filter((value: any) => typeof value === 'string' && value !== '')
+        // Boolean true values are ignored. e.g. { '--cpu': true } => '--cpu'
+        .filter((value: string | boolean) => typeof value === 'string' && value !== '')
     );
   }
 
