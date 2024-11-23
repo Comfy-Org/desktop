@@ -16,7 +16,6 @@ import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../terminal';
-import { getAppResourcesPath } from '../install/resourcePaths';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
@@ -50,6 +49,7 @@ export class ComfyDesktopApp {
 
   private initializeTerminal(virtualEnvironment: VirtualEnvironment) {
     this.terminal = new Terminal(this.appWindow, this.basePath, virtualEnvironment.uvPath);
+    this.terminal.write(virtualEnvironment.activateEnvironmentCommand());
 
     ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
       this.terminal?.write(command);

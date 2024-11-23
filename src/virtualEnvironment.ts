@@ -102,6 +102,19 @@ export class VirtualEnvironment {
     }
   }
 
+  /**
+   * Activates the virtual environment.
+   */
+  public activateEnvironmentCommand(): string {
+    if (process.platform === 'darwin' || process.platform === 'linux') {
+      return `source ${this.venvPath}/bin/activate\r`;
+    }
+    if (process.platform === 'win32') {
+      return `${this.venvPath}\\Scripts\\activate.bat\r`;
+    }
+    throw new Error(`Unsupported platform: ${process.platform}`);
+  }
+
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
     try {
       if (await this.exists()) {
