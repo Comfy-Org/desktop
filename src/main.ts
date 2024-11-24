@@ -66,6 +66,10 @@ if (!gotTheLock) {
     log.debug('App ready');
 
     const appWindow = new AppWindow();
+    appWindow.onClose(() => {
+      log.info('App window closed. Quitting application.');
+      app.quit();
+    });
 
     // Register basic handlers that are necessary during app's installation.
     new PathHandlers().registerHandlers();

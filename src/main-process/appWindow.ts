@@ -87,8 +87,6 @@ export class AppWindow {
   public onClose(callback: () => void): void {
     this.window.on('close', () => {
       callback();
-      // Currently, the application quits when the window is closed for all operating systems.
-      app.quit();
     });
   }
 
