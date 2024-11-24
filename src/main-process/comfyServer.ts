@@ -69,17 +69,21 @@ export class ComfyServer {
     };
   }
 
-  buildLaunchArgs() {
-    return [this.mainScriptPath].concat(
-      Object.entries({
-        ...this.serverArgs.extraServerArgs,
-        ...this.coreLaunchArgs,
-      })
+  static buildLaunchArgs(mainScriptPath: string, args: Record<string, string>) {
+    return [mainScriptPath].concat(
+      Object.entries(args)
         .map(([key, value]) => [`--${key}`, value])
         .flat()
         // Empty string values are ignored. e.g. { '--cpu': '' } => '--cpu'
         .filter((value: string) => value !== '')
     );
+  }
+
+  get launchArgs() {
+    return ComfyServer.buildLaunchArgs(this.mainScriptPath, {
+      ...this.serverArgs.extraServerArgs,
+      ...this.coreLaunchArgs,
+    });
   }
 
   async start() {
@@ -88,7 +92,7 @@ export class ComfyServer {
       const comfyUILog = log.create({ logId: 'comfyui' });
       comfyUILog.transports.file.fileName = 'comfyui.log';
 
-      const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.buildLaunchArgs(), {
+      const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.launchArgs, {
         onStdout: (data) => {
           comfyUILog.info(data);
           this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
