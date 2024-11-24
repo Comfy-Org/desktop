@@ -17,14 +17,10 @@ export class AppWindow {
   private rendererReady: boolean = false;
 
   public constructor() {
-    this.store = new Store<StoreType>();
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = primaryDisplay.workAreaSize;
-    const { store } = this;
-
-    if (!store) {
-      // TODO: Store should never be undefined.  Handle gracefully / fail fast.
-    }
+    const store = this.loadWindowStore();
+    this.store = store;
 
     // Retrieve stored window size, or use default if not available
     const storedWidth = store.get('windowWidth', width) ?? width;
@@ -136,6 +132,38 @@ export class AppWindow {
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
       this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
+    }
+  }
+
+  /**
+   * Load the window settings or `die()` trying.
+   * @returns The electron store file for transient window config
+   * @throws Rethrows errors received from `electron-store` and `app.getPath('userData')`.
+   * There are edge cases where this might not be a catastrophic failure, but inability
+   * to write to our own datastore may result in unexpected user data loss.
+   */
+  private loadWindowStore(): Store<StoreType> {
+    try {
+      // Separate file for non-critical convenience settings - just resets itself if invalid
+      return new Store<StoreType>({
+        clearInvalidConfig: true,
+        name: 'window',
+      });
+    } catch (error) {
+      // Crash: Unknown filesystem error, permission denied on user data folder, etc
+      log.error(`Unknown error whilst loading window configuration.`, error);
+      try {
+        dialog.showErrorBox(
+          'User Data',
+          `Unknown error whilst writing to user data folder:\n\n${app.getPath('userData')}`
+        );
+      } catch (error) {
+        // Crash: Can't even find the user userData folder
+        log.error('Cannot find user data folder.', error);
+        dialog.showErrorBox('Invalid Environment', 'Unknown error whilst attempting to determine user data folder.');
+        throw error;
+      }
+      throw error;
     }
   }
 
