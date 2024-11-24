@@ -1,16 +1,16 @@
-# comfyui-electron
+# desktop comfyui
 
 [![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
 
 # Overview
 
-This electron app is the simplest way to use [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and comes bundled with a few things:
+This desktop app is a packaged way to use [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and comes bundled with a few things:
 
 - Stable version of ComfyUI from [releases](https://github.com/comfyanonymous/ComfyUI/releases)
 - [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager)
 - [uv](https://github.com/astral-sh/uv)
 
-On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager, and the uv executable.
+On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager, and the uv executable as well as some desktop specific features.
 
 ## Installed Files
 
@@ -274,4 +274,4 @@ yarn clean:slate
 
 Windows NSIS x64: [Download](https://download.comfy.org/windows/nsis/x64)
 
-macOS ARM
+macOS ARM: [Download](https://download.comfy.org/mac/dmg/arm64)
