@@ -89,9 +89,8 @@ if (!gotTheLock) {
       const host = process.env.COMFY_HOST || DEFAULT_SERVER_ARGS.host;
       const targetPort = process.env.COMFY_PORT ? parseInt(process.env.COMFY_PORT) : DEFAULT_SERVER_ARGS.port;
       const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
-      const cpuOnly: Record<string, string | boolean> =
-        process.env.COMFYUI_CPU_ONLY === 'true' ? { '--cpu': true } : {};
-      const extraServerArgs: Record<string, string | boolean> = {
+      const cpuOnly: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { '--cpu': '' } : {};
+      const extraServerArgs: Record<string, string> = {
         ...comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs'),
         ...cpuOnly,
       };

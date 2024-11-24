@@ -104,7 +104,7 @@ export const DEFAULT_SERVER_ARGS = {
   /** The port to use for the ComfyUI server. */
   port: 8000,
   // Extra arguments to pass to the ComfyUI server.
-  extraServerArgs: {} as Record<string, string | boolean>,
+  extraServerArgs: {} as Record<string, string>,
 };
 
 export type ServerArgs = typeof DEFAULT_SERVER_ARGS;

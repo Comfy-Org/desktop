@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS: ComfySettingsData = {
 export interface ComfySettingsData {
   'Comfy-Desktop.AutoUpdate': boolean;
   'Comfy-Desktop.SendStatistics': boolean;
-  'Comfy.Server.LaunchArgs': Record<string, string | boolean>;
+  'Comfy.Server.LaunchArgs': Record<string, string>;
   [key: string]: unknown;
 }
 
