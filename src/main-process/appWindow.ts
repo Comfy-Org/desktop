@@ -136,8 +136,8 @@ export class AppWindow {
   }
 
   /**
-   * Load the window settings or `die()` trying.
-   * @returns The electron store file for transient window config
+   * Loads window state from `userData` via `electron-store`.  Overwrites invalid config with defaults.
+   * @returns The electron store for non-critical window state (size/position etc)
    * @throws Rethrows errors received from `electron-store` and `app.getPath('userData')`.
    * There are edge cases where this might not be a catastrophic failure, but inability
    * to write to our own datastore may result in unexpected user data loss.
