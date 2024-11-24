@@ -65,7 +65,7 @@ Sentry.init({
   enabled: process.env.SENTRY_ENABLED === 'true' || app.isPackaged,
   beforeSend: async (event) => {
     filterEvent(event);
-    
+
     if (event.extra?.comfyUIExecutionError || alwaysSendCrashReports) {
       return event;
     }
