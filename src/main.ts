@@ -31,11 +31,41 @@ app.on('window-all-closed', () => {
  * The `alwaysSendCrashReports` variable is used to determine if crash reports should be sent.
  */
 let alwaysSendCrashReports = false;
+
+// Used to filter out paths from strings in sentry events
+let basePath: string | undefined;
+const filterEvent = (obj: unknown) => {
+  if (!obj || !basePath) return obj;
+
+  if (typeof obj === 'string') {
+    return obj.replaceAll(basePath, '[basePath]');
+  }
+
+  try {
+    if (typeof obj === 'object') {
+      for (const k in obj) {
+        try {
+          const record = obj as Record<string, unknown>;
+          record[k] = filterEvent(record[k]);
+        } catch (error) {
+          // Failed to read/write key
+        }
+      }
+    }
+  } catch (error) {
+    // Failed to enumerate keys
+  }
+
+  return obj;
+};
+
 Sentry.init({
   dsn: SENTRY_URL_ENDPOINT,
   autoSessionTracking: false,
   enabled: process.env.SENTRY_ENABLED === 'true' || app.isPackaged,
-  beforeSend: async (event, hint) => {
+  beforeSend: async (event) => {
+    filterEvent(event);
+    
     if (event.extra?.comfyUIExecutionError || alwaysSendCrashReports) {
       return event;
     }
@@ -83,6 +113,7 @@ if (!gotTheLock) {
     try {
       const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
       await comfyDesktopApp.initialize();
+      basePath = comfyDesktopApp.basePath;
       alwaysSendCrashReports = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics');
 
       const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
