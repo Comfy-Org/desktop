@@ -153,7 +153,7 @@ export class VirtualEnvironment {
 
     const installCmd = ['pip', 'install', '-r', this.requirementsCompiledPath, '--index-strategy', 'unsafe-best-match'];
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
-    if (exitCode == 0) {
+    if (exitCode !== 0) {
       log.error(
         `Failed to install requirements.compiled: exit code ${exitCode}. Falling back to installing requirements.txt`
       );
