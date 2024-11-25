@@ -12,9 +12,7 @@ class SentryLogging {
       autoSessionTracking: false,
       enabled: process.env.SENTRY_ENABLED === 'true' || app.isPackaged,
       beforeSend: async (event) => {
-        console.log(event)
         this.filterEvent(event);
-        console.log(event)
 
         if (
           event.extra?.comfyUIExecutionError ||
