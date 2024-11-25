@@ -11,7 +11,16 @@ import waitOn from 'wait-on';
 import { ChildProcess } from 'child_process';
 
 export class ComfyServer {
-  public static readonly MAX_FAIL_WAIT = 120 * 1000; // 120 seconds
+  /**
+   * The maximum amount of time to wait for the server to start.
+   * Installing custom nodes dependencies like ffmpeg can take a long time,
+   * so we need to give it a long timeout.
+   */
+  public static readonly MAX_FAIL_WAIT = 30 * 60 * 1000; // 30 minutes
+
+  /**
+   * The interval to check if the server is ready.
+   */
   public static readonly CHECK_INTERVAL = 1000; // Check every second
 
   private comfyServerProcess: ChildProcess | null = null;
