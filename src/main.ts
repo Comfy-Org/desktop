@@ -1,7 +1,6 @@
 import { IPC_CHANNELS, DEFAULT_SERVER_ARGS, ProgressStatus, SENTRY_URL_ENDPOINT } from './constants';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
-import * as Sentry from '@sentry/electron/main';
 import { findAvailablePort } from './utils';
 import dotenv from 'dotenv';
 import { AppWindow } from './main-process/appWindow';
@@ -9,6 +8,7 @@ import { PathHandlers } from './handlers/pathHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import { LevelOption } from 'electron-log';
+import SentryLogging from './services/sentry';
 
 dotenv.config();
 log.initialize();
@@ -28,63 +28,8 @@ app.on('window-all-closed', () => {
 
 /**
  * Sentry needs to be initialized at the top level.
- * The `alwaysSendCrashReports` variable is used to determine if crash reports should be sent.
  */
-let alwaysSendCrashReports = false;
-
-// Used to filter out paths from strings in sentry events
-let basePath: string | undefined;
-const filterEvent = (obj: unknown) => {
-  if (!obj || !basePath) return obj;
-
-  if (typeof obj === 'string') {
-    return obj.replaceAll(basePath, '[basePath]');
-  }
-
-  try {
-    if (typeof obj === 'object') {
-      for (const k in obj) {
-        try {
-          const record = obj as Record<string, unknown>;
-          record[k] = filterEvent(record[k]);
-        } catch (error) {
-          // Failed to read/write key
-        }
-      }
-    }
-  } catch (error) {
-    // Failed to enumerate keys
-  }
-
-  return obj;
-};
-
-Sentry.init({
-  dsn: SENTRY_URL_ENDPOINT,
-  autoSessionTracking: false,
-  enabled: process.env.SENTRY_ENABLED === 'true' || app.isPackaged,
-  beforeSend: async (event) => {
-    filterEvent(event);
-
-    if (event.extra?.comfyUIExecutionError || alwaysSendCrashReports) {
-      return event;
-    }
-
-    const { response } = await dialog.showMessageBox({
-      title: 'Send Crash Statistics',
-      message: `Would you like to send crash statistics to the team?`,
-      buttons: ['Always send crash reports', 'Do not send crash report'],
-    });
-
-    return response === 0 ? event : null;
-  },
-  integrations: [
-    Sentry.childProcessIntegration({
-      breadcrumbs: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
-      events: ['abnormal-exit', 'killed', 'crashed', 'launch-failed', 'oom', 'integrity-failure'],
-    }),
-  ],
-});
+SentryLogging.init();
 
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -113,8 +58,7 @@ if (!gotTheLock) {
     try {
       const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
       await comfyDesktopApp.initialize();
-      basePath = comfyDesktopApp.basePath;
-      alwaysSendCrashReports = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics');
+      SentryLogging.comfyDesktopApp = comfyDesktopApp;
 
       const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
       const host = process.env.COMFY_HOST || DEFAULT_SERVER_ARGS.host;
