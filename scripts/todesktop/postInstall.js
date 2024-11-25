@@ -11,6 +11,10 @@ async function postInstall() {
     if (!firstInstallOnToDesktopServers) return;
 
     console.log('After Yarn Install ' , os.platform());
+    if (fs.existsSync(path.join('./assets','ComfyUI')))
+    {
+        throw new Error("ComfyUI has already been installed!");
+    }
 
     if (os.platform() === "win32")
     {
@@ -52,7 +56,7 @@ async function postInstall() {
         fs.rmSync(path.join('./assets', tgzFile));
       }
     });
-
+    
 };
 
 postInstall();
