@@ -196,8 +196,9 @@ export class VirtualEnvironment {
    * @returns
    */
   public async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
-    log.info(`Running uv command: ${this.uvPath} ${args.join(' ')}`);
-    return this.runPtyCommandAsync(`${this.uvPath} ${args.map((a) => `"${a}"`).join(' ')}`, callbacks?.onStdout);
+    const uvCommand = os.platform() === 'win32' ? `&"${this.uvPath}"` : this.uvPath;
+    log.info(`Running uv command: ${uvCommand} ${args.join(' ')}`);
+    return this.runPtyCommandAsync(`${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`, callbacks?.onStdout);
   }
 
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
