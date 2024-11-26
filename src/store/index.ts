@@ -5,3 +5,7 @@ export type AppWindowSettings = {
   windowY: number | undefined;
   windowMaximized?: boolean;
 };
+
+export type DesktopSettings = {
+  installState: 'started' | 'installed' | undefined;
+}
