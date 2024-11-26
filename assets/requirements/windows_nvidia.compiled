@@ -5,39 +5,39 @@
 
 aiohappyeyeballs==2.4.3
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   aiohttp
     # from https://pypi.org/simple
 aiohttp==3.11.7
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     # from https://pypi.org/simple
 aiosignal==1.3.1
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   aiohttp
     # from https://pypi.org/simple
 attrs==24.2.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   aiohttp
     # from https://pypi.org/simple
 certifi==2024.8.30
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   requests
     # from https://pypi.org/simple
 cffi==1.17.1
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   cryptography
     #   pynacl
     #   soundfile
     # from https://pypi.org/simple
 charset-normalizer==3.4.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   requests
     # from https://pypi.org/simple
 click==8.1.7
@@ -45,7 +45,7 @@ click==8.1.7
     # from https://pypi.org/simple
 colorama==0.4.6
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   click
     #   tqdm
     # from https://download.pytorch.org/whl/cu121
@@ -57,26 +57,26 @@ deprecated==1.2.15
     # from https://pypi.org/simple
 einops==0.8.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   spandrel
     # from https://pypi.org/simple
 filelock==3.16.1
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   huggingface-hub
     #   torch
     #   transformers
     # from https://pypi.org/simple
 frozenlist==1.5.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   aiohttp
     #   aiosignal
     # from https://pypi.org/simple
 fsspec==2024.10.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   huggingface-hub
     #   torch
     # from https://pypi.org/simple
@@ -88,30 +88,30 @@ gitpython==3.1.43
     # from https://pypi.org/simple
 huggingface-hub==0.26.2
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r custom_nodes/ComfyUI-Manager/requirements.txt
     #   tokenizers
     #   transformers
     # from https://pypi.org/simple
 idna==3.10
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   requests
     #   yarl
     # from https://pypi.org/simple
 jinja2==3.1.4
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   torch
     # from https://pypi.org/simple
 kornia==0.7.4
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     # from https://pypi.org/simple
 kornia-rs==0.1.7
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   kornia
     # from https://pypi.org/simple
 markdown-it-py==3.0.0
@@ -119,7 +119,7 @@ markdown-it-py==3.0.0
     # from https://pypi.org/simple
 markupsafe==3.0.2
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   jinja2
     # from https://pypi.org/simple
 mdurl==0.1.2
@@ -127,23 +127,23 @@ mdurl==0.1.2
     # from https://pypi.org/simple
 mpmath==1.3.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   sympy
     # from https://download.pytorch.org/whl/cu121
 multidict==6.1.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   aiohttp
     #   yarl
     # from https://pypi.org/simple
 networkx==3.4.2
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   torch
     # from https://pypi.org/simple
 numpy==1.26.4
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   scipy
     #   spandrel
     #   torchsde
@@ -152,31 +152,31 @@ numpy==1.26.4
     # from https://pypi.org/simple
 packaging==24.2
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   huggingface-hub
     #   kornia
     #   transformers
     # from https://pypi.org/simple
 pillow==11.0.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   torchvision
     # from https://pypi.org/simple
 propcache==0.2.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   aiohttp
     #   yarl
     # from https://pypi.org/simple
 psutil==6.1.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     # from https://pypi.org/simple
 pycparser==2.22
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   cffi
     # from https://pypi.org/simple
 pygithub==2.5.0
@@ -193,19 +193,19 @@ pynacl==1.5.0
     # from https://pypi.org/simple
 pyyaml==6.0.2
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   huggingface-hub
     #   transformers
     # from https://pypi.org/simple
 regex==2024.11.6
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   transformers
     # from https://pypi.org/simple
 requests==2.32.3
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   huggingface-hub
     #   pygithub
     #   transformers
@@ -217,25 +217,25 @@ rich==13.9.4
     # from https://pypi.org/simple
 safetensors==0.4.5
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   spandrel
     #   transformers
     # from https://pypi.org/simple
 scipy==1.14.1
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   torchsde
     # from https://pypi.org/simple
 sentencepiece==0.2.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     # from https://pypi.org/simple
 setuptools==75.6.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   torch
     # from https://pypi.org/simple
 shellingham==1.5.4
@@ -246,28 +246,28 @@ smmap==5.0.1
     # from https://pypi.org/simple
 soundfile==0.12.1
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     # from https://pypi.org/simple
 spandrel==0.4.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     # from https://pypi.org/simple
 sympy==1.13.1
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   torch
     # from https://download.pytorch.org/whl/cu121
 tokenizers==0.20.3
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   transformers
     # from https://pypi.org/simple
 torch==2.5.1+cu121
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   kornia
     #   spandrel
@@ -277,35 +277,35 @@ torch==2.5.1+cu121
     # from https://download.pytorch.org/whl/cu121
 torchaudio==2.5.1+cu121
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     # from https://download.pytorch.org/whl/cu121
 torchsde==0.2.6
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     # from https://pypi.org/simple
 torchvision==0.20.1+cu121
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   spandrel
     # from https://download.pytorch.org/whl/cu121
 tqdm==4.67.1
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r requirements.txt
     #   huggingface-hub
     #   transformers
     # from https://pypi.org/simple
 trampoline==0.1.2
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   torchsde
     # from https://pypi.org/simple
 transformers==4.46.3
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r custom_nodes/ComfyUI-Manager/requirements.txt
     #   -r requirements.txt
     # from https://pypi.org/simple
@@ -314,7 +314,7 @@ typer==0.13.1
     # from https://pypi.org/simple
 typing-extensions==4.12.2
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   -r custom_nodes/ComfyUI-Manager/requirements.txt
     #   gitpython
     #   huggingface-hub
@@ -327,7 +327,7 @@ typing-extensions==4.12.2
     # from https://pypi.org/simple
 urllib3==2.2.3
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   pygithub
     #   requests
     # from https://pypi.org/simple
@@ -336,6 +336,6 @@ wrapt==1.17.0
     # from https://pypi.org/simple
 yarl==1.18.0
     # via
-    #   --override C:/Users/robin/electron/assets/override.txt
+    #   --override C:redacted/electron/assets/override.txt
     #   aiohttp
     # from https://pypi.org/simple
