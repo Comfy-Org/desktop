@@ -1,6 +1,6 @@
 import log from 'electron-log/main';
 import ElectronStore from 'electron-store';
-import { app, dialog } from 'electron';
+import { app, dialog, shell } from 'electron';
 import path from 'node:path';
 import fs from 'fs/promises';
 import type { DesktopSettings } from '.';
@@ -24,11 +24,17 @@ export function useDesktopStore() {
         // The .json file is invalid.  Prompt user to reset.
         const { response } = await showResetPrompt(configFilePath);
 
-        // You sure?
-        if (response === 0) {
+        if (response === 1) {
+          // Open dir with file selected
+          shell.showItemInFolder(configFilePath);
+        } else if (response === 0) {
+          // Reset - you sure?
           const { response } = await showConfirmReset(configFilePath);
 
           if (response === 0) {
+            // Open dir with file selected
+            shell.showItemInFolder(configFilePath);
+          } else if (response === 1) {
             // Delete all settings
             await tryDeleteConfigFile(configFilePath);
 
@@ -57,10 +63,10 @@ function showResetPrompt(configFilePath: string): Promise<Electron.MessageBoxRet
   return dialog.showMessageBox({
     title: 'Invalid configuration file',
     type: 'error',
-    message: `Format of the configuration file is invalid:\n\n${configFilePath}`,
-    buttons: ['&Reset the configuration file', '&Quit'],
-    defaultId: 1,
-    cancelId: 1,
+    message: `Format of the configuration file below is invalid.  It should be a JSON file containing only ComfyUI configuration options.\n\n${configFilePath}`,
+    buttons: ['&Reset desktop configuration', 'Show the &file (and quit)', '&Quit'],
+    defaultId: 0,
+    cancelId: 2,
     normalizeAccessKeys: true,
   });
 }
@@ -70,9 +76,9 @@ function showConfirmReset(configFilePath: string): Promise<Electron.MessageBoxRe
     title: 'Confirm reset settings',
     type: 'warning',
     message: `The configuration file below will be cleared and all settings will be reset.  You should back this file up before deleting it.\n\n${configFilePath}`,
-    buttons: ['Try to open the &file', '&Yes, delete all settings', '&Quit'],
-    defaultId: 1,
-    cancelId: 1,
+    buttons: ['Show the &file (and quit)', '&Yes, delete all settings', '&Quit'],
+    defaultId: 0,
+    cancelId: 2,
     normalizeAccessKeys: true,
   });
 }
