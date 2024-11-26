@@ -10,6 +10,8 @@ function makeAssets(gpuFlag) {
     gpuFlag,
     '--manager-commit',
     pkg.config.managerCommit,
+    '--manager-url',
+    'https://github.com/Comfy-Org/ComfyUI-Manager',
     '&&',
     'yarn run make:frontend'
   ].join(' ');
