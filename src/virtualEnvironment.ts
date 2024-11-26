@@ -62,7 +62,10 @@ export class VirtualEnvironment {
 
     this.pythonVersion = pythonVersion;
     this.cacheDir = path.join(venvPath, 'uv-cache');
-    this.requirementsCompiledPath = path.join(resourcesPath, 'requirements.compiled');
+    this.requirementsCompiledPath =
+      process.platform === 'win32'
+        ? path.join(resourcesPath, 'requirements', 'macos.compiled')
+        : path.join(resourcesPath, 'requirements', 'windows_nvidia.compiled');
     this.pythonInterpreterPath =
       process.platform === 'win32'
         ? path.join(this.venvPath, 'Scripts', 'python.exe')

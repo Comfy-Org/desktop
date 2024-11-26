@@ -24,6 +24,16 @@ runs:
       shell: cmd
     - run: yarn run download:uv all
       shell: powershell
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    - name: Install ComfyUI and create standalone package
+      shell: powershell
+      run: |
+        set -x
+        pip install comfy-cli
+        yarn make:assets:cpu
     - name: Make app
       shell: powershell
       env:

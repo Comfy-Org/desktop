@@ -6,7 +6,7 @@ function makeAssets(gpuFlag) {
   const baseCommand = [
     'cd assets',
     '&&',
-    `comfy-cli --skip-prompt --here install --version ${pkg.config.comfyVersion} --fast-deps`,
+    `comfy-cli --skip-prompt --here install --version ${pkg.config.comfyVersion} --skip-requirements`,
     gpuFlag,
     '--manager-commit',
     pkg.config.managerCommit,
