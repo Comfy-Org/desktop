@@ -1,7 +1,7 @@
 import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
-import { StoreType } from '../store';
+import { AppWindowSettings } from '../store';
 import log from 'electron-log/main';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
@@ -12,7 +12,7 @@ import { getAppResourcesPath } from '../install/resourcePaths';
  */
 export class AppWindow {
   private window: BrowserWindow;
-  private store: Store<StoreType>;
+  private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
 
@@ -142,10 +142,10 @@ export class AppWindow {
    * There are edge cases where this might not be a catastrophic failure, but inability
    * to write to our own datastore may result in unexpected user data loss.
    */
-  private loadWindowStore(): Store<StoreType> {
+  private loadWindowStore(): Store<AppWindowSettings> {
     try {
       // Separate file for non-critical convenience settings - just resets itself if invalid
-      return new Store<StoreType>({
+      return new Store<AppWindowSettings>({
         clearInvalidConfig: true,
         name: 'window',
       });
