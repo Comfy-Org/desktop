@@ -19,7 +19,7 @@
     "clean:uv": "rimraf assets/uv",
     "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz & yarn run clean:assets:dev",
     "clean:assets:dev": "yarn run clean:assets:git && rimraf assets/python assets/override.txt & rimraf assets/cpython*.tar.gz & rimraf assets/requirements.*",
-    "clean:assets:git": "rimraf assets/ComfyUI/.git assets/ComfyUI/custom_nodes/ComfyUI_Manager/.git",
+    "clean:assets:git": "rimraf assets/ComfyUI/.git assets/ComfyUI/custom_nodes/ComfyUI-Manager/.git",
     "clean:slate": "yarn run clean & yarn run clean:assets & rimraf node_modules",
     "download:uv": "node scripts/downloadUV.js",
     "download-frontend": "node scripts/downloadFrontend.js",

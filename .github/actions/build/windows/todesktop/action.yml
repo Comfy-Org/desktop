@@ -34,6 +34,7 @@ runs:
         set -x
         pip install comfy-cli
         yarn make:assets:cpu
+        yarn clean:assets:git
     - name: Make app
       shell: bash
       env:
