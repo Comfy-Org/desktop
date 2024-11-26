@@ -64,8 +64,8 @@ export class VirtualEnvironment {
     this.cacheDir = path.join(venvPath, 'uv-cache');
     this.requirementsCompiledPath =
       process.platform === 'win32'
-        ? path.join(resourcesPath, 'requirements', 'macos.compiled')
-        : path.join(resourcesPath, 'requirements', 'windows_nvidia.compiled');
+        ? path.join(resourcesPath, 'requirements', 'windows_nvidia.compiled')
+        : path.join(resourcesPath, 'requirements', 'macos.compiled');
     this.pythonInterpreterPath =
       process.platform === 'win32'
         ? path.join(this.venvPath, 'Scripts', 'python.exe')
@@ -196,6 +196,7 @@ export class VirtualEnvironment {
    * @returns
    */
   public async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
+    log.info(`Running uv command: ${this.uvPath} ${args.join(' ')}`);
     return this.runPtyCommandAsync(`${this.uvPath} ${args.map((a) => `"${a}"`).join(' ')}`, callbacks?.onStdout);
   }
 
