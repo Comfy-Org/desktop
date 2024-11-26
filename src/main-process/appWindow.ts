@@ -1,10 +1,11 @@
 import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
-import { StoreType } from '../store';
+import { AppWindowSettings } from '../store';
 import log from 'electron-log/main';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
+import { useDesktopStore } from '../store/store';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
@@ -12,13 +13,14 @@ import { getAppResourcesPath } from '../install/resourcePaths';
  */
 export class AppWindow {
   private window: BrowserWindow;
-  private store: Store<StoreType>;
+  private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
 
   public constructor() {
+    const installed = useDesktopStore().store.get('installState') === 'installed';
     const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, height } = primaryDisplay.workAreaSize;
+    const { width, height } = installed ? primaryDisplay.workAreaSize : { width: 1024, height: 768 };
     const store = this.loadWindowStore();
     this.store = store;
 
@@ -32,8 +34,8 @@ export class AppWindow {
       title: 'ComfyUI',
       width: storedWidth,
       height: storedHeight,
-      minWidth: 480,
-      minHeight: 360,
+      minWidth: 640,
+      minHeight: 640,
       x: storedX,
       y: storedY,
       webPreferences: {
@@ -46,6 +48,7 @@ export class AppWindow {
       autoHideMenuBar: true,
     });
 
+    if (!installed && storedX === undefined) this.window.center();
     if (store.get('windowMaximized')) this.window.maximize();
 
     this.setupWindowEvents();
@@ -121,6 +124,10 @@ export class AppWindow {
     this.window.focus();
   }
 
+  public maximize(): void {
+    this.window.maximize();
+  }
+
   public async loadRenderer(urlPath: string = ''): Promise<void> {
     if (process.env.DEV_SERVER_URL) {
       const url = `${process.env.DEV_SERVER_URL}/${urlPath}`;
@@ -142,10 +149,10 @@ export class AppWindow {
    * There are edge cases where this might not be a catastrophic failure, but inability
    * to write to our own datastore may result in unexpected user data loss.
    */
-  private loadWindowStore(): Store<StoreType> {
+  private loadWindowStore(): Store<AppWindowSettings> {
     try {
       // Separate file for non-critical convenience settings - just resets itself if invalid
-      return new Store<StoreType>({
+      return new Store<AppWindowSettings>({
         clearInvalidConfig: true,
         name: 'window',
       });
