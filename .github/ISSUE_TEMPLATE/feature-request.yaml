@@ -18,14 +18,14 @@ body:
   - type: textarea
     id: feature
     attributes:
-      label: What would your feature do ?
+      label: What problem does this feature solve ?
       description: Tell us about your feature in a very clear and simple way, and what problem it would solve
     validations:
       required: true
   - type: textarea
     id: workflow
     attributes:
-      label: Proposed workflow
+      label: Potential workflow
       description: Please provide us with step by step information on how you'd like the feature to be accessed and used
       value: |
         1. Go to ....
