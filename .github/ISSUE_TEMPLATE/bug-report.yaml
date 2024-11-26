@@ -11,12 +11,15 @@ body:
         - **1:** You have looked at the existing bug reports and made sure this isn't already reported.
         - **2:** You confirmed that the bug is not caused by a custom node. You can disable all custom nodes in Server-Config
         Panel.
-         
+        ![ServerConfigPanel](https://github.com/user-attachments/assets/dcda1a24-c8bf-428d-b89d-f3cde3d1b435)
+
 
   - type: textarea
     attributes:
-      label: Frontend Version
-      description: 'What is the frontend version you are using? You can check this in the settings dialog'
+      label: App Version
+      description: |
+        What is the version you are using? You can check this in the settings dialog
+        ![AboutPanel](https://github.com/user-attachments/assets/76278cde-a60f-45fe-aaf1-fd17930655c0)
     validations:
       required: true
   - type: textarea
@@ -40,20 +43,27 @@ body:
   - type: textarea
     attributes:
       label: Debug Logs
-      description: 'Please copy the output from your terminal logs here.'
+      description: |
+        Please copy the output from your terminal logs here.
+        ![DebugLogs](https://github.com/user-attachments/assets/168b6ea3-ab93-445b-9cd2-670bd9c098a7)
       render: powershell
     validations:
       required: true
   - type: textarea
     attributes:
       label: Browser Logs
-      description: 'Please copy the output from your browser logs here. You can access this by pressing F12 to toggle the developer tools, then navigating to the Console tab.'
+      description: |
+        Please copy the output from your browser logs here.
+        ![OpenDevTools](https://github.com/user-attachments/assets/4505621e-34f0-4b66-b9d0-2e1a9133a635)
+        ![ConsoleTab](https://github.com/user-attachments/assets/cc96c0db-2880-40bb-93a2-c035360c41b2)
     validations:
       required: true
   - type: textarea
     attributes:
       label: Setting JSON
-      description: 'Please upload the setting file here. The setting file is located at `user/default/comfy.settings.json`'
+      description: |
+        Please upload the setting file here. Follow following screenshot to open model directory. The setting file is located at `../user/default/comfy.settings.json`
+        ![OpenFolder](https://github.com/user-attachments/assets/254e41c7-6335-4d6a-a7dd-c93ab74a9d5e)
     validations:
       required: true
   - type: dropdown
