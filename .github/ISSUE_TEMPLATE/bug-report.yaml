@@ -1,6 +1,6 @@
 name: Bug Report
-description: "Something is not behaving as expected."
-title: "[Bug]: "
+description: 'Something is not behaving as expected.'
+title: '[Bug]: '
 labels: ['Potential Bug']
 body:
   - type: markdown
@@ -12,7 +12,6 @@ body:
         - **2:** You confirmed that the bug is not caused by a custom node. You can disable all custom nodes in Server-Config
         Panel.
         ![ServerConfigPanel](https://github.com/user-attachments/assets/dcda1a24-c8bf-428d-b89d-f3cde3d1b435)
-
 
   - type: textarea
     attributes:
