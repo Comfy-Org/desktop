@@ -13,6 +13,8 @@ This desktop app is a packaged way to use [ComfyUI](https://github.com/comfyanon
 
 On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager, and the uv executable as well as some desktop specific features.
 
+**Currently Supported Platforms:** Windows (Nvidia), macOS (apple Silicon)
+
 ## Installed Files
 
 ### Electron
@@ -279,6 +281,6 @@ In either case, no personal data, workflows or logs will be sent.
 
 # Download
 
-Windows NSIS x64: [Download](https://download.comfy.org/windows/nsis/x64)
+Windows (NVIDIA) NSIS x64: [Download](https://download.comfy.org/windows/nsis/x64)
 
 macOS ARM: [Download](https://download.comfy.org/mac/dmg/arm64)
