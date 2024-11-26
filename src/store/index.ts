@@ -7,5 +7,6 @@ export type AppWindowSettings = {
 };
 
 export type DesktopSettings = {
-  installState: 'started' | 'installed' | undefined;
-}
+  basePath?: string;
+  installState?: 'started' | 'installed';
+};

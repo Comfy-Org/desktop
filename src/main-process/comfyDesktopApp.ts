@@ -16,8 +16,9 @@ import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../terminal';
+import { useDesktopStore } from '../store/store';
 import { restoreCustomNodes } from '../services/backup';
-import Store from 'electron-store';
+
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
   private terminal: Terminal | null = null; // Only created after server starts.
@@ -144,7 +145,11 @@ export class ComfyDesktopApp {
     return new Promise<string>((resolve) => {
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
         const installWizard = new InstallWizard(installOptions);
+        const { store } = useDesktopStore();
+        store.set('basePath', installWizard.basePath);
+
         await installWizard.install();
+        store.set('installState', 'installed');
         resolve(installWizard.basePath);
       });
     });
@@ -181,7 +186,7 @@ export class ComfyDesktopApp {
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     });
-    const store = new Store();
+    const { store } = useDesktopStore();
     if (!store.get('Comfy-Desktop.RestoredCustomNodes', false)) {
       try {
         await restoreCustomNodes(virtualEnvironment, this.appWindow);
@@ -199,9 +204,10 @@ export class ComfyDesktopApp {
   }
 
   static async create(appWindow: AppWindow): Promise<ComfyDesktopApp> {
-    const basePath = ComfyServerConfig.exists()
-      ? await ComfyServerConfig.readBasePathFromConfig(ComfyServerConfig.configPath)
-      : await this.install(appWindow);
+    const { store } = useDesktopStore();
+
+    const installed = store.get('installState') === 'installed';
+    const basePath = installed ? store.get('basePath') : await this.install(appWindow);
 
     if (!basePath) {
       throw new Error(`Base path not found! ${ComfyServerConfig.configPath} is probably corrupted.`);
