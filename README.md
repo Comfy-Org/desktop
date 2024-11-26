@@ -1,4 +1,4 @@
-# desktop comfyui
+# ComfyUI Desktop (beta)
 
 [![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
 ![Beta](https://img.shields.io/badge/beta-blue.svg)
@@ -270,6 +270,12 @@ yarn:clean:assets
 # clean:slate also removes node_modules
 yarn clean:slate
 ```
+
+# Crash Reports
+
+At the onboarding step, you can opt-in to send us crash reports, which **only** include stack trace for unhandled exceptions and native crashes. These are really helpful to help us debug issues in lieu of an actual Github bug report. However, you can opt-out and nothing will ever be sent. We use Sentry to send crash reports. Code [here](https://github.com/Comfy-Org/desktop/blob/main/src/services/sentry.ts).
+
+In either case, no personal data, workflows or logs will be sent.
 
 # Download
 
