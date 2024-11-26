@@ -2,6 +2,10 @@ import * as net from 'net';
 import * as fsPromises from 'node:fs/promises';
 import path from 'node:path';
 import fs from 'fs';
+import si from 'systeminformation';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import log from 'electron-log/main';
 
 export async function pathAccessible(path: string): Promise<boolean> {
   try {
@@ -55,11 +59,6 @@ export function rotateLogFiles(logDir: string, baseName: string) {
   }
 }
 
-import si from 'systeminformation';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import log from 'electron-log/main';
-
 const execAsync = promisify(exec);
 
 interface HardwareValidation {
@@ -67,9 +66,12 @@ interface HardwareValidation {
   error?: string;
 }
 
+/**
+ * Validate the system hardware requirements for ComfyUI.
+ */
 export async function validateHardware(): Promise<HardwareValidation> {
   try {
-    //Mac validation
+    // Only ARM Macs are supported.
     if (process.platform === 'darwin') {
       const cpu = await si.cpu();
       const isArmMac = cpu.manufacturer === 'Apple';
@@ -84,13 +86,11 @@ export async function validateHardware(): Promise<HardwareValidation> {
       return { isValid: true };
     }
 
-    // Windows validation
+    // Windows NVIDIA GPU validation
     if (process.platform === 'win32') {
-      // Check for NVIDIA GPU using multiple methods
       const graphics = await si.graphics();
       const hasNvidia = graphics.controllers.some((controller) => controller.vendor.toLowerCase().includes('nvidia'));
 
-      // Double-check with nvidia-smi if systeminformation doesn't find it
       if (!hasNvidia) {
         try {
           await execAsync('nvidia-smi');
@@ -106,7 +106,6 @@ export async function validateHardware(): Promise<HardwareValidation> {
       return { isValid: true };
     }
 
-    // Other platforms (Linux, etc)
     return {
       isValid: false,
       error: 'ComfyUI currently supports only Windows (NVIDIA GPU) and Apple Silicon Macs.',
