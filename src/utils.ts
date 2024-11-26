@@ -54,3 +54,68 @@ export function rotateLogFiles(logDir: string, baseName: string) {
     fs.renameSync(currentLogPath, newLogPath);
   }
 }
+
+import si from 'systeminformation';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import log from 'electron-log/main';
+
+const execAsync = promisify(exec);
+
+interface HardwareValidation {
+  isValid: boolean;
+  error?: string;
+}
+
+export async function validateHardware(): Promise<HardwareValidation> {
+  try {
+    //Mac validation
+    if (process.platform === 'darwin') {
+      const cpu = await si.cpu();
+      const isArmMac = cpu.manufacturer === 'Apple';
+
+      if (!isArmMac) {
+        return {
+          isValid: false,
+          error: 'ComfyUI requires Apple Silicon (M1/M2/M3) Mac. Intel-based Macs are not supported.',
+        };
+      }
+
+      return { isValid: true };
+    }
+
+    // Windows validation
+    if (process.platform === 'win32') {
+      // Check for NVIDIA GPU using multiple methods
+      const graphics = await si.graphics();
+      const hasNvidia = graphics.controllers.some((controller) => controller.vendor.toLowerCase().includes('nvidia'));
+
+      // Double-check with nvidia-smi if systeminformation doesn't find it
+      if (!hasNvidia) {
+        try {
+          await execAsync('nvidia-smi');
+          return { isValid: true };
+        } catch {
+          return {
+            isValid: false,
+            error: 'ComfyUI requires an NVIDIA GPU on Windows. No NVIDIA GPU was detected.',
+          };
+        }
+      }
+
+      return { isValid: true };
+    }
+
+    // Other platforms (Linux, etc)
+    return {
+      isValid: false,
+      error: 'ComfyUI currently supports only Windows (NVIDIA GPU) and Apple Silicon Macs.',
+    };
+  } catch (error) {
+    log.error('Error validating hardware:', error);
+    return {
+      isValid: false,
+      error: 'Failed to validate system hardware requirements. Please check the logs for more details.',
+    };
+  }
+}
