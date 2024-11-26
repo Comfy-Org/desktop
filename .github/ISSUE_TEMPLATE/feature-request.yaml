@@ -1,0 +1,84 @@
+name: Feature Request
+description: Suggest an idea for this project
+title: '[Feature Request]: '
+labels: ['enhancement']
+
+body:
+  - type: checkboxes
+    attributes:
+      label: Prerequisites
+      description: Please ensure you've completed these steps before submitting a feature request
+      options:
+        - label: I have searched the existing issues and checked the recent builds/commits
+          required: true
+        - label: I have read the documentation and this feature is not already available
+          required: true
+        - label: This is a single feature request (not multiple features combined)
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        *Please fill this form with as much information as possible, provide screenshots and/or illustrations of the feature if possible*
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem are you trying to solve? Please describe the issue you're facing.
+      placeholder: |
+        Example:
+        - I'm frustrated when...
+        - I find it difficult to...
+        - I wish I could...
+    validations:
+      required: true
+  - type: textarea
+    id: feature
+    attributes:
+      label: Proposed Solution
+      description: Describe your suggested feature and how it solves the problem
+      placeholder: |
+        Example:
+        - Add a button that...
+        - Implement a system for...
+        - Create a new option to...
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Potential workflow
+      description: Please provide us with step by step information on how you'd like the feature to be accessed and used
+      value: |
+        1. Go to ....
+        2. Press ....
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact Level
+      description: How would you rate the impact of this feature?
+      options:
+        - Critical (Blocking my work)
+        - High (Major improvement)
+        - Medium (Nice to have)
+        - Low (Minor enhancement)
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternative solutions have you considered?
+      placeholder: |
+        Example:
+        - Tried using X instead, but...
+        - Considered Y approach, however...
+    validations:
+      required: false
+  - type: textarea
+    id: misc
+    attributes:
+      label: Additional information
+      description: Add any other context or screenshots about the feature request here.
