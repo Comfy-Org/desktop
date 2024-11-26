@@ -72,35 +72,31 @@ export class InstallWizard {
    * Setup extra_model_paths.yaml file
    */
   public async initializeModelPaths() {
-    const { comfyui: comfyuiConfig, ...extraConfigs } = await this.getMigrationModelPaths();
-    comfyuiConfig['base_path'] = this.basePath;
-    await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, comfyuiConfig, extraConfigs);
-  }
+    let yamlContent: Record<string, ModelPaths> = {};
 
-  /**
-   * Get the config for the migration source (Existing ComfyUI instance).
-   */
-  public async getMigrationModelPaths(): Promise<{ comfyui: ModelPaths } & Record<string, ModelPaths>> {
-    if (!this.shouldMigrateModels) {
-      return { comfyui: {} };
+    const comfyDesktopConfig = ComfyServerConfig.getBaseConfig();
+    comfyDesktopConfig['base_path'] = this.basePath;
+
+    if (this.shouldMigrateModels) {
+      const migrationSource = this.migrationSource!;
+      // The yaml file exists in migration source repo.
+      const migrationServerConfigs = await ComfyServerConfig.getConfigFromRepoPath(migrationSource);
+
+      // The model paths in the migration source repo.
+      const migrationComfyConfig = ComfyServerConfig.getBaseModelPathsFromRepoPath('');
+      migrationComfyConfig['base_path'] = migrationSource;
+
+      yamlContent = {
+        ...migrationServerConfigs,
+        comfyui_migration: migrationComfyConfig,
+        comfyui_desktop: comfyDesktopConfig,
+      };
+    } else {
+      yamlContent = {
+        comfyui_desktop: comfyDesktopConfig,
+      };
     }
-    // The yaml file exited in migration source repo.
-    const migrationServerConfig = await ComfyServerConfig.getConfigFromRepoPath(this.migrationSource!);
 
-    // The model paths in the migration source repo.
-    const migrationComfyConfig = this.migrationSource
-      ? ComfyServerConfig.getBaseModelPathsFromRepoPath(this.migrationSource)
-      : {};
-
-    // The overall paths to add to the config file.
-    const comfyuiConfig = ComfyServerConfig.mergeConfig(migrationServerConfig['comfyui'] ?? {}, migrationComfyConfig);
-    // Do not migrate custom nodes as we currently don't have a way to install their dependencies.
-    if ('custom_nodes' in comfyuiConfig) {
-      delete comfyuiConfig['custom_nodes'];
-    }
-    return {
-      ...migrationServerConfig,
-      comfyui: comfyuiConfig,
-    };
+    await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, yamlContent);
   }
 }

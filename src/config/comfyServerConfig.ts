@@ -86,13 +86,13 @@ export class ComfyServerConfig {
   /**
    * Get the base config for the current operating system.
    */
-  static getBaseConfig(): ModelPaths | null {
+  static getBaseConfig(): ModelPaths {
     for (const [operatingSystem, modelPathConfig] of Object.entries(this.configTemplates)) {
       if (operatingSystem === process.platform) {
         return modelPathConfig;
       }
     }
-    return null;
+    throw new Error(`No base config found for ${process.platform}`);
   }
   /**
    * Generate the content for the extra_model_paths.yaml file.
@@ -100,23 +100,6 @@ export class ComfyServerConfig {
   static generateConfigFileContent(modelPathConfigs: Record<string, ModelPaths>): string {
     const modelConfigYaml = yaml.stringify(modelPathConfigs, { lineWidth: -1 });
     return `# ComfyUI extra_model_paths.yaml for ${process.platform}\n${modelConfigYaml}`;
-  }
-
-  static mergeConfig(baseConfig: ModelPaths, customConfig: ModelPaths): ModelPaths {
-    const mergedConfig: ModelPaths = { ...baseConfig };
-
-    for (const [key, customPath] of Object.entries(customConfig)) {
-      if (key in baseConfig) {
-        // Concatenate paths if key exists in both configs
-        // Order here matters, as ComfyUI searches for models in the order they are listed.
-        mergedConfig[key] = baseConfig[key] + '\n' + customPath;
-      } else {
-        // Use custom path directly if key only exists in custom config
-        mergedConfig[key] = customPath;
-      }
-    }
-
-    return mergedConfig;
   }
 
   static async writeConfigFile(configFilePath: string, content: string): Promise<boolean> {
@@ -155,28 +138,14 @@ export class ComfyServerConfig {
   }
 
   /**
-   * Create the extra_model_paths.yaml file in the given destination path with the given custom config.
+   * Create the extra_model_paths.yaml file in the given destination path.
    * @param destinationPath - The path to the destination file.
-   * @param customConfig - The custom config to merge with the base config.
-   * @param extraConfigs - The extra configs such as paths from A1111.
+   * @param configs - The configs to write.
    */
-  public static async createConfigFile(
-    destinationPath: string,
-    customConfig: ModelPaths,
-    extraConfigs: Record<string, ModelPaths>
-  ): Promise<boolean> {
+  public static async createConfigFile(destinationPath: string, configs: Record<string, ModelPaths>): Promise<boolean> {
     log.info(`Creating model config files in ${destinationPath}`);
     try {
-      const baseConfig = this.getBaseConfig();
-      if (!baseConfig) {
-        log.error('No base config found');
-        return false;
-      }
-      const comfyuiConfig = this.mergeConfig(baseConfig, customConfig);
-      const configContent = this.generateConfigFileContent({
-        ...extraConfigs,
-        comfyui: comfyuiConfig,
-      });
+      const configContent = this.generateConfigFileContent(configs);
       return await this.writeConfigFile(destinationPath, configContent);
     } catch (error) {
       log.error('Error creating model config files:', error);
