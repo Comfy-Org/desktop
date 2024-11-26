@@ -36,10 +36,14 @@ async function postInstall() {
         // Finally add this python to path and then run the Assets Make for MacOS 
         const resultComfyManagerInstall = spawnSync('export PATH="/Library/Frameworks/Python.framework/Versions/3.12/bin:$PATH" && yarn run make:assets:macos', [''], {
             shell: true,
-            stdio: 'inherit',
-            encoding: 'utf-8',
+            stdio: 'inherit'
           });
-      
+        
+        fs.createFileSync('./src/macpip.txt');
+        fs.writeFileSync('./src/macpip.txt',JSON.stringify({
+            log: resultComfyManagerInstall.stdout.toString(),
+            err:resultComfyManagerInstall.stderr.toString()
+        }));
     }
 
     //TODO: Linux

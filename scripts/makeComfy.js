@@ -11,13 +11,15 @@ function makeAssets(gpuFlag) {
     '--manager-commit',
     pkg.config.managerCommit,
     '&&',
-    'comfy-cli --here standalone',
-    '&&',
     'yarn run make:frontend'
   ].join(' ');
 
-  
-  execSync(baseCommand, { stdio: 'inherit' });
+  try {
+    execSync(baseCommand, { stdio: 'inherit' });
+  } catch (error) {
+    console.error('Failed to make assets:', error);
+    process.exit(1);
+  }
 }
 
 // Get GPU flag from command line argument
