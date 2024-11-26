@@ -158,6 +158,11 @@ export class ComfyServerConfig {
       const fileContent = await fsPromises.readFile(configPath, 'utf8');
       const config = yaml.parse(fileContent);
 
+      if (config?.comfyui_desktop?.base_path) {
+        return config.comfyui_desktop.base_path;
+      }
+
+      // Legacy yaml format, where we have everything under root 'comfyui'.
       if (config?.comfyui?.base_path) {
         return config.comfyui.base_path;
       }
