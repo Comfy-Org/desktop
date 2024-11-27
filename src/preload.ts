@@ -160,7 +160,7 @@ const electronAPI = {
      * Gets the data required to restore the terminal
      * @param data The command to execute
      */
-    restore: (): Promise<{ buffer: string[]; pos: { x: number; y: number } }> => {
+    restore: (): Promise<{ buffer: string[]; size: { cols: number; rows: number } }> => {
       return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_RESTORE);
     },
     /**
