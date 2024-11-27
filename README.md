@@ -15,6 +15,8 @@ On startup, it will install all the necessary python dependencies with uv and st
 
 **Currently Supported Platforms:** Windows (Nvidia), macOS (apple Silicon)
 
+Users please read the [guide](https://comfyorg.notion.site/). Developers, read on.
+
 ## Installed Files
 
 ### Electron
