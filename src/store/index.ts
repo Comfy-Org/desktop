@@ -8,5 +8,5 @@ export type AppWindowSettings = {
 
 export type DesktopSettings = {
   basePath?: string;
-  installState?: 'started' | 'installed';
+  installState?: 'started' | 'installed' | 'upgraded';
 };

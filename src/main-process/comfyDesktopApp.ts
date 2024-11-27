@@ -17,6 +17,7 @@ import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../terminal';
 import { useDesktopStore } from '../store/store';
+import { InstallationValidator } from '../install/installationValidator';
 import { restoreCustomNodes } from '../services/backup';
 
 export class ComfyDesktopApp {
@@ -205,14 +206,45 @@ export class ComfyDesktopApp {
 
   static async create(appWindow: AppWindow): Promise<ComfyDesktopApp> {
     const { store } = useDesktopStore();
+    // Migrate settings from old version if required
+    const installState = store.get('installState') ?? (await ComfyDesktopApp.migrateInstallState());
 
-    const installed = store.get('installState') === 'installed';
-    const basePath = installed ? store.get('basePath') : await this.install(appWindow);
+    // Fresh install
+    const basePath =
+      installState === undefined ? await ComfyDesktopApp.install(appWindow) : await ComfyDesktopApp.loadBasePath();
 
-    if (!basePath) {
-      throw new Error(`Base path not found! ${ComfyServerConfig.configPath} is probably corrupted.`);
-    }
     return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow);
+  }
+
+  /**
+   * Sets the ugpraded state if this is a version upgrade from <= 0.3.18
+   * @returns 'upgraded' if this install has just been upgraded, or undefined for a fresh install
+   */
+  static async migrateInstallState(): Promise<string | undefined> {
+    // Fresh install
+    if (!ComfyServerConfig.exists()) return undefined;
+
+    // Upgrade
+    const basePath = await ComfyDesktopApp.loadBasePath();
+
+    // Migrate config
+    const { store } = useDesktopStore();
+    const upgraded = 'upgraded';
+    store.set('installState', upgraded);
+    store.set('basePath', basePath);
+    return upgraded;
+  }
+
+  /** Loads the base_path value from the YAML config. Quits in the event of failure. */
+  static async loadBasePath(): Promise<string> {
+    const basePath = await ComfyServerConfig.readBasePathFromConfig(ComfyServerConfig.configPath);
+    if (basePath) return basePath;
+
+    log.error(`Base path not found! ${ComfyServerConfig.configPath} is probably corrupted.`);
+    await InstallationValidator.showInvalidFileAndQuit(ComfyServerConfig.configPath, {
+      message: `Base path not found! This file is probably corrupt:\n\n${ComfyServerConfig.configPath}`,
+    });
+    throw new Error(/* Unreachable. */);
   }
 
   uninstall(): void {
