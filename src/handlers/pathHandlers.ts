@@ -7,7 +7,6 @@ import fs from 'fs';
 import si from 'systeminformation';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 import path from 'path';
-import { validateHardware } from '../utils';
 
 export class PathHandlers {
   static readonly REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
@@ -43,10 +42,6 @@ export class PathHandlers {
     ipcMain.handle(
       IPC_CHANNELS.VALIDATE_INSTALL_PATH,
       async (event, inputPath: string): Promise<{ isValid: boolean; error?: string }> => {
-        const validation = await validateHardware();
-        if (!validation.isValid) {
-          return validation;
-        }
         try {
           // Check if path exists
           if (!fs.existsSync(inputPath)) {

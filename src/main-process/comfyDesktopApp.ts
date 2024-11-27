@@ -11,7 +11,7 @@ import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'fs';
 import { InstallOptions } from '../preload';
 import path from 'path';
-import { getModelsDirectory } from '../utils';
+import { getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
@@ -133,6 +133,12 @@ export class ComfyDesktopApp {
    * Install ComfyUI and return the base path.
    */
   static async install(appWindow: AppWindow): Promise<string> {
+    const validation = await validateHardware();
+    if (!validation.isValid) {
+      await appWindow.loadRenderer('not-supported');
+      throw new Error(validation.error);
+    }
+
     await appWindow.loadRenderer('welcome');
     return new Promise<string>((resolve) => {
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
