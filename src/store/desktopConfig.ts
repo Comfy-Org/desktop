@@ -5,18 +5,22 @@ import path from 'node:path';
 import fs from 'fs/promises';
 import type { DesktopSettings } from '.';
 
-let currentStore: ElectronStore<DesktopSettings>;
+/** Handles loading of electron-store config, pre-window errors, and provides a non-null interface for the store. */
+export class DesktopConfig {
+  static #store: ElectronStore<DesktopSettings> | undefined;
+  static get store(): ElectronStore<DesktopSettings> {
+    const store = this.#store;
+    if (!store) throw new Error('Cannot access store before initialization.');
+    return store;
+  }
 
-/** Generic wrapper class to load electron stores and handle errors. */
-export function useDesktopStore() {
-  const store = currentStore;
-
-  async function loadStore(
+  static async load(
     options?: ConstructorParameters<typeof ElectronStore<DesktopSettings>>[0]
   ): Promise<ElectronStore<DesktopSettings> | undefined> {
     try {
-      currentStore = new ElectronStore<DesktopSettings>(options);
-      return currentStore;
+      DesktopConfig.#store = new ElectronStore<DesktopSettings>(options);
+
+      return DesktopConfig.#store;
     } catch (error) {
       const configFilePath = path.join(getUserDataOrQuit(), `${options?.name ?? 'config'}.json`);
 
@@ -39,7 +43,7 @@ export function useDesktopStore() {
             await tryDeleteConfigFile(configFilePath);
 
             // Causing a stack overflow from this recursion would take immense patience.
-            return loadStore(options);
+            return DesktopConfig.load(options);
           }
         }
 
@@ -52,11 +56,6 @@ export function useDesktopStore() {
       }
     }
   }
-
-  return {
-    store,
-    loadStore,
-  };
 }
 
 function showResetPrompt(configFilePath: string): Promise<Electron.MessageBoxReturnValue> {

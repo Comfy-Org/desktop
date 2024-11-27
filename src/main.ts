@@ -9,7 +9,7 @@ import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import { LevelOption } from 'electron-log';
 import SentryLogging from './services/sentry';
-import { useDesktopStore } from './store/store';
+import { DesktopConfig } from './store/desktopConfig';
 
 dotenv.config();
 log.initialize();
@@ -41,7 +41,7 @@ if (!gotTheLock) {
   app.on('ready', async () => {
     log.debug('App ready');
 
-    const store = await useDesktopStore().loadStore();
+    const store = await DesktopConfig.load();
     if (store) {
       startApp();
     } else {
