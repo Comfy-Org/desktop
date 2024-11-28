@@ -65,20 +65,6 @@ body:
         ![OpenFolder](https://github.com/user-attachments/assets/254e41c7-6335-4d6a-a7dd-c93ab74a9d5e)
     validations:
       required: true
-  - type: dropdown
-    id: browsers
-    attributes:
-      label: What browsers do you use to access the UI ?
-      multiple: true
-      options:
-        - Mozilla Firefox
-        - Google Chrome
-        - Brave
-        - Apple Safari
-        - Microsoft Edge
-        - Android
-        - iOS
-        - Other
   - type: textarea
     attributes:
       label: Other
