@@ -110,10 +110,10 @@ export class VirtualEnvironment {
    */
   public activateEnvironmentCommand(): string {
     if (process.platform === 'darwin' || process.platform === 'linux') {
-      return `source ${this.venvPath}/bin/activate\r`;
+      return `source "${this.venvPath}/bin/activate"\r`;
     }
     if (process.platform === 'win32') {
-      return `${this.venvPath}\\Scripts\\activate.bat\r`;
+      return `Set-ExecutionPolicy Unrestricted -Scope Process -Force; &"${this.venvPath}\\Scripts\\activate.ps1"; Set-ExecutionPolicy Default -Scope Process -Force\r`;
     }
     throw new Error(`Unsupported platform: ${process.platform}`);
   }
