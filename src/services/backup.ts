@@ -39,6 +39,10 @@ function getSortedLogFiles(): string[] {
 }
 
 async function installCustomNodes(nodes: string[], virtualEnvironment: VirtualEnvironment): Promise<void> {
+  if (nodes.length === 0) {
+    console.log('No custom nodes to restore');
+    return;
+  }
   const cmCliPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager', 'cm-cli.py');
   console.log('Restoring custom nodes:', nodes);
   const cmd = [
