@@ -21,10 +21,15 @@ class SentryLogging {
           return event;
         }
 
+        const errorMessage = event.exception?.values?.[0]?.value || 'Unknown error';
+        const errorType = event.exception?.values?.[0]?.type || 'Error';
+
         const { response } = await dialog.showMessageBox({
-          title: 'Send Crash Statistics',
-          message: `Would you like to send crash statistics to the team?`,
-          buttons: ['Always send crash reports', 'Do not send crash report'],
+          title: 'Send Crash Report',
+          message: `An error occurred: ${errorType}`,
+          detail: `${errorMessage}\n\nWould you like to send the crash report to the team?`,
+          buttons: ['Send Report', 'Do not send crash report'],
+          type: 'error',
         });
 
         return response === 0 ? event : null;
