@@ -97,7 +97,7 @@ export async function validateHardware(): Promise<HardwareValidation> {
           const res = await execAsync(
             'powershell.exe -c "$n = \'*NVIDIA*\'; Get-CimInstance win32_videocontroller | ? { $_.Name -like $n -or $_.VideoProcessor -like $n -or $_.AdapterCompatibility -like $n }"'
           );
-          if (!res) throw new Error('No video card');
+          if (!res?.stdout) throw new Error('No video card');
           return { isValid: true };
         } catch {
           try {
