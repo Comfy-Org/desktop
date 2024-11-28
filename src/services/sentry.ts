@@ -27,7 +27,7 @@ class SentryLogging {
         const { response } = await dialog.showMessageBox({
           title: 'Send Crash Report',
           message: `An error occurred: ${errorType}`,
-          detail: `${errorMessage}\n\nWould you like to send the crash report to the team?`,
+          detail: `${errorMessage}\n\nWould you like to send the crash to the team?`,
           buttons: ['Send Report', 'Do not send crash report'],
           type: 'error',
         });
