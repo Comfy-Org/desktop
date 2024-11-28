@@ -16,6 +16,7 @@ import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../terminal';
+import { restoreCustomNodes } from '../services/backup';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
@@ -180,6 +181,8 @@ export class ComfyDesktopApp {
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     });
+
+    await restoreCustomNodes(virtualEnvironment);
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);
