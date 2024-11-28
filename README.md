@@ -13,6 +13,7 @@
 This desktop app is a packaged way to use [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and comes bundled with a few things:
 
 - Stable version of ComfyUI from [releases](https://github.com/comfyanonymous/ComfyUI/releases)
+- [ComfyUI_frontend](https://github.com/Comfy-Org/ComfyUI_frontend)
 - [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager)
 - [uv](https://github.com/astral-sh/uv)
 
