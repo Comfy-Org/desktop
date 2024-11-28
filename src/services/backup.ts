@@ -6,6 +6,7 @@ import { VirtualEnvironment } from '../virtualEnvironment';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
 function parseLogFile(logPath: string): Set<string> {
+  console.log('Parsing log file:', logPath);
   const customNodes = new Set<string>();
   const pattern = /custom_nodes[/\\]([^/\\\s]+)(?:\.py)?/g;
 
