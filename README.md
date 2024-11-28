@@ -3,6 +3,11 @@
 [![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
 ![Beta](https://img.shields.io/badge/beta-blue.svg)
 
+### Currently Supported Platforms
+
+- Windows (NVIDIA)
+- macOS (Apple silicon)
+
 # Overview
 
 This desktop app is a packaged way to use [ComfyUI](https://github.com/comfyanonymous/ComfyUI) and comes bundled with a few things:
@@ -12,8 +17,6 @@ This desktop app is a packaged way to use [ComfyUI](https://github.com/comfyanon
 - [uv](https://github.com/astral-sh/uv)
 
 On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager, and the uv executable as well as some desktop specific features.
-
-**Currently Supported Platforms:** Windows (Nvidia), macOS (apple Silicon)
 
 Users please read the [guide](https://comfyorg.notion.site/). Developers, read on.
 
