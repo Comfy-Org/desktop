@@ -16,4 +16,5 @@ export type DesktopSettings = {
    * in the yaml config.
    */
   installState?: 'started' | 'installed' | 'upgraded';
+  devCpuMode?: boolean;
 };

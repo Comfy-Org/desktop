@@ -6,6 +6,7 @@ import si from 'systeminformation';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import log from 'electron-log/main';
+import { DesktopConfig } from './store/desktopConfig';
 
 export async function pathAccessible(path: string): Promise<boolean> {
   try {
@@ -96,6 +97,8 @@ interface HardwareValidation {
  */
 export async function validateHardware(): Promise<HardwareValidation> {
   try {
+    if (DesktopConfig.devCpuMode) return { isValid: true };
+
     // Only ARM Macs are supported.
     if (process.platform === 'darwin') {
       const cpu = await si.cpu();

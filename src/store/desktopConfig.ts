@@ -14,6 +14,10 @@ export class DesktopConfig {
     return store;
   }
 
+  static get devCpuMode(): boolean {
+    return DesktopConfig.store.get('devCpuMode') === true;
+  }
+
   static async load(
     options?: ConstructorParameters<typeof ElectronStore<DesktopSettings>>[0]
   ): Promise<ElectronStore<DesktopSettings> | undefined> {
