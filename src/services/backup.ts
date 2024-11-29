@@ -94,5 +94,3 @@ export async function restoreCustomNodes(virtualEnvironment: VirtualEnvironment)
   console.log('Found custom nodes:', customNodes);
   await installCustomNodes(Array.from(customNodes), virtualEnvironment);
 }
-
-console.log(parseLogFile('/Users/junhanhuang/Library/Logs/ComfyUI/comfyui.log'));
