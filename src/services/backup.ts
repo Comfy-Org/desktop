@@ -45,7 +45,7 @@ async function installCustomNodes(nodes: string[], virtualEnvironment: VirtualEn
     return;
   }
   const cmCliPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager', 'cm-cli.py');
-  console.log('Restoring custom nodes:', nodes);
+
   const cmd = [
     cmCliPath,
     'install',
