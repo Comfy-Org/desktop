@@ -71,14 +71,14 @@ async function installCustomNodes(
     ];
     const { exitCode } = await virtualEnvironment.runPythonCommandAsync(cmd, {
       onStdout: (data) => {
-        console.log(data.toString());
+        log.info(data.toString());
       },
       onStderr: (data) => {
-        console.error(data.toString());
+        log.error(data.toString());
       },
     });
     if (exitCode !== 0) {
-      console.error(`Failed to install custom nodes: ${exitCode}`);
+      log.error(`Failed to install custom nodes: ${exitCode}`);
     }
     log.info(`Successfully installed custom node: ${node}`);
   }
