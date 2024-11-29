@@ -5,6 +5,8 @@ import { app } from 'electron';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import log from 'electron-log/main';
+import { AppWindow } from '../main-process/appWindow';
+import { IPC_CHANNELS } from '../constants';
 
 function parseLogFile(logPath: string): Set<string> {
   console.log('Parsing log file:', logPath);
@@ -48,7 +50,11 @@ function getSortedLogFiles(): string[] {
   }
 }
 
-async function installCustomNodes(nodes: string[], virtualEnvironment: VirtualEnvironment): Promise<void> {
+async function installCustomNodes(
+  nodes: string[],
+  virtualEnvironment: VirtualEnvironment,
+  appWindow: AppWindow
+): Promise<void> {
   if (nodes.length === 0) {
     console.log('No custom nodes to restore');
     return;
@@ -56,6 +62,7 @@ async function installCustomNodes(nodes: string[], virtualEnvironment: VirtualEn
   const cmCliPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager', 'cm-cli.py');
 
   for (const node of nodes) {
+    appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Installing custom node: ${node}`);
     const cmd = [
       cmCliPath,
       'install',
@@ -78,7 +85,7 @@ async function installCustomNodes(nodes: string[], virtualEnvironment: VirtualEn
   }
 }
 
-export async function restoreCustomNodes(virtualEnvironment: VirtualEnvironment): Promise<void> {
+export async function restoreCustomNodes(virtualEnvironment: VirtualEnvironment, appWindow: AppWindow): Promise<void> {
   const logFiles = getSortedLogFiles();
   if (logFiles.length === 0) {
     console.log('No log files found');
@@ -92,5 +99,5 @@ export async function restoreCustomNodes(virtualEnvironment: VirtualEnvironment)
   }
 
   console.log('Found custom nodes:', customNodes);
-  await installCustomNodes(Array.from(customNodes), virtualEnvironment);
+  await installCustomNodes(Array.from(customNodes), virtualEnvironment, appWindow);
 }
