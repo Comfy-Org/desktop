@@ -88,7 +88,6 @@ async function installCustomNodes(
 export async function restoreCustomNodes(virtualEnvironment: VirtualEnvironment, appWindow: AppWindow): Promise<void> {
   const logFiles = getSortedLogFiles();
   if (logFiles.length === 0) {
-    console.log('No log files found');
     return;
   }
 
@@ -98,6 +97,6 @@ export async function restoreCustomNodes(virtualEnvironment: VirtualEnvironment,
     nodes.forEach((node) => customNodes.add(node));
   }
 
-  console.log('Found custom nodes:', customNodes);
+  log.info('Found custom nodes:', customNodes);
   await installCustomNodes(Array.from(customNodes), virtualEnvironment, appWindow);
 }
