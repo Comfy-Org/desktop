@@ -56,13 +56,12 @@ async function installCustomNodes(
   appWindow: AppWindow
 ): Promise<void> {
   if (nodes.length === 0) {
-    console.log('No custom nodes to restore');
     return;
   }
   const cmCliPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager', 'cm-cli.py');
 
   for (const node of nodes) {
-    appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Installing custom node: ${node}`);
+    appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Installing custom node: ${node}\n`);
     const cmd = [
       cmCliPath,
       'install',
