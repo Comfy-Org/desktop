@@ -1,4 +1,7 @@
 import { app, dialog, shell } from 'electron';
+import fs from 'fs/promises';
+import log from 'electron-log/main';
+import path from 'node:path';
 
 export class InstallationValidator {
   /**
@@ -21,7 +24,33 @@ export class InstallationValidator {
 
     const result = await dialog.showMessageBox(opt);
 
-    if (result.response === 0) shell.showItemInFolder(file);
+    // Try show the file in file manager
+    if (result.response === 0) {
+      try {
+        const parsed = path.parse(file);
+        log.debug(`Attempting to open containing directory: ${parsed.dir}`);
+        await fs.access(file);
+        shell.showItemInFolder(file);
+      } catch (error) {
+        log.warn(`Could not access file whilst attempting to exit gracefully after a critical error.`, file);
+        try {
+          // Failed - try the parent dir
+          const parsed = path.parse(file);
+          await fs.access(parsed.dir);
+          shell.openPath(parsed.dir);
+        } catch (error) {
+          // Nothing works.  Log, notify, quit.
+          log.error(
+            `Could not read directory containing file, whilst attempting to exit gracefully after a critical error.`
+          );
+          dialog.showErrorBox(
+            'Unable to fine file',
+            `Unable to find the file.  Please navigate to it manually:\n\n${file}`
+          );
+        }
+      }
+    }
+
     app.quit();
     // Wait patiently for graceful termination.
     await new Promise(() => {});
