@@ -11,7 +11,7 @@
   "config": {
     "frontendVersion": "1.5.0",
     "comfyVersion": "0.3.2",
-    "managerCommit": "0f6d0e6ef07d4a08eef91539912a01ae1dcfe237",
+    "managerCommit": "1ca349523787b943f6d03201d4aed1cb0bcbbafe",
     "uvVersion": "0.5.4"
   },
   "scripts": {
