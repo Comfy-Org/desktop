@@ -10,6 +10,9 @@ inputs:
   TODESKTOP_ACCESS_TOKEN:
     description: 'ToDesktop Access Token'
     required: true
+  STAGING:
+    description: 'Build Staging'
+    required: false
 runs:
   using: composite
   steps:
@@ -42,4 +45,11 @@ runs:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         TODESKTOP_EMAIL: ${{ inputs.TODESKTOP_EMAIL}}
         TODESKTOP_ACCESS_TOKEN: ${{inputs.TODESKTOP_ACCESS_TOKEN}}
-      run: yarn run publish
+      run: |
+        if [ "${{ inputs.STAGING }}" = "true" ]; then
+          echo "🚧 Building STAGING version..."
+          yarn run publish:staging
+        else
+          echo "🚀 Building PRODUCTION version..."
+          yarn run publish
+        fi

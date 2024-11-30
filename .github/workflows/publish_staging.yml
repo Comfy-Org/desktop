@@ -17,3 +17,4 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           TODESKTOP_ACCESS_TOKEN: ${{secrets.TODESKTOP_ACCESS_TOKEN}}
           TODESKTOP_EMAIL: ${{secrets.TODESKTOP_EMAIL}}
+          STAGING: true
