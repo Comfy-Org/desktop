@@ -1,10 +1,10 @@
 {
   "extends": "./todesktop.json",
-  "id": "241125q2i8rhv",
-  "appId": "comfyui.staging.app",
+  "id": "241130tqe9q3y",
+  "appId": "comfyuidesktop.staging.app",
   "icon": "./assets/UI/Comfy_Logo_x128.png",
   "packageJson": {
-    "name": "comfyui-staging",
+    "name": "comfyui-desktop-staging",
     "productName": "ComfyUI (Staging)"
   }
 }
