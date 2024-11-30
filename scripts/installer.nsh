@@ -80,3 +80,10 @@
     Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
   ${endIf}
 !macroend
+
+Section "Visual Studio Runtime"
+  SetOutPath "$INSTDIR"
+  File "$%TEMP%\VC_redist.x64.exe"
+  ExecWait "$INSTDIR\VC_redist.x64.exe /install /quiet /norestart"
+  Delete "$INSTDIR\VC_redist.x64.exe"
+SectionEnd
