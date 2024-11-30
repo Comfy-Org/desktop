@@ -59,15 +59,17 @@ async function installCustomNodes(
     return;
   }
   const cmCliPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager', 'cm-cli.py');
-
-  for (const node of nodes) {
-    appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Installing custom node: ${node}\n`);
+  appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Reinstalling ${nodes.length} custom nodes...\n`);
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Installing custom node (${i + 1}/${nodes.length}): ${node}\n`);
     const cmd = [
       cmCliPath,
       'install',
       node,
       '--install-path',
       path.join(virtualEnvironment.venvRootPath, 'custom_nodes'),
+      '--no-deps',
     ];
     const { exitCode } = await virtualEnvironment.runPythonCommandAsync(cmd, {
       onStdout: (data) => {
