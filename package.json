@@ -37,6 +37,7 @@
     "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
     "prepare": "husky",
     "publish": "yarn run vite:compile && todesktop build --async",
+    "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
     "reset-install": "node scripts/resetInstall.js",
     "sign": "node debug/sign.js",
     "start": "node ./scripts/launchdev.js",
