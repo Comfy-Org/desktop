@@ -12,6 +12,7 @@ inputs:
     required: true
   STAGING:
     description: 'Build Staging'
+    default: 'false'
     required: false
 runs:
   using: composite
