@@ -1,4 +1,4 @@
-import { IPC_CHANNELS, DEFAULT_SERVER_ARGS, ProgressStatus, SENTRY_URL_ENDPOINT } from './constants';
+import { IPC_CHANNELS, DEFAULT_SERVER_ARGS, ProgressStatus } from './constants';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import { findAvailablePort } from './utils';

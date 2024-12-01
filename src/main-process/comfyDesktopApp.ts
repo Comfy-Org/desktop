@@ -16,7 +16,8 @@ import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../terminal';
-
+import { restoreCustomNodes } from '../services/backup';
+import Store from 'electron-store';
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
   private terminal: Terminal | null = null; // Only created after server starts.
@@ -180,6 +181,16 @@ export class ComfyDesktopApp {
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     });
+    const store = new Store();
+    if (!store.get('Comfy-Desktop.RestoredCustomNodes', false)) {
+      try {
+        await restoreCustomNodes(virtualEnvironment, this.appWindow);
+        store.set('Comfy-Desktop.RestoredCustomNodes', true);
+      } catch (error) {
+        log.error('Failed to restore custom nodes:', error);
+        store.set('Comfy-Desktop.RestoredCustomNodes', false);
+      }
+    }
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);

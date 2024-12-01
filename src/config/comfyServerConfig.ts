@@ -55,6 +55,7 @@ export class ComfyServerConfig {
   private static readonly commonPaths = {
     ...this.getBaseModelPathsFromRepoPath(''),
     custom_nodes: 'custom_nodes/',
+    download_model_base: 'models',
   };
   private static readonly configTemplates: Record<string, ModelPaths> = {
     win32: {

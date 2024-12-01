@@ -3,7 +3,7 @@
   "productName": "ComfyUI",
   "repository": "github:comfy-org/electron",
   "copyright": "Copyright © 2024 Comfy Org",
-  "version": "0.3.20-test",
+  "version": "0.3.23-test",
   "homepage": "https://comfy.org",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
@@ -11,7 +11,7 @@
   "config": {
     "frontendVersion": "1.5.0",
     "comfyVersion": "0.3.2",
-    "managerCommit": "ada683c6bafcb983c8366e4310b7f95f66bd6362",
+    "managerCommit": "1ca349523787b943f6d03201d4aed1cb0bcbbafe",
     "uvVersion": "0.5.4"
   },
   "scripts": {
@@ -37,6 +37,7 @@
     "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
     "prepare": "husky",
     "publish": "yarn run vite:compile && todesktop build --async",
+    "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
     "reset-install": "node scripts/resetInstall.js",
     "sign": "node debug/sign.js",
     "start": "node ./scripts/launchdev.js",
