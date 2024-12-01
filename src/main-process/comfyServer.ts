@@ -96,7 +96,7 @@ export class ComfyServer {
   }
 
   async start() {
-    rotateLogFiles(app.getPath('logs'), 'comfyui');
+    await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
     return new Promise<void>(async (resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });
       comfyUILog.transports.file.fileName = 'comfyui.log';
