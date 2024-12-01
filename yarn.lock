@@ -544,7 +544,7 @@ __metadata:
     "@electron/windows-sign": "npm:^1.1.3"
     "@playwright/test": "npm:^1.47.2"
     "@sentry/electron": "npm:^5.4.0"
-    "@sentry/vite-plugin": "npm:^2.22.4"
+    "@sentry/vite-plugin": "npm:^2.22.6"
     "@sentry/wizard": "npm:^3.30.0"
     "@todesktop/cli": "npm:^1.9.7"
     "@todesktop/runtime": "npm:^1.6.4"
@@ -3056,7 +3056,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/vite-plugin@npm:^2.22.4":
+"@sentry/vite-plugin@npm:^2.22.6":
   version: 2.22.6
   resolution: "@sentry/vite-plugin@npm:2.22.6"
   dependencies:

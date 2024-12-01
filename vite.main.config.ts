@@ -27,10 +27,10 @@ export default defineConfig((env) => {
       process.env.NODE_ENV === 'production'
         ? sentryVitePlugin({
             org: 'comfy-org',
-            project: 'electron',
+            project: 'desktop',
             authToken: process.env.SENTRY_AUTH_TOKEN,
             release: {
-              name: version,
+              name: `ComfyUI@${version}`,
             },
           })
         : undefined,
