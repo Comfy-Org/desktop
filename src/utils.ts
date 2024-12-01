@@ -46,17 +46,42 @@ export function findAvailablePort(host: string, startPort: number, endPort: numb
 
 /**
  * Rotate old log files by adding a timestamp to the end of the file.
+ * Removes old files.
  * @param logDir The directory to rotate the logs in.
  * @param baseName The base name of the log file.
+ * @param maxFiles The maximum number of log files to keep. When 0, no files are removed. Default: 50
  */
-export function rotateLogFiles(logDir: string, baseName: string) {
+export async function rotateLogFiles(logDir: string, baseName: string, maxFiles = 50) {
   const currentLogPath = path.join(logDir, `${baseName}.log`);
-  if (fs.existsSync(currentLogPath)) {
-    const stats = fs.statSync(currentLogPath);
-    const timestamp = stats.birthtime.toISOString().replace(/[:.]/g, '-');
-    const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
-    fs.renameSync(currentLogPath, newLogPath);
+
+  try {
+    await fsPromises.access(logDir, fs.constants.R_OK | fs.constants.W_OK);
+    await fsPromises.access(currentLogPath);
+  } catch {
+    log.error('Log rotation: cannot access log dir.');
+    // TODO: Report to user
+    return;
   }
+
+  // Remove the oldest file
+  if (maxFiles > 0) {
+    const files = await fsPromises.readdir(logDir, { withFileTypes: true });
+    const names: string[] = [];
+
+    const logFileRegex = new RegExp(`^${baseName}_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.log$`);
+
+    for (const file of files) {
+      if (file.isFile() && logFileRegex.test(file.name)) names.push(file.name);
+    }
+    if (names.length > maxFiles) {
+      names.sort();
+      await fsPromises.unlink(path.join(logDir, names[0]));
+    }
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
+  await fsPromises.rename(currentLogPath, newLogPath);
 }
 
 const execAsync = promisify(exec);
