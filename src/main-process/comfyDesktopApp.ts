@@ -128,6 +128,12 @@ export class ComfyDesktopApp {
         return null;
       }
     });
+    ipcMain.handle(IPC_CHANNELS.RESTORE_CUSTOM_NODES, async () => {
+      if (!this.comfyServer?.virtualEnvironment) return false;
+
+      await restoreCustomNodes(this.comfyServer?.virtualEnvironment, this.appWindow);
+      return true;
+    });
   }
 
   /**

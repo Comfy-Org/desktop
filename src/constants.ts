@@ -30,6 +30,8 @@ export const IPC_CHANNELS = {
   VALIDATE_COMFYUI_SOURCE: 'validate-comfyui-source',
   SHOW_DIRECTORY_PICKER: 'show-directory-picker',
   INSTALL_COMFYUI: 'install-comfyui',
+  RESTORE_CUSTOM_NODES: 'restore-custom-nodes',
+  RESTORE_CUSTOM_NODES_PROGRESS: 'restore-custom-nodes-progress',
 } as const;
 
 export enum ProgressStatus {

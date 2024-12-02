@@ -60,9 +60,11 @@ async function installCustomNodes(
   }
   const cmCliPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager', 'cm-cli.py');
   appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Reinstalling ${nodes.length} custom nodes...\n`);
+  appWindow.send(IPC_CHANNELS.RESTORE_CUSTOM_NODES_PROGRESS, { total: nodes.length });
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
     appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `Installing custom node (${i + 1}/${nodes.length}): ${node}\n`);
+    appWindow.send(IPC_CHANNELS.RESTORE_CUSTOM_NODES_PROGRESS, { total: nodes.length, index: i });
     const cmd = [
       cmCliPath,
       'install',
@@ -83,6 +85,7 @@ async function installCustomNodes(
       log.error(`Failed to install custom nodes: ${exitCode}`);
     }
     log.info(`Successfully installed custom node: ${node}`);
+    appWindow.send(IPC_CHANNELS.RESTORE_CUSTOM_NODES_PROGRESS, { total: nodes.length, index: i, exitCode });
   }
 }
 

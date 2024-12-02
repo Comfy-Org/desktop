@@ -212,6 +212,15 @@ const electronAPI = {
   installComfyUI: (installOptions: InstallOptions) => {
     ipcRenderer.send(IPC_CHANNELS.INSTALL_COMFYUI, installOptions);
   },
+  restoreCustomNodes: () => {
+    return ipcRenderer.invoke(IPC_CHANNELS.RESTORE_CUSTOM_NODES);
+  },
+  onRestoreCustomNodes: (callback: (message: { total: number; index?: number; exitCode?: number }) => void) => {
+    ipcRenderer.on(IPC_CHANNELS.RESTORE_CUSTOM_NODES_PROGRESS, (_event, value) => {
+      console.info(`Received ${IPC_CHANNELS.RESTORE_CUSTOM_NODES_PROGRESS} event`, value);
+      callback(value);
+    });
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
