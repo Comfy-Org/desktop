@@ -4,4 +4,5 @@ export type StoreType = {
   windowX: number | undefined;
   windowY: number | undefined;
   windowMaximized?: boolean;
+  alwaysSendCrashReports?: boolean;
 };
