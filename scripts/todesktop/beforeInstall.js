@@ -19,5 +19,10 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
         // Change stdio to get back the logs if there are issues.
         const result1 = spawnSync('curl' ,['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'],{shell:true,stdio: 'ignore'}).toString();
         const result2 = spawnSync('python-3.12.7-amd64.exe', ['/quiet', 'InstallAllUsers=1','PrependPath=1', 'Include_test=0'],{shell:true,stdio: 'ignore'}).toString();
+
+        // Download git
+        // TODO: Move to the installer, if current dist infra permits it
+        const res = spawnSync('where.exe', ['git'])
+        if (res.status !== 0) spawnSync('curl', ['-s', 'https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/Git-2.47.1-64-bit.exe'], { shell:true, stdio: 'ignore' }).toString();
     }
 };
