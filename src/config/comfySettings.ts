@@ -42,8 +42,4 @@ export class ComfySettings {
   get<K extends keyof ComfySettingsData>(key: K): ComfySettingsData[K] {
     return this.settings[key] ?? DEFAULT_SETTINGS[key];
   }
-
-  set<K extends keyof ComfySettingsData>(key: K, value: ComfySettingsData[K]) {
-    this.settings[key] = value;
-  }
 }
