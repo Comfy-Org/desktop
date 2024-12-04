@@ -175,7 +175,14 @@ export class VirtualEnvironment {
         ? path.join(this.venvPath, 'Scripts', 'python.exe')
         : path.join(this.venvPath, 'bin', 'python');
 
-    return this.runCommand(pythonInterpreterPath, args, {}, callbacks);
+    return this.runCommand(
+      pythonInterpreterPath,
+      args,
+      {
+        PYTHONIOENCODING: 'utf-8',
+      },
+      callbacks
+    );
   }
 
   /**
@@ -187,7 +194,14 @@ export class VirtualEnvironment {
     args: string[],
     callbacks?: ProcessCallbacks
   ): Promise<{ exitCode: number | null }> {
-    return this.runCommandAsync(this.pythonInterpreterPath, args, {}, callbacks);
+    return this.runCommandAsync(
+      this.pythonInterpreterPath,
+      args,
+      {
+        PYTHONIOENCODING: 'utf-8',
+      },
+      callbacks
+    );
   }
 
   /**
@@ -252,7 +266,6 @@ export class VirtualEnvironment {
       env: {
         ...process.env,
         ...env,
-        PYTHONIOENCODING: 'utf-8',
       },
     });
 
