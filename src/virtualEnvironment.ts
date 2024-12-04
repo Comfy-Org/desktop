@@ -252,6 +252,7 @@ export class VirtualEnvironment {
       env: {
         ...process.env,
         ...env,
+        PYTHONIOENCODING: 'utf-8',
       },
     });
 
