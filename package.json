@@ -49,7 +49,8 @@
     "typescript": "yarn run tsc",
     "vite:compile": "vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts",
     "vite:types": "vite build --config vite.types.config.ts && node scripts/prepareTypes.js",
-    "release:types": "node scripts/releaseTypes.js"
+    "release:types": "node scripts/releaseTypes.js",
+    "update:frontend": "node scripts/updateFrontend.js"
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
