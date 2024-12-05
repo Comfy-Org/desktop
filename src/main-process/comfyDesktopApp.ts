@@ -139,10 +139,11 @@ export class ComfyDesktopApp {
     const validation = await validateHardware();
     if (!validation.isValid) {
       await appWindow.loadRenderer('not-supported');
-      throw new Error(validation.error);
+      log.error(validation.error);
+    } else {
+      await appWindow.loadRenderer('welcome');
     }
 
-    await appWindow.loadRenderer('welcome');
     return new Promise<string>((resolve) => {
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
         const installWizard = new InstallWizard(installOptions);
