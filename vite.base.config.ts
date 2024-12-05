@@ -23,6 +23,10 @@ export function getBuildConfig(env: ConfigEnv): UserConfig {
       minify: command === 'build',
     },
     clearScreen: false,
+
+    define: {
+      __COMFYUI_VERSION__: JSON.stringify(pkg.config.comfyVersion),
+    },
   };
 }
 

@@ -130,6 +130,9 @@ const electronAPI = {
   getElectronVersion: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_ELECTRON_VERSION);
   },
+  getComfyUIVersion: () => {
+    return __COMFYUI_VERSION__;
+  },
   /**
    * Send an error message to Sentry
    * @param error The error object or message to send
