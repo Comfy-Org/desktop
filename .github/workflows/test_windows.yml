@@ -4,6 +4,15 @@ on:
   workflow_dispatch:
   workflow_call:
 
+  push:
+    branches:
+      - "enh/playwright-tests"
+  pull_request:
+    branches:
+      - "main" 
+    paths:
+      - ".github/workflows/test_windows.yml"
+
 jobs:
   build-windows-debug:
     runs-on: windows-latest
