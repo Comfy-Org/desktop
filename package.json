@@ -9,7 +9,7 @@
   "main": ".vite/build/main.js",
   "packageManager": "yarn@4.5.0",
   "config": {
-    "frontendVersion": "1.5.0",
+    "frontendVersion": "1.5.6",
     "comfyVersion": "0.3.2",
     "managerCommit": "1ca349523787b943f6d03201d4aed1cb0bcbbafe",
     "uvVersion": "0.5.4"
