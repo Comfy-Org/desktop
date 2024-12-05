@@ -11,7 +11,7 @@ async function main() {
     execSync(`git checkout -b ${branchName} -t origin/main`, { stdio: 'inherit' })
 
     // Get latest frontend release: https://github.com/Comfy-Org/ComfyUI_frontend/releases
-    const latestRelease = 'https://github.com/Comfy-Org/ComfyUI_frontend/releases/latest'
+    const latestRelease = 'https://api.github.com/repos/Comfy-Org/ComfyUI_frontend/releases/latest'
     const latestReleaseData = await fetch(latestRelease)
     const latestReleaseTag = (await latestReleaseData.json()).tag_name
     const version = latestReleaseTag.replace('v', '')
