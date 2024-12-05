@@ -39,10 +39,11 @@ function setupMainPackageWatcher() {
 					}
 
 					/** Spawn new electron process */
-					electronApp = spawn(String(electronPath), ['--inspect=9223', '.'], {
+					electronApp = spawn(String(electronPath), ['--remote-debugging-port=9000',  '--remote-allow-origins=http://127.0.0.1:9000', '.'], {
 						stdio: 'inherit',
 					});
 
+					electronApp.addListener('')
 					/** Stops the watch script when the application has been quit */
 					electronApp.addListener('exit', process.exit);
 				},

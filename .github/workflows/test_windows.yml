@@ -1,0 +1,24 @@
+name: Playwright App Windows Test
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build-windows-debug:
+    runs-on: windows-latest
+    steps:
+      - name: Github checkout
+        uses: actions/checkout@v4
+      - name: Declare some variables
+        run: |
+          echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+        shell: bash
+      - name: Build
+        uses: ./.github/actions/build/windows/app
+        with:
+          build-gpu: 'cpu'
+          sign-and-publish: false
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Run Playwright Tests
+        run: npm run test:e2e
