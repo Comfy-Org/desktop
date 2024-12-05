@@ -42,6 +42,7 @@ export class ComfyDesktopApp {
   initializeTodesktop(): void {
     log.debug('Initializing todesktop');
     todesktop.init({
+      autoCheckInterval: 60 * 60 * 1000, // every hour
       customLogger: log,
       updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
       autoUpdater: this.comfySettings.get('Comfy-Desktop.AutoUpdate'),
