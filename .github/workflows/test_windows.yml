@@ -31,3 +31,9 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Run Playwright Tests
         run: npm run test:e2e
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshot
+          path: screenshot.png
+    
