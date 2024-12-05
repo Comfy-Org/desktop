@@ -9,7 +9,6 @@ import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import { LevelOption } from 'electron-log';
 import SentryLogging from './services/sentry';
-import { DesktopConfig } from './store/desktopConfig';
 
 dotenv.config();
 log.initialize();
@@ -41,17 +40,6 @@ if (!gotTheLock) {
   app.on('ready', async () => {
     log.debug('App ready');
 
-    const store = await DesktopConfig.load();
-    if (store) {
-      startApp();
-    } else {
-      app.exit(20);
-    }
-  });
-}
-
-async function startApp() {
-  try {
     const appWindow = new AppWindow();
     appWindow.onClose(() => {
       log.info('App window closed. Quitting application.');
@@ -91,8 +79,5 @@ async function startApp() {
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);
     }
-  } catch (error) {
-    log.error('Fatal error occurred during app startup.', error);
-    app.exit(2024);
-  }
+  });
 }

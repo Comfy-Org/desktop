@@ -16,10 +16,8 @@ import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../terminal';
-import { DesktopConfig } from '../store/desktopConfig';
-import { InstallationValidator } from '../install/installationValidator';
 import { restoreCustomNodes } from '../services/backup';
-
+import Store from 'electron-store';
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
   private terminal: Terminal | null = null; // Only created after server starts.
@@ -147,11 +145,7 @@ export class ComfyDesktopApp {
     return new Promise<string>((resolve) => {
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
         const installWizard = new InstallWizard(installOptions);
-        const { store } = DesktopConfig;
-        store.set('basePath', installWizard.basePath);
-
         await installWizard.install();
-        store.set('installState', 'installed');
         resolve(installWizard.basePath);
       });
     });
@@ -188,7 +182,7 @@ export class ComfyDesktopApp {
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     });
-    const { store } = DesktopConfig;
+    const store = new Store();
     if (!store.get('Comfy-Desktop.RestoredCustomNodes', false)) {
       try {
         await restoreCustomNodes(virtualEnvironment, this.appWindow);
@@ -206,46 +200,14 @@ export class ComfyDesktopApp {
   }
 
   static async create(appWindow: AppWindow): Promise<ComfyDesktopApp> {
-    const { store } = DesktopConfig;
-    // Migrate settings from old version if required
-    const installState = store.get('installState') ?? (await ComfyDesktopApp.migrateInstallState());
+    const basePath = ComfyServerConfig.exists()
+      ? await ComfyServerConfig.readBasePathFromConfig(ComfyServerConfig.configPath)
+      : await this.install(appWindow);
 
-    // Fresh install
-    const basePath =
-      installState === undefined ? await ComfyDesktopApp.install(appWindow) : await ComfyDesktopApp.loadBasePath();
-
+    if (!basePath) {
+      throw new Error(`Base path not found! ${ComfyServerConfig.configPath} is probably corrupted.`);
+    }
     return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow);
-  }
-
-  /**
-   * Sets the ugpraded state if this is a version upgrade from <= 0.3.18
-   * @returns 'upgraded' if this install has just been upgraded, or undefined for a fresh install
-   */
-  static async migrateInstallState(): Promise<string | undefined> {
-    // Fresh install
-    if (!ComfyServerConfig.exists()) return undefined;
-
-    // Upgrade
-    const basePath = await ComfyDesktopApp.loadBasePath();
-
-    // Migrate config
-    const { store } = DesktopConfig;
-    const upgraded = 'upgraded';
-    store.set('installState', upgraded);
-    store.set('basePath', basePath);
-    return upgraded;
-  }
-
-  /** Loads the base_path value from the YAML config. Quits in the event of failure. */
-  static async loadBasePath(): Promise<string> {
-    const basePath = await ComfyServerConfig.readBasePathFromConfig(ComfyServerConfig.configPath);
-    if (basePath) return basePath;
-
-    log.error(`Base path not found! ${ComfyServerConfig.configPath} is probably corrupted.`);
-    await InstallationValidator.showInvalidFileAndQuit(ComfyServerConfig.configPath, {
-      message: `Base path not found! This file is probably corrupt:\n\n${ComfyServerConfig.configPath}`,
-    });
-    throw new Error(/* Unreachable. */);
   }
 
   uninstall(): void {
