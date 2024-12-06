@@ -48,6 +48,8 @@ test('has title', async () => {
 
   const installButton = page.getByText("Install")
 
+  await page.screenshot({ path: 'screenshot-install.png' });
+
   await expect(installButton).toBeVisible();
   await expect(installButton).toBeEnabled();
 
