@@ -26,6 +26,8 @@ test('has title', async () => {
 
   getStartedButton?.click();
 
+  await page.waitForTimeout(3000);
+
 
   await page.screenshot({ path: 'screenshot-get-started.png' });
 });
