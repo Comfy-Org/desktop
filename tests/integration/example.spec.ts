@@ -18,16 +18,17 @@ test('has title', async () => {
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/ComfyUI/);
 
-  await page.screenshot({ path: 'screenshot-load.png' });
+  const getStartedButton = page.getByText("Get Started")
 
-  const getStartedButton = await page.$("button[data-testid='get-started-button']");
+  await expect(getStartedButton).toBeVisible();
+  await expect(getStartedButton).toBeEnabled();
+
+  await page.screenshot({ path: 'screenshot-load.png' });  
+
+  await getStartedButton.click();
+
+  await expect(page.getByText("Choose Installation Location")).toBeVisible();
+
   
-  expect(getStartedButton).toBeDefined();
-
-  getStartedButton?.click();
-
-  await page.waitForTimeout(3000);
-
-
   await page.screenshot({ path: 'screenshot-get-started.png' });
 });
