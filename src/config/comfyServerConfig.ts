@@ -43,6 +43,29 @@ const knownModelKeys = [
 
 export type ModelPaths = Record<string, string>;
 
+/** @see BasePathReadSuccess */
+type BasePathReadResult = BasePathReadSuccess | BasePathReadFailure;
+
+/** Result of a YAML config read attempt */
+interface BasePathReadSuccess {
+  /**
+   * Exactly what happened when trying to read the file.
+   * - `success`: All OK.  Path is present.
+   * - `invalid`: File format invalid: `base_path` was not present or not a string.
+   * - `notFound`: The file does not exist.
+   * - `error`: Filesystem error (permissions, unresponsive disk, etc).
+   */
+  status: 'success';
+  /** The value of base_path from the YAML file */
+  path: string;
+}
+
+/** @see BasePathReadSuccess */
+interface BasePathReadFailure {
+  status: 'invalid' | 'notFound' | 'error';
+  path?: unknown;
+}
+
 /**
  * The ComfyServerConfig class is used to manage the configuration for the ComfyUI server.
  */
@@ -154,29 +177,34 @@ export class ComfyServerConfig {
     }
   }
 
-  public static async readBasePathFromConfig(configPath: string): Promise<string | null> {
+  /**
+   * Reads a YAML config file and attempts to return the base_path value.
+   *
+   * Attempts to read the new config path first, falling back to the original path if not.
+   * @param configPath The path to read
+   * @returns Status of the attempt and the value of base_path, if available
+   */
+  public static async readBasePathFromConfig(configPath: string): Promise<BasePathReadResult> {
     try {
       const fileContent = await fsPromises.readFile(configPath, 'utf8');
       const config = yaml.parse(fileContent);
 
-      if (config?.comfyui_desktop?.base_path) {
-        return config.comfyui_desktop.base_path;
+      // Fallback to legacy yaml format, where we have everything under root 'comfyui'.
+      const base_path = config?.comfyui_desktop?.base_path ?? config?.comfyui?.base_path;
+      if (typeof base_path !== 'string') {
+        log.warn(`Base path in YAML config was invalid: [${ComfyServerConfig.configPath}]`);
+        return { status: 'invalid', path: base_path };
       }
 
-      // Legacy yaml format, where we have everything under root 'comfyui'.
-      if (config?.comfyui?.base_path) {
-        return config.comfyui.base_path;
-      }
-
-      log.warn(`No base_path found in ${configPath}`);
-      return null;
+      return { status: 'success', path: base_path };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         log.info(`Config file not found at ${configPath}`);
+        return { status: 'notFound' };
       } else {
         log.error(`Error reading config file ${configPath}:`, error);
+        return { status: 'error' };
       }
-      return null;
     }
   }
 }

@@ -3,19 +3,21 @@ import fs from 'fs/promises';
 import log from 'electron-log/main';
 import path from 'node:path';
 
+type RequireProperties<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+
+type MessageBoxOptions = RequireProperties<Electron.MessageBoxOptions, 'buttons' | 'defaultId' | 'cancelId'>;
+
 export class InstallationValidator {
   /**
    * Shows a dialog box with an option to open the problematic file in the native shell file viewer.
    * @param options The options paramter of {@link dialog.showMessageBox}, filled with defaults for invalid config
    * @returns
    */
-  static async showInvalidFileAndQuit(file: string, options: Electron.MessageBoxOptions): Promise<void> {
-    const defaults: Electron.MessageBoxOptions = {
-      // Message must be set by caller.
-      message: `Was unable to read the file shown below.  It could be missing, inaccessible, or corrupt.\n\n${file}`,
+  static async showInvalidFileAndQuit(file: string, options: MessageBoxOptions): Promise<void> {
+    const defaults: Partial<Electron.MessageBoxOptions> = {
       title: 'Invalid file',
       type: 'error',
-      buttons: ['Locate the &file (then quit)', '&Quit'],
+      buttons: ['Open the &directory and quit', '&Quit'],
       defaultId: 0,
       cancelId: 1,
       normalizeAccessKeys: true,
