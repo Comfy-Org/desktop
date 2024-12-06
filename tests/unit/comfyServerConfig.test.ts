@@ -54,20 +54,23 @@ comfyui:
 
     it('should read base_path from valid config file', async () => {
       const result = await ComfyServerConfig.readBasePathFromConfig(testConfigPath);
-      expect(result).toBe('~/test/comfyui');
+      expect(result.status).toBe('success');
+      expect(result.path).toBe('~/test/comfyui');
     });
 
-    it('should return null for non-existent file', async () => {
+    it('should detect non-existent file', async () => {
       const result = await ComfyServerConfig.readBasePathFromConfig('non_existent_file.yaml');
-      expect(result).toBeNull();
+      expect(result.status).toBe('notFound');
+      expect(result.path).toBeUndefined();
     });
 
-    it('should return null for invalid config file', async () => {
+    it('should detect invalid config file', async () => {
       const invalidConfigPath = path.join(__dirname, 'invalid_config.yaml');
       await fsPromises.writeFile(invalidConfigPath, 'invalid: yaml: content:', 'utf8');
 
       const result = await ComfyServerConfig.readBasePathFromConfig(invalidConfigPath);
-      expect(result).toBeNull();
+      expect(result.status).toBe('invalid');
+      expect(result.path).toBeUndefined();
 
       await fsPromises.rm(invalidConfigPath);
     });
