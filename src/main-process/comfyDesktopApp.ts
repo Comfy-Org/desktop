@@ -212,8 +212,8 @@ export class ComfyDesktopApp {
     const installState = store.get('installState') ?? (await ComfyDesktopApp.migrateInstallState());
 
     // Fresh install
-    const basePath =
-      installState === undefined ? await ComfyDesktopApp.install(appWindow) : await ComfyDesktopApp.loadBasePath();
+    const loadedPath = installState === undefined ? undefined : await ComfyDesktopApp.loadBasePath();
+    const basePath = loadedPath ?? (await ComfyDesktopApp.install(appWindow));
 
     return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow);
   }
