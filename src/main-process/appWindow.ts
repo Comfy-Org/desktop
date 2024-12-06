@@ -12,7 +12,7 @@ import { getAppResourcesPath } from '../install/resourcePaths';
  */
 export class AppWindow {
   private window: BrowserWindow;
-  private store: Store<StoreType>;
+  public store: Store<StoreType>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
 

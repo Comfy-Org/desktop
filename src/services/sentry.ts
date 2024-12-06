@@ -14,9 +14,12 @@ class SentryLogging {
       beforeSend: async (event) => {
         this.filterEvent(event);
 
+        const alwaysSendCrashReports = this.comfyDesktopApp?.appWindow?.store?.get('alwaysSendCrashReports', false);
+
         if (
           event.extra?.comfyUIExecutionError ||
-          this.comfyDesktopApp?.comfySettings.get('Comfy-Desktop.SendStatistics')
+          this.comfyDesktopApp?.comfySettings.get('Comfy-Desktop.SendStatistics') ||
+          alwaysSendCrashReports
         ) {
           return event;
         }
@@ -28,11 +31,15 @@ class SentryLogging {
           title: 'Send Crash Report',
           message: `An error occurred: ${errorType}`,
           detail: `${errorMessage}\n\nWould you like to send the crash to the team?`,
-          buttons: ['Send Report', 'Do not send crash report'],
+          buttons: ['Send Report', 'Always send crash reports', 'Do not send crash report'],
           type: 'error',
         });
 
-        return response === 0 ? event : null;
+        if (response === 1) {
+          this.comfyDesktopApp?.appWindow?.store?.set('alwaysSendCrashReports', true);
+        }
+
+        return response !== 2 ? event : null;
       },
       integrations: [
         Sentry.childProcessIntegration({
