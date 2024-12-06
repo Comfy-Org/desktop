@@ -31,7 +31,7 @@ test('has title', async () => {
   
   await page.screenshot({ path: 'screenshot-get-started.png' });
 
-  const nextButton = page.getByRole('button', { name: 'Next' })
+  let nextButton = page.getByRole('button', { name: 'Next' })
 
   await expect(nextButton).toBeVisible();
   await expect(nextButton).toBeEnabled();
@@ -42,13 +42,15 @@ test('has title', async () => {
 
   await page.screenshot({ path: 'screenshot-migrate.png' });
 
-  // await nextButton.click();
+  nextButton = page.getByRole('button', { name: 'Next' })
 
-  // await expect(page.getByText("Desktop App Settings")).toBeVisible();
+  await nextButton.click();
+
+  await expect(page.getByText("Desktop App Settings")).toBeVisible();
 
   // const installButton = page.getByText("Install")
 
-  // await page.screenshot({ path: 'screenshot-install.png' });
+  await page.screenshot({ path: 'screenshot-install.png' });
 
   // await expect(installButton).toBeVisible();
   // await expect(installButton).toBeEnabled();
