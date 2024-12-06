@@ -28,7 +28,30 @@ test('has title', async () => {
   await getStartedButton.click();
 
   await expect(page.getByText("Choose Installation Location")).toBeVisible();
-
   
   await page.screenshot({ path: 'screenshot-get-started.png' });
+
+  const nextButton = page.getByText("Next")
+
+  await expect(nextButton).toBeVisible();
+  await expect(nextButton).toBeEnabled();
+
+  await nextButton.click();
+
+  await expect(page.getByText("Migrate from Existing Installation")).toBeVisible();
+
+  await page.screenshot({ path: 'screenshot-migrate.png' });
+
+  await nextButton.click();
+
+  await expect(page.getByText("Desktop App Settings")).toBeVisible();
+
+  const installButton = page.getByText("Install")
+
+  await expect(installButton).toBeVisible();
+  await expect(installButton).toBeEnabled();
+
+  await installButton.click();
+
+  
 });
