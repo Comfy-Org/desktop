@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
 import log from 'electron-log/main';
-import yaml from 'yaml';
+import yaml, { type YAMLParseError } from 'yaml';
 import path from 'node:path';
 import { app } from 'electron';
 
@@ -198,7 +198,10 @@ export class ComfyServerConfig {
 
       return { status: 'success', path: base_path };
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as YAMLParseError)?.name === 'YAMLParseError') {
+        log.error(`Unable to parse config file [${configPath}]`, error);
+        return { status: 'invalid' };
+      } else if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
         log.info(`Config file not found at ${configPath}`);
         return { status: 'notFound' };
       } else {
