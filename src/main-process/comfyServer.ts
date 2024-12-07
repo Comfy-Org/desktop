@@ -83,7 +83,7 @@ export class ComfyServer {
       Object.entries(args)
         .map(([key, value]) => [`--${key}`, value])
         .flat()
-        // Empty string values are ignored. e.g. { '--cpu': '' } => '--cpu'
+        // Empty string values are ignored. e.g. { cpu: '' } => '--cpu'
         .filter((value: string) => value !== '')
     );
   }
