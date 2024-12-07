@@ -4,16 +4,14 @@ import { chromium } from '@playwright/test';
 test('has title', async () => {
   const browser = await chromium.connectOverCDP('http://127.0.0.1:9000');
 
-  console.log(browser.isConnected() && 'Connected to Chrome.');
-  console.log(`Contexts in CDP session: ${browser.contexts().length}.`);
+  expect(browser.isConnected()).toBeTruthy();  
+  expect(browser.contexts()).toBeGreaterThan(0);
 
-  const context = browser.contexts()[0];
+  const context = browser.contexts()[0];  
   const pages = context.pages();
 
-  console.log(`Pages in context: ${pages.length}.`);
+  expect(pages).toHaveLength(1);
   const page = pages[0];
-
-  console.info(await page.title());
 
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/ComfyUI/);

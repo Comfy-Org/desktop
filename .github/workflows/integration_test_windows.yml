@@ -1,28 +1,18 @@
-name: Playwright App Windows Test
+name: Windows App Integration Test
 
 on:
-  workflow_dispatch:
-  workflow_call:
-
-  push:
-    branches:
-      - 'enh/playwright-tests'
   pull_request:
-    branches:
-      - 'main'
-    paths:
-      - '.github/workflows/test_windows.yml'
+    branches: [main]
+  push:
+    branches: [main]
+
 
 jobs:
-  build-windows-debug:
+  integration-windows-test:
     runs-on: windows-latest
     steps:
       - name: Github checkout
-        uses: actions/checkout@v4
-      - name: Declare some variables
-        run: |
-          echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
-        shell: bash
+        uses: actions/checkout@v4      
       - name: Build
         uses: ./.github/actions/build/windows/app
         with:
@@ -31,7 +21,7 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Run Playwright Tests
         run: npm run test:e2e
-      - name: Upload artifact
+      - name: Upload screenshots
         uses: actions/upload-artifact@v3
         with:
           name: screenshot
