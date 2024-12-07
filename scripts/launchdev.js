@@ -38,8 +38,10 @@ function setupMainPackageWatcher() {
 						electronApp = null;
 					}
 
+					const args = process.env.CI ? ['--remote-debugging-port=9000',  '--remote-allow-origins=http://127.0.0.1:9000' ] : ['--inspect=9223']
+
 					/** Spawn new electron process */
-					electronApp = spawn(String(electronPath), ['--remote-debugging-port=9000',  '--remote-allow-origins=http://127.0.0.1:9000', '.'], {
+					electronApp = spawn(String(electronPath), [...args, '.'], {
 						stdio: 'inherit',
 					});
 

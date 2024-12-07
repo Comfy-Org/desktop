@@ -18,44 +18,35 @@ test('has title', async () => {
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/ComfyUI/);
 
-  const getStartedButton = page.getByText("Get Started")
+  const getStartedButton = page.getByText('Get Started');
 
   await expect(getStartedButton).toBeVisible();
   await expect(getStartedButton).toBeEnabled();
 
-  await page.screenshot({ path: 'screenshot-load.png' });  
+  await page.screenshot({ path: 'screenshot-load.png' });
 
   await getStartedButton.click();
 
-  await expect(page.getByText("Choose Installation Location")).toBeVisible();
-  
+  await expect(page.getByText('Choose Installation Location')).toBeVisible();
+
   await page.screenshot({ path: 'screenshot-get-started.png' });
 
-  let nextButton = page.getByRole('button', { name: 'Next' })
+  let nextButton = page.getByRole('button', { name: 'Next' });
 
   await expect(nextButton).toBeVisible();
   await expect(nextButton).toBeEnabled();
 
   await nextButton.click();
 
-  await expect(page.getByText("Migrate from Existing Installation")).toBeVisible();
+  await expect(page.getByText('Migrate from Existing Installation')).toBeVisible();
 
   await page.screenshot({ path: 'screenshot-migrate.png' });
 
-  nextButton = page.getByRole('button', { name: 'Next' })
+  nextButton = page.getByRole('button', { name: 'Next' });
 
   await nextButton.click();
 
-  await expect(page.getByText("Desktop App Settings")).toBeVisible();
-
-  // const installButton = page.getByText("Install")
+  await expect(page.getByText('Desktop App Settings')).toBeVisible();
 
   await page.screenshot({ path: 'screenshot-install.png' });
-
-  // await expect(installButton).toBeVisible();
-  // await expect(installButton).toBeEnabled();
-
-  // await installButton.click();
-
-  
 });

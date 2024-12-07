@@ -6,12 +6,12 @@ on:
 
   push:
     branches:
-      - "enh/playwright-tests"
+      - 'enh/playwright-tests'
   pull_request:
     branches:
-      - "main" 
+      - 'main'
     paths:
-      - ".github/workflows/test_windows.yml"
+      - '.github/workflows/test_windows.yml'
 
 jobs:
   build-windows-debug:
@@ -36,4 +36,3 @@ jobs:
         with:
           name: screenshot
           path: screenshot*.png
-    

@@ -116,8 +116,9 @@ export async function validateHardware(): Promise<HardwareValidation> {
       const graphics = await si.graphics();
       const hasNvidia = graphics.controllers.some((controller) => controller.vendor.toLowerCase().includes('nvidia'));
 
-
-      return { isValid: true }; // Temporary workaround for test
+      if (process.env.CI) {
+        return { isValid: true }; // Temporary workaround for testing with Playwright
+      }
 
       if (!hasNvidia) {
         try {
