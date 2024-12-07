@@ -5,7 +5,7 @@ test('has title', async () => {
   const browser = await chromium.connectOverCDP('http://127.0.0.1:9000');
 
   expect(browser.isConnected()).toBeTruthy();
-  expect(browser.contexts()).toBeGreaterThan(0);
+  expect(browser.contexts().length).toBeGreaterThan(0);
 
   const context = browser.contexts()[0];
   const pages = context.pages();
