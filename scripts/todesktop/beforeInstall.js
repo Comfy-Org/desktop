@@ -19,5 +19,8 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
         // Change stdio to get back the logs if there are issues.
         const result1 = spawnSync('curl' ,['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'],{shell:true,stdio: 'ignore'}).toString();
         const result2 = spawnSync('python-3.12.7-amd64.exe', ['/quiet', 'InstallAllUsers=1','PrependPath=1', 'Include_test=0'],{shell:true,stdio: 'ignore'}).toString();
+
+        // Download Visual C Redistributable depedency for Pytorch (-L sets to follow redirects) into %TEMP% (will be picked up by installer.nsh)
+        const result3 = spawnSync('curl', ['-s', '-L', 'https://aka.ms/vs/16/release/vc_redist.x64.exe', '-o', '%TEMP%/vc_redist.x64.exe'],{shell:true,stdio: 'ignore'}).toString();
     }
 };
