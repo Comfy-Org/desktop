@@ -1,5 +1,10 @@
 !include 'LogicLib.nsh'
 
+# electron-build documentation: https://www.electron.build/nsis.html#custom-nsis-script
+# NSIS reference: https://nsis.sourceforge.io/Docs/
+#
+# Hooks: customHeader, preInit, customInit, customUnInit, customInstall, customUnInstall, customRemoveFiles, customInstallMode, customWelcomePage, customUnWelcomePage
+
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
 !macro customUnInstallCheckCommon
@@ -80,3 +85,16 @@
     Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
   ${endIf}
 !macroend
+
+# Checks for git and installs it if not present.
+Section "Git for Windows"
+    IfErrors gitClearErrors
+  gitClearErrors:
+    ExecWait "where.exe git"
+    IfErrors installGit gitInstalled
+  installGit:
+    SetOutPath "$INSTDIR"
+    ExecWait "$INSTDIR\Git-2.47.1-64-bit.exe /verysilent /suppressmsgboxes /log /norestart /restartapplications"
+    Delete "$INSTDIR\Git-2.47.1-64-bit.exe"
+  gitInstalled:
+SectionEnd
