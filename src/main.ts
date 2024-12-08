@@ -82,11 +82,17 @@ async function startApp() {
         ...cpuOnly,
       };
 
+      let onReady: (() => void) | null = null;
       if (!useExternalServer) {
-        await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
+        onReady = await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
+
+      const waitLoad = Promise.withResolvers();
+      ipcMain.handle(IPC_CHANNELS.LOADED, waitLoad.resolve);
       appWindow.loadComfyUI({ host, port, extraServerArgs });
+      await waitLoad.promise;
+      onReady?.();
     } catch (error) {
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);

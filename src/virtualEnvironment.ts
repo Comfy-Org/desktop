@@ -6,7 +6,7 @@ import { app } from 'electron';
 import * as pty from 'node-pty';
 import * as os from 'os';
 
-type ProcessCallbacks = {
+export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
   onStderr?: (data: string) => void;
 };
@@ -192,15 +192,19 @@ export class VirtualEnvironment {
    */
   public async runPythonCommandAsync(
     args: string[],
-    callbacks?: ProcessCallbacks
+    callbacks?: ProcessCallbacks,
+    env?: Record<string, string>,
+    cwd?: string
   ): Promise<{ exitCode: number | null }> {
     return this.runCommandAsync(
       this.pythonInterpreterPath,
       args,
       {
+        ...env,
         PYTHONIOENCODING: 'utf-8',
       },
-      callbacks
+      callbacks,
+      cwd
     );
   }
 
@@ -258,11 +262,12 @@ export class VirtualEnvironment {
     command: string,
     args: string[],
     env: Record<string, string>,
-    callbacks?: ProcessCallbacks
+    callbacks?: ProcessCallbacks,
+    cwd?: string
   ): ChildProcess {
     log.info(`Running command: ${command} ${args.join(' ')} in ${this.venvRootPath}`);
     const childProcess: ChildProcess = spawn(command, args, {
-      cwd: this.venvRootPath,
+      cwd: cwd ?? this.venvRootPath,
       env: {
         ...process.env,
         ...env,
@@ -288,10 +293,11 @@ export class VirtualEnvironment {
     command: string,
     args: string[],
     env: Record<string, string>,
-    callbacks?: ProcessCallbacks
+    callbacks?: ProcessCallbacks,
+    cwd?: string
   ): Promise<{ exitCode: number | null }> {
     return new Promise((resolve, reject) => {
-      const childProcess = this.runCommand(command, args, env, callbacks);
+      const childProcess = this.runCommand(command, args, env, callbacks, cwd);
 
       childProcess.on('close', (code) => {
         resolve({ exitCode: code });

@@ -25,6 +25,10 @@ export class InstallWizard {
     return !!this.migrationSource && this.migrationItemIds.has('models');
   }
 
+  get shouldMigrateCustomNodes(): boolean {
+    return !!this.migrationSource && this.migrationItemIds.has('custom_nodes');
+  }
+
   get basePath(): string {
     return path.join(this.installOptions.installPath, 'ComfyUI');
   }

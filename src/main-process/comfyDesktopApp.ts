@@ -13,12 +13,15 @@ import { InstallOptions } from '../preload';
 import path from 'path';
 import { getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
-import { VirtualEnvironment } from '../virtualEnvironment';
+import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../terminal';
 import { DesktopConfig } from '../store/desktopConfig';
 import { InstallationValidator } from '../install/installationValidator';
 import { restoreCustomNodes } from '../services/backup';
+import { CmCli } from '../services/cmCli';
+import ElectronStore from 'electron-store';
+import { DesktopSettings } from '../store';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
@@ -153,6 +156,9 @@ export class ComfyDesktopApp {
 
         await installWizard.install();
         store.set('installState', 'installed');
+        if (installWizard.shouldMigrateCustomNodes) {
+          store.set('migrateCustomNodes', installWizard.migrationSource);
+        }
         resolve(installWizard.basePath);
       });
     });
@@ -179,7 +185,8 @@ export class ComfyDesktopApp {
 
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
     const virtualEnvironment = new VirtualEnvironment(this.basePath);
-    await virtualEnvironment.create({
+
+    const processCallbacks: ProcessCallbacks = {
       onStdout: (data) => {
         log.info(data);
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
@@ -188,8 +195,12 @@ export class ComfyDesktopApp {
         log.error(data);
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
-    });
+    };
+    await virtualEnvironment.create(processCallbacks);
+
     const { store } = DesktopConfig;
+    const customNodeMigrationError = await this.migrateCustomNodes(store, virtualEnvironment, processCallbacks);
+
     if (!store.get('Comfy-Desktop.RestoredCustomNodes', false)) {
       try {
         await restoreCustomNodes(virtualEnvironment, this.appWindow);
@@ -204,6 +215,40 @@ export class ComfyDesktopApp {
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);
     await this.comfyServer.start();
     this.initializeTerminal(virtualEnvironment);
+
+    return () => {
+      if (customNodeMigrationError) {
+        this.appWindow.showToast({
+          summary: 'Failed to migrate custom nodes',
+          detail: customNodeMigrationError,
+          severity: 'error',
+        });
+      }
+    };
+  }
+
+  async migrateCustomNodes(
+    store: ElectronStore<DesktopSettings>,
+    virtualEnvironment: VirtualEnvironment,
+    callbacks: ProcessCallbacks
+  ) {
+    const customNodeMigrationPath = store.get('migrateCustomNodes');
+    let customNodeMigrationError: string | null = null;
+    if (customNodeMigrationPath) {
+      log.info('Migrating custom nodes from: ', customNodeMigrationPath);
+      try {
+        const cmCli = new CmCli(virtualEnvironment);
+        await cmCli.restoreCustomNodes(customNodeMigrationPath, callbacks);
+      } catch (error) {
+        log.error('Error migrating custom nodes', error);
+        customNodeMigrationError =
+          error instanceof Error ? error.message : typeof error === 'string' ? error : 'Error migrating custom nodes.';
+      } finally {
+        // Always remove the flag so the user doesnt get stuck here
+        store.delete('migrateCustomNodes');
+      }
+    }
+    return customNodeMigrationError;
   }
 
   static async create(appWindow: AppWindow): Promise<ComfyDesktopApp> {
