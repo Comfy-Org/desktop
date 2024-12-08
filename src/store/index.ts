@@ -16,4 +16,10 @@ export type DesktopSettings = {
    * in the yaml config.
    */
   installState?: 'started' | 'installed' | 'upgraded';
+  /**
+   * Controls whether to use a custom window on linux/win32
+   * - `custom`: Modern, theme-reactive, feels like an integral part of the UI
+   * - `default`: Impersonal, static, plain - default window title bar
+   */
+  windowStyle?: 'custom' | 'default';
 };
