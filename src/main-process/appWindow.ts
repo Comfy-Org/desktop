@@ -261,6 +261,7 @@ export class AppWindow {
     if (process.platform === 'darwin' || DesktopConfig.store.get('windowStyle') === 'default') return;
 
     if (options.height) options.height = Math.round(options.height);
+    if (!options.height) delete options.height;
     this.window.setTitleBarOverlay(options);
   }
 
