@@ -50,6 +50,15 @@ export class AppWindow {
     const storedX = store.get('windowX');
     const storedY = store.get('windowY');
 
+    // macOS requires different handling to linux / win32
+    const customChrome: Pick<Electron.BrowserWindowConstructorOptions, 'titleBarStyle' | 'titleBarOverlay'> =
+      process.platform !== 'darwin' && DesktopConfig.store.get('windowStyle') !== 'default'
+        ? {
+            titleBarStyle: 'hidden',
+            titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
+          }
+        : {};
+
     this.window = new BrowserWindow({
       title: 'ComfyUI',
       width: storedWidth,
@@ -66,12 +75,7 @@ export class AppWindow {
         devTools: true,
       },
       autoHideMenuBar: true,
-      ...(process.platform === 'darwin'
-        ? {}
-        : {
-            titleBarStyle: 'hidden',
-            titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
-          }),
+      ...customChrome,
     });
 
     if (!installed && storedX === undefined) this.window.center();
