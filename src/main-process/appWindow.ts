@@ -31,7 +31,7 @@ export class AppWindow {
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
   /** Default dark mode config for system window overlay (min/max/close window). */
-  private darkOverlay = { color: '#00000000', height: 44, symbolColor: '#ddd' };
+  private darkOverlay = { color: '#00000000', symbolColor: '#ddd' };
   /** Default light mode config for system window overlay (min/max/close window). */
   private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
   /** The application menu. */
@@ -258,6 +258,9 @@ export class AppWindow {
   }
 
   changeTheme(options: TitleBarOverlayOptions): void {
+    if (process.platform === 'darwin' || DesktopConfig.store.get('windowStyle') === 'default') return;
+
+    if (options.height) options.height = Math.round(options.height);
     this.window.setTitleBarOverlay(options);
   }
 
