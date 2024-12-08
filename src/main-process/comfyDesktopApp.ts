@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain, type Point } from 'electron';
+import { app, dialog, ipcMain, type Point, type TitleBarOverlayOptions } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
@@ -92,6 +92,9 @@ export class ComfyDesktopApp {
   }
 
   registerIPCHandlers(): void {
+    ipcMain.on(IPC_CHANNELS.CHANGE_THEME, (_event, options: TitleBarOverlayOptions) => {
+      this.appWindow.changeTheme(options);
+    });
     ipcMain.on(IPC_CHANNELS.SHOW_CONTEXT_MENU, (_event, options?: ElectronContextMenuOptions) => {
       this.appWindow.showSystemContextMenu(options);
     });
