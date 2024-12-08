@@ -1,4 +1,16 @@
-import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem, nativeTheme } from 'electron';
+import {
+  BrowserWindow,
+  screen,
+  app,
+  shell,
+  ipcMain,
+  Tray,
+  Menu,
+  dialog,
+  MenuItem,
+  nativeTheme,
+  type TitleBarOverlayOptions,
+} from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { AppWindowSettings } from '../store/AppWindowSettings';
@@ -18,6 +30,10 @@ export class AppWindow {
   private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: unknown }> = [];
   private rendererReady: boolean = false;
+  /** Default dark mode config for system window overlay (min/max/close window). */
+  private darkOverlay = { color: '#00000000', height: 44, symbolColor: '#ddd' };
+  /** Default light mode config for system window overlay (min/max/close window). */
+  private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
   /** The application menu. */
   private menu: Electron.Menu | null;
   /** The "edit" menu - cut/copy/paste etc. */
@@ -251,8 +267,9 @@ export class AppWindow {
     });
   }
 
-  private darkOverlay = { color: '#00000000', height: 44, symbolColor: '#ddd' };
-  private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
+  changeTheme(options: TitleBarOverlayOptions): void {
+    this.window.setTitleBarOverlay(options);
+  }
 
   showSystemContextMenu(options?: ElectronContextMenuOptions): void {
     if (options?.type === 'text') {
