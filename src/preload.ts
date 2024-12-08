@@ -237,6 +237,13 @@ const electronAPI = {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window_Controls_Overlay_API}
    */
   changeTheme: (theme: ElectronOverlayOptions): void => ipcRenderer.send(IPC_CHANNELS.CHANGE_THEME, theme),
+  /**
+   * Opens the native system context menu for the window object itself.
+   *
+   * Typically contains options such as min, max, restore, close.
+   * @param pos The position to anchor the menu load to (e.g. pointer pos)
+   */
+  showSystemMenu: (pos: Electron.Point): void => ipcRenderer.send(IPC_CHANNELS.SHOW_SYSTEM_CONTEXT, pos),
 } as const;
 
 export type ElectronAPI = typeof electronAPI;

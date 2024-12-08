@@ -10,6 +10,7 @@ import {
   MenuItem,
   nativeTheme,
   type TitleBarOverlayOptions,
+  type Point,
 } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
@@ -25,9 +26,12 @@ import { DesktopConfig } from '../store/desktopConfig';
  */
 export class AppWindow {
   private window: BrowserWindow;
+  /** Volatile store containing window config - saves window state between launches. */
   private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
+  /** The system context menu. */
+  private menu: Electron.Menu | null;
   /** Default dark mode config for system window overlay (min/max/close window). */
   private darkOverlay = { color: '#00000000', height: 44, symbolColor: '#ddd' };
   /** Default light mode config for system window overlay (min/max/close window). */
@@ -77,7 +81,7 @@ export class AppWindow {
     this.setupAppEvents();
     this.sendQueuedEventsOnReady();
     this.setupTray();
-    this.buildMenu();
+    this.menu = this.buildMenu();
   }
 
   public isReady(): boolean {
@@ -250,6 +254,10 @@ export class AppWindow {
     this.window.setTitleBarOverlay(options);
   }
 
+  showSystemContextMenu(pos?: Point): void {
+    this.menu?.popup(pos);
+  }
+
   setupTray() {
     // Set icon for the tray
     // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
@@ -332,5 +340,6 @@ export class AppWindow {
         Menu.setApplicationMenu(menu);
       }
     }
+    return menu;
   }
 }
