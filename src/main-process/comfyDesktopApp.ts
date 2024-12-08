@@ -92,7 +92,7 @@ export class ComfyDesktopApp {
   }
 
   registerIPCHandlers(): void {
-    ipcMain.on(IPC_CHANNELS.SHOW_SYSTEM_CONTEXT, (_event, pos: Point) => {
+    ipcMain.on(IPC_CHANNELS.SHOW_SYSTEM_CONTEXT, (_event, pos?: Point) => {
       this.appWindow.showSystemContextMenu(pos);
     });
     ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {

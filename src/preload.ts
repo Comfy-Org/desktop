@@ -221,7 +221,7 @@ const electronAPI = {
    * Typically contains options such as min, max, restore, close.
    * @param pos The position to anchor the menu load to (e.g. pointer pos)
    */
-  showSystemMenu: (pos: Electron.Point): void => ipcRenderer.send(IPC_CHANNELS.SHOW_SYSTEM_CONTEXT, pos),
+  showSystemMenu: (pos?: Electron.Point): void => ipcRenderer.send(IPC_CHANNELS.SHOW_SYSTEM_CONTEXT, pos),
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
