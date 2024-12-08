@@ -1,4 +1,15 @@
-import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem } from 'electron';
+import {
+  BrowserWindow,
+  screen,
+  app,
+  shell,
+  ipcMain,
+  Tray,
+  Menu,
+  dialog,
+  MenuItem,
+  nativeTheme,
+} from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { AppWindowSettings } from '../store';
@@ -46,6 +57,12 @@ export class AppWindow {
         devTools: true,
       },
       autoHideMenuBar: true,
+      ...(process.platform === 'darwin'
+        ? {}
+        : {
+            titleBarStyle: 'hidden',
+            titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
+          }),
     });
 
     if (!installed && storedX === undefined) this.window.center();
@@ -223,6 +240,9 @@ export class AppWindow {
       }
     });
   }
+
+  private darkOverlay = { color: '#00000000', height: 44, symbolColor: '#ddd' };
+  private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
 
   setupTray() {
     // Set icon for the tray
