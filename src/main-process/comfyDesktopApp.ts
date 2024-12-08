@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog, ipcMain, type Point } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
@@ -92,6 +92,9 @@ export class ComfyDesktopApp {
   }
 
   registerIPCHandlers(): void {
+    ipcMain.on(IPC_CHANNELS.SHOW_SYSTEM_CONTEXT, (_event, pos: Point) => {
+      this.appWindow.showSystemContextMenu(pos);
+    });
     ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
       this.appWindow.openDevTools();
     });

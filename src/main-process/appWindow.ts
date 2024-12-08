@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem } from 'electron';
+import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem, type Point } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { AppWindowSettings } from '../store';
@@ -13,9 +13,12 @@ import { DesktopConfig } from '../store/desktopConfig';
  */
 export class AppWindow {
   private window: BrowserWindow;
+  /** Volatile store containing window config - saves window state between launches. */
   private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
+  /** The system context menu. */
+  private menu: Electron.Menu | null;
 
   public constructor() {
     const installed = DesktopConfig.store.get('installState') === 'installed';
@@ -55,7 +58,7 @@ export class AppWindow {
     this.setupAppEvents();
     this.sendQueuedEventsOnReady();
     this.setupTray();
-    this.buildMenu();
+    this.menu = this.buildMenu();
   }
 
   public isReady(): boolean {
@@ -224,6 +227,10 @@ export class AppWindow {
     });
   }
 
+  showSystemContextMenu(pos?: Point): void {
+    this.menu?.popup(pos);
+  }
+
   setupTray() {
     // Set icon for the tray
     // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
@@ -306,5 +313,6 @@ export class AppWindow {
         Menu.setApplicationMenu(menu);
       }
     }
+    return menu;
   }
 }
