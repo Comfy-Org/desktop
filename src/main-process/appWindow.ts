@@ -9,6 +9,7 @@ import {
   dialog,
   MenuItem,
   nativeTheme,
+  type TitleBarOverlayOptions,
 } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
@@ -27,6 +28,10 @@ export class AppWindow {
   private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
+  /** Default dark mode config for system window overlay (min/max/close window). */
+  private darkOverlay = { color: '#00000000', height: 44, symbolColor: '#ddd' };
+  /** Default light mode config for system window overlay (min/max/close window). */
+  private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
 
   public constructor() {
     const installed = DesktopConfig.store.get('installState') === 'installed';
@@ -241,8 +246,9 @@ export class AppWindow {
     });
   }
 
-  private darkOverlay = { color: '#00000000', height: 44, symbolColor: '#ddd' };
-  private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
+  changeTheme(options: TitleBarOverlayOptions): void {
+    this.window.setTitleBarOverlay(options);
+  }
 
   setupTray() {
     // Set icon for the tray
