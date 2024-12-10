@@ -19,6 +19,7 @@ import log from 'electron-log/main';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { DesktopConfig } from '../store/desktopConfig';
+import type { ElectronContextMenuOptions } from '../preload';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
@@ -30,8 +31,10 @@ export class AppWindow {
   private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
-  /** The system context menu. */
+  /** The application menu. */
   private menu: Electron.Menu | null;
+  /** The "edit" menu - cut/copy/paste etc. */
+  private editMenu?: Menu;
   /** Default dark mode config for system window overlay (min/max/close window). */
   private darkOverlay = { color: '#00000000', symbolColor: '#ddd' };
   /** Default light mode config for system window overlay (min/max/close window). */
@@ -86,6 +89,7 @@ export class AppWindow {
     this.sendQueuedEventsOnReady();
     this.setupTray();
     this.menu = this.buildMenu();
+    this.buildTextMenu();
   }
 
   public isReady(): boolean {
@@ -262,8 +266,12 @@ export class AppWindow {
     this.window.setTitleBarOverlay(options);
   }
 
-  showSystemContextMenu(pos?: Point): void {
-    this.menu?.popup(pos);
+  showSystemContextMenu(options?: ElectronContextMenuOptions): void {
+    if (options?.type === 'text') {
+      this.editMenu?.popup(options.pos);
+    } else {
+      this.menu?.popup(options?.pos);
+    }
   }
 
   setupTray() {
@@ -317,6 +325,11 @@ export class AppWindow {
 
     // If we want to make it more dynamic return tray so we can access it later
     return tray;
+  }
+
+  buildTextMenu() {
+    // Electron bug - strongly typed to the incorrect case.
+    this.editMenu = Menu.getApplicationMenu()?.items.find((x) => x.role?.toLowerCase() === 'editmenu')?.submenu;
   }
 
   buildMenu() {

@@ -51,6 +51,11 @@ export interface ElectronOverlayOptions {
   height?: number;
 }
 
+export interface ElectronContextMenuOptions {
+  type: 'system' | 'text' | 'image';
+  pos?: Electron.Point;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -238,12 +243,14 @@ const electronAPI = {
    */
   changeTheme: (theme: ElectronOverlayOptions): void => ipcRenderer.send(IPC_CHANNELS.CHANGE_THEME, theme),
   /**
-   * Opens the native system context menu for the window object itself.
+   * Opens native context menus.
    *
-   * Typically contains options such as min, max, restore, close.
-   * @param pos The position to anchor the menu load to (e.g. pointer pos)
+   * {@link ElectronContextMenuOptions} contains the various options to control the menu type.
+   * @param options Define which type of menu to use, position, etc.
    */
-  showSystemMenu: (pos?: Electron.Point): void => ipcRenderer.send(IPC_CHANNELS.SHOW_SYSTEM_CONTEXT, pos),
+  showContextMenu: (options?: ElectronContextMenuOptions): void => {
+    return ipcRenderer.send(IPC_CHANNELS.SHOW_CONTEXT_MENU, options);
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
