@@ -35,6 +35,27 @@ export interface DownloadProgressUpdate {
   message?: string;
 }
 
+/** @todo Type inference chain broken by comfyui-electron-types. This is duplication. */
+export interface ElectronOverlayOptions {
+  /**
+   * The CSS color of the Window Controls Overlay when enabled.
+   */
+  color?: string;
+  /**
+   * The CSS color of the symbols on the Window Controls Overlay when enabled.
+   */
+  symbolColor?: string;
+  /**
+   * The height of the title bar and Window Controls Overlay in pixels.
+   */
+  height?: number;
+}
+
+export interface ElectronContextMenuOptions {
+  type: 'system' | 'text' | 'image';
+  pos?: Electron.Point;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -214,6 +235,21 @@ const electronAPI = {
    */
   installComfyUI: (installOptions: InstallOptions) => {
     ipcRenderer.send(IPC_CHANNELS.INSTALL_COMFYUI, installOptions);
+  },
+  /**
+   * Update the Window Controls Overlay theme overrides
+   * @param theme The theme settings to apply
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window_Controls_Overlay_API}
+   */
+  changeTheme: (theme: ElectronOverlayOptions): void => ipcRenderer.send(IPC_CHANNELS.CHANGE_THEME, theme),
+  /**
+   * Opens native context menus.
+   *
+   * {@link ElectronContextMenuOptions} contains the various options to control the menu type.
+   * @param options Define which type of menu to use, position, etc.
+   */
+  showContextMenu: (options?: ElectronContextMenuOptions): void => {
+    return ipcRenderer.send(IPC_CHANNELS.SHOW_CONTEXT_MENU, options);
   },
 } as const;
 
