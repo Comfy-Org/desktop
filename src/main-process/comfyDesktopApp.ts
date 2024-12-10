@@ -9,7 +9,7 @@ import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'fs';
-import { InstallOptions } from '../preload';
+import { InstallOptions, type ElectronContextMenuOptions } from '../preload';
 import path from 'path';
 import { getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
@@ -92,8 +92,8 @@ export class ComfyDesktopApp {
   }
 
   registerIPCHandlers(): void {
-    ipcMain.on(IPC_CHANNELS.SHOW_SYSTEM_CONTEXT, (_event, pos?: Point) => {
-      this.appWindow.showSystemContextMenu(pos);
+    ipcMain.on(IPC_CHANNELS.SHOW_CONTEXT_MENU, (_event, options?: ElectronContextMenuOptions) => {
+      this.appWindow.showSystemContextMenu(options);
     });
     ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
       this.appWindow.openDevTools();
