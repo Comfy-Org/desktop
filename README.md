@@ -285,4 +285,3 @@ yarn clean:slate
 At the onboarding step, you can opt-in to send us crash reports, which **only** include stack trace for unhandled exceptions and native crashes. These are really helpful to help us debug issues in lieu of an actual Github bug report. However, you can opt-out and nothing will ever be sent. We use Sentry to send crash reports. Code [here](https://github.com/Comfy-Org/desktop/blob/main/src/services/sentry.ts).
 
 In either case, no personal data, workflows or logs will be sent.
-
