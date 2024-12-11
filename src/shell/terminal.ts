@@ -1,7 +1,7 @@
-import * as os from 'node:os';
 import * as pty from 'node-pty';
-import { AppWindow } from './main-process/appWindow';
-import { IPC_CHANNELS } from './constants';
+import { AppWindow } from '../main-process/appWindow';
+import { IPC_CHANNELS } from '../constants';
+import { getDefaultShell } from './util';
 
 export class Terminal {
   #pty: pty.IPty | undefined;
@@ -48,7 +48,7 @@ export class Terminal {
   #createPty() {
     const window = this.window;
     // TODO: does this want to be a setting?
-    const shell = this.#getDefaultShell();
+    const shell = getDefaultShell();
     const instance = pty.spawn(shell, [], {
       handleFlowControl: false,
       conptyInheritCursor: false,
@@ -73,16 +73,5 @@ export class Terminal {
     });
 
     return instance;
-  }
-
-  #getDefaultShell(): string {
-    switch (os.platform()) {
-      case 'win32':
-        return 'powershell.exe';
-      case 'darwin':
-        return 'zsh';
-      default: // Linux and others
-        return 'bash';
-    }
   }
 }

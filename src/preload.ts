@@ -35,6 +35,11 @@ export interface DownloadProgressUpdate {
   message?: string;
 }
 
+export interface ElectronContextMenuOptions {
+  type: 'system' | 'text' | 'image';
+  pos?: Electron.Point;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -214,6 +219,15 @@ const electronAPI = {
    */
   installComfyUI: (installOptions: InstallOptions) => {
     ipcRenderer.send(IPC_CHANNELS.INSTALL_COMFYUI, installOptions);
+  },
+  /**
+   * Opens native context menus.
+   *
+   * {@link ElectronContextMenuOptions} contains the various options to control the menu type.
+   * @param options Define which type of menu to use, position, etc.
+   */
+  showContextMenu: (options?: ElectronContextMenuOptions): void => {
+    return ipcRenderer.send(IPC_CHANNELS.SHOW_CONTEXT_MENU, options);
   },
 } as const;
 

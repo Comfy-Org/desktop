@@ -5,6 +5,7 @@ import { pathAccessible } from './utils';
 import { app } from 'electron';
 import * as pty from 'node-pty';
 import * as os from 'os';
+import { getDefaultShell } from './shell/util';
 
 type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -28,7 +29,7 @@ export class VirtualEnvironment {
 
   get uvPtyInstance() {
     if (!this.uvPty) {
-      const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+      const shell = getDefaultShell();
       this.uvPty = pty.spawn(shell, [], {
         handleFlowControl: false,
         conptyInheritCursor: false,
