@@ -247,6 +247,9 @@ const electronAPI = {
     console.log('Restarting core process');
     await ipcRenderer.invoke(IPC_CHANNELS.RESTART_APP);
   },
+  getPlatform: (): NodeJS.Platform => {
+    return process.platform;
+  },
   getGpu: (): GpuType | undefined => {
     return DesktopConfig.gpu;
   },
