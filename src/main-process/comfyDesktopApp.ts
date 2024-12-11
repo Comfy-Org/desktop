@@ -138,6 +138,13 @@ export class ComfyDesktopApp {
     ipcMain.handle(IPC_CHANNELS.SET_CPU_MODE, (_event, enabled: boolean): Promise<void> => {
       return DesktopConfig.setAsync('devCpuMode', enabled);
     });
+    // Restart core
+    ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (_event): Promise<boolean> => {
+      if (!this.comfyServer) return false;
+      await this.comfyServer?.kill();
+      await this.comfyServer.start();
+      return true;
+    });
   }
 
   /**

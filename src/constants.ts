@@ -32,6 +32,7 @@ export const IPC_CHANNELS = {
   INSTALL_COMFYUI: 'install-comfyui',
   SHOW_CONTEXT_MENU: 'show-context-menu',
   SET_CPU_MODE: 'set-cpu-mode',
+  RESTART_CORE: 'restart-core',
 } as const;
 
 export enum ProgressStatus {
