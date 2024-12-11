@@ -83,6 +83,17 @@ export class DesktopConfig {
       }
     });
   }
+
+  /** @inheritdoc {@link ElectronStore.get} */
+  static async getAsync<Key extends keyof DesktopSettings>(key: Key): Promise<DesktopSettings[Key]> {
+    return new Promise((resolve, reject) => {
+      try {
+        resolve(DesktopConfig.store.get(key));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 }
 
 function showResetPrompt(configFilePath: string): Promise<Electron.MessageBoxReturnValue> {
