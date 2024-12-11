@@ -7,6 +7,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import log from 'electron-log/main';
 import { DesktopConfig } from './store/desktopConfig';
+import type { GpuType } from './preload';
 
 export async function pathAccessible(path: string): Promise<boolean> {
   try {
@@ -89,6 +90,8 @@ const execAsync = promisify(exec);
 
 interface HardwareValidation {
   isValid: boolean;
+  /** The detected GPU (not guaranteed to be valid - check isValid) */
+  gpu?: GpuType;
   error?: string;
 }
 
@@ -97,7 +100,7 @@ interface HardwareValidation {
  */
 export async function validateHardware(): Promise<HardwareValidation> {
   try {
-    if (DesktopConfig.devCpuMode) return { isValid: true };
+    if (DesktopConfig.devCpuMode) return { isValid: true, gpu: 'cpu' };
 
     // Only ARM Macs are supported.
     if (process.platform === 'darwin') {
@@ -111,7 +114,7 @@ export async function validateHardware(): Promise<HardwareValidation> {
         };
       }
 
-      return { isValid: true };
+      return { isValid: true, gpu: 'mps' };
     }
 
     // Windows NVIDIA GPU validation
@@ -130,11 +133,9 @@ export async function validateHardware(): Promise<HardwareValidation> {
             'powershell.exe -c "$n = \'*NVIDIA*\'; Get-CimInstance win32_videocontroller | ? { $_.Name -like $n -or $_.VideoProcessor -like $n -or $_.AdapterCompatibility -like $n }"'
           );
           if (!res?.stdout) throw new Error('No video card');
-          return { isValid: true };
         } catch {
           try {
             await execAsync('nvidia-smi');
-            return { isValid: true };
           } catch {
             return {
               isValid: false,
@@ -144,7 +145,7 @@ export async function validateHardware(): Promise<HardwareValidation> {
         }
       }
 
-      return { isValid: true };
+      return { isValid: true, gpu: 'nvidia' };
     }
 
     return {

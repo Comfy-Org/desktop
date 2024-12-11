@@ -1,3 +1,5 @@
+import type { GpuType } from '../preload';
+
 export type AppWindowSettings = {
   windowWidth: number;
   windowHeight: number;
@@ -17,4 +19,9 @@ export type DesktopSettings = {
    */
   installState?: 'started' | 'installed' | 'upgraded';
   devCpuMode?: boolean;
+  /**
+   * The last GPU that was detected during hardware validation.
+   * Allows manual override of some install behaviour.
+   */
+  detectedGpu?: GpuType;
 };

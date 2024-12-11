@@ -152,6 +152,8 @@ export class ComfyDesktopApp {
    */
   static async install(appWindow: AppWindow): Promise<string> {
     const validation = await validateHardware();
+    if (typeof validation?.gpu === 'string') DesktopConfig.store.set('detectedGpu', validation.gpu);
+
     if (!validation.isValid) {
       await appWindow.loadRenderer('not-supported');
       log.error(validation.error);

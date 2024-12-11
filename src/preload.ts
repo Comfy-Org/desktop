@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus, DownloadStatus } from './constants';
 import type { DownloadState } from './models/DownloadManager';
 import path from 'node:path';
+import { DesktopConfig } from './store/desktopConfig';
 
 /**
  * Open a folder in the system's default file explorer.
@@ -12,13 +13,15 @@ const openFolder = async (folderPath: string) => {
   ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
 };
 
+export type GpuType = 'nvidia' | 'mps' | 'cpu' | 'unsupported';
+
 export interface InstallOptions {
   installPath: string;
   autoUpdate: boolean;
   allowMetrics: boolean;
   migrationSourcePath?: string;
   migrationItemIds?: string[];
-  gpu: 'nvidia' | 'mps' | 'cpu';
+  gpu: GpuType;
 }
 
 export interface SystemPaths {
@@ -243,6 +246,9 @@ const electronAPI = {
   restartCore: async (): Promise<void> => {
     console.log('Restarting core process');
     await ipcRenderer.invoke(IPC_CHANNELS.RESTART_APP);
+  },
+  getGpu: (): GpuType | undefined => {
+    return DesktopConfig.gpu;
   },
 } as const;
 

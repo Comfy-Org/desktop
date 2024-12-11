@@ -4,6 +4,7 @@ import { app, dialog, shell } from 'electron';
 import path from 'node:path';
 import fs from 'fs/promises';
 import type { DesktopSettings } from '.';
+import type { GpuType } from '../preload';
 
 /** Handles loading of electron-store config, pre-window errors, and provides a non-null interface for the store. */
 export class DesktopConfig {
@@ -16,6 +17,10 @@ export class DesktopConfig {
 
   static get devCpuMode(): boolean {
     return DesktopConfig.store.get('devCpuMode') === true;
+  }
+
+  static get gpu(): GpuType | undefined {
+    return DesktopConfig.store.get('detectedGpu');
   }
 
   static async load(
