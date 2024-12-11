@@ -18,6 +18,7 @@ export interface InstallOptions {
   allowMetrics: boolean;
   migrationSourcePath?: string;
   migrationItemIds?: string[];
+  gpu: 'nvidia' | 'mps' | 'cpu';
 }
 
 export interface SystemPaths {
