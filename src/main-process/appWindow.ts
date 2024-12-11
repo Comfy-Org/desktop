@@ -1,4 +1,17 @@
-import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem } from 'electron';
+import {
+  BrowserWindow,
+  screen,
+  app,
+  shell,
+  ipcMain,
+  Tray,
+  Menu,
+  dialog,
+  MenuItem,
+  nativeTheme,
+  type TitleBarOverlayOptions,
+  type Point,
+} from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { AppWindowSettings } from '../store';
@@ -6,6 +19,7 @@ import log from 'electron-log/main';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { DesktopConfig } from '../store/desktopConfig';
+import type { ElectronContextMenuOptions } from '../preload';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
@@ -13,9 +27,18 @@ import { DesktopConfig } from '../store/desktopConfig';
  */
 export class AppWindow {
   private window: BrowserWindow;
+  /** Volatile store containing window config - saves window state between launches. */
   private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
+  /** The application menu. */
+  private menu: Electron.Menu | null;
+  /** The "edit" menu - cut/copy/paste etc. */
+  private editMenu?: Menu;
+  /** Default dark mode config for system window overlay (min/max/close window). */
+  private darkOverlay = { color: '#00000000', symbolColor: '#ddd' };
+  /** Default light mode config for system window overlay (min/max/close window). */
+  private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
 
   public constructor() {
     const installed = DesktopConfig.store.get('installState') === 'installed';
@@ -29,6 +52,15 @@ export class AppWindow {
     const storedHeight = store.get('windowHeight', height);
     const storedX = store.get('windowX');
     const storedY = store.get('windowY');
+
+    // macOS requires different handling to linux / win32
+    const customChrome: Pick<Electron.BrowserWindowConstructorOptions, 'titleBarStyle' | 'titleBarOverlay'> =
+      process.platform !== 'darwin' && DesktopConfig.store.get('windowStyle') !== 'default'
+        ? {
+            titleBarStyle: 'hidden',
+            titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
+          }
+        : {};
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
@@ -46,6 +78,7 @@ export class AppWindow {
         devTools: true,
       },
       autoHideMenuBar: true,
+      ...customChrome,
     });
 
     if (!installed && storedX === undefined) this.window.center();
@@ -55,7 +88,8 @@ export class AppWindow {
     this.setupAppEvents();
     this.sendQueuedEventsOnReady();
     this.setupTray();
-    this.buildMenu();
+    this.menu = this.buildMenu();
+    this.buildTextMenu();
   }
 
   public isReady(): boolean {
@@ -224,6 +258,22 @@ export class AppWindow {
     });
   }
 
+  changeTheme(options: TitleBarOverlayOptions): void {
+    if (process.platform === 'darwin' || DesktopConfig.store.get('windowStyle') === 'default') return;
+
+    if (options.height) options.height = Math.round(options.height);
+    if (!options.height) delete options.height;
+    this.window.setTitleBarOverlay(options);
+  }
+
+  showSystemContextMenu(options?: ElectronContextMenuOptions): void {
+    if (options?.type === 'text') {
+      this.editMenu?.popup(options.pos);
+    } else {
+      this.menu?.popup(options?.pos);
+    }
+  }
+
   setupTray() {
     // Set icon for the tray
     // I think there is a way to packaged the icon in so you don't need to reference resourcesPath
@@ -277,6 +327,11 @@ export class AppWindow {
     return tray;
   }
 
+  buildTextMenu() {
+    // Electron bug - strongly typed to the incorrect case.
+    this.editMenu = Menu.getApplicationMenu()?.items.find((x) => x.role?.toLowerCase() === 'editmenu')?.submenu;
+  }
+
   buildMenu() {
     const menu = Menu.getApplicationMenu();
     if (menu) {
@@ -306,5 +361,6 @@ export class AppWindow {
         Menu.setApplicationMenu(menu);
       }
     }
+    return menu;
   }
 }
