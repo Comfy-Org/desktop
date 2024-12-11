@@ -60,6 +60,24 @@ export class DesktopConfig {
       }
     }
   }
+
+  /**
+   * Saves each {@link config} setting individually, returning a promise for the task.
+   * @param key The key of {@link DesktopSettings} to save
+   * @param value The value to be saved.  Must be valid.
+   * @returns A promise that resolves on successful save, or rejects with the first caught error.
+   */
+  static async setAsync<Key extends keyof DesktopSettings>(key: Key, value: DesktopSettings[Key]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      log.info(`Saving setting: [${key}]`, value);
+      try {
+        DesktopConfig.store.set(key, value);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 }
 
 function showResetPrompt(configFilePath: string): Promise<Electron.MessageBoxReturnValue> {

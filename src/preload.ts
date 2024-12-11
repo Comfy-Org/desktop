@@ -230,6 +230,15 @@ const electronAPI = {
   showContextMenu: (options?: ElectronContextMenuOptions): void => {
     return ipcRenderer.send(IPC_CHANNELS.SHOW_CONTEXT_MENU, options);
   },
+  Config: {
+    /**
+     * Controls whether ComfyUI core will start up with the `--cpu` flag.
+     * @param settings An key/value pair object containing all settings to update
+     */
+    setCpuMode: async (enabled: boolean): Promise<void> => {
+      await ipcRenderer.invoke(IPC_CHANNELS.SET_CPU_MODE, enabled);
+    },
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;

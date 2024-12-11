@@ -134,6 +134,10 @@ export class ComfyDesktopApp {
         return null;
       }
     });
+    // Config
+    ipcMain.handle(IPC_CHANNELS.SET_CPU_MODE, (_event, enabled: boolean): Promise<void> => {
+      return DesktopConfig.setAsync('devCpuMode', enabled);
+    });
   }
 
   /**
