@@ -241,6 +241,13 @@ const electronAPI = {
     setCpuMode: async (enabled: boolean): Promise<void> => {
       await ipcRenderer.invoke(IPC_CHANNELS.SET_CPU_MODE, enabled);
     },
+    /**
+     * Finds the name of the last detected GPU type.  Detection only runs during installation.
+     * @returns The last GPU detected by `validateHardware` - runs during installation
+     */
+    getGpu: async (): Promise<GpuType | undefined> => {
+      return await ipcRenderer.invoke(IPC_CHANNELS.GET_GPU);
+    },
   },
   /** Restart the python server without restarting desktop. */
   restartCore: async (): Promise<void> => {
@@ -249,9 +256,6 @@ const electronAPI = {
   },
   getPlatform: (): NodeJS.Platform => {
     return process.platform;
-  },
-  getGpu: (): GpuType | undefined => {
-    return DesktopConfig.gpu;
   },
 } as const;
 

@@ -9,7 +9,7 @@ import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'fs';
-import { InstallOptions, type ElectronContextMenuOptions } from '../preload';
+import { InstallOptions, type ElectronContextMenuOptions, type GpuType } from '../preload';
 import path from 'path';
 import { getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
@@ -137,6 +137,9 @@ export class ComfyDesktopApp {
     // Config
     ipcMain.handle(IPC_CHANNELS.SET_CPU_MODE, (_event, enabled: boolean): Promise<void> => {
       return DesktopConfig.setAsync('devCpuMode', enabled);
+    });
+    ipcMain.handle(IPC_CHANNELS.GET_GPU, (_event): Promise<GpuType | undefined> => {
+      return DesktopConfig.getAsync('detectedGpu');
     });
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (_event): Promise<boolean> => {
