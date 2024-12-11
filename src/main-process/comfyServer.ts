@@ -91,7 +91,7 @@ export class ComfyServer {
   get launchArgs() {
     return ComfyServer.buildLaunchArgs(this.mainScriptPath, {
       ...this.coreLaunchArgs,
-      ...this.serverArgs.extraServerArgs,      
+      ...this.serverArgs.extraServerArgs,
     });
   }
 
