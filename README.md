@@ -3,10 +3,11 @@
 [![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
 ![Beta](https://img.shields.io/badge/beta-blue.svg)
 
-### Currently Supported Platforms
+# Download
 
-- Windows (NVIDIA)
-- macOS (Apple silicon)
+Windows (NVIDIA) NSIS x64: [Download](https://download.comfy.org/windows/nsis/x64)
+
+macOS ARM: [Download](https://download.comfy.org/mac/dmg/arm64)
 
 # Overview
 
@@ -285,8 +286,3 @@ At the onboarding step, you can opt-in to send us crash reports, which **only** 
 
 In either case, no personal data, workflows or logs will be sent.
 
-# Download
-
-Windows (NVIDIA) NSIS x64: [Download](https://download.comfy.org/windows/nsis/x64)
-
-macOS ARM: [Download](https://download.comfy.org/mac/dmg/arm64)
