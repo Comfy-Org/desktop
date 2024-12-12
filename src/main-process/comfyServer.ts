@@ -75,6 +75,7 @@ export class ComfyServer {
       'front-end-root': this.webRootPath,
       'extra-model-paths-config': ComfyServerConfig.configPath,
       port: this.serverArgs.port.toString(),
+      listen: this.serverArgs.host,
     };
   }
 

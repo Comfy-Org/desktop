@@ -104,7 +104,8 @@ export class AppWindow {
   }
 
   public loadComfyUI(serverArgs: ServerArgs) {
-    this.window.loadURL(`http://${serverArgs.host}:${serverArgs.port}`);
+    const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
+    this.window.loadURL(`http://${host}:${serverArgs.port}`);
   }
 
   public openDevTools(): void {
