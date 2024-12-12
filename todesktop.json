@@ -14,10 +14,19 @@
     "assets/uv/**",
     ".vite/**",
     ".yarnrc.yml",
-    ".yarn/**"
+    ".yarn/**",
+    ".husky/**"
   ],
   "extraResources": [{ "from": "./assets" }],
-  "filesForDistribution": ["!assets/**", "!dist/**", "!src/**", "!scripts/**", "!.yarn/**", "!.yarnrc.yml"],
+  "filesForDistribution": [
+    "!assets/**",
+    "!dist/**",
+    "!src/**",
+    "!scripts/**",
+    "!.yarn/**",
+    "!.yarnrc.yml",
+    "!.husky/**"
+  ],
   "mac": {
     "additionalBinariesToSign": ["./assets/uv/macos/uv", "./assets/uv/macos/uvx"]
   },
