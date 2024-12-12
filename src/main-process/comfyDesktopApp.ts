@@ -135,11 +135,11 @@ export class ComfyDesktopApp {
       }
     });
     // Config
-    ipcMain.handle(IPC_CHANNELS.SET_CPU_MODE, (_event, enabled: boolean): Promise<void> => {
-      return DesktopConfig.setAsync('devCpuMode', enabled);
+    ipcMain.handle(IPC_CHANNELS.SET_CPU_MODE, async (_event, enabled: boolean): Promise<void> => {
+      return await DesktopConfig.setAsync('devCpuMode', enabled);
     });
-    ipcMain.handle(IPC_CHANNELS.GET_GPU, (_event): Promise<GpuType | undefined> => {
-      return DesktopConfig.getAsync('detectedGpu');
+    ipcMain.handle(IPC_CHANNELS.GET_GPU, async (_event): Promise<GpuType | undefined> => {
+      return await DesktopConfig.getAsync('detectedGpu');
     });
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (_event): Promise<boolean> => {
