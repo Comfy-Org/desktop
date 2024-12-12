@@ -21,7 +21,7 @@ export interface InstallOptions {
   allowMetrics: boolean;
   migrationSourcePath?: string;
   migrationItemIds?: string[];
-  gpu: GpuType;
+  gpu?: GpuType;
 }
 
 export interface SystemPaths {
