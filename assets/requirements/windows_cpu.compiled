@@ -121,9 +121,6 @@ markupsafe==3.0.2
     #   --override assets/override.txt
     #   jinja2
     # from https://pypi.org/simple
-matrix-client==0.4.0
-    # via -r assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
-    # from https://pypi.org/simple
 mdurl==0.1.2
     # via markdown-it-py
     # from https://pypi.org/simple
@@ -209,7 +206,6 @@ requests==2.32.3
     # via
     #   --override assets/override.txt
     #   huggingface-hub
-    #   matrix-client
     #   pygithub
     #   transformers
     # from https://pypi.org/simple
@@ -331,7 +327,6 @@ typing-extensions==4.12.2
 urllib3==2.2.3
     # via
     #   --override assets/override.txt
-    #   matrix-client
     #   pygithub
     #   requests
     # from https://pypi.org/simple
