@@ -169,7 +169,11 @@ export class ComfyDesktopApp {
         const installWizard = new InstallWizard(installOptions);
         const { store } = DesktopConfig;
         store.set('basePath', installWizard.basePath);
-        store.set('selectedGpu', installOptions.gpu);
+
+        const { gpu } = installOptions;
+        store.set('selectedGpu', gpu);
+        if (gpu === 'cpu') store.set('devCpuMode', true);
+        else store.delete('devCpuMode');
 
         await installWizard.install();
         store.set('installState', 'installed');
