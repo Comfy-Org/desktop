@@ -1,7 +1,7 @@
 import { app } from 'electron';
 import { IPC_CHANNELS, ServerArgs } from '../constants';
 import { VirtualEnvironment } from '../virtualEnvironment';
-import { rotateLogFiles } from '../utils';
+import { ansiCodes, rotateLogFiles } from '../utils';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import log from 'electron-log/main';
 import path from 'path';
@@ -101,17 +101,19 @@ export class ComfyServer {
       const comfyUILog = log.create({ logId: 'comfyui' });
       comfyUILog.transports.file.fileName = 'comfyui.log';
 
+      // TODO: Check if electron-log has updated types
+      comfyUILog.transports.file.transforms.push(({ data }) => {
+        // @ts-expect-error electron-log types are broken.  data and return type are `string`.
+        return typeof data === 'string' ? data.replaceAll(ansiCodes, '') : data;
+      });
+
       const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.launchArgs, {
         onStdout: (data) => {
-          comfyUILog.info(
-            data.replaceAll(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-          );
+          comfyUILog.info(data);
           this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
         },
         onStderr: (data) => {
-          comfyUILog.error(
-            data.replaceAll(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-          );
+          comfyUILog.error(data);
           this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
         },
       });
