@@ -3,6 +3,10 @@
 [![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
 ![Beta](https://img.shields.io/badge/beta-blue.svg)
 
+# USER GUIDE
+
+Please read this https://comfyorg.notion.site
+
 # Download
 
 Windows (NVIDIA) NSIS x64: [Download](https://download.comfy.org/windows/nsis/x64)
@@ -20,7 +24,7 @@ This desktop app is a packaged way to use [ComfyUI](https://github.com/comfyanon
 
 On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager, and the uv executable as well as some desktop specific features.
 
-Users please read the [guide](https://comfyorg.notion.site/). Developers, read on.
+Developers, read on.
 
 ## Installed Files
 
