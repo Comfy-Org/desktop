@@ -73,10 +73,14 @@ async function installCustomNodes(
     ];
     const { exitCode } = await virtualEnvironment.runPythonCommandAsync(cmd, {
       onStdout: (data) => {
-        log.info(data.toString());
+        log.info(
+          data.toString().replaceAll(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+        );
       },
       onStderr: (data) => {
-        log.error(data.toString());
+        log.error(
+          data.toString().replaceAll(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+        );
       },
     });
     if (exitCode !== 0) {

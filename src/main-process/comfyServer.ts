@@ -103,11 +103,15 @@ export class ComfyServer {
 
       const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.launchArgs, {
         onStdout: (data) => {
-          comfyUILog.info(data);
+          comfyUILog.info(
+            data.replaceAll(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+          );
           this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
         },
         onStderr: (data) => {
-          comfyUILog.error(data);
+          comfyUILog.error(
+            data.replaceAll(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+          );
           this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
         },
       });
