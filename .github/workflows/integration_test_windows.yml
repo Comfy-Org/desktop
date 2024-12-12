@@ -3,8 +3,28 @@ name: Windows App Integration Test
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '.prettierrc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'README.md'
+      - '.husky/**'
+      - '.vscode/**'
+      - 'scripts/**'
+      - '.gitignore'
+      - 'todesktop.json'
   push:
     branches: [main]
+    paths-ignore:
+      - '.prettierrc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'README.md'
+      - '.husky/**'
+      - '.vscode/**'
+      - 'scripts/**'
+      - '.gitignore'
+      - 'todesktop.json'
 
 jobs:
   integration-windows-test:
