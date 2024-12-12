@@ -35,7 +35,7 @@
     "make:nvidia": "yarn run make -- --nvidia",
     "notarize": "node debug/notarize.js",
     "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
-    "prepare": "husky",
+    "postinstall": "husky",
     "publish": "yarn run vite:compile && todesktop build --async",
     "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
     "reset-install": "node scripts/resetInstall.js",
@@ -50,7 +50,8 @@
     "vite:compile": "vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts",
     "vite:types": "vite build --config vite.types.config.ts && node scripts/prepareTypes.js",
     "release:types": "node scripts/releaseTypes.js",
-    "update:frontend": "node scripts/updateFrontend.js"
+    "update:frontend": "node scripts/updateFrontend.js",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
