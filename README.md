@@ -58,9 +58,17 @@ The application will be dragged into `/Applications`
 
 ### ComfyUI
 
-ComfyUI will also write files to disk as you use it. You will also be asked to select a location to store ComfyUI files like models, inputs, outputs, custom_nodes and saved workflows.
+You will also be asked to select a location to store ComfyUI files like models, inputs, outputs, custom_nodes and saved workflows. This directory is stored in the `basePath` key of `config.json`. 
 
-An `extra_model_config.yaml` is created to tell ComfyUI where to look for these files. You can edit this file to do things like add additional model files to the search path.
+On Windows: `%APPDATA%\ComfyUI\config.json`
+
+On macOS: `~/Library/Application Support/ComfyUI/config.json`
+
+On Linux: `~/.config/ComfyUI/config.json`
+
+#### Model Paths
+
+This directory is also written as the `base_path` in `extra_model_config.yaml`. The Desktop app will look for model checkpoints here by default, but you can add additional models to the search path by editing this file.
 
 On Windows: `%APPDATA%\ComfyUI\extra_model_config.yaml`
 
