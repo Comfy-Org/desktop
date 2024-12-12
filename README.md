@@ -58,7 +58,7 @@ The application will be dragged into `/Applications`
 
 ### ComfyUI
 
-You will also be asked to select a location to store ComfyUI files like models, inputs, outputs, custom_nodes and saved workflows. This directory is stored in the `basePath` key of `config.json`. 
+You will also be asked to select a location to store ComfyUI files like models, inputs, outputs, custom_nodes and saved workflows. This directory is stored in the `basePath` key of `config.json`.
 
 On Windows: `%APPDATA%\ComfyUI\config.json`
 
