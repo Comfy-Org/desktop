@@ -11,7 +11,7 @@ import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'fs';
 import { InstallOptions, type ElectronContextMenuOptions } from '../preload';
 import path from 'path';
-import { getModelsDirectory, validateHardware } from '../utils';
+import { ansiCodes, getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
@@ -185,11 +185,11 @@ export class ComfyDesktopApp {
     const virtualEnvironment = new VirtualEnvironment(this.basePath);
     await virtualEnvironment.create({
       onStdout: (data) => {
-        log.info(data.replaceAll(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''));
+        log.info(data.replaceAll(ansiCodes, ''));
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
       onStderr: (data) => {
-        log.error(data.replaceAll(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''));
+        log.error(data.replaceAll(ansiCodes, ''));
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     });
