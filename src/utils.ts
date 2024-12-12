@@ -7,7 +7,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import log from 'electron-log/main';
 import { DesktopConfig } from './store/desktopConfig';
-import type { GpuType } from './preload';
+import type { TorchDeviceType } from './preload';
 
 export async function pathAccessible(path: string): Promise<boolean> {
   try {
@@ -91,7 +91,7 @@ const execAsync = promisify(exec);
 interface HardwareValidation {
   isValid: boolean;
   /** The detected GPU (not guaranteed to be valid - check isValid) */
-  gpu?: GpuType;
+  gpu?: TorchDeviceType;
   error?: string;
 }
 

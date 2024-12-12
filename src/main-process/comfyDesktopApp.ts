@@ -9,7 +9,7 @@ import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'fs';
-import { InstallOptions, type ElectronContextMenuOptions, type GpuType } from '../preload';
+import { InstallOptions, type ElectronContextMenuOptions, type TorchDeviceType } from '../preload';
 import path from 'path';
 import { getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
@@ -138,7 +138,7 @@ export class ComfyDesktopApp {
     ipcMain.handle(IPC_CHANNELS.SET_CPU_MODE, async (_event, enabled: boolean): Promise<void> => {
       return await DesktopConfig.setAsync('devCpuMode', enabled);
     });
-    ipcMain.handle(IPC_CHANNELS.GET_GPU, async (_event): Promise<GpuType | undefined> => {
+    ipcMain.handle(IPC_CHANNELS.GET_GPU, async (_event): Promise<TorchDeviceType | undefined> => {
       return await DesktopConfig.getAsync('detectedGpu');
     });
     // Restart core
@@ -170,10 +170,10 @@ export class ComfyDesktopApp {
         const { store } = DesktopConfig;
         store.set('basePath', installWizard.basePath);
 
-        const { gpu } = installOptions;
-        if (gpu !== undefined) {
-          store.set('selectedGpu', gpu);
-          if (gpu === 'cpu') store.set('devCpuMode', true);
+        const { device } = installOptions;
+        if (device !== undefined) {
+          store.set('selectedDevice', device);
+          if (device === 'cpu') store.set('devCpuMode', true);
           else store.delete('devCpuMode');
         }
 
@@ -207,8 +207,8 @@ export class ComfyDesktopApp {
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
 
     const { store } = DesktopConfig;
-    const selectedGpu = store.get('selectedGpu');
-    const virtualEnvironment = new VirtualEnvironment(this.basePath, selectedGpu);
+    const selectedDevice = store.get('selectedDevice');
+    const virtualEnvironment = new VirtualEnvironment(this.basePath, selectedDevice);
 
     await virtualEnvironment.create({
       onStdout: (data) => {

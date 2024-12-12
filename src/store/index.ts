@@ -1,4 +1,4 @@
-import type { GpuType } from '../preload';
+import type { TorchDeviceType } from '../preload';
 
 export type AppWindowSettings = {
   windowWidth: number;
@@ -23,7 +23,7 @@ export type DesktopSettings = {
    * The last GPU that was detected during hardware validation.
    * Allows manual override of some install behaviour.
    */
-  detectedGpu?: GpuType;
-  /** The GPU installation mode that was selected during installation. */
-  selectedGpu?: GpuType;
+  detectedGpu?: TorchDeviceType;
+  /** The pytorch device that the user selected during installation. */
+  selectedDevice?: TorchDeviceType;
 };

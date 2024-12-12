@@ -7,7 +7,7 @@ import * as pty from 'node-pty';
 import * as os from 'os';
 import { getDefaultShell } from './shell/util';
 import { DesktopConfig } from './store/desktopConfig';
-import type { GpuType } from './preload';
+import type { TorchDeviceType } from './preload';
 
 type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -27,7 +27,7 @@ export class VirtualEnvironment {
   readonly pythonInterpreterPath: string;
   readonly comfyUIRequirementsPath: string;
   readonly comfyUIManagerRequirementsPath: string;
-  readonly selectedGpu?: string;
+  readonly selectedDevice?: string;
   uvPty: pty.IPty | undefined;
 
   get uvPtyInstance() {
@@ -51,10 +51,10 @@ export class VirtualEnvironment {
     return this.uvPty;
   }
 
-  constructor(venvPath: string, selectedGpu: GpuType | undefined, pythonVersion: string = '3.12.4') {
+  constructor(venvPath: string, selectedDevice: TorchDeviceType | undefined, pythonVersion: string = '3.12.4') {
     this.venvRootPath = venvPath;
     this.pythonVersion = pythonVersion;
-    this.selectedGpu = selectedGpu;
+    this.selectedDevice = selectedDevice;
 
     this.venvPath = path.join(venvPath, '.venv'); // uv defaults to .venv
     const resourcesPath = app.isPackaged ? path.join(process.resourcesPath) : path.join(app.getAppPath(), 'assets');
@@ -95,7 +95,7 @@ export class VirtualEnvironment {
     function compiledRequirements() {
       if (process.platform === 'darwin') return 'macos';
       if (process.platform === 'win32') {
-        return DesktopConfig.devCpuMode || selectedGpu === 'cpu' ? 'windows_cpu' : 'windows_nvidia';
+        return DesktopConfig.devCpuMode || selectedDevice === 'cpu' ? 'windows_cpu' : 'windows_nvidia';
       }
     }
   }
@@ -132,7 +132,7 @@ export class VirtualEnvironment {
   }
 
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
-    if (this.selectedGpu === 'unsupported') {
+    if (this.selectedDevice === 'unsupported') {
       log.info('User elected to manually configure their environment.  Skipping python configuration.');
       return;
     }
@@ -329,13 +329,13 @@ export class VirtualEnvironment {
   }
 
   private async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
-    const { selectedGpu } = this;
+    const { selectedDevice } = this;
 
-    if (selectedGpu === 'cpu') {
+    if (selectedDevice === 'cpu') {
       // CPU mode
       log.info('Installing PyTorch CPU');
       await this.runUvCommandAsync(['pip', 'install', 'torch', 'torchvision', 'torchaudio'], callbacks);
-    } else if (selectedGpu === 'nvidia' || process.platform === 'win32') {
+    } else if (selectedDevice === 'nvidia' || process.platform === 'win32') {
       // Win32 default
       log.info('Installing PyTorch CUDA 12.1');
       await this.runUvCommandAsync(
@@ -350,7 +350,7 @@ export class VirtualEnvironment {
         ],
         callbacks
       );
-    } else if (selectedGpu === 'mps' || process.platform === 'darwin') {
+    } else if (selectedDevice === 'mps' || process.platform === 'darwin') {
       // macOS default
       log.info('Installing PyTorch Nightly for macOS.');
       await this.runUvCommandAsync(
