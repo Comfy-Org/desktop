@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testMatch: 'src/__tests__/e2e/*.test.ts',
-  timeout: 1000000,
+  testDir: './tests/integration',
+  /* Run local instance before starting the tests */
+  globalSetup: require.resolve('./playwright.setup'),
 });

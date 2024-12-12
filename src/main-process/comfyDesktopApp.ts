@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog, ipcMain, type Point } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
@@ -9,13 +9,13 @@ import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'fs';
-import { InstallOptions } from '../preload';
+import { InstallOptions, type ElectronContextMenuOptions } from '../preload';
 import path from 'path';
 import { getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
-import { Terminal } from '../terminal';
+import { Terminal } from '../shell/terminal';
 import { DesktopConfig } from '../store/desktopConfig';
 import { InstallationValidator } from '../install/installationValidator';
 import { restoreCustomNodes } from '../services/backup';
@@ -95,6 +95,9 @@ export class ComfyDesktopApp {
   }
 
   registerIPCHandlers(): void {
+    ipcMain.on(IPC_CHANNELS.SHOW_CONTEXT_MENU, (_event, options?: ElectronContextMenuOptions) => {
+      this.appWindow.showSystemContextMenu(options);
+    });
     ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
       this.appWindow.openDevTools();
     });
@@ -159,6 +162,7 @@ export class ComfyDesktopApp {
         if (installWizard.shouldMigrateCustomNodes) {
           store.set('migrateCustomNodes', installWizard.migrationSource);
         }
+        appWindow.maximize();
         resolve(installWizard.basePath);
       });
     });

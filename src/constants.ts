@@ -32,6 +32,7 @@ export const IPC_CHANNELS = {
   INSTALL_COMFYUI: 'install-comfyui',
   SHOW_TOAST: 'show-toast',
   LOADED: 'loaded',
+  SHOW_CONTEXT_MENU: 'show-context-menu',
 } as const;
 
 export enum ProgressStatus {

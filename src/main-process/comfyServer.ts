@@ -75,6 +75,7 @@ export class ComfyServer {
       'front-end-root': this.webRootPath,
       'extra-model-paths-config': ComfyServerConfig.configPath,
       port: this.serverArgs.port.toString(),
+      listen: this.serverArgs.host,
     };
   }
 
@@ -90,8 +91,8 @@ export class ComfyServer {
 
   get launchArgs() {
     return ComfyServer.buildLaunchArgs(this.mainScriptPath, {
-      ...this.serverArgs.extraServerArgs,
       ...this.coreLaunchArgs,
+      ...this.serverArgs.extraServerArgs,
     });
   }
 
