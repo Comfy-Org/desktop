@@ -24,4 +24,6 @@ export type DesktopSettings = {
    * Allows manual override of some install behaviour.
    */
   detectedGpu?: GpuType;
+  /** The GPU installation mode that was selected during installation. */
+  selectedGpu?: GpuType;
 };

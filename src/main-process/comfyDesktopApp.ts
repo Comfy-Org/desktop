@@ -169,6 +169,7 @@ export class ComfyDesktopApp {
         const installWizard = new InstallWizard(installOptions);
         const { store } = DesktopConfig;
         store.set('basePath', installWizard.basePath);
+        store.set('selectedGpu', installOptions.gpu);
 
         await installWizard.install();
         store.set('installState', 'installed');
@@ -198,7 +199,11 @@ export class ComfyDesktopApp {
     DownloadManager.getInstance(this.appWindow!, getModelsDirectory(this.basePath));
 
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
-    const virtualEnvironment = new VirtualEnvironment(this.basePath);
+
+    const { store } = DesktopConfig;
+    const selectedGpu = store.get('selectedGpu');
+    const virtualEnvironment = new VirtualEnvironment(this.basePath, selectedGpu);
+
     await virtualEnvironment.create({
       onStdout: (data) => {
         log.info(data);
@@ -209,7 +214,7 @@ export class ComfyDesktopApp {
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     });
-    const { store } = DesktopConfig;
+
     if (!store.get('Comfy-Desktop.RestoredCustomNodes', false)) {
       try {
         await restoreCustomNodes(virtualEnvironment, this.appWindow);
