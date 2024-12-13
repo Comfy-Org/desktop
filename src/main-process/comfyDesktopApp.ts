@@ -16,7 +16,7 @@ import { DownloadManager } from '../models/DownloadManager';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../shell/terminal';
-import { DesktopConfig } from '../store/desktopConfig';
+import { useDesktopConfig } from '../store/desktopConfig';
 import { InstallationValidator } from '../install/installationValidator';
 import { restoreCustomNodes } from '../services/backup';
 
@@ -136,7 +136,7 @@ export class ComfyDesktopApp {
     });
     // Config
     ipcMain.handle(IPC_CHANNELS.GET_GPU, async (_event): Promise<TorchDeviceType | undefined> => {
-      return await DesktopConfig.getAsync('detectedGpu');
+      return await useDesktopConfig().getAsync('detectedGpu');
     });
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (_event): Promise<boolean> => {
@@ -152,7 +152,7 @@ export class ComfyDesktopApp {
    */
   static async install(appWindow: AppWindow): Promise<string> {
     const validation = await validateHardware();
-    if (typeof validation?.gpu === 'string') DesktopConfig.store.set('detectedGpu', validation.gpu);
+    if (typeof validation?.gpu === 'string') useDesktopConfig().set('detectedGpu', validation.gpu);
 
     if (!validation.isValid) {
       await appWindow.loadRenderer('not-supported');
@@ -164,16 +164,15 @@ export class ComfyDesktopApp {
     return new Promise<string>((resolve) => {
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
         const installWizard = new InstallWizard(installOptions);
-        const { store } = DesktopConfig;
-        store.set('basePath', installWizard.basePath);
+        useDesktopConfig().set('basePath', installWizard.basePath);
 
         const { device } = installOptions;
         if (device !== undefined) {
-          store.set('selectedDevice', device);
+          useDesktopConfig().set('selectedDevice', device);
         }
 
         await installWizard.install();
-        store.set('installState', 'installed');
+        useDesktopConfig().set('installState', 'installed');
         appWindow.maximize();
         resolve(installWizard.basePath);
       });
@@ -201,8 +200,8 @@ export class ComfyDesktopApp {
 
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
 
-    const { store } = DesktopConfig;
-    const selectedDevice = store.get('selectedDevice');
+    const config = useDesktopConfig();
+    const selectedDevice = config.get('selectedDevice');
     const virtualEnvironment = new VirtualEnvironment(this.basePath, selectedDevice);
 
     await virtualEnvironment.create({
@@ -216,13 +215,13 @@ export class ComfyDesktopApp {
       },
     });
 
-    if (!store.get('Comfy-Desktop.RestoredCustomNodes', false)) {
+    if (!config.get('Comfy-Desktop.RestoredCustomNodes', false)) {
       try {
         await restoreCustomNodes(virtualEnvironment, this.appWindow);
-        store.set('Comfy-Desktop.RestoredCustomNodes', true);
+        config.set('Comfy-Desktop.RestoredCustomNodes', true);
       } catch (error) {
         log.error('Failed to restore custom nodes:', error);
-        store.set('Comfy-Desktop.RestoredCustomNodes', false);
+        config.set('Comfy-Desktop.RestoredCustomNodes', false);
       }
     }
 
@@ -233,9 +232,8 @@ export class ComfyDesktopApp {
   }
 
   static async create(appWindow: AppWindow): Promise<ComfyDesktopApp> {
-    const { store } = DesktopConfig;
     // Migrate settings from old version if required
-    const installState = store.get('installState') ?? (await ComfyDesktopApp.migrateInstallState());
+    const installState = useDesktopConfig().get('installState') ?? (await ComfyDesktopApp.migrateInstallState());
 
     // Fresh install
     const loadedPath = installState === undefined ? undefined : await ComfyDesktopApp.loadBasePath();
@@ -256,10 +254,10 @@ export class ComfyDesktopApp {
     const basePath = await ComfyDesktopApp.loadBasePath();
 
     // Migrate config
-    const { store } = DesktopConfig;
+    const config = useDesktopConfig();
     const upgraded = 'upgraded';
-    store.set('installState', upgraded);
-    store.set('basePath', basePath);
+    config.set('installState', upgraded);
+    config.set('basePath', basePath);
     return upgraded;
   }
 

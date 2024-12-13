@@ -5,7 +5,7 @@ import { AppWindowSettings } from '../store';
 import log from 'electron-log/main';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
-import { DesktopConfig } from '../store/desktopConfig';
+import { useDesktopConfig } from '../store/desktopConfig';
 import type { ElectronContextMenuOptions } from '../preload';
 
 /**
@@ -24,7 +24,7 @@ export class AppWindow {
   private editMenu?: Menu;
 
   public constructor() {
-    const installed = DesktopConfig.store.get('installState') === 'installed';
+    const installed = useDesktopConfig().get('installState') === 'installed';
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = installed ? primaryDisplay.workAreaSize : { width: 1024, height: 768 };
     const store = this.loadWindowStore();

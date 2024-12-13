@@ -17,11 +17,6 @@ export function useDesktopConfig() {
 
 /** Handles loading of electron-store config, pre-window errors, and provides a non-null interface for the store. */
 export class DesktopConfig {
-  /** @deprecated */
-  static get store() {
-    return current.#store;
-  }
-
   #store: ElectronStore<DesktopSettings>;
 
   private constructor(store: ElectronStore<DesktopSettings>) {
@@ -89,11 +84,11 @@ export class DesktopConfig {
    * @param value The value to be saved.  Must be valid.
    * @returns A promise that resolves on successful save, or rejects with the first caught error.
    */
-  static async setAsync<Key extends keyof DesktopSettings>(key: Key, value: DesktopSettings[Key]): Promise<void> {
+  async setAsync<Key extends keyof DesktopSettings>(key: Key, value: DesktopSettings[Key]): Promise<void> {
     return new Promise((resolve, reject) => {
       log.info(`Saving setting: [${key}]`, value);
       try {
-        DesktopConfig.store.set(key, value);
+        this.#store.set(key, value);
         resolve();
       } catch (error) {
         reject(error);
@@ -102,10 +97,10 @@ export class DesktopConfig {
   }
 
   /** @inheritdoc {@link ElectronStore.get} */
-  static async getAsync<Key extends keyof DesktopSettings>(key: Key): Promise<DesktopSettings[Key]> {
+  async getAsync<Key extends keyof DesktopSettings>(key: Key): Promise<DesktopSettings[Key]> {
     return new Promise((resolve, reject) => {
       try {
-        resolve(DesktopConfig.store.get(key));
+        resolve(this.#store.get(key));
       } catch (error) {
         reject(error);
       }

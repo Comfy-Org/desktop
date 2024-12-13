@@ -9,7 +9,7 @@ export type AppWindowSettings = {
 };
 
 export type DesktopSettings = {
-  basePath?: string;
+  basePath?: string | null;
   /**
    * The state of the installation.
    * - `started`: The installation has started.
@@ -25,4 +25,5 @@ export type DesktopSettings = {
   detectedGpu?: GpuType;
   /** The pytorch device that the user selected during installation. */
   selectedDevice?: TorchDeviceType;
+  'Comfy-Desktop.RestoredCustomNodes': boolean;
 };
