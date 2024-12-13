@@ -54,7 +54,7 @@ export class AppWindow {
 
     // macOS requires different handling to linux / win32
     const customChrome: Pick<Electron.BrowserWindowConstructorOptions, 'titleBarStyle' | 'titleBarOverlay'> =
-      process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') !== 'default'
+      process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom'
         ? {
             titleBarStyle: 'hidden',
             titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
@@ -272,7 +272,7 @@ export class AppWindow {
   }
 
   changeTheme(options: TitleBarOverlayOptions): void {
-    if (process.platform === 'darwin' || useDesktopConfig().get('windowStyle') === 'default') return;
+    if (process.platform === 'darwin' || useDesktopConfig().get('windowStyle') !== 'custom') return;
 
     if (options.height) options.height = Math.round(options.height);
     if (!options.height) delete options.height;
