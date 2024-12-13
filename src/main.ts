@@ -41,12 +41,15 @@ if (!gotTheLock) {
   app.on('ready', async () => {
     log.debug('App ready');
 
-    const store = await DesktopConfig.load(shell);
-    if (store) {
-      startApp();
-    } else {
+    try {
+      const store = await DesktopConfig.load(shell);
+      if (!store) throw new Error('Unknown error loading app config on startup.');
+    } catch (error) {
+      dialog.showErrorBox('User Data', `Unknown error whilst writing to user data folder:\n\n${error}`);
       app.exit(20);
     }
+
+    await startApp();
   });
 }
 

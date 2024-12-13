@@ -73,7 +73,7 @@ export class DesktopConfig {
       } else {
         // Crash: Unknown filesystem error, permission denied on user data folder, etc
         log.error(`Unknown error whilst loading configuration file: ${configFilePath}`, error);
-        dialog.showErrorBox('User Data', `Unknown error whilst writing to user data folder:\n\n${configFilePath}`);
+        throw new Error(configFilePath);
       }
     }
   }
