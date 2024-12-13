@@ -1,4 +1,16 @@
-import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem, type Point } from 'electron';
+import {
+  BrowserWindow,
+  screen,
+  app,
+  shell,
+  ipcMain,
+  Tray,
+  Menu,
+  dialog,
+  MenuItem,
+  nativeTheme,
+  type TitleBarOverlayOptions,
+} from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { AppWindowSettings } from '../store';
@@ -18,6 +30,10 @@ export class AppWindow {
   private store: Store<AppWindowSettings>;
   private messageQueue: Array<{ channel: string; data: any }> = [];
   private rendererReady: boolean = false;
+  /** Default dark mode config for system window overlay (min/max/close window). */
+  private darkOverlay = { color: '#00000000', symbolColor: '#ddd' };
+  /** Default light mode config for system window overlay (min/max/close window). */
+  private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
   /** The application menu. */
   private menu: Electron.Menu | null;
   /** The "edit" menu - cut/copy/paste etc. */
@@ -36,6 +52,15 @@ export class AppWindow {
     const storedX = store.get('windowX');
     const storedY = store.get('windowY');
 
+    // macOS requires different handling to linux / win32
+    const customChrome: Pick<Electron.BrowserWindowConstructorOptions, 'titleBarStyle' | 'titleBarOverlay'> =
+      process.platform !== 'darwin' && DesktopConfig.store.get('windowStyle') === 'custom'
+        ? {
+            titleBarStyle: 'hidden',
+            titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
+          }
+        : {};
+
     this.window = new BrowserWindow({
       title: 'ComfyUI',
       width: storedWidth,
@@ -52,6 +77,7 @@ export class AppWindow {
         devTools: true,
       },
       autoHideMenuBar: true,
+      ...customChrome,
     });
 
     if (!installed && storedX === undefined) this.window.center();
@@ -230,6 +256,14 @@ export class AppWindow {
         }
       }
     });
+  }
+
+  changeTheme(options: TitleBarOverlayOptions): void {
+    if (process.platform === 'darwin' || DesktopConfig.store.get('windowStyle') !== 'custom') return;
+
+    if (options.height) options.height = Math.round(options.height);
+    if (!options.height) delete options.height;
+    this.window.setTitleBarOverlay(options);
   }
 
   showSystemContextMenu(options?: ElectronContextMenuOptions): void {
