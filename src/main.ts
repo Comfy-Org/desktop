@@ -1,5 +1,5 @@
 import { IPC_CHANNELS, DEFAULT_SERVER_ARGS, ProgressStatus } from './constants';
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog, ipcMain, shell } from 'electron';
 import log from 'electron-log/main';
 import { findAvailablePort } from './utils';
 import dotenv from 'dotenv';
@@ -41,7 +41,7 @@ if (!gotTheLock) {
   app.on('ready', async () => {
     log.debug('App ready');
 
-    const store = await DesktopConfig.load();
+    const store = await DesktopConfig.load(shell);
     if (store) {
       startApp();
     } else {

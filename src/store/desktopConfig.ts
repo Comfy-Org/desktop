@@ -1,6 +1,6 @@
 import log from 'electron-log/main';
 import ElectronStore from 'electron-store';
-import { app, dialog, shell } from 'electron';
+import { app, dialog } from 'electron';
 import path from 'node:path';
 import fs from 'fs/promises';
 import type { DesktopSettings } from '.';
@@ -16,6 +16,7 @@ export class DesktopConfig {
   }
 
   static async load(
+    shell: Electron.Shell,
     options?: ConstructorParameters<typeof ElectronStore<DesktopSettings>>[0]
   ): Promise<ElectronStore<DesktopSettings> | undefined> {
     try {
@@ -44,7 +45,7 @@ export class DesktopConfig {
             await tryDeleteConfigFile(configFilePath);
 
             // Causing a stack overflow from this recursion would take immense patience.
-            return DesktopConfig.load(options);
+            return DesktopConfig.load(shell, options);
           }
         }
 
