@@ -6,23 +6,47 @@ import fs from 'fs/promises';
 import type { DesktopSettings } from '.';
 import type { TorchDeviceType } from '../preload';
 
+/** Backing ref for the singleton config instance. */
+let current: DesktopConfig;
+
+/** Temporary service locator. DesktopConfig.load() must be called before access. */
+export function useDesktopConfig() {
+  if (!current) throw new Error('Cannot access store before initialization.');
+  return current;
+}
+
 /** Handles loading of electron-store config, pre-window errors, and provides a non-null interface for the store. */
 export class DesktopConfig {
-  static #store: ElectronStore<DesktopSettings> | undefined;
-  static get store(): ElectronStore<DesktopSettings> {
-    const store = this.#store;
-    if (!store) throw new Error('Cannot access store before initialization.');
-    return store;
+  /** @deprecated */
+  static get store() {
+    return current.#store;
+  }
+
+  #store: ElectronStore<DesktopSettings>;
+
+  private constructor(store: ElectronStore<DesktopSettings>) {
+    this.#store = store;
+  }
+
+  /** @inheritdoc {@link ElectronStore.get} */
+  get<Key extends keyof DesktopSettings>(key: Key, defaultValue?: Required<DesktopSettings>[Key]) {
+    return defaultValue === undefined ? this.#store.get(key) : this.#store.get(key, defaultValue);
+  }
+
+  /** @inheritdoc {@link ElectronStore.set} */
+  set<Key extends keyof DesktopSettings>(key: Key, value: Required<DesktopSettings>[Key]) {
+    return value === undefined ? this.#store.delete(key) : this.#store.set(key, value);
   }
 
   static async load(
     shell: Electron.Shell,
     options?: ConstructorParameters<typeof ElectronStore<DesktopSettings>>[0]
-  ): Promise<ElectronStore<DesktopSettings> | undefined> {
+  ): Promise<DesktopConfig | undefined> {
     try {
-      DesktopConfig.#store = new ElectronStore<DesktopSettings>(options);
+      const store = new ElectronStore<DesktopSettings>(options);
+      current = new DesktopConfig(store);
 
-      return DesktopConfig.#store;
+      return current;
     } catch (error) {
       const configFilePath = path.join(getUserDataOrQuit(), `${options?.name ?? 'config'}.json`);
 
