@@ -33,6 +33,12 @@ export class DesktopConfig {
     return value === undefined ? this.#store.delete(key) : this.#store.set(key, value);
   }
 
+  /**
+   * Static factory method. Loads the config from disk.
+   * @param shell Shell environment that can open file and folder views for the user
+   * @param options electron-store options to pass through to the backing store
+   * @throws On unknown error
+   */
   static async load(
     shell: Electron.Shell,
     options?: ConstructorParameters<typeof ElectronStore<DesktopSettings>>[0]
