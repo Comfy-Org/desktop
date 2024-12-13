@@ -16,4 +16,8 @@ export type DesktopSettings = {
    * in the yaml config.
    */
   installState?: 'started' | 'installed' | 'upgraded';
+  /**
+   * The path to the migration installation to migrate custom nodes from
+   */
+  migrateCustomNodes?: string;
 };
