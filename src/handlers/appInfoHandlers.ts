@@ -1,4 +1,4 @@
-import { app, ipcMain, shell } from 'electron';
+import { app, ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../constants';
 /**
  * Handles static information about the app in IPC channels.

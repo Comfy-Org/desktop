@@ -4,7 +4,6 @@ import { app, dialog } from 'electron';
 import path from 'node:path';
 import fs from 'fs/promises';
 import type { DesktopSettings } from '.';
-import type { TorchDeviceType } from '../preload';
 
 /** Backing ref for the singleton config instance. */
 let current: DesktopConfig;

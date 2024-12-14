@@ -6,7 +6,6 @@ import { app } from 'electron';
 import * as pty from 'node-pty';
 import * as os from 'os';
 import { getDefaultShell } from './shell/util';
-import { DesktopConfig } from './store/desktopConfig';
 import type { TorchDeviceType } from './preload';
 
 type ProcessCallbacks = {

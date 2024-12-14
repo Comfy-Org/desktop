@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain, type Point } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';

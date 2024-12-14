@@ -2,7 +2,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus, DownloadStatus } from './constants';
 import type { DownloadState } from './models/DownloadManager';
 import path from 'node:path';
-import { DesktopConfig } from './store/desktopConfig';
 
 /**
  * Open a folder in the system's default file explorer.
