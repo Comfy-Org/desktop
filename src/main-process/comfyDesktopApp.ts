@@ -83,7 +83,7 @@ export class ComfyDesktopApp {
       }));
 
       // Combine all GPU info into a single object
-      const allGpuInfo = Object.assign({}, ...gpuInfo);
+      const allGpuInfo = { ...gpuInfo };
       // Set Sentry context with all GPU information
       Sentry.setContext('gpus', allGpuInfo);
     } catch (e) {
