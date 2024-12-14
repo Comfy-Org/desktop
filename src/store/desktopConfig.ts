@@ -36,6 +36,7 @@ export class DesktopConfig {
    * Static factory method. Loads the config from disk.
    * @param shell Shell environment that can open file and folder views for the user
    * @param options electron-store options to pass through to the backing store
+   * @returns The newly created instance, or `undefined` on error.
    * @throws On unknown error
    */
   static async load(
