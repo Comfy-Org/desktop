@@ -15,10 +15,6 @@ export class DesktopConfig {
     return store;
   }
 
-  static get gpu(): TorchDeviceType | undefined {
-    return DesktopConfig.store.get('detectedGpu');
-  }
-
   static async load(
     options?: ConstructorParameters<typeof ElectronStore<DesktopSettings>>[0]
   ): Promise<ElectronStore<DesktopSettings> | undefined> {
