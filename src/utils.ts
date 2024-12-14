@@ -8,7 +8,7 @@ import { promisify } from 'node:util';
 import log from 'electron-log/main';
 import type { GpuType } from './preload';
 
-export const ansiCodes = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+export const ansiCodes = /[\u001B\u009B][#();?[]*(?:\d{1,4}(?:;\d{0,4})*)?[\d<=>A-ORZcf-nqry]/g;
 
 export async function pathAccessible(path: string): Promise<boolean> {
   try {
@@ -82,7 +82,7 @@ export async function rotateLogFiles(logDir: string, baseName: string, maxFiles 
     }
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replaceAll(/[.:]/g, '-');
   const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
   await fsPromises.rename(currentLogPath, newLogPath);
 }

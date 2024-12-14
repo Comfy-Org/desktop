@@ -288,9 +288,8 @@ export class ComfyDesktopApp {
         return null;
       case 'notFound':
         return null;
-      case 'error':
       default:
-        // Explain and quit
+        // 'error': Explain and quit
         // TODO: Support link?  Something?
         await InstallationValidator.showInvalidFileAndQuit(ComfyServerConfig.configPath, {
           message: `Unable to read the YAML configuration file.  Please ensure this file is available and can be read:
@@ -302,7 +301,7 @@ If this problem persists, back up and delete the config file, then restart the a
           defaultId: 0,
           cancelId: 1,
         });
-        throw new Error(/* Unreachable. */);
+        throw new Error('Unreachable');
     }
   }
 

@@ -164,7 +164,7 @@ export class ComfyServer {
       // Set up a timeout in case the process doesn't exit
       const timeout = setTimeout(() => {
         reject(new Error('Timeout: Python server did not exit within 10 seconds'));
-      }, 10000);
+      }, 10_000);
 
       // Listen for the 'exit' event
       this.comfyServerProcess.once('exit', (code, signal) => {

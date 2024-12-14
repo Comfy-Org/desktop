@@ -71,7 +71,7 @@ const electronAPI = {
     return ipcRenderer.invoke(IPC_CHANNELS.IS_PACKAGED);
   }, //Emulates app.ispackaged in renderer
   restartApp: (customMessage?: string, delay?: number): void => {
-    console.log('Sending restarting app message to main process with custom message: ', customMessage);
+    console.log('Sending restarting app message to main process with custom message:', customMessage);
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
   reinstall: () => {
