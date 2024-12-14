@@ -98,7 +98,7 @@ export class ComfyServer {
 
   async start() {
     await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
-    return new Promise<void>(async (resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });
       comfyUILog.transports.file.fileName = 'comfyui.log';
 
@@ -136,19 +136,19 @@ export class ComfyServer {
 
       this.comfyServerProcess = comfyServerProcess;
 
-      try {
-        await waitOn({
-          resources: [`${this.baseUrl}/queue`],
-          timeout: ComfyServer.MAX_FAIL_WAIT,
-          interval: ComfyServer.CHECK_INTERVAL,
+      waitOn({
+        resources: [`${this.baseUrl}/queue`],
+        timeout: ComfyServer.MAX_FAIL_WAIT,
+        interval: ComfyServer.CHECK_INTERVAL,
+      })
+        .then(() => {
+          log.info('Python server is ready');
+          resolve();
+        })
+        .catch((error) => {
+          log.error('Server failed to start:', error);
+          reject(new Error('Python Server Failed To Start Within Timeout.'));
         });
-
-        log.info('Python server is ready');
-        resolve();
-      } catch (error) {
-        log.error('Server failed to start:', error);
-        reject('Python Server Failed To Start Within Timeout.');
-      }
     });
   }
 

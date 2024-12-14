@@ -161,8 +161,8 @@ export class ComfyDesktopApp {
       await appWindow.loadRenderer('welcome');
     }
 
-    return new Promise<string>((resolve) => {
-      ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, async (event, installOptions: InstallOptions) => {
+    return new Promise<string>((resolve, reject) => {
+      ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, (_event, installOptions: InstallOptions) => {
         const installWizard = new InstallWizard(installOptions);
         useDesktopConfig().set('basePath', installWizard.basePath);
 
@@ -171,27 +171,31 @@ export class ComfyDesktopApp {
           useDesktopConfig().set('selectedDevice', device);
         }
 
-        await installWizard.install();
-        useDesktopConfig().set('installState', 'installed');
-        appWindow.maximize();
-        resolve(installWizard.basePath);
+        installWizard
+          .install()
+          .then(() => {
+            useDesktopConfig().set('installState', 'installed');
+            appWindow.maximize();
+            resolve(installWizard.basePath);
+          })
+          .catch((reason) => {
+            reject(reason);
+          });
       });
     });
   }
 
   async startComfyServer(serverArgs: ServerArgs) {
-    app.on('before-quit', async () => {
+    app.on('before-quit', () => {
       if (!this.comfyServer) {
         return;
       }
 
-      try {
-        log.info('Before-quit: Killing Python server');
-        await this.comfyServer.kill();
-      } catch (error) {
+      log.info('Before-quit: Killing Python server');
+      this.comfyServer.kill().catch((error) => {
         log.error('Python server did not exit properly');
         log.error(error);
-      }
+      });
     });
     log.info('Server start');
     await this.appWindow.loadRenderer('server-start');
