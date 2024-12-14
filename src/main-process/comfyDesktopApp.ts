@@ -86,8 +86,8 @@ export class ComfyDesktopApp {
       const allGpuInfo = { ...gpuInfo };
       // Set Sentry context with all GPU information
       Sentry.setContext('gpus', allGpuInfo);
-    } catch (e) {
-      log.error('Error getting GPU info: ', e);
+    } catch (error) {
+      log.error('Error getting GPU info: ', error);
     }
   }
 
@@ -136,8 +136,8 @@ export class ComfyDesktopApp {
               comfyorigin: 'core',
             },
           });
-        } catch (err) {
-          log.error('Failed to send error to Sentry:', err);
+        } catch (error_) {
+          log.error('Failed to send error to Sentry:', error_);
           return null;
         }
       }
@@ -186,9 +186,7 @@ export class ComfyDesktopApp {
             appWindow.maximize();
             resolve(installWizard.basePath);
           })
-          .catch((reason) => {
-            reject(reason);
-          });
+          .catch(reject);
       });
     });
   }

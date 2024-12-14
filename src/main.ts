@@ -41,8 +41,8 @@ if (!gotTheLock) {
   app.on('ready', () => {
     log.debug('App ready');
 
-    startApp().catch((reason) => {
-      log.error('Unhandled exception in app startup', reason);
+    startApp().catch((error) => {
+      log.error('Unhandled exception in app startup', error);
       app.exit(2020);
     });
   });

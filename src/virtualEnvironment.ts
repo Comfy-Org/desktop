@@ -315,8 +315,8 @@ export class VirtualEnvironment {
         resolve({ exitCode: code });
       });
 
-      childProcess.on('error', (err) => {
-        reject(err);
+      childProcess.on('error', (error) => {
+        reject(error);
       });
     });
   }
