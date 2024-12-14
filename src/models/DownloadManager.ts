@@ -223,7 +223,7 @@ export class DownloadManager {
   }
 
   getAllDownloads(): DownloadState[] {
-    return Array.from(this.downloads.values())
+    return [...this.downloads.values()]
       .filter((download) => download.item !== null)
       .map((download) => ({
         url: download.url,

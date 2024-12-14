@@ -80,13 +80,13 @@ export class ComfyServer {
   }
 
   static buildLaunchArgs(mainScriptPath: string, args: Record<string, string>) {
-    return [mainScriptPath].concat(
-      Object.entries(args)
-        .map(([key, value]) => [`--${key}`, value])
-        .flat()
+    return [
+      mainScriptPath,
+      ...Object.entries(args)
+        .flatMap(([key, value]) => [`--${key}`, value])
         // Empty string values are ignored. e.g. { cpu: '' } => '--cpu'
-        .filter((value: string) => value !== '')
-    );
+        .filter((value: string) => value !== ''),
+    ];
   }
 
   get launchArgs() {

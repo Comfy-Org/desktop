@@ -155,10 +155,11 @@ export class ComfyServerConfig {
   }
 
   public static getBaseModelPathsFromRepoPath(repoPath: string): ModelPaths {
-    return knownModelKeys.reduce((acc, key) => {
-      acc[key] = path.join(repoPath, 'models', key) + path.sep;
-      return acc;
-    }, {} as ModelPaths);
+    const paths: ModelPaths = {};
+    for (const key of knownModelKeys) {
+      paths[key] = path.join(repoPath, 'models', key) + path.sep;
+    }
+    return paths;
   }
 
   /**

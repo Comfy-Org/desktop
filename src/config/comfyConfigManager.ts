@@ -70,7 +70,7 @@ export class ComfyConfigManager {
   }
 
   static createNestedDirectories(basePath: string, structure: DirectoryStructure): void {
-    structure.forEach((item) => {
+    for (const item of structure) {
       if (typeof item === 'string') {
         const dirPath = path.join(basePath, item);
         this.createDirIfNotExists(dirPath);
@@ -88,7 +88,7 @@ export class ComfyConfigManager {
       } else {
         log.warn(`Invalid directory structure item: ${JSON.stringify(item)}`);
       }
-    });
+    }
   }
 
   /**
