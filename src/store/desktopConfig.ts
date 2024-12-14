@@ -14,15 +14,6 @@ export function useDesktopConfig() {
   return current;
 }
 
-/** Backing ref for the singleton config instance. */
-let current: DesktopConfig;
-
-/** Temporary service locator. DesktopConfig.load() must be called before access. */
-export function useDesktopConfig() {
-  if (!current) throw new Error('Cannot access store before initialization.');
-  return current;
-}
-
 /** Handles loading of electron-store config, pre-window errors, and provides a non-null interface for the store. */
 export class DesktopConfig {
   #store: ElectronStore<DesktopSettings>;
