@@ -53,6 +53,7 @@ async function startApp() {
     const store = await DesktopConfig.load(shell);
     if (!store) throw new Error('Unknown error loading app config on startup.');
   } catch (error) {
+    log.error('Unhandled exception during config load', error);
     dialog.showErrorBox('User Data', `Unknown error whilst writing to user data folder:\n\n${error}`);
     app.exit(20);
     return;
@@ -99,11 +100,12 @@ async function startApp() {
       appWindow.sendServerStartProgress(ProgressStatus.READY);
       await appWindow.loadComfyUI({ host, port, extraServerArgs });
     } catch (error) {
+      log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);
     }
   } catch (error) {
-    log.error('Fatal error occurred during app startup.', error);
+    log.error('Fatal error occurred during app pre-startup.', error);
     app.exit(2024);
   }
 }
