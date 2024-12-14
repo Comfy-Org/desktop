@@ -38,22 +38,26 @@ if (!gotTheLock) {
   log.info('App already running. Exiting...');
   app.quit();
 } else {
-  app.on('ready', async () => {
+  app.on('ready', () => {
     log.debug('App ready');
 
-    try {
-      const store = await DesktopConfig.load(shell);
-      if (!store) throw new Error('Unknown error loading app config on startup.');
-    } catch (error) {
-      dialog.showErrorBox('User Data', `Unknown error whilst writing to user data folder:\n\n${error}`);
-      app.exit(20);
-    }
-
-    await startApp();
+    startApp().catch((reason) => {
+      log.error('Unhandled exception in app startup', reason);
+      app.exit(2020);
+    });
   });
 }
 
 async function startApp() {
+  try {
+    const store = await DesktopConfig.load(shell);
+    if (!store) throw new Error('Unknown error loading app config on startup.');
+  } catch (error) {
+    dialog.showErrorBox('User Data', `Unknown error whilst writing to user data folder:\n\n${error}`);
+    app.exit(20);
+    return;
+  }
+
   try {
     const appWindow = new AppWindow();
     appWindow.onClose(() => {
