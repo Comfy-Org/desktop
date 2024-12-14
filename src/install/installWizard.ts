@@ -63,6 +63,12 @@ export class InstallWizard {
       'Comfy-Desktop.AutoUpdate': this.installOptions.autoUpdate,
       'Comfy-Desktop.SendStatistics': this.installOptions.allowMetrics,
     };
+
+    if (this.installOptions.device === 'cpu') {
+      settings['Comfy.Server.LaunchArgs'] ??= {};
+      settings['Comfy.Server.LaunchArgs']['cpu'] = '';
+    }
+
     const settingsJson = JSON.stringify(settings, null, 2);
     fs.writeFileSync(settingsPath, settingsJson);
     log.info(`Wrote settings to ${settingsPath}: ${settingsJson}`);
