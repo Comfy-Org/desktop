@@ -13,7 +13,8 @@ const openFolder = async (folderPath: string) => {
   ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
 };
 
-export type TorchDeviceType = 'nvidia' | 'mps' | 'cpu' | 'unsupported';
+export type GpuType = 'nvidia' | 'mps' | 'unsupported';
+export type TorchDeviceType = GpuType | 'cpu';
 
 export interface InstallOptions {
   /** Base installation path */
@@ -247,7 +248,7 @@ const electronAPI = {
      * Finds the name of the last detected GPU type.  Detection only runs during installation.
      * @returns The last GPU detected by `validateHardware` - runs during installation
      */
-    getGpu: async (): Promise<TorchDeviceType | undefined> => {
+    getDetectedGpu: async (): Promise<GpuType | undefined> => {
       return await ipcRenderer.invoke(IPC_CHANNELS.GET_GPU);
     },
   },
