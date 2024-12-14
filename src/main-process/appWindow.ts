@@ -103,9 +103,9 @@ export class AppWindow {
     });
   }
 
-  public loadComfyUI(serverArgs: ServerArgs) {
+  public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
-    this.window.loadURL(`http://${host}:${serverArgs.port}`);
+    await this.window.loadURL(`http://${host}:${serverArgs.port}`);
   }
 
   public openDevTools(): void {
@@ -146,7 +146,7 @@ export class AppWindow {
     } else {
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
-      this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
+      await this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
     }
   }
 

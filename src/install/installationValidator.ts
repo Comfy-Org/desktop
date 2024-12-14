@@ -39,7 +39,7 @@ export class InstallationValidator {
           // Failed - try the parent dir
           const parsed = path.parse(file);
           await fs.access(parsed.dir);
-          shell.openPath(parsed.dir);
+          await shell.openPath(parsed.dir);
         } catch (error) {
           // Nothing works.  Log, notify, quit.
           log.error(

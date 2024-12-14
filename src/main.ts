@@ -97,7 +97,7 @@ async function startApp() {
         await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
-      appWindow.loadComfyUI({ host, port, extraServerArgs });
+      await appWindow.loadComfyUI({ host, port, extraServerArgs });
     } catch (error) {
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);

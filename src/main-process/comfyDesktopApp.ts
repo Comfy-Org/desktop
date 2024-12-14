@@ -35,7 +35,7 @@ export class ComfyDesktopApp {
   }
 
   public async initialize(): Promise<void> {
-    this.comfySettings.loadSettings();
+    await this.comfySettings.loadSettings();
     this.registerIPCHandlers();
     this.initializeTodesktop();
     await this.setupGPUContext();
@@ -194,7 +194,7 @@ export class ComfyDesktopApp {
       }
     });
     log.info('Server start');
-    this.appWindow.loadRenderer('server-start');
+    await this.appWindow.loadRenderer('server-start');
 
     DownloadManager.getInstance(this.appWindow!, getModelsDirectory(this.basePath));
 
