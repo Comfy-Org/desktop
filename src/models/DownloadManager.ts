@@ -320,13 +320,24 @@ export class DownloadManager {
   }
 
   private registerIpcHandlers() {
-    ipcMain.handle(IPC_CHANNELS.START_DOWNLOAD, (event, { url, path, filename }) =>
+    interface FileAndPath {
+      filename: string;
+      path: string;
+    }
+    interface DownloadDetails extends FileAndPath {
+      url: string;
+    }
+
+    ipcMain.handle(IPC_CHANNELS.START_DOWNLOAD, (event, { url, path, filename }: DownloadDetails) =>
       this.startDownload(url, path, filename)
     );
     ipcMain.handle(IPC_CHANNELS.PAUSE_DOWNLOAD, (event, url: string) => this.pauseDownload(url));
     ipcMain.handle(IPC_CHANNELS.RESUME_DOWNLOAD, (event, url: string) => this.resumeDownload(url));
     ipcMain.handle(IPC_CHANNELS.CANCEL_DOWNLOAD, (event, url: string) => this.cancelDownload(url));
     ipcMain.handle(IPC_CHANNELS.GET_ALL_DOWNLOADS, () => this.getAllDownloads());
-    ipcMain.handle(IPC_CHANNELS.DELETE_MODEL, (event, { filename, path }) => this.deleteModel(filename, path));
+
+    ipcMain.handle(IPC_CHANNELS.DELETE_MODEL, (event, { filename, path }: FileAndPath) =>
+      this.deleteModel(filename, path)
+    );
   }
 }
