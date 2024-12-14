@@ -71,7 +71,7 @@ export async function rotateLogFiles(logDir: string, baseName: string, maxFiles 
     const files = await fsPromises.readdir(logDir, { withFileTypes: true });
     const names: string[] = [];
 
-    const logFileRegex = new RegExp(`^${baseName}_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.log$`);
+    const logFileRegex = new RegExp(`^${baseName}_\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-\\d{3}Z\\.log$`);
 
     for (const file of files) {
       if (file.isFile() && logFileRegex.test(file.name)) names.push(file.name);
