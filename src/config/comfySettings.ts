@@ -40,7 +40,7 @@ export class ComfySettings {
       return;
     }
     try {
-      const fileContent = await fs.readFile(this.filePath, 'utf-8');
+      const fileContent = await fs.readFile(this.filePath, 'utf8');
       this.settings = JSON.parse(fileContent);
     } catch (error) {
       log.error(`Settings file cannot be loaded.`, error);

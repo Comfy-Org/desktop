@@ -197,7 +197,7 @@ export class VirtualEnvironment {
       pythonInterpreterPath,
       args,
       {
-        PYTHONIOENCODING: 'utf-8',
+        PYTHONIOENCODING: 'utf8',
       },
       callbacks
     );
@@ -216,7 +216,7 @@ export class VirtualEnvironment {
       this.pythonInterpreterPath,
       args,
       {
-        PYTHONIOENCODING: 'utf-8',
+        PYTHONIOENCODING: 'utf8',
       },
       callbacks
     );

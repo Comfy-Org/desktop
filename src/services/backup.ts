@@ -12,7 +12,7 @@ import { ansiCodes } from '../utils';
 function parseLogFile(logPath: string): Set<string> {
   console.log('Parsing log file:', logPath);
   const customNodes = new Set<string>();
-  const content = fs.readFileSync(logPath, 'utf-8');
+  const content = fs.readFileSync(logPath, 'utf8');
 
   const lines = content.split('\n');
   for (let i = 0; i < lines.length; i++) {
