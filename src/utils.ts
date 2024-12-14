@@ -99,8 +99,6 @@ interface HardwareValidation {
  */
 export async function validateHardware(): Promise<HardwareValidation> {
   try {
-    if (DesktopConfig.devCpuMode) return { isValid: true, gpu: 'cpu' };
-
     // Only ARM Macs are supported.
     if (process.platform === 'darwin') {
       const cpu = await si.cpu();
