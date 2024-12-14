@@ -1,4 +1,16 @@
-import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem, type Point } from 'electron';
+import {
+  BrowserWindow,
+  screen,
+  app,
+  shell,
+  ipcMain,
+  Tray,
+  Menu,
+  dialog,
+  MenuItem,
+  type Point,
+  ipcRenderer,
+} from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { AppWindowSettings } from '../store';
@@ -7,12 +19,13 @@ import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { DesktopConfig } from '../store/desktopConfig';
 import type { ElectronContextMenuOptions } from '../preload';
+import { EventEmitter } from 'node:stream';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
  * Closes the application when the window is closed.
  */
-export class AppWindow {
+export class AppWindow extends EventEmitter {
   private window: BrowserWindow;
   /** Volatile store containing window config - saves window state between launches. */
   private store: Store<AppWindowSettings>;
@@ -24,6 +37,7 @@ export class AppWindow {
   private editMenu?: Menu;
 
   public constructor() {
+    super();
     const installed = DesktopConfig.store.get('installState') === 'installed';
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = installed ? primaryDisplay.workAreaSize : { width: 1024, height: 768 };
@@ -259,6 +273,17 @@ export class AppWindow {
     }
 
     const contextMenu = Menu.buildFromTemplate([
+      ...(process.platform === 'darwin'
+        ? [
+            {
+              label: 'Check for Updates',
+              click: () => {
+                this.emit(IPC_CHANNELS.CHECK_FOR_UPDATES);
+              },
+            },
+          ]
+        : []),
+
       {
         label: 'Show Comfy Window',
         click: () => {

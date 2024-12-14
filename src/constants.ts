@@ -4,6 +4,7 @@ export const IPC_CHANNELS = {
   RENDERER_READY: 'renderer-ready',
   RESTART_APP: 'restart-app',
   REINSTALL: 'reinstall',
+  CHECK_FOR_UPDATES: 'check-for-updates',
   LOG_MESSAGE: 'log-message',
   OPEN_DIALOG: 'open-dialog',
   DOWNLOAD_PROGRESS: 'download-progress',
@@ -31,6 +32,7 @@ export const IPC_CHANNELS = {
   SHOW_DIRECTORY_PICKER: 'show-directory-picker',
   INSTALL_COMFYUI: 'install-comfyui',
   SHOW_CONTEXT_MENU: 'show-context-menu',
+  GET_OS_PLATFORM: 'get-os-platform',
 } as const;
 
 export enum ProgressStatus {
