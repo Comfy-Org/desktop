@@ -120,20 +120,28 @@ export class ComfyDesktopApp {
       log.info('Reinstalling...');
       this.reinstall();
     });
-    ipcMain.handle(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, async (_event, { error, extras }): Promise<string | null> => {
-      try {
-        return Sentry.captureMessage(error, {
-          level: 'error',
-          extra: { ...extras, comfyUIExecutionError: true },
-          tags: {
-            comfyorigin: 'core',
-          },
-        });
-      } catch (err) {
-        log.error('Failed to send error to Sentry:', err);
-        return null;
+    type SentryErrorDetail = {
+      error: string;
+      extras?: Record<string, unknown>;
+    };
+
+    ipcMain.handle(
+      IPC_CHANNELS.SEND_ERROR_TO_SENTRY,
+      async (_event, { error, extras }: SentryErrorDetail): Promise<string | null> => {
+        try {
+          return Sentry.captureMessage(error, {
+            level: 'error',
+            extra: { ...extras, comfyUIExecutionError: true },
+            tags: {
+              comfyorigin: 'core',
+            },
+          });
+        } catch (err) {
+          log.error('Failed to send error to Sentry:', err);
+          return null;
+        }
       }
-    });
+    );
     // Config
     ipcMain.handle(IPC_CHANNELS.GET_GPU, async (): Promise<TorchDeviceType | undefined> => {
       return await useDesktopConfig().getAsync('detectedGpu');
