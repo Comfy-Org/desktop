@@ -200,7 +200,7 @@ export class ComfyDesktopApp {
     log.info('Server start');
     await this.appWindow.loadRenderer('server-start');
 
-    DownloadManager.getInstance(this.appWindow!, getModelsDirectory(this.basePath));
+    DownloadManager.getInstance(this.appWindow, getModelsDirectory(this.basePath));
 
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
 
