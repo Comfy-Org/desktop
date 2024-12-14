@@ -33,14 +33,14 @@ export class InstallationValidator {
         log.debug(`Attempting to open containing directory: ${parsed.dir}`);
         await fs.access(file);
         shell.showItemInFolder(file);
-      } catch (error) {
+      } catch {
         log.warn(`Could not access file whilst attempting to exit gracefully after a critical error.`, file);
         try {
           // Failed - try the parent dir
           const parsed = path.parse(file);
           await fs.access(parsed.dir);
           await shell.openPath(parsed.dir);
-        } catch (error) {
+        } catch {
           // Nothing works.  Log, notify, quit.
           log.error(
             `Could not read directory containing file, whilst attempting to exit gracefully after a critical error.`

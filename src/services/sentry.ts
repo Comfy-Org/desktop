@@ -56,12 +56,12 @@ class SentryLogging {
           try {
             const record = obj as Record<string, unknown>;
             record[k] = this.filterEvent(record[k]);
-          } catch (error) {
+          } catch {
             // Failed to read/write key
           }
         }
       }
-    } catch (error) {
+    } catch {
       // Failed to enumerate keys
     }
 

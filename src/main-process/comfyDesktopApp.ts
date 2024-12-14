@@ -64,7 +64,7 @@ export class ComfyDesktopApp {
       this.terminal?.resize(cols, rows);
     });
 
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, (_event) => {
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, () => {
       return this.terminal?.restore();
     });
   }
@@ -135,11 +135,11 @@ export class ComfyDesktopApp {
       }
     });
     // Config
-    ipcMain.handle(IPC_CHANNELS.GET_GPU, async (_event): Promise<TorchDeviceType | undefined> => {
+    ipcMain.handle(IPC_CHANNELS.GET_GPU, async (): Promise<TorchDeviceType | undefined> => {
       return await useDesktopConfig().getAsync('detectedGpu');
     });
     // Restart core
-    ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (_event): Promise<boolean> => {
+    ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => {
       if (!this.comfyServer) return false;
       await this.comfyServer?.kill();
       await this.comfyServer.start();

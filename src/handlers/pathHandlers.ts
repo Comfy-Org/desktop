@@ -57,7 +57,7 @@ export class PathHandlers {
           // Check if path is writable
           try {
             fs.accessSync(inputPath, fs.constants.W_OK);
-          } catch (err) {
+          } catch {
             return { isValid: false, error: 'Path is not writable' };
           }
 
