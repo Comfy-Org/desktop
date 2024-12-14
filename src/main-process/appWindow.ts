@@ -248,7 +248,7 @@ export class AppWindow {
       'UI',
       process.platform === 'darwin' ? 'Comfy_Logo_x16_BW.png' : 'Comfy_Logo_x32.png'
     );
-    let tray = new Tray(trayImage);
+    const tray = new Tray(trayImage);
 
     tray.setToolTip('ComfyUI');
 
