@@ -1,6 +1,6 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import * as glob from 'glob';
+import path from 'node:path';
+import fs from 'node:fs';
+import glob from 'glob';
 import { app } from 'electron';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { getAppResourcesPath } from '../install/resourcePaths';

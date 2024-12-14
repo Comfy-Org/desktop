@@ -6,9 +6,9 @@ jest.mock('electron', () => ({
 }));
 
 import { app } from 'electron';
-import path from 'path';
+import path from 'node:path';
 import { ComfyServerConfig } from '../../src/config/comfyServerConfig';
-import * as fsPromises from 'node:fs/promises';
+import fsPromises from 'node:fs/promises';
 
 describe('ComfyServerConfig', () => {
   describe('configPath', () => {

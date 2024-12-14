@@ -1,5 +1,5 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import log from 'electron-log/main';
 
 export const DEFAULT_SETTINGS: ComfySettingsData = {

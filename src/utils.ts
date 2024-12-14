@@ -1,10 +1,10 @@
-import * as net from 'net';
-import * as fsPromises from 'node:fs/promises';
+import net from 'node:net';
+import fsPromises from 'node:fs/promises';
 import path from 'node:path';
-import fs from 'fs';
+import fs from 'node:fs';
 import si from 'systeminformation';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 import log from 'electron-log/main';
 import type { GpuType } from './preload';
 

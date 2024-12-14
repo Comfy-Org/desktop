@@ -1,5 +1,5 @@
-import * as fs from 'node:fs';
-import * as fsPromises from 'node:fs/promises';
+import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
 import log from 'electron-log/main';
 import yaml, { type YAMLParseError } from 'yaml';
 import path from 'node:path';

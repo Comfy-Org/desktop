@@ -3,10 +3,10 @@ import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import type { SystemPaths } from '../preload';
-import fs from 'fs';
+import fs from 'node:fs';
 import si from 'systeminformation';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
-import path from 'path';
+import path from 'node:path';
 
 export class PathHandlers {
   static readonly REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes

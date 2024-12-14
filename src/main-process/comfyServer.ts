@@ -4,11 +4,11 @@ import { VirtualEnvironment } from '../virtualEnvironment';
 import { ansiCodes, rotateLogFiles } from '../utils';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import log from 'electron-log/main';
-import path from 'path';
+import path from 'node:path';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { AppWindow } from './appWindow';
 import waitOn from 'wait-on';
-import { ChildProcess } from 'child_process';
+import { ChildProcess } from 'node:child_process';
 
 export class ComfyServer {
   /**

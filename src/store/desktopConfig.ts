@@ -2,7 +2,7 @@ import log from 'electron-log/main';
 import ElectronStore from 'electron-store';
 import { app, dialog } from 'electron';
 import path from 'node:path';
-import fs from 'fs/promises';
+import fs from 'node:fs/promises';
 import type { DesktopSettings } from '.';
 
 /** Backing ref for the singleton config instance. */

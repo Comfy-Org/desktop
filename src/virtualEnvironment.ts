@@ -1,10 +1,10 @@
-import * as path from 'node:path';
+import path from 'node:path';
 import { spawn, ChildProcess } from 'node:child_process';
 import log from 'electron-log/main';
 import { pathAccessible } from './utils';
 import { app } from 'electron';
-import * as pty from 'node-pty';
-import * as os from 'os';
+import pty from 'node-pty';
+import os from 'node:os';
 import { getDefaultShell } from './shell/util';
 import type { TorchDeviceType } from './preload';
 
