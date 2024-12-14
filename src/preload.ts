@@ -238,13 +238,6 @@ const electronAPI = {
   },
   Config: {
     /**
-     * Controls whether ComfyUI core will start up with the `--cpu` flag.
-     * @param settings An key/value pair object containing all settings to update
-     */
-    setCpuMode: async (enabled: boolean): Promise<void> => {
-      await ipcRenderer.invoke(IPC_CHANNELS.SET_CPU_MODE, enabled);
-    },
-    /**
      * Finds the name of the last detected GPU type.  Detection only runs during installation.
      * @returns The last GPU detected by `validateHardware` - runs during installation
      */

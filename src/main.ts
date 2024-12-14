@@ -73,10 +73,7 @@ async function startApp() {
       SentryLogging.comfyDesktopApp = comfyDesktopApp;
 
       const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
-
-      const useCpuOnly = DesktopConfig.devCpuMode || process.env.COMFYUI_CPU_ONLY === 'true';
-      const cpuOnly: Record<string, string> = useCpuOnly ? { cpu: '' } : {};
-
+      const cpuOnly: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { cpu: '' } : {};
       const extraServerArgs: Record<string, string> = {
         ...comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs'),
         ...cpuOnly,

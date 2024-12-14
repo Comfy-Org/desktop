@@ -135,9 +135,6 @@ export class ComfyDesktopApp {
       }
     });
     // Config
-    ipcMain.handle(IPC_CHANNELS.SET_CPU_MODE, async (_event, enabled: boolean): Promise<void> => {
-      return await DesktopConfig.setAsync('devCpuMode', enabled);
-    });
     ipcMain.handle(IPC_CHANNELS.GET_GPU, async (_event): Promise<TorchDeviceType | undefined> => {
       return await DesktopConfig.getAsync('detectedGpu');
     });
@@ -173,8 +170,6 @@ export class ComfyDesktopApp {
         const { device } = installOptions;
         if (device !== undefined) {
           store.set('selectedDevice', device);
-          if (device === 'cpu') store.set('devCpuMode', true);
-          else store.delete('devCpuMode');
         }
 
         await installWizard.install();

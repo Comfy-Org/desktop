@@ -18,7 +18,6 @@ export type DesktopSettings = {
    * in the yaml config.
    */
   installState?: 'started' | 'installed' | 'upgraded';
-  devCpuMode?: boolean;
   /**
    * The last GPU that was detected during hardware validation.
    * Allows manual override of some install behaviour.

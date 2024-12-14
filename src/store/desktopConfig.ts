@@ -15,10 +15,6 @@ export class DesktopConfig {
     return store;
   }
 
-  static get devCpuMode(): boolean {
-    return DesktopConfig.store.get('devCpuMode') === true;
-  }
-
   static get gpu(): TorchDeviceType | undefined {
     return DesktopConfig.store.get('detectedGpu');
   }

@@ -95,7 +95,7 @@ export class VirtualEnvironment {
     function compiledRequirements() {
       if (process.platform === 'darwin') return 'macos';
       if (process.platform === 'win32') {
-        return DesktopConfig.devCpuMode || selectedDevice === 'cpu' ? 'windows_cpu' : 'windows_nvidia';
+        return selectedDevice === 'cpu' ? 'windows_cpu' : 'windows_nvidia';
       }
     }
   }
