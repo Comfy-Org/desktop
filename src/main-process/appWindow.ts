@@ -16,7 +16,7 @@ export class AppWindow {
   private window: BrowserWindow;
   /** Volatile store containing window config - saves window state between launches. */
   private store: Store<AppWindowSettings>;
-  private messageQueue: Array<{ channel: string; data: any }> = [];
+  private messageQueue: Array<{ channel: string; data: unknown }> = [];
   private rendererReady: boolean = false;
   /** The application menu. */
   private menu: Electron.Menu | null;
@@ -69,7 +69,7 @@ export class AppWindow {
     return this.rendererReady;
   }
 
-  public send(channel: string, data: any): void {
+  public send(channel: string, data: unknown): void {
     if (!this.isReady()) {
       this.messageQueue.push({ channel, data });
       return;
