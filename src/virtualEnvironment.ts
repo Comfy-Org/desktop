@@ -288,12 +288,12 @@ export class VirtualEnvironment {
     });
 
     if (callbacks) {
-      childProcess.stdout?.on('data', (data) => {
+      childProcess.stdout?.on('data', (data: Buffer) => {
         console.log(data.toString());
         callbacks.onStdout?.(data.toString());
       });
 
-      childProcess.stderr?.on('data', (data) => {
+      childProcess.stderr?.on('data', (data: Buffer) => {
         console.log(data.toString());
         callbacks.onStderr?.(data.toString());
       });
