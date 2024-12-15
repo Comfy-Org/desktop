@@ -1,8 +1,8 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import { ComfyConfigManager, DirectoryStructure } from '../../src/config/comfyConfigManager';
 
 // Mock the fs module
-jest.mock('fs');
+jest.mock('node:fs');
 jest.mock('electron-log/main', () => ({
   info: jest.fn(),
   error: jest.fn(),
