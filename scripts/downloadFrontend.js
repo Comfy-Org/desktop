@@ -1,5 +1,5 @@
-import * as axios from 'axios'
-import * as extract from 'extract-zip'
+import axios from 'axios'
+import extract from 'extract-zip'
 import fs from 'fs/promises'
 import path from 'path'
 

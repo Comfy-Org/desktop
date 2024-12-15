@@ -1,9 +1,9 @@
 import path from "path"
 import os from 'os'
 import * as fs from 'fs-extra'
-import * as axios from 'axios'
-import * as tar from 'tar'
-import * as extractZip from 'extract-zip'
+import axios from 'axios'
+import tar from 'tar'
+import extractZip from 'extract-zip'
 import packageJson from './getPackage.js'
 
 const uvVer = packageJson.config.uvVersion;
