@@ -1,5 +1,5 @@
-const { execSync } = require('child_process')
-const { readFileSync, writeFileSync } = require('fs')
+import { execSync } from 'child_process'
+import { readFileSync, writeFileSync } from 'fs'
 
 async function main() {
   try {

@@ -1,10 +1,12 @@
-const path = require("path");
-const os = require('os');
-const fs = require('fs-extra');
-const axios = require('axios');
-const tar = require('tar');
-const extractZip = require('extract-zip');
-const uvVer = require('../package.json').config.uvVersion;
+import path from "path"
+import os from 'os'
+import * as fs from 'fs-extra'
+import * as axios from 'axios'
+import * as tar from 'tar'
+import * as extractZip from 'extract-zip'
+import packageJson from './getPackage.js'
+
+const uvVer = packageJson.config.uvVersion;
 
 const options = {
     win32: {

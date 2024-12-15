@@ -1,6 +1,6 @@
-const { execSync } = require('child_process');
-const pkg = require('../package.json');
-const fs = require('fs');
+import * as child_process from 'child_process'
+import pkg from './getPackage.js'
+import fs from 'fs'
 
 function makeAssets(gpuFlag) {
   const baseCommand = [
@@ -17,7 +17,7 @@ function makeAssets(gpuFlag) {
   ].join(' ');
 
   try {
-    execSync(baseCommand, { stdio: 'inherit' });
+    child_process.execSync(baseCommand, { stdio: 'inherit' });
   } catch (error) {
     console.error('Failed to make assets:', error);
     process.exit(1);

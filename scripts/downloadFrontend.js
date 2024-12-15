@@ -1,10 +1,12 @@
-const axios = require('axios');
-const extract = require('extract-zip');
-const fs = require('fs/promises');
-const path = require('path');
+import * as axios from 'axios'
+import * as extract from 'extract-zip'
+import fs from 'fs/promises'
+import path from 'path'
+
+import packageJson from './getPackage.js'
 
 // Example "v1.3.34"
-const version = process.argv[2] || require('../package.json').config.frontendVersion;
+const version = process.argv[2] || packageJson.config.frontendVersion;
 if (!version) {
     console.error('No version specified');
     process.exit(1);
