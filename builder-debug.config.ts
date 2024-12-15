@@ -8,7 +8,7 @@ const debugConfig: Configuration = {
     { from: './assets/uv/uvx', to: 'uv/uvx' },
     { from: './assets/UI', to: 'UI' },
   ],
-  beforeBuild: './scripts/preMake.js',
+  beforeBuild: './scripts/preMake.cjs',
   win: {
     icon: './assets/UI/Comfy_Logo.ico',
     target: 'zip',
