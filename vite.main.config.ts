@@ -14,7 +14,7 @@ export default defineConfig((env) => {
       lib: {
         entry: './src/main.ts',
         fileName: () => '[name].js',
-        formats: ['cjs'],
+        formats: ['es'],
       },
       rollupOptions: {
         external,

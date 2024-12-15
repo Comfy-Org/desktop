@@ -8,6 +8,7 @@
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.js",
   "packageManager": "yarn@4.5.0",
+  "type": "module",
   "config": {
     "frontendVersion": "1.5.14",
     "comfyVersion": "0.3.7",

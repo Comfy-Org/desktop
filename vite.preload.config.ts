@@ -14,8 +14,8 @@ export default defineConfig((env: ConfigEnv) => {
           format: 'cjs',
           // It should not be split chunks.
           inlineDynamicImports: true,
-          entryFileNames: '[name].js',
-          chunkFileNames: '[name].js',
+          entryFileNames: '[name].cjs',
+          chunkFileNames: '[name].cjs',
           assetFileNames: '[name].[ext]',
         },
       },
