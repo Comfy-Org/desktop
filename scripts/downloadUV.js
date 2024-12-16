@@ -1,8 +1,8 @@
 import path from "path"
 import os from 'os'
-import * as fs from 'fs-extra'
+import fs from 'fs-extra'
 import axios from 'axios'
-import tar from 'tar'
+import * as tar from 'tar'
 import extractZip from 'extract-zip'
 import packageJson from './getPackage.js'
 
@@ -82,4 +82,4 @@ async function downloadAndExtract(baseURL, options) {
 }
 
 //** Download and Extract UV. Default uses OS.Platfrom. Add 'all' will download all. Add 'none' will skip */
-downloadUV();
+await downloadUV();
