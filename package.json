@@ -47,7 +47,7 @@
     "test:update-snapshots": "npx playwright test --update-snapshots",
     "todesktop:afterPack": "./scripts/todesktop/afterPack.cjs",
     "todesktop:beforeInstall": "./scripts/todesktop/beforeInstall.cjs",
-    "typescript": "yarn run tsc",
+    "typescript": "tsc -p tsconfig.build.json",
     "vite:compile": "yarn run typescript && vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts",
     "vite:types": "yarn run typescript && vite build --config vite.types.config.ts && node scripts/prepareTypes.js",
     "release:types": "node scripts/releaseTypes.js",
