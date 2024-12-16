@@ -1,10 +1,10 @@
-const { exec, execSync, spawnSync, spawn } = require("child_process");
-const path = require("path");
-const os = require('os');
-const process = require("process");
-const fs = require('fs-extra');
+import { exec, execSync, spawnSync, spawn } from "child_process"
+import path from "path"
+import * as os from 'os'
+import process from "process"
+import fs from 'fs-extra'
 
-module.exports = async ({ appOutDir, packager, outDir }) => {
+export default async ({ appOutDir, packager, outDir }) => {
 
     const firstInstallOnToDesktopServers =
         process.env.TODESKTOP_CI && process.env.TODESKTOP_INITIAL_INSTALL_PHASE;

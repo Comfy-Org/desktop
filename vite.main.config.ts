@@ -11,8 +11,8 @@ export default defineConfig((env) => {
       outDir: '.vite/build',
       lib: {
         entry: './src/main.ts',
-        fileName: () => '[name].js',
-        formats: ['es'],
+        fileName: (_format, name) => `${name}.cjs`,
+        formats: ['cjs'],
       },
       rollupOptions: {
         external,
