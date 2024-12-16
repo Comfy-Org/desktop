@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
-    "jsx": "react",
+    "noEmit": true,
+
+    // TODO: Pin to ES2024 when this is resolved: https://github.com/evanw/esbuild/pull/3990
     "target": "ESNext",
     "module": "ESNext",
     "allowJs": true,
@@ -11,7 +13,7 @@
     "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "resolveJsonModule": true,
     "paths": {
       "/*": ["./*"]
