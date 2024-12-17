@@ -4,11 +4,9 @@ import { useDesktopConfig } from '../store/desktopConfig';
 import type { TorchDeviceType } from '../preload';
 
 /**
- * Handles static information about the app in IPC channels.
+ * Handles information about the app and current state in IPC channels.
  */
 export class AppInfoHandlers {
-  constructor() {}
-
   registerHandlers() {
     ipcMain.handle(IPC_CHANNELS.IS_PACKAGED, () => {
       return app.isPackaged;
