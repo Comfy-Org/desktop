@@ -18,5 +18,6 @@
     }
   },
   "exclude": [".history", ".vite", "assets", "dist", "node_modules", "out"],
-  "include": ["src/**/*", "forge.env.d.ts", "global.d.ts"]
+  // Include JS files so they are covered by projectService (ESLint)
+  "include": ["src/**/*", "forge.env.d.ts", "global.d.ts", "*.js", "scripts/**/*"]
 }
