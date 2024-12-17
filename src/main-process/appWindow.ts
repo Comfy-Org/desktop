@@ -45,7 +45,7 @@ export class AppWindow {
       x: storedX,
       y: storedY,
       webPreferences: {
-        preload: path.join(__dirname, '../build/preload.mjs'),
+        preload: path.join(__dirname, '../build/preload.cjs'),
         nodeIntegration: true,
         contextIsolation: true,
         webviewTag: true,
