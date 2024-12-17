@@ -155,8 +155,11 @@ export class ComfyDesktopApp {
    * Install ComfyUI and return the base path.
    */
   static async install(appWindow: AppWindow): Promise<string> {
+    const config = useDesktopConfig();
+    if (!config.get('installState')) config.set('installState', 'started');
+
     const validation = await validateHardware();
-    if (typeof validation?.gpu === 'string') useDesktopConfig().set('detectedGpu', validation.gpu);
+    if (typeof validation?.gpu === 'string') config.set('detectedGpu', validation.gpu);
 
     if (!validation.isValid) {
       await appWindow.loadRenderer('not-supported');
