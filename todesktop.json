@@ -28,7 +28,10 @@
     "!.husky/**"
   ],
   "mac": {
-    "additionalBinariesToSign": ["./assets/uv/macos/uv", "./assets/uv/macos/uvx"]
+    "additionalBinariesToSign": [
+      "./assets/uv/macos/uv",
+      "./assets/uv/macos/uvx"
+    ]
   },
   "windows": {
     "nsisInclude": "./scripts/installer.nsh"
