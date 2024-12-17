@@ -142,10 +142,6 @@ export class ComfyDesktopApp {
         }
       }
     );
-    // Config
-    ipcMain.handle(IPC_CHANNELS.GET_GPU, async (): Promise<TorchDeviceType | undefined> => {
-      return await useDesktopConfig().getAsync('detectedGpu');
-    });
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => {
       if (!this.comfyServer) return false;
