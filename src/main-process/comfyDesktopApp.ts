@@ -110,12 +110,14 @@ export class ComfyDesktopApp {
       }
     );
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, async (): Promise<string> => {
       return this.basePath;
     });
     ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
       return !ComfyServerConfig.exists();
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
     ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
       log.info('Reinstalling...');
       this.reinstall();
@@ -127,6 +129,7 @@ export class ComfyDesktopApp {
 
     ipcMain.handle(
       IPC_CHANNELS.SEND_ERROR_TO_SENTRY,
+      // eslint-disable-next-line @typescript-eslint/require-await
       async (_event, { error, extras }: SentryErrorDetail): Promise<string | null> => {
         try {
           return Sentry.captureMessage(error, {
@@ -334,6 +337,7 @@ If this problem persists, back up and delete the config file, then restart the a
       return relaunchApplication(delay);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     dialog
       .showMessageBox({
         type: 'question',
