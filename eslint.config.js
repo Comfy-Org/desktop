@@ -60,5 +60,14 @@ export default tseslint.config(
     rules: {
       'unicorn/no-process-exit': 'off',
     },
+  },
+
+  // Tests
+  {
+    files: ['tests/**/*'],
+    rules: {
+      'unicorn/prefer-module': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+    },
   }
 );
