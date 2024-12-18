@@ -1,8 +1,8 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import os from 'node:os'
-import * as yaml from 'yaml'
-import * as readline from 'node:readline'
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import * as yaml from 'yaml';
+import * as readline from 'node:readline';
 
 /**
  * Get the path to the extra_models_config.yaml file based on the platform.
@@ -25,11 +25,11 @@ function getConfigPath(filename) {
 async function askForConfirmation(question) {
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
-  return new Promise(resolve => {
-    rl.question(question + ' (y/N): ', answer => {
+  return new Promise((resolve) => {
+    rl.question(question + ' (y/N): ', (answer) => {
       rl.close();
       resolve(answer.toLowerCase() === 'y');
     });
@@ -93,7 +93,6 @@ async function main() {
         console.log('Skipping ComfyUI directory deletion');
       }
     }
-
   } catch (error) {
     console.error('Error during reset:', error);
     process.exit(1);
