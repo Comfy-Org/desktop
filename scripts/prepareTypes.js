@@ -1,6 +1,6 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import mainPackage from './getPackage.js'
+import fs from 'node:fs';
+import path from 'node:path';
+import mainPackage from './getPackage.js';
 
 // Create the types-only package.json
 const typesPackage = {
@@ -8,12 +8,9 @@ const typesPackage = {
   version: mainPackage.version,
   main: './index.mjs',
   types: './index.d.ts',
-  files: [
-    'index.d.ts',
-    'index.mjs'
-  ],
+  files: ['index.d.ts', 'index.mjs'],
   publishConfig: {
-    access: 'public'
+    access: 'public',
   },
   repository: mainPackage.repository,
   homepage: mainPackage.homepage,
@@ -29,10 +26,7 @@ if (!fs.existsSync(distDir)) {
 }
 
 // Write the new package.json to the dist directory
-fs.writeFileSync(
-  path.join(distDir, 'package.json'),
-  JSON.stringify(typesPackage, null, 2)
-);
+fs.writeFileSync(path.join(distDir, 'package.json'), JSON.stringify(typesPackage, null, 2));
 
 // Create an empty yarn.lock file
 fs.writeFileSync(path.join(distDir, 'yarn.lock'), '');
