@@ -46,4 +46,4 @@ async function downloadAndExtractFrontend() {
     }
 }
 
-downloadAndExtractFrontend();
+await downloadAndExtractFrontend();
