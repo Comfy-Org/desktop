@@ -103,9 +103,9 @@ export class ComfyServer {
       comfyUILog.transports.file.fileName = 'comfyui.log';
 
       // TODO: Check if electron-log has updated types
+      // @ts-expect-error electron-log types are broken.  data and return type are `string`.
       comfyUILog.transports.file.transforms.push(({ data }) => {
-        // @ts-expect-error electron-log types are broken.  data and return type are `string`.
-        return typeof data === 'string' ? data.replaceAll(ansiCodes, '') : data;
+        return typeof data === 'string' ? (data as string).replaceAll(ansiCodes, '') : data;
       });
 
       const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.launchArgs, {
