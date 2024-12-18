@@ -6,7 +6,7 @@ import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 export default tseslint.config(
   // Baseline include / exclude
   { files: ['**/*.{js,cjs,mjs,ts,mts}'] },
-  { ignores: ['dist/**/*', 'jest.config.cjs'] },
+  { ignores: ['dist/**/*', 'jest.config.cjs', 'scripts/shims/**/*'] },
 
   // Baseline
   eslint.configs.recommended,
