@@ -1,4 +1,4 @@
-import type { ConfigEnv, UserConfig } from 'vite';
+import type { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
 import { getBuildConfig, external, pluginHotRestart } from './vite.base.config';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
