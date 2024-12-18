@@ -1,7 +1,7 @@
 import axios from 'axios'
 import extract from 'extract-zip'
-import fs from 'fs/promises'
-import path from 'path'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
 import packageJson from './getPackage.js'
 

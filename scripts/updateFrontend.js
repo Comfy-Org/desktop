@@ -1,12 +1,12 @@
-import { execSync } from 'child_process'
-import { readFileSync, writeFileSync } from 'fs'
+import { execSync } from 'node:child_process'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 async function main() {
   try {
     // Create a new branch with version-bump prefix
     console.log('Creating new branch...')
     const date = new Date().toISOString().split('T')[0]
-    const timestamp = new Date().getTime()
+    const timestamp = Date.now()
     const branchName = `version-bump-${date}-${timestamp}`
     execSync(`git checkout -b ${branchName} -t origin/main`, { stdio: 'inherit' })
 

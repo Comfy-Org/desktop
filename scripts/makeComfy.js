@@ -1,6 +1,5 @@
-import * as child_process from 'child_process'
+import * as child_process from 'node:child_process'
 import pkg from './getPackage.js'
-import fs from 'fs'
 
 function makeAssets(gpuFlag) {
   const baseCommand = [

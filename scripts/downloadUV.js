@@ -1,5 +1,5 @@
-import path from "path"
-import os from 'os'
+import path from "node:path"
+import os from 'node:os'
 import fs from 'fs-extra'
 import axios from 'axios'
 import * as tar from 'tar'
@@ -8,6 +8,7 @@ import packageJson from './getPackage.js'
 
 const uvVer = packageJson.config.uvVersion;
 
+/** @typedef {{ [key]: { zipFile: string, uvOutputFolderName: string, zip: boolean } }} UvDownloadOptions */
 const options = {
     win32: {
         zipFile: 'uv-x86_64-pc-windows-msvc.zip',
@@ -52,6 +53,7 @@ async function downloadUV() {
 
 };
 
+/** @param {UvDownloadOptions[any]} options */
 async function downloadAndExtract(baseURL, options) {
     const {
         zipFile,
