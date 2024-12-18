@@ -30,6 +30,7 @@ async function downloadAndExtractFrontend() {
     });
 
     // Save to temporary file
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await fs.writeFile(downloadPath, response.data);
 
     // Extract the zip file
