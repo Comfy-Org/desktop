@@ -22,7 +22,8 @@ function getConfigPath(filename) {
   }
 }
 
-async function askForConfirmation(question) {
+/** @returns {Promise<boolean>} */
+function askForConfirmation(question) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -41,12 +42,15 @@ async function main() {
     const configPath = getConfigPath('config.json');
     const windowStorePath = getConfigPath('window.json');
     const modelsConfigPath = getConfigPath('extra_models_config.yaml');
-    let desktopBasePath = null;
-    let basePath = null;
+    let desktopBasePath;
+    /** @type {string | undefined} */
+    let basePath;
 
     // Read basePath from desktop config
     if (fs.existsSync(configPath)) {
       const configContent = fs.readFileSync(configPath, 'utf8');
+
+      /** @type {import('../src/store/index').DesktopSettings} */
       const parsed = JSON.parse(configContent);
       desktopBasePath = parsed?.basePath;
     }
