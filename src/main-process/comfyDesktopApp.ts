@@ -9,7 +9,7 @@ import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'node:fs';
-import { InstallOptions, type ElectronContextMenuOptions, type TorchDeviceType } from '../preload';
+import { InstallOptions, type ElectronContextMenuOptions } from '../preload';
 import path from 'node:path';
 import { ansiCodes, getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
