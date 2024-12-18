@@ -2,7 +2,7 @@ import { build } from 'vite';
 import electronPath from 'electron';
 import { spawn } from 'node:child_process';
 
-/** @type 'production' | 'development'' */
+/** @type {'production' | 'development'} */
 const mode = (process.env.MODE = process.env.MODE || 'development')
 
 /** @type {import('vite').LogLevel} */
@@ -13,7 +13,7 @@ const logLevel = 'warn'
  * On file changed it totally re-launch electron app.
  */
 function setupMainPackageWatcher() {
-	/** @type {ChildProcess | null} */
+	/** @type {import('node:child_process').ChildProcess | null} */
 	let electronApp = null;
 
 	return build({
