@@ -64,16 +64,16 @@ async function downloadAndExtract(baseURL, options) {
     responseType: 'arraybuffer',
   });
   fs.writeFileSync(zipFilePath, downloadedFile.data);
-  zip
-    ? await extractZip(zipFilePath, {
-        dir: path.resolve(outputUVFolder),
-      })
-    : tar.extract({
-        sync: true,
-        file: zipFilePath,
-        C: outputUVFolder,
-        'strip-components': 1,
-      });
+  if (zip) {
+    await extractZip(zipFilePath, { dir: path.resolve(outputUVFolder) });
+  } else {
+    tar.extract({
+      sync: true,
+      file: zipFilePath,
+      C: outputUVFolder,
+      'strip-components': 1,
+    });
+  }
   await fs.unlink(zipFilePath);
   console.log(`FINISHED DOWNLOAD AND EXTRACT UV ${uvOutputFolderName}`);
 }
