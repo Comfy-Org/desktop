@@ -1,8 +1,9 @@
 import { app } from 'electron';
 import path from 'node:path';
 import { ComfyServerConfig } from '../../src/config/comfyServerConfig';
-import { rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { tmpdir } from 'node:os';
 
 // Mock electron
 vi.mock('electron', () => ({
@@ -17,6 +18,11 @@ vi.mock('electron-log/main', () => ({
     error: vi.fn(),
   },
 }));
+
+async function createTmpDir() {
+  const prefix = path.join(tmpdir(), 'vitest-');
+  return await mkdtemp(prefix);
+}
 
 describe('ComfyServerConfig', () => {
   describe('configPath', () => {
@@ -42,9 +48,13 @@ describe('ComfyServerConfig', () => {
   });
 
   describe('readBasePathFromConfig', () => {
-    const testConfigPath = path.join(__dirname, 'test_config.yaml');
+    let tmpdir = '';
+    let testConfigPath = '';
 
     beforeAll(async () => {
+      tmpdir = await createTmpDir();
+      testConfigPath = path.join(tmpdir, 'test_config.yaml');
+
       // Create a test YAML file
       const testConfig = `# Test ComfyUI config
 comfyui:
@@ -57,7 +67,7 @@ comfyui:
     });
 
     afterAll(async () => {
-      await rm(testConfigPath);
+      await rm(tmpdir, { recursive: true });
     });
 
     it('should read base_path from valid config file', async () => {
@@ -73,7 +83,7 @@ comfyui:
     });
 
     it('should detect invalid config file', async () => {
-      const invalidConfigPath = path.join(__dirname, 'invalid_config.yaml');
+      const invalidConfigPath = path.join(tmpdir, 'invalid_config.yaml');
       await writeFile(invalidConfigPath, 'invalid: yaml: content:', 'utf8');
 
       const result = await ComfyServerConfig.readBasePathFromConfig(invalidConfigPath);
