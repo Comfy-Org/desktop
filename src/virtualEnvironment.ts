@@ -80,14 +80,18 @@ export class VirtualEnvironment {
       ? path.join(process.resourcesPath, 'uv')
       : path.join(app.getAppPath(), 'assets', 'uv');
 
-    if (process.platform === 'win32') {
-      this.uvPath = path.join(uvFolder, 'win', 'uv.exe');
-    } else if (process.platform === 'linux') {
-      this.uvPath = path.join(uvFolder, 'linux', 'uv');
-    } else if (process.platform === 'darwin') {
-      this.uvPath = path.join(uvFolder, 'macos', 'uv');
-    } else {
-      throw new Error(`Unsupported platform: ${process.platform}`);
+    switch (process.platform) {
+      case 'win32':
+        this.uvPath = path.join(uvFolder, 'win', 'uv.exe');
+        break;
+      case 'linux':
+        this.uvPath = path.join(uvFolder, 'linux', 'uv');
+        break;
+      case 'darwin':
+        this.uvPath = path.join(uvFolder, 'macos', 'uv');
+        break;
+      default:
+        throw new Error(`Unsupported platform: ${process.platform}`);
     }
     log.info(`Using uv at ${this.uvPath}`);
 
