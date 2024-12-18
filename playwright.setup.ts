@@ -1,18 +1,17 @@
-import { type FullConfig } from '@playwright/test';
-import { spawn } from 'child_process';
+import { spawn } from 'node:child_process';
 
-async function globalSetup(config: FullConfig) {
+async function globalSetup() {
   console.log('globalSetup');
 
-  return new Promise<void>(async (resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const electron = spawn('node', ['./scripts/launchdev.js']);
 
     electron.on('close', () => {
-      reject('process failed to start');
+      reject(new Error('process failed to start'));
     });
 
-    electron.stdout.on('data', (data) => {
-      if (data.indexOf('App ready') >= 0) {
+    electron.stdout.on('data', (data: string | Buffer) => {
+      if (data.includes('App ready')) {
         resolve();
       }
     });
