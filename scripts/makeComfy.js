@@ -1,5 +1,5 @@
-import * as child_process from 'node:child_process'
-import pkg from './getPackage.js'
+import * as child_process from 'node:child_process';
+import pkg from './getPackage.js';
 
 function makeAssets(gpuFlag) {
   const baseCommand = [
@@ -12,7 +12,7 @@ function makeAssets(gpuFlag) {
     '--manager-url',
     'https://github.com/Comfy-Org/ComfyUI-Manager',
     '&&',
-    'yarn run make:frontend'
+    'yarn run make:frontend',
   ].join(' ');
 
   try {
@@ -29,7 +29,7 @@ const gpuFlags = {
   nvidia: '--nvidia',
   amd: '--amd',
   cpu: '--cpu',
-  macos: '--m-series'
+  macos: '--m-series',
 };
 
 if (!arg || !gpuFlags[arg]) {
