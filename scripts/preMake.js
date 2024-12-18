@@ -3,7 +3,8 @@ import * as os from 'node:os'
 import process from "node:process"
 import fs from 'fs-extra'
 
-export default async ({ appOutDir, packager, outDir }) => {
+/** @param {{ appOutDir, packager, outDir }} arg0 */
+const preMake = () => {
 
     const firstInstallOnToDesktopServers =
         process.env.TODESKTOP_CI && process.env.TODESKTOP_INITIAL_INSTALL_PHASE;
@@ -35,4 +36,5 @@ export default async ({ appOutDir, packager, outDir }) => {
 
     }
     console.log(">PREMAKE FINISH<");
-}
+};
+export default preMake;
