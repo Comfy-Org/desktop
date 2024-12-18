@@ -290,7 +290,7 @@ export class ComfyDesktopApp {
       default:
         // 'error': Explain and quit
         // TODO: Support link?  Something?
-        await InstallationValidator.showInvalidFileAndQuit(ComfyServerConfig.configPath, {
+        await new InstallationValidator().showInvalidFileAndQuit(ComfyServerConfig.configPath, {
           message: `Unable to read the YAML configuration file.  Please ensure this file is available and can be read:
 
 ${ComfyServerConfig.configPath}
