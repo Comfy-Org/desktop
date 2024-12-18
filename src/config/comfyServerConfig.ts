@@ -140,8 +140,9 @@ export class ComfyServerConfig {
   public static async readConfigFile(configPath: string): Promise<Record<string, ModelPaths> | null> {
     try {
       const fileContent = await fsPromises.readFile(configPath, 'utf8');
-      const config = yaml.parse(fileContent);
-      return config;
+      // TODO: Reimplement with validation and error reporting.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return yaml.parse(fileContent);
     } catch (error) {
       log.error(`Error reading config file ${configPath}:`, error);
       return null;
@@ -188,9 +189,12 @@ export class ComfyServerConfig {
   public static async readBasePathFromConfig(configPath: string): Promise<BasePathReadResult> {
     try {
       const fileContent = await fsPromises.readFile(configPath, 'utf8');
+      // TODO: Reimplement with validation and error reporting.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const config = yaml.parse(fileContent);
 
       // Fallback to legacy yaml format, where we have everything under root 'comfyui'.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const base_path = config?.comfyui_desktop?.base_path ?? config?.comfyui?.base_path;
       if (typeof base_path !== 'string') {
         log.warn(`Base path in YAML config was invalid: [${ComfyServerConfig.configPath}]`);
