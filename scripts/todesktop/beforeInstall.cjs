@@ -16,14 +16,13 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
     // ToDesktop currently does not have the min 3.12 python installed.
     // Download the installer then install it
     // Change stdio to get back the logs if there are issues.
-    const result1 = spawnSync('curl', ['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'], {
+    spawnSync('curl', ['-s', 'https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe'], {
       shell: true,
       stdio: 'ignore',
-    }).toString();
-    const result2 = spawnSync(
-      'python-3.12.7-amd64.exe',
-      ['/quiet', 'InstallAllUsers=1', 'PrependPath=1', 'Include_test=0'],
-      { shell: true, stdio: 'ignore' }
-    ).toString();
+    });
+    spawnSync('python-3.12.7-amd64.exe', ['/quiet', 'InstallAllUsers=1', 'PrependPath=1', 'Include_test=0'], {
+      shell: true,
+      stdio: 'ignore',
+    });
   }
 };
