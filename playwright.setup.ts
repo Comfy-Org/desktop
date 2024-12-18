@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 
 async function globalSetup() {
-  console.log('globalSetup');
+  console.log('Playwright globalSetup called');
 
   return new Promise<void>((resolve, reject) => {
     const electron = spawn('node', ['./scripts/launchdev.js']);
