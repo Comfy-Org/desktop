@@ -51,6 +51,7 @@ async function main() {
       const configContent = fs.readFileSync(configPath, 'utf8');
 
       /** @type {import('../src/store/index').DesktopSettings} */
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const parsed = JSON.parse(configContent);
       desktopBasePath = parsed?.basePath;
     }
@@ -58,7 +59,9 @@ async function main() {
     // Read base_path before deleting the config file
     if (fs.existsSync(modelsConfigPath)) {
       const configContent = fs.readFileSync(modelsConfigPath, 'utf8');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const config = yaml.parse(configContent);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       basePath = config?.comfyui?.base_path;
     } else {
       console.log('Config file not found, nothing to remove');

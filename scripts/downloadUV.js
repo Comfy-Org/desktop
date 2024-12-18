@@ -44,6 +44,7 @@ async function downloadUV() {
 
   const uvDownloaded = fs.existsSync(path.join('./assets', 'uv'));
   if (!uvDownloaded) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await downloadAndExtract(baseDownloadURL, options[os.platform()]);
     return;
   }
@@ -63,6 +64,7 @@ async function downloadAndExtract(baseURL, options) {
     url: baseURL + zipFile,
     responseType: 'arraybuffer',
   });
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   fs.writeFileSync(zipFilePath, downloadedFile.data);
   if (zip) {
     await extractZip(zipFilePath, { dir: path.resolve(outputUVFolder) });
