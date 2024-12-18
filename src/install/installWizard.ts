@@ -2,7 +2,7 @@ import path from 'node:path';
 import log from 'electron-log/main';
 import fs from 'node:fs';
 import { InstallOptions } from '../preload';
-import { DEFAULT_SETTINGS } from '../config/comfySettings';
+import { DEFAULT_SETTINGS, type ComfySettingsData } from '../config/comfySettings';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 
@@ -55,7 +55,10 @@ export class InstallWizard {
    */
   public initializeSettings() {
     const settingsPath = path.join(this.basePath, 'user', 'default', 'comfy.settings.json');
-    const existingSettings = fs.existsSync(settingsPath) ? JSON.parse(fs.readFileSync(settingsPath, 'utf8')) : {};
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const existingSettings: ComfySettingsData = fs.existsSync(settingsPath)
+      ? JSON.parse(fs.readFileSync(settingsPath, 'utf8'))
+      : {};
 
     const settings = {
       ...DEFAULT_SETTINGS,
