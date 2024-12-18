@@ -1,21 +1,29 @@
-// Mock electron
-jest.mock('electron', () => ({
-  app: {
-    getPath: jest.fn().mockReturnValue('/fake/user/data'),
-  },
-}));
-
 import { app } from 'electron';
 import path from 'node:path';
 import { ComfyServerConfig } from '../../src/config/comfyServerConfig';
-import fsPromises from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+
+// Mock electron
+vi.mock('electron', () => ({
+  app: {
+    getPath: vi.fn().mockReturnValue('/fake/user/data'),
+  },
+}));
+
+vi.mock('electron-log/main', () => ({
+  default: {
+    info: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 describe('ComfyServerConfig', () => {
   describe('configPath', () => {
     it('should return the correct path', () => {
       // Mock the userData path
       const mockUserDataPath = '/fake/user/data';
-      (app.getPath as jest.Mock).mockImplementation((key: string) => {
+      vi.mocked(app.getPath).mockImplementation((key: string) => {
         if (key === 'userData') {
           return mockUserDataPath;
         }
@@ -45,11 +53,11 @@ comfyui:
   checkpoints: models/checkpoints/
   loras: models/loras/`;
 
-      await fsPromises.writeFile(testConfigPath, testConfig, 'utf8');
+      await writeFile(testConfigPath, testConfig, 'utf8');
     });
 
     afterAll(async () => {
-      await fsPromises.rm(testConfigPath);
+      await rm(testConfigPath);
     });
 
     it('should read base_path from valid config file', async () => {
@@ -66,13 +74,13 @@ comfyui:
 
     it('should detect invalid config file', async () => {
       const invalidConfigPath = path.join(__dirname, 'invalid_config.yaml');
-      await fsPromises.writeFile(invalidConfigPath, 'invalid: yaml: content:', 'utf8');
+      await writeFile(invalidConfigPath, 'invalid: yaml: content:', 'utf8');
 
       const result = await ComfyServerConfig.readBasePathFromConfig(invalidConfigPath);
       expect(result.status).toBe('invalid');
       expect(result.path).toBeUndefined();
 
-      await fsPromises.rm(invalidConfigPath);
+      await rm(invalidConfigPath);
     });
   });
 });
