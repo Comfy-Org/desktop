@@ -91,26 +91,16 @@ export class DesktopConfig {
    * @returns A promise that resolves on successful save, or rejects with the first caught error.
    */
   async setAsync<Key extends keyof DesktopSettings>(key: Key, value: DesktopSettings[Key]): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       log.info(`Saving setting: [${key}]`, value);
-      try {
-        this.#store.set(key, value);
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
+      this.#store.set(key, value);
+      resolve();
     });
   }
 
   /** @inheritdoc {@link ElectronStore.get} */
   async getAsync<Key extends keyof DesktopSettings>(key: Key): Promise<DesktopSettings[Key]> {
-    return new Promise((resolve, reject) => {
-      try {
-        resolve(this.#store.get(key));
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return new Promise((resolve) => resolve(this.#store.get(key)));
   }
 }
 
