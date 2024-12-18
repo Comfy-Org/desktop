@@ -1,9 +1,7 @@
 import { expect, jest, describe, it } from '@jest/globals';
 
 jest.mock('node:path', () => ({
-  join: jest.fn((...args) => {
-    return 'preload.js';
-  }),
+  join: jest.fn(() => 'preload.js'),
 }));
 
 jest.mock('@sentry/electron/main', () => ({
@@ -39,15 +37,13 @@ jest.mock('electron', () => ({
     getPath: jest.fn(),
     requestSingleInstanceLock: jest.fn().mockReturnValue(true),
   },
-  BrowserWindow: jest.fn().mockImplementation((options) => {
-    return {
-      loadURL: jest.fn(),
-      on: jest.fn(),
-      webContents: {
-        openDevTools: jest.fn(),
-      },
-    };
-  }),
+  BrowserWindow: jest.fn().mockImplementation(() => ({
+    loadURL: jest.fn(),
+    on: jest.fn(),
+    webContents: {
+      openDevTools: jest.fn(),
+    },
+  })),
   ipcMain: {
     on: jest.fn(),
     handle: jest.fn(),
