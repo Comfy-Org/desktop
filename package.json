@@ -43,7 +43,7 @@
     "sign": "node debug/sign.js",
     "start": "node ./scripts/launchdev.js",
     "test:e2e": "npx playwright test",
-    "test:unit": "vitest",
+    "test:unit": "vitest run --config vite.main.config.ts",
     "test:update-snapshots": "npx playwright test --update-snapshots",
     "todesktop:afterPack": "./scripts/todesktop/afterPack.cjs",
     "todesktop:beforeInstall": "./scripts/todesktop/beforeInstall.cjs",
