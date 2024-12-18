@@ -14,7 +14,9 @@ try {
   execSync('yarn version patch', { stdio: 'inherit' });
 
   // Read the new version from package.json
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
   const newVersion = packageJson.version;
 
   // Commit the version bump
