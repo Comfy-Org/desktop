@@ -33,7 +33,7 @@ function setupMainPackageWatcher() {
         writeBundle() {
           /** Kill electron if process already exist */
           if (electronApp !== null) {
-            electronApp.removeListener('exit', process.exit);
+            electronApp.removeListener('exit', () => process.exit());
             electronApp.kill('SIGINT');
             electronApp = null;
           }
@@ -48,7 +48,7 @@ function setupMainPackageWatcher() {
           });
 
           /** Stops the watch script when the application has been quit */
-          electronApp.addListener('exit', process.exit);
+          electronApp.addListener('exit', () => process.exit());
         },
       },
     ],
@@ -80,7 +80,5 @@ function setupPreloadPackageWatcher() {
   });
 }
 
-(async () => {
-  await setupPreloadPackageWatcher();
-  await setupMainPackageWatcher();
-})();
+await setupPreloadPackageWatcher();
+await setupMainPackageWatcher();
