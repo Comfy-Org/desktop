@@ -2,11 +2,12 @@ import { ipcMain } from 'electron';
 
 import { PathHandlers } from '../../../src/handlers/pathHandlers';
 import { IPC_CHANNELS } from '../../../src/constants';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-jest.mock('electron', () => ({
+vi.mock('electron', () => ({
   ipcMain: {
-    on: jest.fn(),
-    handle: jest.fn(),
+    on: vi.fn(),
+    handle: vi.fn(),
   },
 }));
 

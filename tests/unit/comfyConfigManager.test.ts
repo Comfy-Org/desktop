@@ -1,53 +1,60 @@
-import fs from 'node:fs';
+import fs, { type PathLike } from 'node:fs';
 import { ComfyConfigManager, DirectoryStructure } from '../../src/config/comfyConfigManager';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import path from 'node:path';
+
+// Workaround for mock impls.
+const { normalize } = path;
 
 // Mock the fs module
-jest.mock('node:fs');
-jest.mock('electron-log/main', () => ({
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
+vi.mock('node:fs');
+vi.mock('electron-log/main', () => ({
+  default: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  },
 }));
 
 describe('ComfyConfigManager', () => {
   // Reset all mocks before each test
   beforeEach(() => {
-    jest.clearAllMocks();
-    (fs.existsSync as jest.Mock).mockReset();
-    (fs.mkdirSync as jest.Mock).mockReset();
-    (fs.writeFileSync as jest.Mock).mockReset();
-    (fs.renameSync as jest.Mock).mockReset();
+    vi.clearAllMocks();
+    vi.mocked(fs.existsSync).mockReset();
+    vi.mocked(fs.mkdirSync).mockReset();
+    vi.mocked(fs.writeFileSync).mockReset();
+    vi.mocked(fs.renameSync).mockReset();
   });
 
   describe('setUpComfyUI', () => {
     it('should reject existing directory when it contains ComfyUI structure', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      expect(() => ComfyConfigManager.setUpComfyUI('/existing/ComfyUI')).toThrow();
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      expect(() => ComfyConfigManager.setUpComfyUI(path.normalize('/existing/ComfyUI'))).toThrow();
     });
 
     it('should create ComfyUI subdirectory when it is missing', () => {
-      (fs.existsSync as jest.Mock).mockImplementationOnce((path: string) => {
-        if (['/some/base/path/ComfyUI'].includes(path)) {
+      vi.mocked(fs.existsSync).mockImplementationOnce((path: PathLike) => {
+        if ([normalize('/some/base/path/ComfyUI')].includes(path.toString())) {
           return false;
         }
         return true;
       });
 
-      ComfyConfigManager.setUpComfyUI('/some/base/path/ComfyUI');
+      ComfyConfigManager.setUpComfyUI(path.normalize('/some/base/path/ComfyUI'));
     });
   });
 
   describe('isComfyUIDirectory', () => {
     it('should return true when all required directories exist', () => {
-      (fs.existsSync as jest.Mock).mockImplementation((path: string) => {
+      vi.mocked(fs.existsSync).mockImplementation((path: PathLike) => {
         const requiredDirs = [
-          '/fake/path/models',
-          '/fake/path/input',
-          '/fake/path/user',
-          '/fake/path/output',
-          '/fake/path/custom_nodes',
+          normalize('/fake/path/models'),
+          normalize('/fake/path/input'),
+          normalize('/fake/path/user'),
+          normalize('/fake/path/output'),
+          normalize('/fake/path/custom_nodes'),
         ];
-        return requiredDirs.includes(path);
+        return requiredDirs.includes(path.toString());
       });
 
       const result = ComfyConfigManager.isComfyUIDirectory('/fake/path');
@@ -57,7 +64,7 @@ describe('ComfyConfigManager', () => {
     });
 
     it('should return false when some required directories are missing', () => {
-      (fs.existsSync as jest.Mock)
+      vi.mocked(fs.existsSync)
         .mockReturnValueOnce(true) // models exists
         .mockReturnValueOnce(true) // input exists
         .mockReturnValueOnce(false) // user missing
@@ -72,22 +79,22 @@ describe('ComfyConfigManager', () => {
 
   describe('createComfyDirectories', () => {
     it('should create all necessary directories when none exist', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      vi.mocked(fs.existsSync).mockReturnValue(false);
 
       ComfyConfigManager.createComfyDirectories('/fake/path/ComfyUI');
 
       // Verify each required directory was created
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/fake/path/ComfyUI/models', { recursive: true });
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/fake/path/ComfyUI/input', { recursive: true });
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/fake/path/ComfyUI/user', { recursive: true });
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/fake/path/ComfyUI/output', { recursive: true });
-      expect(fs.mkdirSync).toHaveBeenCalledWith('/fake/path/ComfyUI/custom_nodes', { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith(path.normalize('/fake/path/ComfyUI/models'), { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith(path.normalize('/fake/path/ComfyUI/input'), { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith(path.normalize('/fake/path/ComfyUI/user'), { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith(path.normalize('/fake/path/ComfyUI/output'), { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith(path.normalize('/fake/path/ComfyUI/custom_nodes'), { recursive: true });
     });
   });
 
   describe('createNestedDirectories', () => {
     it('should create nested directory structure correctly', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      vi.mocked(fs.existsSync).mockReturnValue(false);
 
       const structure = ['dir1', ['dir2', ['subdir1', 'subdir2']], ['dir3', [['subdir3', ['subsubdir1']]]]];
 

@@ -1,74 +1,74 @@
-import { expect, jest, describe, it } from '@jest/globals';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
-jest.mock('node:path', () => ({
-  join: jest.fn(() => 'preload.js'),
+vi.mock('node:path', () => ({
+  join: vi.fn(() => 'preload.js'),
 }));
 
-jest.mock('@sentry/electron/main', () => ({
-  init: jest.fn(),
-  captureException: jest.fn(),
+vi.mock('@sentry/electron/main', () => ({
+  init: vi.fn(),
+  captureException: vi.fn(),
 }));
 
-jest.mock('tar', () => ({
-  extract: jest.fn(),
+vi.mock('tar', () => ({
+  extract: vi.fn(),
 }));
-jest.mock('axios');
-jest.mock('fs');
-jest.mock('node:fs/promises');
+vi.mock('axios');
+vi.mock('fs');
+vi.mock('node:fs/promises');
 
 const mockMenuInstance = {
-  append: jest.fn(),
-  popup: jest.fn(),
-  closePopup: jest.fn(),
+  append: vi.fn(),
+  popup: vi.fn(),
+  closePopup: vi.fn(),
 };
 
-const MockMenu = jest.fn(() => mockMenuInstance) as jest.Mock & {
-  buildFromTemplate: jest.Mock;
+const MockMenu = vi.fn(() => mockMenuInstance) as Mock & {
+  buildFromTemplate: Mock;
 };
-MockMenu.buildFromTemplate = jest.fn().mockReturnValue({
+MockMenu.buildFromTemplate = vi.fn().mockReturnValue({
   items: [],
 });
 
-jest.mock('electron', () => ({
+vi.mock('electron', () => ({
   app: {
     isPackaged: false,
     isReady: true,
-    on: jest.fn(),
-    getPath: jest.fn(),
-    requestSingleInstanceLock: jest.fn().mockReturnValue(true),
+    on: vi.fn(),
+    getPath: vi.fn(),
+    requestSingleInstanceLock: vi.fn().mockReturnValue(true),
   },
-  BrowserWindow: jest.fn().mockImplementation(() => ({
-    loadURL: jest.fn(),
-    on: jest.fn(),
+  BrowserWindow: vi.fn().mockImplementation(() => ({
+    loadURL: vi.fn(),
+    on: vi.fn(),
     webContents: {
-      openDevTools: jest.fn(),
+      openDevTools: vi.fn(),
     },
   })),
   ipcMain: {
-    on: jest.fn(),
-    handle: jest.fn(),
+    on: vi.fn(),
+    handle: vi.fn(),
   },
   screen: {
-    getPrimaryDisplay: jest.fn().mockReturnValue({
+    getPrimaryDisplay: vi.fn().mockReturnValue({
       workAreaSize: { width: 1920, height: 1080 },
     }),
   },
   // Add this line to mock Tray
-  Tray: jest.fn().mockImplementation(() => ({
-    setToolTip: jest.fn(),
-    setContextMenu: jest.fn(),
-    on: jest.fn(),
-    setPressedImage: jest.fn(),
+  Tray: vi.fn().mockImplementation(() => ({
+    setToolTip: vi.fn(),
+    setContextMenu: vi.fn(),
+    on: vi.fn(),
+    setPressedImage: vi.fn(),
   })),
   // Add this line to mock Menu
   Menu: MockMenu,
   // Mock other Electron modules if necessary
 }));
 
-jest.mock('electron-log/main', () => ({
-  initialize: jest.fn(),
-  info: jest.fn(),
-  error: jest.fn(),
+vi.mock('electron-log/main', () => ({
+  initialize: vi.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
   // Add other methods you might use from electron-log
 }));
 
