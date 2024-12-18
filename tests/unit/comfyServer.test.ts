@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { ComfyServer } from '../../src/main-process/comfyServer';
 
 describe('ComfyServer', () => {
