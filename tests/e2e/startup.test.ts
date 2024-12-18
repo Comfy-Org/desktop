@@ -9,11 +9,9 @@ test('launch app', async () => {
     console.error(`Electron stderr: ${data}`);
   });
 
-  const isPackaged = await electronApp.evaluate(async ({ app }) => {
-    // This runs in Electron's main process, parameter here is always
-    // the result of the require('electron') in the main app script.
-    return app.isPackaged;
-  });
+  // This runs in Electron's main process, parameter here is always
+  // the result of the require('electron') in the main app script.
+  const isPackaged = await electronApp.evaluate(({ app }) => app.isPackaged);
 
   expect(isPackaged).toBe(false);
 
