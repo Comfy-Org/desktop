@@ -45,7 +45,6 @@ function setupMainPackageWatcher() {
 						stdio: 'inherit',
 					});
 
-					electronApp.addListener('')
 					/** Stops the watch script when the application has been quit */
 					electronApp.addListener('exit', process.exit);
 				},
