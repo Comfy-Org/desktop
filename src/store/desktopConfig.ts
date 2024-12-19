@@ -3,7 +3,7 @@ import ElectronStore from 'electron-store';
 import { app, dialog } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import type { DesktopSettings } from '.';
+import type { DesktopSettings } from './desktopSettings';
 
 /** Backing ref for the singleton config instance. */
 let current: DesktopConfig;
