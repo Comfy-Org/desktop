@@ -49,6 +49,7 @@ if (!gotTheLock) {
 }
 
 async function startApp() {
+  // Load config or exit
   try {
     const store = await DesktopConfig.load(shell);
     if (!store) throw new Error('Unknown error loading app config on startup.');
@@ -60,6 +61,7 @@ async function startApp() {
   }
 
   try {
+    // Load window
     const appWindow = new AppWindow();
     appWindow.onClose(() => {
       log.info('App window closed. Quitting application.');
@@ -75,6 +77,7 @@ async function startApp() {
         ...options,
       });
     });
+
     try {
       const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
       await comfyDesktopApp.initialize();
