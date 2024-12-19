@@ -12,7 +12,7 @@
   "config": {
     "frontendVersion": "1.6.1",
     "comfyVersion": "0.3.8",
-    "managerCommit": "52b6e4b2eb6481333b29556788f28633e73bd0a9",
+    "managerCommit": "b4e52e65ec87978fc6294e82d55e1b91c5b02d55",
     "uvVersion": "0.5.8"
   },
   "scripts": {
@@ -68,6 +68,7 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.2",
     "@types/tar": "6.1.13",
+    "@types/tmp": "^0.2.6",
     "@types/wait-on": "^5.3.4",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
@@ -107,6 +108,7 @@
     "node-pty": "^1.0.0",
     "systeminformation": "^5.23.5",
     "tar": "^7.4.3",
+    "tmp": "^0.2.3",
     "wait-on": "^8.0.1",
     "yaml": "^2.6.0"
   },
