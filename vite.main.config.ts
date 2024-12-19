@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import type { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
 import { getBuildConfig, external, pluginHotRestart } from './vite.base.config';
@@ -41,6 +42,10 @@ export default defineConfig((env) => {
     resolve: {
       // Load the Node.js entry.
       mainFields: ['module', 'jsnext:main', 'jsnext'],
+    },
+    test: {
+      name: 'main',
+      include: ['tests/unit/**/*'],
     },
   };
 
