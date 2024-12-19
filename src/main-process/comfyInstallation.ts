@@ -139,6 +139,7 @@ If this problem persists, back up and delete the config file, then restart the a
       const config = useDesktopConfig();
       // Migrate config
       this.setState('installed');
+      this.isValid = true;
       config.set('basePath', this.basePath);
     }
   }
