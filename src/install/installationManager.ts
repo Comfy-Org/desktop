@@ -48,7 +48,10 @@ export class InstallationManager {
    */
   async resumeInstallation(installation: ComfyInstallation) {
     // TODO: Resume install at point of interruption
-    if (installation.state === 'started') await this.freshInstall();
+    if (installation.state === 'started') {
+      await this.freshInstall();
+      installation.setState('installed');
+    }
     if (installation.state === 'upgraded') installation.upgradeConfig();
   }
 
