@@ -1,17 +1,17 @@
-import { exec, execSync, spawnSync, spawn } from "child_process"
-import path from "path"
-import * as os from 'os'
-import process from "process"
+import { spawnSync } from "node:child_process"
+import * as os from 'node:os'
+import process from "node:process"
 import fs from 'fs-extra'
 
-export default async ({ appOutDir, packager, outDir }) => {
+/** @param {{ appOutDir, packager, outDir }} arg0 */
+const preMake = () => {
 
     const firstInstallOnToDesktopServers =
         process.env.TODESKTOP_CI && process.env.TODESKTOP_INITIAL_INSTALL_PHASE;
     // Do NOT run on CI
     if (process.env.CI || firstInstallOnToDesktopServers) return;
 
-    const isNvidia = process.argv[process.argv.length-1] === '--nvidia';
+    const isNvidia = process.argv.at(-1) === '--nvidia';
 
     console.log(`<BUILDING COMFYCLI ON ${os.platform()} ${isNvidia && "Nvidia Ver"}>`)
 
@@ -36,4 +36,5 @@ export default async ({ appOutDir, packager, outDir }) => {
 
     }
     console.log(">PREMAKE FINISH<");
-}
+};
+export default preMake;
