@@ -16,12 +16,10 @@ import { DownloadManager } from '../models/DownloadManager';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from '../install/installWizard';
 import { Terminal } from '../shell/terminal';
-import { useDesktopConfig } from '../store/desktopConfig';
+import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { InstallationValidator } from '../install/installationValidator';
 import { restoreCustomNodes } from '../services/backup';
 import { CmCli } from '../services/cmCli';
-import ElectronStore from 'electron-store';
-import { DesktopSettings } from '../store';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
@@ -186,8 +184,8 @@ export class ComfyDesktopApp {
           .then(() => {
             useDesktopConfig().set('installState', 'installed');
             appWindow.maximize();
-            if (installWizard.shouldMigrateCustomNodes) {
-              store.set('migrateCustomNodesFrom', installWizard.migrationSource);
+            if (installWizard.shouldMigrateCustomNodes && installWizard.migrationSource) {
+              useDesktopConfig().set('migrateCustomNodesFrom', installWizard.migrationSource);
             }
             resolve(installWizard.basePath);
           })
@@ -228,11 +226,11 @@ export class ComfyDesktopApp {
         log.error(data.replaceAll(ansiCodes, ''));
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
-    }
+    };
 
     await virtualEnvironment.create(processCallbacks);
 
-    const customNodeMigrationError = await this.migrateCustomNodes(store, virtualEnvironment, processCallbacks);
+    const customNodeMigrationError = await this.migrateCustomNodes(config, virtualEnvironment, processCallbacks);
 
     if (!config.get('Comfy-Desktop.RestoredCustomNodes', false)) {
       try {
@@ -260,12 +258,8 @@ export class ComfyDesktopApp {
     };
   }
 
-  async migrateCustomNodes(
-    store: ElectronStore<DesktopSettings>,
-    virtualEnvironment: VirtualEnvironment,
-    callbacks: ProcessCallbacks
-  ) {
-    const customNodeMigrationPath = store.get('migrateCustomNodesFrom');
+  async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {
+    const customNodeMigrationPath = config.get('migrateCustomNodesFrom');
     let customNodeMigrationError: string | null = null;
     if (customNodeMigrationPath) {
       log.info('Migrating custom nodes from: ', customNodeMigrationPath);
@@ -278,7 +272,7 @@ export class ComfyDesktopApp {
           error instanceof Error ? error.message : typeof error === 'string' ? error : 'Error migrating custom nodes.';
       } finally {
         // Always remove the flag so the user doesnt get stuck here
-        store.delete('migrateCustomNodesFrom');
+        config.delete('migrateCustomNodesFrom');
       }
     }
     return customNodeMigrationError;
