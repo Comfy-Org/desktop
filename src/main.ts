@@ -10,6 +10,7 @@ import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import { LevelOption } from 'electron-log';
 import SentryLogging from './services/sentry';
 import { DesktopConfig } from './store/desktopConfig';
+import { ComfyInstallation } from './main-process/comfyInstallation';
 
 dotenv.config();
 log.initialize();
@@ -78,7 +79,25 @@ async function startApp() {
     });
 
     try {
-      const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
+      // Ensure installation is complete and valid
+      const installation = new ComfyInstallation();
+      const validation = await installation.validate();
+
+      // Fresh install / upgrade
+      if (validation.state === undefined || validation.state === 'started') {
+        await installation.startFreshInstall(appWindow);
+      } else if (validation.state === 'upgraded') {
+        installation.upgrade(validation);
+      }
+
+      // Fix any issues before attempting app start
+      if (validation.issues.length > 0) installation.resolveIssues(validation);
+
+      if (!installation.isValid) throw new Error('Installation validation failed.');
+      if (!installation.basePath) throw new Error('Base path was invalid after installation validation.');
+
+      // Initialize app
+      const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation.basePath);
       await comfyDesktopApp.initialize();
       SentryLogging.comfyDesktopApp = comfyDesktopApp;
 
