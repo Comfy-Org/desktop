@@ -27,13 +27,11 @@ app.on('window-all-closed', () => {
   }
 });
 
-/**
- * Sentry needs to be initialized at the top level.
- */
+// Sentry needs to be initialized at the top level.
 SentryLogging.init();
 
+// Synchronous app start
 const gotTheLock = app.requestSingleInstanceLock();
-
 if (!gotTheLock) {
   log.info('App already running. Exiting...');
   app.quit();
@@ -48,6 +46,7 @@ if (!gotTheLock) {
   });
 }
 
+// Async app start
 async function startApp() {
   // Load config or exit
   try {
@@ -61,7 +60,7 @@ async function startApp() {
   }
 
   try {
-    // Load window
+    // Create native window
     const appWindow = new AppWindow();
     appWindow.onClose(() => {
       log.info('App window closed. Quitting application.');
@@ -83,6 +82,7 @@ async function startApp() {
       await comfyDesktopApp.initialize();
       SentryLogging.comfyDesktopApp = comfyDesktopApp;
 
+      // Construct core launch args
       const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
       const cpuOnly: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { cpu: '' } : {};
       const extraServerArgs: Record<string, string> = {
@@ -97,6 +97,7 @@ async function startApp() {
       delete extraServerArgs.listen;
       delete extraServerArgs.port;
 
+      // Start server
       if (!useExternalServer) {
         await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
       }
