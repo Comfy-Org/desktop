@@ -1,4 +1,4 @@
-import type { ConfigEnv, UserConfig } from 'vite';
+import type { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
 import { getBuildConfig, external } from './vite.base.config';
 
@@ -19,6 +19,11 @@ export default defineConfig((env) => {
           assetFileNames: '[name].[ext]',
         },
       },
+    },
+    test: {
+      name: 'preload',
+      include: ['tests/preload/**/*'],
+      environment: 'jsdom',
     },
   };
 

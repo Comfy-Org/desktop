@@ -3,5 +3,5 @@ out
 dist
 assets
 .vite
-scripts
+scripts/shims
 .env_*

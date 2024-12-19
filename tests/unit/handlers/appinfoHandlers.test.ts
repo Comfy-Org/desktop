@@ -1,11 +1,12 @@
 import { ipcMain } from 'electron';
 import { AppInfoHandlers } from '../../../src/handlers/appInfoHandlers';
 import { IPC_CHANNELS } from '../../../src/constants';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-jest.mock('electron', () => ({
+vi.mock('electron', () => ({
   ipcMain: {
-    on: jest.fn(),
-    handle: jest.fn(),
+    on: vi.fn(),
+    handle: vi.fn(),
   },
 }));
 
@@ -19,8 +20,8 @@ describe('AppInfoHandlers', () => {
   it('should register all expected handle channels', () => {
     const expectedChannels = [IPC_CHANNELS.IS_PACKAGED, IPC_CHANNELS.GET_ELECTRON_VERSION];
 
-    expectedChannels.forEach((channel) => {
+    for (const channel of expectedChannels) {
       expect(ipcMain.handle).toHaveBeenCalledWith(channel, expect.any(Function));
-    });
+    }
   });
 });
