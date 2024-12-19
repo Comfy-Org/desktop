@@ -44,6 +44,7 @@ export default defineConfig((env) => {
       mainFields: ['module', 'jsnext:main', 'jsnext'],
     },
     test: {
+      name: 'main',
       include: ['tests/unit/**/*'],
     },
   };
