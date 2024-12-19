@@ -24,11 +24,13 @@ export class DesktopConfig {
 
   /** @inheritdoc {@link ElectronStore.get} */
   get<Key extends keyof DesktopSettings>(key: Key, defaultValue?: Required<DesktopSettings>[Key]) {
+    log.verbose('Getting config:', key);
     return defaultValue === undefined ? this.#store.get(key) : this.#store.get(key, defaultValue);
   }
 
   /** @inheritdoc {@link ElectronStore.set} */
   set<Key extends keyof DesktopSettings>(key: Key, value: Required<DesktopSettings>[Key]) {
+    log.verbose('Saving config:', key, value);
     return value === undefined ? this.#store.delete(key) : this.#store.set(key, value);
   }
 

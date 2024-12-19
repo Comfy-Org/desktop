@@ -37,18 +37,27 @@ export class ComfyInstallation {
    * @returns The validated installation state, along with a list of any issues detected.
    */
   async validate(): Promise<ValidationResult> {
+    log.info(`Validating installation. Recorded state: [${this.state}]`);
+
     const result: ValidationResult = { state: this.state, issues: [] };
 
     // Upgraded from a version prior to 0.3.18
     // TODO: Validate more than just the existence of one file
-    if (!result.state && ComfyServerConfig.exists()) result.state = 'upgraded';
+    if (!result.state && ComfyServerConfig.exists()) {
+      log.info('Found extra_models_config.yaml but no recorded state - assuming upgrade from <= 0.3.18');
+      result.state = 'upgraded';
+    }
 
     // Fresh install
-    if (!result.state) return result;
+    if (!result.state) {
+      log.info('No installation detected.');
+      return result;
+    }
 
     // Validate base path
     const basePath = await this.loadBasePath();
     if (basePath === undefined || !(await pathAccessible(basePath))) {
+      log.warn('"base_path" is inaccessible or not in config.');
       result.issues.push('invalidBasePath');
     }
 
@@ -56,6 +65,7 @@ export class ComfyInstallation {
     // Set result.state
 
     if (result.state === 'installed' && result.issues.length === 0) this.isValid = true;
+    log.info(`Validation result: state: ${result.state}, issues: ${result.issues.length}`);
     return result;
   }
 
@@ -95,6 +105,8 @@ If this problem persists, back up and delete the config file, then restart the a
    * Install ComfyUI and return the base path.
    */
   async startFreshInstall(appWindow: AppWindow): Promise<void> {
+    log.info('Starting installation.');
+
     this.setState('started');
     const config = useDesktopConfig();
 
@@ -102,14 +114,17 @@ If this problem persists, back up and delete the config file, then restart the a
     if (typeof validation?.gpu === 'string') config.set('detectedGpu', validation.gpu);
 
     if (!validation.isValid) {
+      log.verbose('Loading not-supported renderer.');
       await appWindow.loadRenderer('not-supported');
       log.error(validation.error);
     } else {
+      log.verbose('Loading welcome renderer.');
       await appWindow.loadRenderer('welcome');
     }
 
     return new Promise<void>((resolve, reject) => {
       ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, (_event, installOptions: InstallOptions) => {
+        log.verbose('Received INSTALL_COMFYUI.');
         const installWizard = new InstallWizard(installOptions);
         useDesktopConfig().set('basePath', installWizard.basePath);
 
