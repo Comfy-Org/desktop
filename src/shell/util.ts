@@ -1,4 +1,4 @@
-import os from 'os';
+import os from 'node:os';
 
 export function getDefaultShell(): string {
   switch (os.platform()) {

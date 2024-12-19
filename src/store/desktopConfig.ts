@@ -1,26 +1,53 @@
 import log from 'electron-log/main';
 import ElectronStore from 'electron-store';
-import { app, dialog, shell } from 'electron';
+import { app, dialog } from 'electron';
 import path from 'node:path';
-import fs from 'fs/promises';
+import fs from 'node:fs/promises';
 import type { DesktopSettings } from '.';
+
+/** Backing ref for the singleton config instance. */
+let current: DesktopConfig;
+
+/** Temporary service locator. DesktopConfig.load() must be called before access. */
+export function useDesktopConfig() {
+  if (!current) throw new Error('Cannot access store before initialization.');
+  return current;
+}
 
 /** Handles loading of electron-store config, pre-window errors, and provides a non-null interface for the store. */
 export class DesktopConfig {
-  static #store: ElectronStore<DesktopSettings> | undefined;
-  static get store(): ElectronStore<DesktopSettings> {
-    const store = this.#store;
-    if (!store) throw new Error('Cannot access store before initialization.');
-    return store;
+  #store: ElectronStore<DesktopSettings>;
+
+  private constructor(store: ElectronStore<DesktopSettings>) {
+    this.#store = store;
   }
 
-  static async load(
-    options?: ConstructorParameters<typeof ElectronStore<DesktopSettings>>[0]
-  ): Promise<ElectronStore<DesktopSettings> | undefined> {
-    try {
-      DesktopConfig.#store = new ElectronStore<DesktopSettings>(options);
+  /** @inheritdoc {@link ElectronStore.get} */
+  get<Key extends keyof DesktopSettings>(key: Key, defaultValue?: Required<DesktopSettings>[Key]) {
+    return defaultValue === undefined ? this.#store.get(key) : this.#store.get(key, defaultValue);
+  }
 
-      return DesktopConfig.#store;
+  /** @inheritdoc {@link ElectronStore.set} */
+  set<Key extends keyof DesktopSettings>(key: Key, value: Required<DesktopSettings>[Key]) {
+    return value === undefined ? this.#store.delete(key) : this.#store.set(key, value);
+  }
+
+  /**
+   * Static factory method. Loads the config from disk.
+   * @param shell Shell environment that can open file and folder views for the user
+   * @param options electron-store options to pass through to the backing store
+   * @returns The newly created instance, or `undefined` on error.
+   * @throws On unknown error
+   */
+  static async load(
+    shell: Electron.Shell,
+    options?: ConstructorParameters<typeof ElectronStore<DesktopSettings>>[0]
+  ): Promise<DesktopConfig | undefined> {
+    try {
+      const store = new ElectronStore<DesktopSettings>(options);
+      current = new DesktopConfig(store);
+
+      return current;
     } catch (error) {
       const configFilePath = path.join(getUserDataOrQuit(), `${options?.name ?? 'config'}.json`);
 
@@ -43,7 +70,7 @@ export class DesktopConfig {
             await tryDeleteConfigFile(configFilePath);
 
             // Causing a stack overflow from this recursion would take immense patience.
-            return DesktopConfig.load(options);
+            return DesktopConfig.load(shell, options);
           }
         }
 
@@ -52,9 +79,38 @@ export class DesktopConfig {
       } else {
         // Crash: Unknown filesystem error, permission denied on user data folder, etc
         log.error(`Unknown error whilst loading configuration file: ${configFilePath}`, error);
-        dialog.showErrorBox('User Data', `Unknown error whilst writing to user data folder:\n\n${configFilePath}`);
+        throw new Error(configFilePath);
       }
     }
+  }
+
+  /**
+   * Saves each {@link config} setting individually, returning a promise for the task.
+   * @param key The key of {@link DesktopSettings} to save
+   * @param value The value to be saved.  Must be valid.
+   * @returns A promise that resolves on successful save, or rejects with the first caught error.
+   */
+  async setAsync<Key extends keyof DesktopSettings>(key: Key, value: DesktopSettings[Key]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      log.info(`Saving setting: [${key}]`, value);
+      try {
+        this.#store.set(key, value);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /** @inheritdoc {@link ElectronStore.get} */
+  async getAsync<Key extends keyof DesktopSettings>(key: Key): Promise<DesktopSettings[Key]> {
+    return new Promise((resolve, reject) => {
+      try {
+        resolve(this.#store.get(key));
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 }
 

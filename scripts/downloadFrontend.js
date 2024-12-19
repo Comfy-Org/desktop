@@ -1,10 +1,12 @@
-const axios = require('axios');
-const extract = require('extract-zip');
-const fs = require('fs/promises');
-const path = require('path');
+import axios from 'axios'
+import extract from 'extract-zip'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+
+import packageJson from './getPackage.js'
 
 // Example "v1.3.34"
-const version = process.argv[2] || require('../package.json').config.frontendVersion;
+const version = process.argv[2] || packageJson.config.frontendVersion;
 if (!version) {
     console.error('No version specified');
     process.exit(1);
@@ -44,4 +46,4 @@ async function downloadAndExtractFrontend() {
     }
 }
 
-downloadAndExtractFrontend();
+await downloadAndExtractFrontend();

@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "jsx": "react",
+    "noEmit": true,
+
+    // TODO: Pin to ES2024 when this is resolved: https://github.com/evanw/esbuild/pull/3990
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "ESNext",
     "allowJs": true,
     "strict": true,
     "skipLibCheck": true,
@@ -11,12 +13,13 @@
     "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "resolveJsonModule": true,
     "paths": {
       "/*": ["./*"]
     }
   },
   "exclude": [".history", ".vite", "assets", "dist", "node_modules", "out"],
-  "include": ["src/**/*", "forge.env.d.ts", "global.d.ts"]
+  // Include JS files so they are covered by projectService (ESLint)
+  "include": ["src/**/*", "*.ts", "*.js", "scripts/**/*", "tests/**/*"]
 }

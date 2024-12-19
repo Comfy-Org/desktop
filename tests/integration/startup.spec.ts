@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import { chromium } from '@playwright/test';
 
 test('has title', async () => {
@@ -25,26 +25,34 @@ test('has title', async () => {
 
   await getStartedButton.click();
 
-  await expect(page.getByText('Choose Installation Location')).toBeVisible();
+  // Select GPU screen
+  await expect(page.getByText('Select GPU')).toBeVisible();
 
+  const nextButton = page.getByRole('button', { name: 'Next' });
+  const cpuToggle = page.locator('#cpu-mode');
+
+  await expect(cpuToggle).toBeVisible();
+  await cpuToggle.click();
+
+  await clickEnabledButton(nextButton);
+
+  await expect(page.getByText('Choose Installation Location')).toBeVisible();
   await page.screenshot({ path: 'screenshot-get-started.png' });
 
-  let nextButton = page.getByRole('button', { name: 'Next' });
-
-  await expect(nextButton).toBeVisible();
-  await expect(nextButton).toBeEnabled();
-
-  await nextButton.click();
+  await clickEnabledButton(nextButton);
 
   await expect(page.getByText('Migrate from Existing Installation')).toBeVisible();
-
   await page.screenshot({ path: 'screenshot-migrate.png' });
 
-  nextButton = page.getByRole('button', { name: 'Next' });
-
-  await nextButton.click();
+  await clickEnabledButton(nextButton);
 
   await expect(page.getByText('Desktop App Settings')).toBeVisible();
-
   await page.screenshot({ path: 'screenshot-install.png' });
+
+  /**  */
+  async function clickEnabledButton(button: Locator) {
+    await expect(button).toBeVisible();
+    await expect(button).toBeEnabled();
+    await button.click();
+  }
 });

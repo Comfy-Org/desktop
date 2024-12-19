@@ -1,5 +1,5 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import log from 'electron-log/main';
 
 export const DEFAULT_SETTINGS: ComfySettingsData = {
@@ -40,7 +40,7 @@ export class ComfySettings {
       return;
     }
     try {
-      const fileContent = await fs.readFile(this.filePath, 'utf-8');
+      const fileContent = await fs.readFile(this.filePath, 'utf8');
       this.settings = JSON.parse(fileContent);
     } catch (error) {
       log.error(`Settings file cannot be loaded.`, error);

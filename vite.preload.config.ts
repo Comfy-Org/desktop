@@ -3,7 +3,7 @@ import { defineConfig, mergeConfig } from 'vite';
 import { getBuildConfig, external } from './vite.base.config';
 
 // https://vitejs.dev/config
-export default defineConfig((env: ConfigEnv) => {
+export default defineConfig((env) => {
   const config: UserConfig = {
     build: {
       rollupOptions: {
@@ -14,8 +14,8 @@ export default defineConfig((env: ConfigEnv) => {
           format: 'cjs',
           // It should not be split chunks.
           inlineDynamicImports: true,
-          entryFileNames: '[name].js',
-          chunkFileNames: '[name].js',
+          entryFileNames: '[name].cjs',
+          chunkFileNames: '[name].cjs',
           assetFileNames: '[name].[ext]',
         },
       },

@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-const yaml = require('yaml');
-const readline = require('readline');
+import fs from 'node:fs'
+import path from 'node:path'
+import os from 'node:os'
+import * as yaml from 'yaml'
+import * as readline from 'node:readline'
 
 /**
  * Get the path to the extra_models_config.yaml file based on the platform.

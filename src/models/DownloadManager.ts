@@ -1,6 +1,6 @@
 import { session, DownloadItem, ipcMain } from 'electron';
-import * as path from 'path';
-import * as fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 import type { AppWindow } from '../main-process/appWindow';
@@ -36,7 +36,7 @@ export class DownloadManager {
     this.mainWindow = mainWindow;
     this.modelsDirectory = modelsDirectory;
 
-    session.defaultSession.on('will-download', (event, item, webContents) => {
+    session.defaultSession.on('will-download', (event, item) => {
       const url = item.getURLChain()[0]; // Get the original URL in case of redirects.
       log.info('Will-download event ', url);
       const download = this.downloads.get(url);
@@ -223,7 +223,7 @@ export class DownloadManager {
   }
 
   getAllDownloads(): DownloadState[] {
-    return Array.from(this.downloads.values())
+    return [...this.downloads.values()]
       .filter((download) => download.item !== null)
       .map((download) => ({
         url: download.url,
@@ -320,13 +320,24 @@ export class DownloadManager {
   }
 
   private registerIpcHandlers() {
-    ipcMain.handle(IPC_CHANNELS.START_DOWNLOAD, (event, { url, path, filename }) =>
+    interface FileAndPath {
+      filename: string;
+      path: string;
+    }
+    interface DownloadDetails extends FileAndPath {
+      url: string;
+    }
+
+    ipcMain.handle(IPC_CHANNELS.START_DOWNLOAD, (event, { url, path, filename }: DownloadDetails) =>
       this.startDownload(url, path, filename)
     );
     ipcMain.handle(IPC_CHANNELS.PAUSE_DOWNLOAD, (event, url: string) => this.pauseDownload(url));
     ipcMain.handle(IPC_CHANNELS.RESUME_DOWNLOAD, (event, url: string) => this.resumeDownload(url));
     ipcMain.handle(IPC_CHANNELS.CANCEL_DOWNLOAD, (event, url: string) => this.cancelDownload(url));
-    ipcMain.handle(IPC_CHANNELS.GET_ALL_DOWNLOADS, (event) => this.getAllDownloads());
-    ipcMain.handle(IPC_CHANNELS.DELETE_MODEL, (event, { filename, path }) => this.deleteModel(filename, path));
+    ipcMain.handle(IPC_CHANNELS.GET_ALL_DOWNLOADS, () => this.getAllDownloads());
+
+    ipcMain.handle(IPC_CHANNELS.DELETE_MODEL, (event, { filename, path }: FileAndPath) =>
+      this.deleteModel(filename, path)
+    );
   }
 }

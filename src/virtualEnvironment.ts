@@ -1,11 +1,12 @@
-import * as path from 'node:path';
+import path from 'node:path';
 import { spawn, ChildProcess } from 'node:child_process';
 import log from 'electron-log/main';
 import { pathAccessible } from './utils';
 import { app } from 'electron';
-import * as pty from 'node-pty';
-import * as os from 'os';
+import pty from 'node-pty';
+import os from 'node:os';
 import { getDefaultShell } from './shell/util';
+import type { TorchDeviceType } from './preload';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -25,6 +26,7 @@ export class VirtualEnvironment {
   readonly pythonInterpreterPath: string;
   readonly comfyUIRequirementsPath: string;
   readonly comfyUIManagerRequirementsPath: string;
+  readonly selectedDevice?: string;
   uvPty: pty.IPty | undefined;
 
   get uvPtyInstance() {
@@ -48,8 +50,11 @@ export class VirtualEnvironment {
     return this.uvPty;
   }
 
-  constructor(venvPath: string, pythonVersion: string = '3.12.4') {
+  constructor(venvPath: string, selectedDevice: TorchDeviceType | undefined, pythonVersion: string = '3.12.4') {
     this.venvRootPath = venvPath;
+    this.pythonVersion = pythonVersion;
+    this.selectedDevice = selectedDevice;
+
     this.venvPath = path.join(venvPath, '.venv'); // uv defaults to .venv
     const resourcesPath = app.isPackaged ? path.join(process.resourcesPath) : path.join(app.getAppPath(), 'assets');
     this.comfyUIRequirementsPath = path.join(resourcesPath, 'ComfyUI', 'requirements.txt');
@@ -61,12 +66,11 @@ export class VirtualEnvironment {
       'requirements.txt'
     );
 
-    this.pythonVersion = pythonVersion;
     this.cacheDir = path.join(venvPath, 'uv-cache');
-    this.requirementsCompiledPath =
-      process.platform === 'win32'
-        ? path.join(resourcesPath, 'requirements', 'windows_nvidia.compiled')
-        : path.join(resourcesPath, 'requirements', 'macos.compiled');
+
+    const filename = `${compiledRequirements()}.compiled`;
+    this.requirementsCompiledPath = path.join(resourcesPath, 'requirements', filename);
+
     this.pythonInterpreterPath =
       process.platform === 'win32'
         ? path.join(this.venvPath, 'Scripts', 'python.exe')
@@ -86,6 +90,13 @@ export class VirtualEnvironment {
       throw new Error(`Unsupported platform: ${process.platform}`);
     }
     log.info(`Using uv at ${this.uvPath}`);
+
+    function compiledRequirements() {
+      if (process.platform === 'darwin') return 'macos';
+      if (process.platform === 'win32') {
+        return selectedDevice === 'cpu' ? 'windows_cpu' : 'windows_nvidia';
+      }
+    }
   }
 
   public async create(callbacks?: ProcessCallbacks): Promise<void> {
@@ -120,6 +131,11 @@ export class VirtualEnvironment {
   }
 
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
+    if (this.selectedDevice === 'unsupported') {
+      log.info('User elected to manually configure their environment.  Skipping python configuration.');
+      return;
+    }
+
     try {
       if (await this.exists()) {
         log.info(`Virtual environment already exists at ${this.venvPath}`);
@@ -151,6 +167,7 @@ export class VirtualEnvironment {
   }
 
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
+    // pytorch nightly is required for MPS
     if (process.platform === 'darwin') {
       return this.manualInstall(callbacks);
     }
@@ -180,7 +197,7 @@ export class VirtualEnvironment {
       pythonInterpreterPath,
       args,
       {
-        PYTHONIOENCODING: 'utf-8',
+        PYTHONIOENCODING: 'utf8',
       },
       callbacks
     );
@@ -202,7 +219,7 @@ export class VirtualEnvironment {
       args,
       {
         ...env,
-        PYTHONIOENCODING: 'utf-8',
+        PYTHONIOENCODING: 'utf8',
       },
       callbacks,
       cwd
@@ -221,7 +238,7 @@ export class VirtualEnvironment {
   }
 
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
-    const id = new Date().valueOf();
+    const id = Date.now();
     return new Promise((res) => {
       const endMarker = `--end-${id}:`;
       const input = `clear; ${command}; echo "${endMarker}$?"`;
@@ -229,7 +246,7 @@ export class VirtualEnvironment {
         const lines = data.split('\n');
         for (const line of lines) {
           // Remove ansi sequences to see if this the exit marker
-          const clean = line.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, '');
+          const clean = line.replaceAll(/\u001B\[[\d;?]*[A-Za-z]/g, '');
           if (clean.startsWith(endMarker)) {
             const exit = clean.substring(endMarker.length).trim();
             let exitCode: number;
@@ -240,8 +257,8 @@ export class VirtualEnvironment {
               exitCode = -999;
             } else {
               // Bash should output a number
-              exitCode = parseInt(exit);
-              if (isNaN(exitCode)) {
+              exitCode = Number.parseInt(exit);
+              if (Number.isNaN(exitCode)) {
                 console.warn('Unable to parse exit code:', exit);
                 exitCode = -998;
               }
@@ -276,12 +293,12 @@ export class VirtualEnvironment {
     });
 
     if (callbacks) {
-      childProcess.stdout?.on('data', (data) => {
+      childProcess.stdout?.on('data', (data: Buffer) => {
         console.log(data.toString());
         callbacks.onStdout?.(data.toString());
       });
 
-      childProcess.stderr?.on('data', (data) => {
+      childProcess.stderr?.on('data', (data: Buffer) => {
         console.log(data.toString());
         callbacks.onStderr?.(data.toString());
       });
@@ -304,8 +321,8 @@ export class VirtualEnvironment {
         resolve({ exitCode: code });
       });
 
-      childProcess.on('error', (err) => {
-        reject(err);
+      childProcess.on('error', (error) => {
+        reject(error);
       });
     });
   }
@@ -317,7 +334,14 @@ export class VirtualEnvironment {
   }
 
   private async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
-    if (process.platform === 'win32') {
+    const { selectedDevice } = this;
+
+    if (selectedDevice === 'cpu') {
+      // CPU mode
+      log.info('Installing PyTorch CPU');
+      await this.runUvCommandAsync(['pip', 'install', 'torch', 'torchvision', 'torchaudio'], callbacks);
+    } else if (selectedDevice === 'nvidia' || process.platform === 'win32') {
+      // Win32 default
       log.info('Installing PyTorch CUDA 12.1');
       await this.runUvCommandAsync(
         [
@@ -331,9 +355,8 @@ export class VirtualEnvironment {
         ],
         callbacks
       );
-    }
-
-    if (process.platform === 'darwin') {
+    } else if (selectedDevice === 'mps' || process.platform === 'darwin') {
+      // macOS default
       log.info('Installing PyTorch Nightly for macOS.');
       await this.runUvCommandAsync(
         [
@@ -352,6 +375,7 @@ export class VirtualEnvironment {
       );
     }
   }
+
   private async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUI requirements from ${this.comfyUIRequirementsPath}`);
     const installCmd = ['pip', 'install', '-r', this.comfyUIRequirementsPath];

@@ -1,8 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-
-// Read the main package.json
-const mainPackage = require('../package.json');
+import fs from 'node:fs'
+import path from 'node:path'
+import mainPackage from './getPackage.js'
 
 // Create the types-only package.json
 const typesPackage = {
@@ -25,7 +23,7 @@ const typesPackage = {
 };
 
 // Ensure dist directory exists
-const distDir = path.join(__dirname, '../dist');
+const distDir = path.join(import.meta.dirname, '../dist');
 if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
 }

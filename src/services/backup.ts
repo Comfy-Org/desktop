@@ -1,21 +1,22 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import * as glob from 'glob';
+import path from 'node:path';
+import fs from 'node:fs';
+import glob from 'glob';
 import { app } from 'electron';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import log from 'electron-log/main';
 import { AppWindow } from '../main-process/appWindow';
 import { IPC_CHANNELS } from '../constants';
+import { ansiCodes } from '../utils';
 
 function parseLogFile(logPath: string): Set<string> {
   console.log('Parsing log file:', logPath);
   const customNodes = new Set<string>();
-  const content = fs.readFileSync(logPath, 'utf-8');
+  const content = fs.readFileSync(logPath, 'utf8');
 
   const lines = content.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
     // Match the exact format from Python's "{:6.1f} seconds"
     const timeMatch = line.match(/\s*\d+\.\d+\s+seconds/);
     if (timeMatch) {
@@ -72,12 +73,8 @@ async function installCustomNodes(
       '--no-deps',
     ];
     const { exitCode } = await virtualEnvironment.runPythonCommandAsync(cmd, {
-      onStdout: (data) => {
-        log.info(data.toString());
-      },
-      onStderr: (data) => {
-        log.error(data.toString());
-      },
+      onStdout: (data) => log.info(data.toString().replaceAll(ansiCodes, '')),
+      onStderr: (data) => log.error(data.toString().replaceAll(ansiCodes, '')),
     });
     if (exitCode !== 0) {
       log.error(`Failed to install custom nodes: ${exitCode}`);
@@ -95,9 +92,9 @@ export async function restoreCustomNodes(virtualEnvironment: VirtualEnvironment,
   const customNodes = new Set<string>();
   for (const logFile of logFiles) {
     const nodes = parseLogFile(logFile);
-    nodes.forEach((node) => customNodes.add(node));
+    for (const node of nodes) customNodes.add(node);
   }
 
   log.info('Found custom nodes:', customNodes);
-  await installCustomNodes(Array.from(customNodes), virtualEnvironment, appWindow);
+  await installCustomNodes([...customNodes], virtualEnvironment, appWindow);
 }

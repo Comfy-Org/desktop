@@ -1,5 +1,5 @@
-import * as fs from 'node:fs';
-import * as fsPromises from 'node:fs/promises';
+import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
 import log from 'electron-log/main';
 import yaml, { type YAMLParseError } from 'yaml';
 import path from 'node:path';
@@ -155,10 +155,11 @@ export class ComfyServerConfig {
   }
 
   public static getBaseModelPathsFromRepoPath(repoPath: string): ModelPaths {
-    return knownModelKeys.reduce((acc, key) => {
-      acc[key] = path.join(repoPath, 'models', key) + path.sep;
-      return acc;
-    }, {} as ModelPaths);
+    const paths: ModelPaths = {};
+    for (const key of knownModelKeys) {
+      paths[key] = path.join(repoPath, 'models', key) + path.sep;
+    }
+    return paths;
   }
 
   /**

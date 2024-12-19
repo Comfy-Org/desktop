@@ -1,4 +1,4 @@
-import type { ConfigEnv, UserConfig } from 'vite';
+import type { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
 import { getBuildConfig, external, pluginHotRestart } from './vite.base.config';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
@@ -6,14 +6,12 @@ import { version } from './package.json';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
-  const forgeEnv = env as ConfigEnv;
-
   const config: UserConfig = {
     build: {
       outDir: '.vite/build',
       lib: {
         entry: './src/main.ts',
-        fileName: () => '[name].js',
+        fileName: (_format, name) => `${name}.cjs`,
         formats: ['cjs'],
       },
       rollupOptions: {
@@ -46,5 +44,5 @@ export default defineConfig((env) => {
     },
   };
 
-  return mergeConfig(getBuildConfig(forgeEnv), config);
+  return mergeConfig(getBuildConfig(env), config);
 });

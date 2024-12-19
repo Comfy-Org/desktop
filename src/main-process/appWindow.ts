@@ -1,11 +1,11 @@
-import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem, type Point } from 'electron';
+import { BrowserWindow, screen, app, shell, ipcMain, Tray, Menu, dialog, MenuItem } from 'electron';
 import path from 'node:path';
 import Store from 'electron-store';
 import { AppWindowSettings } from '../store';
 import log from 'electron-log/main';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
-import { DesktopConfig } from '../store/desktopConfig';
+import { useDesktopConfig } from '../store/desktopConfig';
 import type { ElectronContextMenuOptions } from '../preload';
 
 /**
@@ -16,7 +16,7 @@ export class AppWindow {
   private window: BrowserWindow;
   /** Volatile store containing window config - saves window state between launches. */
   private store: Store<AppWindowSettings>;
-  private messageQueue: Array<{ channel: string; data: any }> = [];
+  private messageQueue: Array<{ channel: string; data: unknown }> = [];
   private rendererReady: boolean = false;
   /** The application menu. */
   private menu: Electron.Menu | null;
@@ -24,7 +24,7 @@ export class AppWindow {
   private editMenu?: Menu;
 
   public constructor() {
-    const installed = DesktopConfig.store.get('installState') === 'installed';
+    const installed = useDesktopConfig().get('installState') === 'installed';
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = installed ? primaryDisplay.workAreaSize : { width: 1024, height: 768 };
     const store = this.loadWindowStore();
@@ -45,7 +45,7 @@ export class AppWindow {
       x: storedX,
       y: storedY,
       webPreferences: {
-        preload: path.join(__dirname, '../build/preload.js'),
+        preload: path.join(__dirname, '../build/preload.cjs'),
         nodeIntegration: true,
         contextIsolation: true,
         webviewTag: true,
@@ -69,7 +69,7 @@ export class AppWindow {
     return this.rendererReady;
   }
 
-  public send(channel: string, data: any): void {
+  public send(channel: string, data: unknown): void {
     if (!this.isReady()) {
       this.messageQueue.push({ channel, data });
       return;
@@ -114,9 +114,9 @@ export class AppWindow {
     });
   }
 
-  public loadComfyUI(serverArgs: ServerArgs) {
+  public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
-    this.window.loadURL(`http://${host}:${serverArgs.port}`);
+    await this.window.loadURL(`http://${host}:${serverArgs.port}`);
   }
 
   public openDevTools(): void {
@@ -157,7 +157,7 @@ export class AppWindow {
     } else {
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
-      this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
+      await this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
     }
   }
 
@@ -259,7 +259,7 @@ export class AppWindow {
       'UI',
       process.platform === 'darwin' ? 'Comfy_Logo_x16_BW.png' : 'Comfy_Logo_x32.png'
     );
-    let tray = new Tray(trayImage);
+    const tray = new Tray(trayImage);
 
     tray.setToolTip('ComfyUI');
 

@@ -1,11 +1,14 @@
-const path = require("path");
-const os = require('os');
-const fs = require('fs-extra');
-const axios = require('axios');
-const tar = require('tar');
-const extractZip = require('extract-zip');
-const uvVer = require('../package.json').config.uvVersion;
+import path from "node:path"
+import os from 'node:os'
+import fs from 'fs-extra'
+import axios from 'axios'
+import * as tar from 'tar'
+import extractZip from 'extract-zip'
+import packageJson from './getPackage.js'
 
+const uvVer = packageJson.config.uvVersion;
+
+/** @typedef {{ [key]: { zipFile: string, uvOutputFolderName: string, zip: boolean } }} UvDownloadOptions */
 const options = {
     win32: {
         zipFile: 'uv-x86_64-pc-windows-msvc.zip',
@@ -50,6 +53,7 @@ async function downloadUV() {
 
 };
 
+/** @param {UvDownloadOptions[any]} options */
 async function downloadAndExtract(baseURL, options) {
     const {
         zipFile,
@@ -80,4 +84,4 @@ async function downloadAndExtract(baseURL, options) {
 }
 
 //** Download and Extract UV. Default uses OS.Platfrom. Add 'all' will download all. Add 'none' will skip */
-downloadUV();
+await downloadUV();

@@ -1,4 +1,4 @@
-import * as pty from 'node-pty';
+import pty from 'node-pty';
 import { AppWindow } from '../main-process/appWindow';
 import { IPC_CHANNELS } from '../constants';
 import { getDefaultShell } from './util';

@@ -12,12 +12,18 @@ const openFolder = async (folderPath: string) => {
   ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
 };
 
+export type GpuType = 'nvidia' | 'mps' | 'unsupported';
+export type TorchDeviceType = GpuType | 'cpu';
+
 export interface InstallOptions {
+  /** Base installation path */
   installPath: string;
   autoUpdate: boolean;
   allowMetrics: boolean;
   migrationSourcePath?: string;
   migrationItemIds?: string[];
+  /** Torch compute device */
+  device?: TorchDeviceType;
 }
 
 export interface SystemPaths {
@@ -65,7 +71,7 @@ const electronAPI = {
     return ipcRenderer.invoke(IPC_CHANNELS.IS_PACKAGED);
   }, //Emulates app.ispackaged in renderer
   restartApp: (customMessage?: string, delay?: number): void => {
-    console.log('Sending restarting app message to main process with custom message: ', customMessage);
+    console.log('Sending restarting app message to main process with custom message:', customMessage);
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
   reinstall: () => {
@@ -143,11 +149,8 @@ const electronAPI = {
    * @param error The error object or message to send
    * @param extras Optional additional context/data to attach
    */
-  sendErrorToSentry: (error: string, extras?: Record<string, any>) => {
-    return ipcRenderer.invoke(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, {
-      error: error,
-      extras,
-    });
+  sendErrorToSentry: (error: string, extras?: Record<string, unknown>) => {
+    return ipcRenderer.invoke(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, { error, extras });
   },
   Terminal: {
     /**
@@ -242,6 +245,23 @@ const electronAPI = {
    */
   showContextMenu: (options?: ElectronContextMenuOptions): void => {
     return ipcRenderer.send(IPC_CHANNELS.SHOW_CONTEXT_MENU, options);
+  },
+  Config: {
+    /**
+     * Finds the name of the last detected GPU type.  Detection only runs during installation.
+     * @returns The last GPU detected by `validateHardware` - runs during installation
+     */
+    getDetectedGpu: async (): Promise<GpuType | undefined> => {
+      return await ipcRenderer.invoke(IPC_CHANNELS.GET_GPU);
+    },
+  },
+  /** Restart the python server without restarting desktop. */
+  restartCore: async (): Promise<void> => {
+    console.log('Restarting core process');
+    await ipcRenderer.invoke(IPC_CHANNELS.RESTART_APP);
+  },
+  getPlatform: (): NodeJS.Platform => {
+    return process.platform;
   },
 } as const;
 

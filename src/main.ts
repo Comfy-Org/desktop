@@ -1,5 +1,5 @@
 import { IPC_CHANNELS, DEFAULT_SERVER_ARGS, ProgressStatus } from './constants';
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog, ipcMain, shell } from 'electron';
 import log from 'electron-log/main';
 import { findAvailablePort } from './utils';
 import dotenv from 'dotenv';
@@ -38,19 +38,27 @@ if (!gotTheLock) {
   log.info('App already running. Exiting...');
   app.quit();
 } else {
-  app.on('ready', async () => {
+  app.on('ready', () => {
     log.debug('App ready');
 
-    const store = await DesktopConfig.load();
-    if (store) {
-      startApp();
-    } else {
-      app.exit(20);
-    }
+    startApp().catch((error) => {
+      log.error('Unhandled exception in app startup', error);
+      app.exit(2020);
+    });
   });
 }
 
 async function startApp() {
+  try {
+    const store = await DesktopConfig.load(shell);
+    if (!store) throw new Error('Unknown error loading app config on startup.');
+  } catch (error) {
+    log.error('Unhandled exception during config load', error);
+    dialog.showErrorBox('User Data', `Unknown error whilst writing to user data folder:\n\n${error}`);
+    app.exit(20);
+    return;
+  }
+
   try {
     const appWindow = new AppWindow();
     appWindow.onClose(() => {
@@ -94,15 +102,16 @@ async function startApp() {
 
       const waitLoad = Promise.withResolvers();
       ipcMain.handle(IPC_CHANNELS.LOADED, waitLoad.resolve);
-      appWindow.loadComfyUI({ host, port, extraServerArgs });
+      await appWindow.loadComfyUI({ host, port, extraServerArgs });
       await waitLoad.promise;
       onReady?.();
     } catch (error) {
+      log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);
     }
   } catch (error) {
-    log.error('Fatal error occurred during app startup.', error);
+    log.error('Fatal error occurred during app pre-startup.', error);
     app.exit(2024);
   }
 }

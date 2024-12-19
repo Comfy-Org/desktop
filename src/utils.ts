@@ -1,11 +1,14 @@
-import * as net from 'net';
-import * as fsPromises from 'node:fs/promises';
+import net from 'node:net';
+import fsPromises from 'node:fs/promises';
 import path from 'node:path';
-import fs from 'fs';
+import fs from 'node:fs';
 import si from 'systeminformation';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 import log from 'electron-log/main';
+import type { GpuType } from './preload';
+
+export const ansiCodes = /[\u001B\u009B][#();?[]*(?:\d{1,4}(?:;\d{0,4})*)?[\d<=>A-ORZcf-nqry]/g;
 
 export async function pathAccessible(path: string): Promise<boolean> {
   try {
@@ -68,7 +71,7 @@ export async function rotateLogFiles(logDir: string, baseName: string, maxFiles 
     const files = await fsPromises.readdir(logDir, { withFileTypes: true });
     const names: string[] = [];
 
-    const logFileRegex = new RegExp(`^${baseName}_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.log$`);
+    const logFileRegex = new RegExp(`^${baseName}_\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-\\d{3}Z\\.log$`);
 
     for (const file of files) {
       if (file.isFile() && logFileRegex.test(file.name)) names.push(file.name);
@@ -79,7 +82,7 @@ export async function rotateLogFiles(logDir: string, baseName: string, maxFiles 
     }
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replaceAll(/[.:]/g, '-');
   const newLogPath = path.join(logDir, `${baseName}_${timestamp}.log`);
   await fsPromises.rename(currentLogPath, newLogPath);
 }
@@ -88,6 +91,8 @@ const execAsync = promisify(exec);
 
 interface HardwareValidation {
   isValid: boolean;
+  /** The detected GPU (not guaranteed to be valid - check isValid) */
+  gpu?: GpuType;
   error?: string;
 }
 
@@ -108,7 +113,7 @@ export async function validateHardware(): Promise<HardwareValidation> {
         };
       }
 
-      return { isValid: true };
+      return { isValid: true, gpu: 'mps' };
     }
 
     // Windows NVIDIA GPU validation
@@ -127,11 +132,9 @@ export async function validateHardware(): Promise<HardwareValidation> {
             'powershell.exe -c "$n = \'*NVIDIA*\'; Get-CimInstance win32_videocontroller | ? { $_.Name -like $n -or $_.VideoProcessor -like $n -or $_.AdapterCompatibility -like $n }"'
           );
           if (!res?.stdout) throw new Error('No video card');
-          return { isValid: true };
         } catch {
           try {
             await execAsync('nvidia-smi');
-            return { isValid: true };
           } catch {
             return {
               isValid: false,
@@ -141,7 +144,7 @@ export async function validateHardware(): Promise<HardwareValidation> {
         }
       }
 
-      return { isValid: true };
+      return { isValid: true, gpu: 'nvidia' };
     }
 
     return {
