@@ -20,6 +20,11 @@ export default defineConfig((env) => {
         },
       },
     },
+    test: {
+      name: 'preload',
+      include: ['tests/preload/**/*'],
+      environment: 'jsdom',
+    },
   };
 
   return mergeConfig(getBuildConfig(env), config);
