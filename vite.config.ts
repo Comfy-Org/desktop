@@ -1,7 +1,7 @@
 /// <reference types="vitest/config" />
 import { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
-import { getBuildConfig, external, pluginHotRestart } from './vite.base.config';
+import { getBuildConfig, external } from './vite.base.config';
 import { viteElectronAppPlugin } from './infrastructure/viteElectronAppPlugin';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { version } from './package.json';
@@ -30,7 +30,6 @@ export default defineConfig((env) => {
     plugins: [
       // Custom hot reload solution for vite 6
       viteElectronAppPlugin(),
-      pluginHotRestart('restart'),
       process.env.NODE_ENV === 'production'
         ? sentryVitePlugin({
             org: 'comfy-org',
