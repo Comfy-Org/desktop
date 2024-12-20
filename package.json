@@ -41,7 +41,7 @@
     "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
     "reset-install": "node scripts/resetInstall.js",
     "sign": "node debug/sign.js",
-    "start": "node ./scripts/launchdev.js",
+    "start": "vite build --watch --config vite.main.config.ts",
     "test:e2e": "npx playwright test",
     "test:unit": "vitest run",
     "test:update-snapshots": "npx playwright test --update-snapshots",

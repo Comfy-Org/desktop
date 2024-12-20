@@ -1,7 +1,8 @@
 /// <reference types="vitest/config" />
-import type { UserConfig } from 'vite';
+import { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
 import { getBuildConfig, external, pluginHotRestart } from './vite.base.config';
+import { viteElectronAppPlugin } from './infrastructure/viteElectronAppPlugin';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { version } from './package.json';
 
@@ -21,7 +22,14 @@ export default defineConfig((env) => {
       sourcemap: true,
       minify: false,
     },
+    server: {
+      watch: {
+        ignored: ['**/assets/ComfyUI/**', 'venv/**'],
+      },
+    },
     plugins: [
+      // Custom hot reload solution for vite 6
+      viteElectronAppPlugin(),
       pluginHotRestart('restart'),
       process.env.NODE_ENV === 'production'
         ? sentryVitePlugin({
