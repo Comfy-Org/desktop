@@ -20,6 +20,12 @@ export default defineConfig((env) => {
         },
       },
     },
+    // TODO: Not impl. - placeholder for vitest configuration
+    test: {
+      name: 'preload',
+      include: ['tests/preload/**/*'],
+      environment: 'jsdom',
+    },
   };
 
   return mergeConfig(getBuildConfig(env), config);
