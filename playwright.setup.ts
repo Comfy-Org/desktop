@@ -4,7 +4,7 @@ async function globalSetup() {
   console.log('Playwright globalSetup called');
 
   return new Promise<void>((resolve, reject) => {
-    const electron = spawn('node', ['./scripts/launchdev.js']);
+    const electron = spawn('node', ['./scripts/launchCI.js']);
 
     electron.on('close', () => {
       reject(new Error('process failed to start'));
