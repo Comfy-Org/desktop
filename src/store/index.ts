@@ -19,6 +19,10 @@ export type DesktopSettings = {
    */
   installState?: 'started' | 'installed' | 'upgraded';
   /**
+   * The path to the migration installation to migrate custom nodes from
+   */
+  migrateCustomNodesFrom?: string;
+  /**
    * The last GPU that was detected during hardware validation.
    * Allows manual override of some install behaviour.
    */

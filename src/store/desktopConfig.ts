@@ -32,6 +32,11 @@ export class DesktopConfig {
     return value === undefined ? this.#store.delete(key) : this.#store.set(key, value);
   }
 
+  /** @inheritdoc {@link ElectronStore.delete} */
+  delete<Key extends keyof DesktopSettings>(key: Key) {
+    this.#store.delete(key);
+  }
+
   /**
    * Static factory method. Loads the config from disk.
    * @param shell Shell environment that can open file and folder views for the user
