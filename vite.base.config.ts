@@ -1,5 +1,5 @@
 import { builtinModules } from 'node:module';
-import type { ConfigEnv, Plugin, UserConfig } from 'vite';
+import type { ConfigEnv, UserConfig } from 'vite';
 import pkg from './package.json';
 
 export const builtins = ['electron', ...builtinModules.flatMap((m) => [m, `node:${m}`])];
@@ -26,21 +26,6 @@ export function getBuildConfig(env: ConfigEnv): UserConfig {
 
     define: {
       __COMFYUI_VERSION__: JSON.stringify(pkg.config.comfyVersion),
-    },
-  };
-}
-
-export function pluginHotRestart(command: 'reload' | 'restart'): Plugin {
-  return {
-    name: '@electron-forge/plugin-vite:hot-restart',
-    closeBundle() {
-      if (command === 'reload') {
-        // TODO: Send message to external renderer dev server for reload.
-      } else {
-        // Main process hot restart.
-        // https://github.com/electron/forge/blob/v7.2.0/packages/api/core/src/api/start.ts#L216-L223
-        process.stdin.emit('data', 'rs');
-      }
     },
   };
 }
