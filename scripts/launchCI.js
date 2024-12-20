@@ -37,7 +37,7 @@ function setupMainPackageWatcher() {
   return build({
     mode,
     logLevel,
-    configFile: 'vite.main.config.ts',
+    configFile: 'vite.config.ts',
     plugins: [runAppAfterBuild()],
   });
 }
