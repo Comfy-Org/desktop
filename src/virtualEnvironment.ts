@@ -240,7 +240,7 @@ export class VirtualEnvironment {
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
     const id = Date.now();
     return new Promise((res) => {
-      const endMarker = `--end-${id}:`;
+      const endMarker = `_-end-${id}:`;
       const input = `clear; ${command}; echo "${endMarker}$?"`;
       const dataReader = this.uvPtyInstance.onData((data) => {
         const lines = data.split('\n');
