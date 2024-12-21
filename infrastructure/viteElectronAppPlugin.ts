@@ -19,9 +19,6 @@ export function viteElectronAppPlugin(): PluginOption {
   return {
     name: 'Load Electron app in watch mode',
     apply: 'build',
-    options() {
-      console.warn('options');
-    },
     buildStart() {
       // Only operate in watch mode.
       if (this.meta.watchMode !== true || !electronApp) return;
