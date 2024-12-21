@@ -27,6 +27,12 @@ app.on('window-all-closed', () => {
   }
 });
 
+// Suppress unhandled exception dialog when already quitting.
+let quitting = false;
+app.on('before-quit', () => {
+  quitting = true;
+});
+
 // Sentry needs to be initialized at the top level.
 SentryLogging.init();
 
@@ -107,7 +113,7 @@ async function startApp() {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);
-      dialog.showErrorBox('Unhandled exception', `An unhandled exception occurred:\n\n${error}`);
+      if (!quitting) dialog.showErrorBox('Unhandled exception', `An unhandled exception occurred:\n\n${error}`);
     }
   } catch (error) {
     log.error('Fatal error occurred during app pre-startup.', error);
