@@ -1,6 +1,8 @@
-import type { UserConfig } from 'vite';
+/// <reference types="vitest/config" />
+import { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
-import { getBuildConfig, external, pluginHotRestart } from './vite.base.config';
+import { getBuildConfig, external } from './vite.base.config';
+import { viteElectronAppPlugin } from './infrastructure/viteElectronAppPlugin';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { version } from './package.json';
 
@@ -20,8 +22,14 @@ export default defineConfig((env) => {
       sourcemap: true,
       minify: false,
     },
+    server: {
+      watch: {
+        ignored: ['**/assets/ComfyUI/**', 'venv/**'],
+      },
+    },
     plugins: [
-      pluginHotRestart('restart'),
+      // Custom hot reload solution for vite 6
+      viteElectronAppPlugin(),
       process.env.NODE_ENV === 'production'
         ? sentryVitePlugin({
             org: 'comfy-org',
@@ -41,6 +49,10 @@ export default defineConfig((env) => {
     resolve: {
       // Load the Node.js entry.
       mainFields: ['module', 'jsnext:main', 'jsnext'],
+    },
+    test: {
+      name: 'main',
+      include: ['tests/unit/**/*'],
     },
   };
 

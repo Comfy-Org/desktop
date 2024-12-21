@@ -21,5 +21,12 @@
   },
   "exclude": [".history", ".vite", "assets", "dist", "node_modules", "out"],
   // Include JS files so they are covered by projectService (ESLint)
-  "include": ["src/**/*", "*.ts", "*.js", "scripts/**/*", "tests/**/*"]
+  "include": [
+    "src/**/*",
+    "*.ts",
+    "*.js",
+    "infrastructure/**/*",
+    "scripts/**/*",
+    "tests/**/*"
+  ]
 }
