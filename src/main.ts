@@ -113,7 +113,13 @@ async function startApp() {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);
-      if (!quitting) dialog.showErrorBox('Unhandled exception', `An unhandled exception occurred:\n\n${error}`);
+      if (!quitting) {
+        dialog.showErrorBox(
+          'Unhandled exception',
+          `An unexpected error occurred whilst starting the app, and it needs to be closed.\n\nError message:\n\n${error}`
+        );
+        app.quit();
+      }
     }
   } catch (error) {
     log.error('Fatal error occurred during app pre-startup.', error);
