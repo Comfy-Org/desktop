@@ -72,6 +72,6 @@ runs:
           Mac (Apple Silicon): https://download.comfy.org/${BUILD_ID}/mac/dmg/arm64
           Windows: https://download.comfy.org/${BUILD_ID}/windows/nsis/x64"
           
-          # Update the specific release
-          gh release edit ${{ inputs.RELEASE_TAG }} --notes-append "$DOWNLOAD_LINKS"
+          # Update the specific release and mark as non-prerelease
+          gh release edit ${{ inputs.RELEASE_TAG }} --notes-append "$DOWNLOAD_LINKS" --prerelease=false
         fi
