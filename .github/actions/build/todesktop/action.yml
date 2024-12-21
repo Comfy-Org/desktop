@@ -72,6 +72,12 @@ runs:
           Mac (Apple Silicon): https://download.comfy.org/${BUILD_ID}/mac/dmg/arm64
           Windows: https://download.comfy.org/${BUILD_ID}/windows/nsis/x64"
           
-          # Update the specific release and mark as non-prerelease
-          gh release edit ${{ inputs.RELEASE_TAG }} --notes-append "$DOWNLOAD_LINKS" --prerelease=false
+          # First get existing release notes
+          EXISTING_NOTES=$(gh release view ${{ inputs.RELEASE_TAG }} --json body -q .body)
+          
+          # Combine existing notes with download links
+          UPDATED_NOTES="${EXISTING_NOTES}${DOWNLOAD_LINKS}"
+          
+          # Update the release with combined notes
+          gh release edit ${{ inputs.RELEASE_TAG }} --notes "$UPDATED_NOTES" --prerelease=false
         fi
