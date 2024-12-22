@@ -269,6 +269,8 @@ We use Todesktop to build and codesign our distributables. To make a new release
 1. Check the Github action "Publish All" runs. It should update the release body with Download links when it is finished.
 1. Test the build, and if it looks good release it on ToDesktop. Also mark the release as "Latest".
 
+If a build fails for some reason, you can manually retry by running the "Publish All" GH action with a release tag as input.
+
 ### Publish Locally
 
 Follow the above steps for local development setup first.
