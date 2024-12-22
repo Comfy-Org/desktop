@@ -264,6 +264,7 @@ The launch environment can be customised, e.g. add a `"linux"` section to source
 
 We use Todesktop to build and codesign our distributables. To make a new release:
 
+1. Create a PR that updates package.json to the next version.
 1. Create a Github Release with semantic version tag eg. "v1.0.0"
 1. Make sure it is a pre-release.
 1. Check the Github action "Publish All" runs. It should update the release body with Download links when it is finished.
