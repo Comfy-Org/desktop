@@ -62,22 +62,25 @@ runs:
           BUILD_ID=$(echo $BUILD_URL | cut -d'/' -f6)
           APP_ID=$(echo $BUILD_URL | cut -d'/' -f5)
           
-          # Create download links section
-          DOWNLOAD_LINKS="
-          ### Download Latest:
-          Mac (Apple Silicon): https://download.comfy.org/mac/dmg/arm64
-          Windows: https://download.comfy.org/windows/nsis/x64
+          # Only update release notes if RELEASE_TAG is provided
+          if [ -n "${{ inputs.RELEASE_TAG }}" ]; then
+            # Create download links section
+            DOWNLOAD_LINKS="
+            ### Download Latest:
+            Mac (Apple Silicon): https://download.comfy.org/mac/dmg/arm64
+            Windows: https://download.comfy.org/windows/nsis/x64
 
-          ### Artifacts of current release:
-          Mac (Apple Silicon): https://download.comfy.org/${BUILD_ID}/mac/dmg/arm64
-          Windows: https://download.comfy.org/${BUILD_ID}/windows/nsis/x64"
-          
-          # First get existing release notes
-          EXISTING_NOTES=$(gh release view ${{ inputs.RELEASE_TAG }} --json body -q .body)
-          
-          # Combine existing notes with download links
-          UPDATED_NOTES="${EXISTING_NOTES}${DOWNLOAD_LINKS}"
-          
-          # Update the release with combined notes
-          gh release edit ${{ inputs.RELEASE_TAG }} --notes "$UPDATED_NOTES" --prerelease=false
+            ### Artifacts of current release:
+            Mac (Apple Silicon): https://download.comfy.org/${BUILD_ID}/mac/dmg/arm64
+            Windows: https://download.comfy.org/${BUILD_ID}/windows/nsis/x64"
+            
+            # First get existing release notes
+            EXISTING_NOTES=$(gh release view ${{ inputs.RELEASE_TAG }} --json body -q .body)
+            
+            # Combine existing notes with download links
+            UPDATED_NOTES="${EXISTING_NOTES}${DOWNLOAD_LINKS}"
+            
+            # Update the release with combined notes
+            gh release edit ${{ inputs.RELEASE_TAG }} --notes "$UPDATED_NOTES"
+          fi
         fi
