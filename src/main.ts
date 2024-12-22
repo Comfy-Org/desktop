@@ -105,7 +105,14 @@ async function startApp() {
 
       // Start server
       if (!useExternalServer) {
-        await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
+        try {
+          await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
+        } catch (error) {
+          log.error('Unhandled exception during server start', error);
+          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+          appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+          return;
+        }
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
       await appWindow.loadComfyUI({ host, port, extraServerArgs });
