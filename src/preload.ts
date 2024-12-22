@@ -53,14 +53,14 @@ const electronAPI = {
    */
   onProgressUpdate: (callback: (update: { status: ProgressStatus }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
-      console.info(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
+      console.debug(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       callback(value);
     });
   },
   onLogMessage: (callback: (message: string) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOG_MESSAGE, (_event, value) => {
-      console.info(`Received ${IPC_CHANNELS.LOG_MESSAGE} event`, value);
+      console.debug(`Received ${IPC_CHANNELS.LOG_MESSAGE} event`, value);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       callback(value);
     });
