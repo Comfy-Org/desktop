@@ -112,7 +112,7 @@ async function startApp() {
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
-      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);
+      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
       if (!quitting) {
         dialog.showErrorBox(
           'Unhandled exception',
