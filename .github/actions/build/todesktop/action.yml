@@ -70,9 +70,18 @@ runs:
             Mac (Apple Silicon): https://download.comfy.org/mac/dmg/arm64
             Windows: https://download.comfy.org/windows/nsis/x64
 
-            ### Artifacts of current release:
+            <details>
+
+            <summary>
+
+            ### Artifacts of current release
+
+            </summary>
+
             Mac (Apple Silicon): https://download.comfy.org/${BUILD_ID}/mac/dmg/arm64
             Windows: https://download.comfy.org/${BUILD_ID}/windows/nsis/x64"
+
+            </details>
             
             # First get existing release notes
             EXISTING_NOTES=$(gh release view ${{ inputs.RELEASE_TAG }} --json body -q .body)
