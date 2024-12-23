@@ -207,6 +207,7 @@ export class ComfyDesktopApp {
     this.initializeTerminal(virtualEnvironment);
 
     if (customNodeMigrationError) {
+      // TODO: Replace with IPC callback to handle i18n (SoC).
       new Notification({
         title: 'Failed to migrate custom nodes',
         body: customNodeMigrationError,
@@ -214,24 +215,23 @@ export class ComfyDesktopApp {
     }
   }
 
+  /** @returns `undefined` if successful, or an error `string` on failure. */
   async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {
-    const customNodeMigrationPath = config.get('migrateCustomNodesFrom');
-    let customNodeMigrationError: string | null = null;
-    if (customNodeMigrationPath) {
-      log.info('Migrating custom nodes from: ', customNodeMigrationPath);
-      try {
-        const cmCli = new CmCli(virtualEnvironment);
-        await cmCli.restoreCustomNodes(customNodeMigrationPath, callbacks);
-      } catch (error) {
-        log.error('Error migrating custom nodes', error);
-        customNodeMigrationError =
-          error instanceof Error ? error.message : typeof error === 'string' ? error : 'Error migrating custom nodes.';
-      } finally {
-        // Always remove the flag so the user doesnt get stuck here
-        config.delete('migrateCustomNodesFrom');
-      }
+    const fromPath = config.get('migrateCustomNodesFrom');
+    if (!fromPath) return;
+
+    log.info('Migrating custom nodes from:', fromPath);
+    try {
+      const cmCli = new CmCli(virtualEnvironment);
+      await cmCli.restoreCustomNodes(fromPath, callbacks);
+    } catch (error) {
+      log.error('Error migrating custom nodes:', error);
+      // TODO: Replace with IPC callback to handle i18n (SoC).
+      return error?.toString?.() ?? 'Error migrating custom nodes.';
+    } finally {
+      // Always remove the flag so the user doesnt get stuck here
+      config.delete('migrateCustomNodesFrom');
     }
-    return customNodeMigrationError;
   }
 
   static create(appWindow: AppWindow, basePath: string): ComfyDesktopApp {
