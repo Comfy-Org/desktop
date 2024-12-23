@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog, ipcMain, Notification } from 'electron';
 import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
 import { graphics } from 'systeminformation';
@@ -250,15 +250,12 @@ export class ComfyDesktopApp {
     await this.comfyServer.start();
     this.initializeTerminal(virtualEnvironment);
 
-    return () => {
-      if (customNodeMigrationError) {
-        this.appWindow.showToast({
-          summary: 'Failed to migrate custom nodes',
-          detail: customNodeMigrationError,
-          severity: 'error',
-        });
-      }
-    };
+    if (customNodeMigrationError) {
+      new Notification({
+        title: 'Failed to migrate custom nodes',
+        body: customNodeMigrationError,
+      }).show();
+    }
   }
 
   async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {

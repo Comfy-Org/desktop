@@ -227,20 +227,6 @@ const electronAPI = {
     ipcRenderer.send(IPC_CHANNELS.INSTALL_COMFYUI, installOptions);
   },
   /**
-   * Shows a toast popup with the supplied config
-   */
-  onShowToast: (callback: (config: { message: string; type: string }) => void) => {
-    ipcRenderer.on(IPC_CHANNELS.SHOW_TOAST, (_event, value) => {
-      callback(value);
-    });
-  },
-  /**
-   * Trigged by the frontend app when it is loaded
-   */
-  loaded: (): Promise<string> => {
-    return ipcRenderer.invoke(IPC_CHANNELS.LOADED);
-  },
-  /**
    * Opens native context menus.
    *
    * {@link ElectronContextMenuOptions} contains the various options to control the menu type.

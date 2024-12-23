@@ -94,17 +94,11 @@ async function startApp() {
       delete extraServerArgs.listen;
       delete extraServerArgs.port;
 
-      let onReady: (() => void) | null = null;
       if (!useExternalServer) {
-        onReady = await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
+        await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
-
-      const waitLoad = Promise.withResolvers();
-      ipcMain.handle(IPC_CHANNELS.LOADED, waitLoad.resolve);
       await appWindow.loadComfyUI({ host, port, extraServerArgs });
-      await waitLoad.promise;
-      onReady?.();
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);

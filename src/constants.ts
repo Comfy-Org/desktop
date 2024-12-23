@@ -30,8 +30,6 @@ export const IPC_CHANNELS = {
   VALIDATE_COMFYUI_SOURCE: 'validate-comfyui-source',
   SHOW_DIRECTORY_PICKER: 'show-directory-picker',
   INSTALL_COMFYUI: 'install-comfyui',
-  SHOW_TOAST: 'show-toast',
-  LOADED: 'loaded',
   SHOW_CONTEXT_MENU: 'show-context-menu',
   RESTART_CORE: 'restart-core',
   GET_GPU: 'get-gpu',

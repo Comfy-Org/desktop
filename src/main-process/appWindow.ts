@@ -98,17 +98,6 @@ export class AppWindow {
     });
   }
 
-  /**
-   * Shows a toast popup in the client
-   */
-  showToast(config: {
-    severity?: 'success' | 'info' | 'warn' | 'error' | 'secondary' | 'contrast' | undefined;
-    summary?: string | undefined;
-    detail?: any | undefined;
-  }): void {
-    this.send(IPC_CHANNELS.SHOW_TOAST, config);
-  }
-
   public onClose(callback: () => void): void {
     this.window.on('close', () => {
       callback();
