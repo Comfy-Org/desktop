@@ -27,13 +27,17 @@ app.on('window-all-closed', () => {
   }
 });
 
-/**
- * Sentry needs to be initialized at the top level.
- */
+// Suppress unhandled exception dialog when already quitting.
+let quitting = false;
+app.on('before-quit', () => {
+  quitting = true;
+});
+
+// Sentry needs to be initialized at the top level.
 SentryLogging.init();
 
+// Synchronous app start
 const gotTheLock = app.requestSingleInstanceLock();
-
 if (!gotTheLock) {
   log.info('App already running. Exiting...');
   app.quit();
@@ -48,7 +52,9 @@ if (!gotTheLock) {
   });
 }
 
+// Async app start
 async function startApp() {
+  // Load config or exit
   try {
     const store = await DesktopConfig.load(shell);
     if (!store) throw new Error('Unknown error loading app config on startup.');
@@ -60,6 +66,7 @@ async function startApp() {
   }
 
   try {
+    // Create native window
     const appWindow = new AppWindow();
     appWindow.onClose(() => {
       log.info('App window closed. Quitting application.');
@@ -75,11 +82,13 @@ async function startApp() {
         ...options,
       });
     });
+
     try {
       const comfyDesktopApp = await ComfyDesktopApp.create(appWindow);
       await comfyDesktopApp.initialize();
       SentryLogging.comfyDesktopApp = comfyDesktopApp;
 
+      // Construct core launch args
       const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
       const cpuOnly: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { cpu: '' } : {};
       const extraServerArgs: Record<string, string> = {
@@ -94,15 +103,30 @@ async function startApp() {
       delete extraServerArgs.listen;
       delete extraServerArgs.port;
 
+      // Start server
       if (!useExternalServer) {
-        await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
+        try {
+          await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
+        } catch (error) {
+          log.error('Unhandled exception during server start', error);
+          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+          appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+          return;
+        }
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
       await appWindow.loadComfyUI({ host, port, extraServerArgs });
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
-      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, error);
+      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+      if (!quitting) {
+        dialog.showErrorBox(
+          'Unhandled exception',
+          `An unexpected error occurred whilst starting the app, and it needs to be closed.\n\nError message:\n\n${error}`
+        );
+        app.quit();
+      }
     }
   } catch (error) {
     log.error('Fatal error occurred during app pre-startup.', error);

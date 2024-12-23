@@ -92,13 +92,11 @@ export const MigrationItems: MigrationItem[] = [
     label: 'Models',
     description: 'Reference model files from existing ComfyUI installations. (No copy)',
   },
-  // TODO: Decide whether we want to auto-migrate custom nodes, and install their dependencies.
-  // huchenlei: This is a very essential thing for migration experience.
-  // {
-  //   id: 'custom_nodes',
-  //   label: 'Custom Nodes',
-  //   description: 'Reference custom node files from existing ComfyUI installations. (No copy)',
-  // },
+  {
+    id: 'custom_nodes',
+    label: 'Custom Nodes',
+    description: 'Reinstall custom nodes from existing ComfyUI installations.',
+  },
 ] as const;
 
 export const DEFAULT_SERVER_ARGS = {

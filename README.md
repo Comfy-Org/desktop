@@ -264,10 +264,13 @@ The launch environment can be customised, e.g. add a `"linux"` section to source
 
 We use Todesktop to build and codesign our distributables. To make a new release:
 
-1. Make a PR with the semantic version. eg. `v1.0.1`
-1. Add the label `Release` to the PR.
-1. Merge the PR
-1. A build will automatically start and you can view it at https://app.todesktop.com
+1. Create a PR that updates package.json to the next version.
+1. Create a Github Release with semantic version tag eg. "v1.0.0"
+1. Make sure it is a pre-release.
+1. Check the Github action "Publish All" runs. It should update the release body with Download links when it is finished.
+1. Test the build, and if it looks good release it on ToDesktop. Also mark the release as "Latest".
+
+If a build fails for some reason, you can manually retry by running the "Publish All" GH action with a release tag as input.
 
 ### Publish Locally
 

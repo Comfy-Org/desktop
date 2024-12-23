@@ -14,6 +14,9 @@ inputs:
     description: 'Build Staging'
     default: 'false'
     required: false
+  RELEASE_TAG:
+    description: 'Release Tag'
+    required: false
 runs:
   using: composite
   steps:
@@ -52,5 +55,41 @@ runs:
           yarn run publish:staging
         else
           echo "🚀 Building PRODUCTION version..."
-          yarn run publish
+          yarn run publish | tee build.log
+          
+          # Extract build ID from the log
+          BUILD_URL=$(grep "Build complete!" build.log | head -n1 | cut -d' ' -f3)
+          BUILD_ID=$(echo $BUILD_URL | cut -d'/' -f6)
+          APP_ID=$(echo $BUILD_URL | cut -d'/' -f5)
+          
+          # Only update release notes if RELEASE_TAG is provided
+          if [ -n "${{ inputs.RELEASE_TAG }}" ]; then
+            # Create download links section
+            DOWNLOAD_LINKS="
+            ### Download Latest:
+            Mac (Apple Silicon): https://download.comfy.org/mac/dmg/arm64
+            Windows: https://download.comfy.org/windows/nsis/x64
+
+            <details>
+
+            <summary>
+
+            ### Artifacts of current release
+
+            </summary>
+
+            Mac (Apple Silicon): https://download.comfy.org/${BUILD_ID}/mac/dmg/arm64
+            Windows: https://download.comfy.org/${BUILD_ID}/windows/nsis/x64"
+
+            </details>
+            
+            # First get existing release notes
+            EXISTING_NOTES=$(gh release view ${{ inputs.RELEASE_TAG }} --json body -q .body)
+            
+            # Combine existing notes with download links
+            UPDATED_NOTES="${EXISTING_NOTES}${DOWNLOAD_LINKS}"
+            
+            # Update the release with combined notes
+            gh release edit ${{ inputs.RELEASE_TAG }} --notes "$UPDATED_NOTES"
+          fi
         fi

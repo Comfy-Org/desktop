@@ -4,11 +4,11 @@ import log from 'electron-log/main';
 import { pathAccessible } from './utils';
 import { app } from 'electron';
 import pty from 'node-pty';
-import os from 'node:os';
+import os, { EOL } from 'node:os';
 import { getDefaultShell } from './shell/util';
 import type { TorchDeviceType } from './preload';
 
-type ProcessCallbacks = {
+export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
   onStderr?: (data: string) => void;
 };
@@ -55,7 +55,8 @@ export class VirtualEnvironment {
     this.pythonVersion = pythonVersion;
     this.selectedDevice = selectedDevice;
 
-    this.venvPath = path.join(venvPath, '.venv'); // uv defaults to .venv
+    // uv defaults to .venv
+    this.venvPath = path.join(venvPath, '.venv');
     const resourcesPath = app.isPackaged ? path.join(process.resourcesPath) : path.join(app.getAppPath(), 'assets');
     this.comfyUIRequirementsPath = path.join(resourcesPath, 'ComfyUI', 'requirements.txt');
     this.comfyUIManagerRequirementsPath = path.join(
@@ -126,10 +127,10 @@ export class VirtualEnvironment {
    */
   public activateEnvironmentCommand(): string {
     if (process.platform === 'darwin' || process.platform === 'linux') {
-      return `source "${this.venvPath}/bin/activate"\r`;
+      return `source "${this.venvPath}/bin/activate"${EOL}`;
     }
     if (process.platform === 'win32') {
-      return `Set-ExecutionPolicy Unrestricted -Scope Process -Force; &"${this.venvPath}\\Scripts\\activate.ps1"; Set-ExecutionPolicy Default -Scope Process -Force\r`;
+      return `Set-ExecutionPolicy Unrestricted -Scope Process -Force${EOL}& "${this.venvPath}\\Scripts\\activate.ps1"${EOL}Set-ExecutionPolicy Default -Scope Process -Force${EOL}`;
     }
     throw new Error(`Unsupported platform: ${process.platform}`);
   }
@@ -214,15 +215,19 @@ export class VirtualEnvironment {
    */
   public async runPythonCommandAsync(
     args: string[],
-    callbacks?: ProcessCallbacks
+    callbacks?: ProcessCallbacks,
+    env?: Record<string, string>,
+    cwd?: string
   ): Promise<{ exitCode: number | null }> {
     return this.runCommandAsync(
       this.pythonInterpreterPath,
       args,
       {
+        ...env,
         PYTHONIOENCODING: 'utf8',
       },
-      callbacks
+      callbacks,
+      cwd
     );
   }
 
@@ -232,7 +237,7 @@ export class VirtualEnvironment {
    * @returns
    */
   public async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
-    const uvCommand = os.platform() === 'win32' ? `&"${this.uvPath}"` : this.uvPath;
+    const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
     log.info(`Running uv command: ${uvCommand} ${args.join(' ')}`);
     return this.runPtyCommandAsync(`${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`, callbacks?.onStdout);
   }
@@ -240,10 +245,10 @@ export class VirtualEnvironment {
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
     const id = Date.now();
     return new Promise((res) => {
-      const endMarker = `--end-${id}:`;
-      const input = `clear; ${command}; echo "${endMarker}$?"`;
+      const endMarker = `_-end-${id}:`;
+      const input = `clear${EOL}${command}${EOL}echo "${endMarker}$?"`;
       const dataReader = this.uvPtyInstance.onData((data) => {
-        const lines = data.split('\n');
+        const lines = data.split(/(\r\n|\n)/);
         for (const line of lines) {
           // Remove ansi sequences to see if this the exit marker
           const clean = line.replaceAll(/\u001B\[[\d;?]*[A-Za-z]/g, '');
@@ -272,7 +277,7 @@ export class VirtualEnvironment {
         }
         onData?.(data);
       });
-      this.uvPtyInstance.write(`${input}\r\n`);
+      this.uvPtyInstance.write(`${input}${EOL}`);
     });
   }
 
@@ -280,11 +285,12 @@ export class VirtualEnvironment {
     command: string,
     args: string[],
     env: Record<string, string>,
-    callbacks?: ProcessCallbacks
+    callbacks?: ProcessCallbacks,
+    cwd?: string
   ): ChildProcess {
     log.info(`Running command: ${command} ${args.join(' ')} in ${this.venvRootPath}`);
     const childProcess: ChildProcess = spawn(command, args, {
-      cwd: this.venvRootPath,
+      cwd: cwd ?? this.venvRootPath,
       env: {
         ...process.env,
         ...env,
@@ -310,10 +316,11 @@ export class VirtualEnvironment {
     command: string,
     args: string[],
     env: Record<string, string>,
-    callbacks?: ProcessCallbacks
+    callbacks?: ProcessCallbacks,
+    cwd?: string
   ): Promise<{ exitCode: number | null }> {
     return new Promise((resolve, reject) => {
-      const childProcess = this.runCommand(command, args, env, callbacks);
+      const childProcess = this.runCommand(command, args, env, callbacks, cwd);
 
       childProcess.on('close', (code) => {
         resolve({ exitCode: code });
