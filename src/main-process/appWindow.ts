@@ -45,6 +45,7 @@ export class AppWindow {
       x: storedX,
       y: storedY,
       webPreferences: {
+        // eslint-disable-next-line unicorn/prefer-module
         preload: path.join(__dirname, '../build/preload.cjs'),
         nodeIntegration: true,
         contextIsolation: true,
@@ -194,6 +195,7 @@ export class AppWindow {
   }
 
   private setupWindowEvents(): void {
+    // eslint-disable-next-line unicorn/consistent-function-scoping
     const updateBounds = () => {
       if (!this.window) return;
 
@@ -213,6 +215,7 @@ export class AppWindow {
     this.window.on('move', updateBounds);
 
     this.window.webContents.setWindowOpenHandler(({ url }) => {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       shell.openExternal(url);
       return { action: 'deny' };
     });
@@ -276,6 +279,7 @@ export class AppWindow {
           this.show();
           // Mac Only
           if (process.platform === 'darwin') {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             app.dock.show();
           }
         },
@@ -315,6 +319,7 @@ export class AppWindow {
       const aboutMenuItem = {
         label: 'About ComfyUI',
         click: () => {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           dialog.showMessageBox({
             title: 'About',
             message: `ComfyUI v${app.getVersion()}`,

@@ -43,6 +43,7 @@ function setupMainPackageWatcher() {
             : ['--inspect=9223'];
 
           /** Spawn new electron process */
+          // eslint-disable-next-line @typescript-eslint/no-base-to-string
           electronApp = spawn(String(electronPath), [...args, '.'], {
             stdio: 'inherit',
           });

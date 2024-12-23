@@ -2,7 +2,7 @@ import { builtinModules } from 'node:module';
 import type { ConfigEnv, Plugin, UserConfig } from 'vite';
 import pkg from './package.json';
 
-export const builtins = ['electron', ...builtinModules.map((m) => [m, `node:${m}`]).flat()];
+export const builtins = ['electron', ...builtinModules.flatMap((m) => [m, `node:${m}`])];
 
 export const external = [
   ...builtins,

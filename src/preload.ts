@@ -54,12 +54,14 @@ const electronAPI = {
   onProgressUpdate: (callback: (update: { status: ProgressStatus }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
       console.info(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       callback(value);
     });
   },
   onLogMessage: (callback: (message: string) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOG_MESSAGE, (_event, value) => {
       console.info(`Received ${IPC_CHANNELS.LOG_MESSAGE} event`, value);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       callback(value);
     });
   },
@@ -113,6 +115,7 @@ const electronAPI = {
   },
   DownloadManager: {
     onDownloadProgress: (callback: (progress: DownloadProgressUpdate) => void) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_event, progress) => callback(progress));
     },
     startDownload: (url: string, path: string, filename: string): Promise<boolean> => {
@@ -252,6 +255,7 @@ const electronAPI = {
      * @returns The last GPU detected by `validateHardware` - runs during installation
      */
     getDetectedGpu: async (): Promise<GpuType | undefined> => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return await ipcRenderer.invoke(IPC_CHANNELS.GET_GPU);
     },
   },

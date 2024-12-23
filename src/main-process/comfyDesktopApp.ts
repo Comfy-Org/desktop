@@ -9,7 +9,7 @@ import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import fs from 'node:fs';
-import { InstallOptions, type ElectronContextMenuOptions, type TorchDeviceType } from '../preload';
+import { InstallOptions, type ElectronContextMenuOptions } from '../preload';
 import path from 'node:path';
 import { ansiCodes, getModelsDirectory, validateHardware } from '../utils';
 import { DownloadManager } from '../models/DownloadManager';
@@ -111,12 +111,14 @@ export class ComfyDesktopApp {
       }
     );
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, async (): Promise<string> => {
       return this.basePath;
     });
     ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
       return !ComfyServerConfig.exists();
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
     ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
       log.info('Reinstalling...');
       this.reinstall();
@@ -128,6 +130,7 @@ export class ComfyDesktopApp {
 
     ipcMain.handle(
       IPC_CHANNELS.SEND_ERROR_TO_SENTRY,
+      // eslint-disable-next-line @typescript-eslint/require-await
       async (_event, { error, extras }: SentryErrorDetail): Promise<string | null> => {
         try {
           return Sentry.captureMessage(error, {
@@ -328,7 +331,7 @@ export class ComfyDesktopApp {
       default:
         // 'error': Explain and quit
         // TODO: Support link?  Something?
-        await InstallationValidator.showInvalidFileAndQuit(ComfyServerConfig.configPath, {
+        await new InstallationValidator().showInvalidFileAndQuit(ComfyServerConfig.configPath, {
           message: `Unable to read the YAML configuration file.  Please ensure this file is available and can be read:
 
 ${ComfyServerConfig.configPath}
@@ -372,6 +375,7 @@ If this problem persists, back up and delete the config file, then restart the a
       return relaunchApplication(delay);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     dialog
       .showMessageBox({
         type: 'question',

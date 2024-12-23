@@ -2,6 +2,7 @@ import pty from 'node-pty';
 import { AppWindow } from '../main-process/appWindow';
 import { IPC_CHANNELS } from '../constants';
 import { getDefaultShell } from './util';
+import { EOL } from 'node:os';
 
 export class Terminal {
   #pty: pty.IPty | undefined;
@@ -60,10 +61,10 @@ export class Terminal {
 
     if (process.platform === 'win32') {
       // PowerShell function
-      instance.write(`function pip { & "${this.#uvPath}" pip $args }\r\n`);
+      instance.write(`function pip { & "${this.#uvPath}" pip $args }${EOL}`);
     } else {
       // Bash/Zsh alias
-      instance.write(`alias pip='"${this.#uvPath}" pip'\r\n`);
+      instance.write(`alias pip='"${this.#uvPath}" pip'${EOL}`);
     }
 
     instance.onData((data) => {

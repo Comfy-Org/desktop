@@ -6,7 +6,7 @@ import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 export default tseslint.config(
   // Baseline include / exclude
   { files: ['**/*.{js,cjs,mjs,ts,mts}'] },
-  { ignores: ['dist/**/*', 'jest.config.cjs'] },
+  { ignores: ['dist/**/*', 'jest.config.cjs', 'scripts/shims/**/*'] },
 
   // Baseline
   eslint.configs.recommended,
@@ -51,6 +51,7 @@ export default tseslint.config(
       'unicorn/no-null': 'off',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/switch-case-braces': 'off',
+      'unicorn/explicit-length-check': 'off',
     },
   },
 
@@ -59,6 +60,15 @@ export default tseslint.config(
     files: ['scripts/**/*'],
     rules: {
       'unicorn/no-process-exit': 'off',
+    },
+  },
+
+  // Tests
+  {
+    files: ['tests/**/*'],
+    rules: {
+      'unicorn/prefer-module': 'off',
+      '@typescript-eslint/unbound-method': 'off',
     },
   }
 );
