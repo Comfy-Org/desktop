@@ -95,7 +95,9 @@ export class InstallationManager {
 
     await installWizard.install();
     this.appWindow.maximize();
-    if (installWizard.shouldMigrateCustomNodes && installWizard.migrationSource) {
+    const shouldMigrateCustomNodes =
+      !!installWizard.migrationSource && installWizard.migrationItemIds.has('custom_nodes');
+    if (shouldMigrateCustomNodes) {
       useDesktopConfig().set('migrateCustomNodesFrom', installWizard.migrationSource);
     }
 

@@ -17,18 +17,6 @@ export class InstallWizard {
     return this.installOptions.migrationSourcePath;
   }
 
-  get shouldMigrateUserFiles(): boolean {
-    return !!this.migrationSource && this.migrationItemIds.has('user_files');
-  }
-
-  get shouldMigrateModels(): boolean {
-    return !!this.migrationSource && this.migrationItemIds.has('models');
-  }
-
-  get shouldMigrateCustomNodes(): boolean {
-    return !!this.migrationSource && this.migrationItemIds.has('custom_nodes');
-  }
-
   get basePath(): string {
     return path.join(this.installOptions.installPath, 'ComfyUI');
   }
@@ -45,11 +33,11 @@ export class InstallWizard {
    * Copy user files from migration source to the new ComfyUI folder.
    */
   public initializeUserFiles() {
-    if (!this.shouldMigrateUserFiles) {
-      return;
-    }
+    const shouldMigrateUserFiles = !!this.migrationSource && this.migrationItemIds.has('user_files');
+    if (!shouldMigrateUserFiles) return;
+
     // Copy user files from migration source to the new ComfyUI folder.
-    const srcUserFilesDir = path.join(this.migrationSource!, 'user');
+    const srcUserFilesDir = path.join(this.migrationSource, 'user');
     const destUserFilesDir = path.join(this.basePath, 'user');
     fs.cpSync(srcUserFilesDir, destUserFilesDir, { recursive: true });
   }
@@ -90,8 +78,10 @@ export class InstallWizard {
     const comfyDesktopConfig = ComfyServerConfig.getBaseConfig();
     comfyDesktopConfig['base_path'] = this.basePath;
 
-    if (this.shouldMigrateModels) {
-      const migrationSource = this.migrationSource!;
+    const { migrationSource } = this;
+    const shouldMigrateModels = !!migrationSource && this.migrationItemIds.has('models');
+
+    if (shouldMigrateModels) {
       // The yaml file exists in migration source repo.
       const migrationServerConfigs = await ComfyServerConfig.getConfigFromRepoPath(migrationSource);
 
