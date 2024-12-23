@@ -1,5 +1,5 @@
 import log from 'electron-log/main';
-import path from 'path';
+import path from 'node:path';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { fileSync } from 'tmp';
