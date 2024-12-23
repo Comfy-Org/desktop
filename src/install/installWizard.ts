@@ -85,7 +85,7 @@ export class InstallWizard {
    * Setup extra_model_paths.yaml file
    */
   public async initializeModelPaths() {
-    let yamlContent: Record<string, ModelPaths> = {};
+    let yamlContent: Record<string, ModelPaths>;
 
     const comfyDesktopConfig = ComfyServerConfig.getBaseConfig();
     comfyDesktopConfig['base_path'] = this.basePath;
