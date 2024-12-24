@@ -15,6 +15,9 @@ export type ProcessCallbacks = {
 
 /**
  * Manages a virtual Python environment using uv.
+ *
+ * Maintains its own node-pty instance; output from this is piped to the virtual terminal.
+ * @todo Split either installation or terminal management to a separate class.
  */
 export class VirtualEnvironment {
   readonly venvRootPath: string;
