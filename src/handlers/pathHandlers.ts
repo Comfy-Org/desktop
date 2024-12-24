@@ -2,7 +2,7 @@ import { app, dialog, ipcMain, shell } from 'electron';
 import { IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
-import type { SystemPaths } from '../preload';
+import type { PathValidationResult, SystemPaths } from '../preload';
 import fs from 'node:fs';
 import si from 'systeminformation';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
@@ -43,38 +43,50 @@ export class PathHandlers {
      */
     ipcMain.handle(
       IPC_CHANNELS.VALIDATE_INSTALL_PATH,
-      async (event, inputPath: string): Promise<{ isValid: boolean; error?: string }> => {
+      async (event, inputPath: string): Promise<PathValidationResult> => {
+        const result: PathValidationResult = {
+          isValid: true,
+          freeSpace: -1,
+          requiredSpace: PathHandlers.REQUIRED_SPACE,
+        };
+
         try {
+          // Check if root path exists
+          const parent = path.dirname(inputPath);
+          if (!fs.existsSync(parent)) {
+            result.parentMissing = true;
+          }
+
           // Check if path exists
-          if (!fs.existsSync(inputPath)) {
-            return { isValid: false, error: 'Path does not exist' };
+          if (fs.existsSync(inputPath)) {
+            result.exists = true;
           }
 
           // Check if path is writable
           try {
-            fs.accessSync(inputPath, fs.constants.W_OK);
+            fs.accessSync(parent, fs.constants.W_OK);
           } catch {
-            return { isValid: false, error: 'Path is not writable' };
+            result.cannotWrite = true;
           }
 
           // Check available disk space (require at least 10GB free)
           const disks = await si.fsSize();
           const disk = disks.find((disk) => inputPath.startsWith(disk.mount));
-          if (disk && disk.available < PathHandlers.REQUIRED_SPACE) {
-            return {
-              isValid: false,
-              error: 'Insufficient disk space. At least 10GB of free space is required.',
-            };
-          }
-
-          return { isValid: true };
+          if (disk) result.freeSpace = disk.available;
         } catch (error) {
           log.error('Error validating install path:', error);
-          return {
-            isValid: false,
-            error: `Failed to validate install path: ${error}`,
-          };
+          result.error = `${error}`;
         }
+
+        if (
+          result.cannotWrite ||
+          result.parentMissing ||
+          result.freeSpace < PathHandlers.REQUIRED_SPACE ||
+          result.error
+        ) {
+          result.isValid = false;
+        }
+        return result;
       }
     );
     /**
