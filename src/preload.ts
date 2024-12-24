@@ -46,6 +46,23 @@ export interface ElectronContextMenuOptions {
   pos?: Electron.Point;
 }
 
+/** The result of validating a path (originally for ComfyUI installation). */
+export type PathValidationResult = {
+  isValid: boolean;
+  /** `true` if the parent of the selected path (via `dirname()`) is not present (it must be present). */
+  parentMissing?: boolean;
+  /** `true` if the selected path already exists. */
+  exists?: boolean;
+  /** `true` if the selected path is not writable. */
+  cannotWrite?: boolean;
+  /** The amount of free space in the path. `-1` if this could not be determined. */
+  freeSpace: number;
+  /** The amount of space in bytes required to install ComfyUI. */
+  requiredSpace: number;
+  /** If any unhandled exceptions occured, this is the result of casting the error to string. */
+  error?: string;
+};
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -205,7 +222,7 @@ const electronAPI = {
    * Validate the install path for the application. Check whether the path is valid
    * and writable. The disk should have enough free space to install the application.
    */
-  validateInstallPath: (path: string): Promise<{ isValid: boolean; error?: string }> => {
+  validateInstallPath: (path: string): Promise<PathValidationResult> => {
     return ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_INSTALL_PATH, path);
   },
   /**
