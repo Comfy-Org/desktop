@@ -24,7 +24,7 @@ export interface InstallOptions {
   migrationSourcePath?: string;
   migrationItemIds?: string[];
   /** Torch compute device */
-  device?: TorchDeviceType;
+  device: TorchDeviceType;
 }
 
 export interface SystemPaths {
