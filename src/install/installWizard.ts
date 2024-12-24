@@ -70,7 +70,7 @@ export class InstallWizard {
   }
 
   /**
-   * Setup extra_model_paths.yaml file
+   * Setup extra_models_config.yaml file
    */
   public async initializeModelPaths() {
     let yamlContent: Record<string, ModelPaths>;
