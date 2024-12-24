@@ -18,12 +18,12 @@ export class InstallWizard {
   }
 
   get basePath(): string {
-    return path.join(this.installOptions.installPath, 'ComfyUI');
+    return this.installOptions.installPath;
   }
 
   public async install() {
     // Setup the ComfyUI folder structure.
-    ComfyConfigManager.setUpComfyUI(this.basePath);
+    ComfyConfigManager.createComfyDirectories(this.basePath);
     this.initializeUserFiles();
     this.initializeSettings();
     await this.initializeModelPaths();

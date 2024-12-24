@@ -29,7 +29,7 @@ describe('ComfyConfigManager', () => {
   describe('setUpComfyUI', () => {
     it('should reject existing directory when it contains ComfyUI structure', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      expect(() => ComfyConfigManager.setUpComfyUI(path.normalize('/existing/ComfyUI'))).toThrow();
+      expect(() => ComfyConfigManager.createComfyDirectories(path.normalize('/existing/ComfyUI'))).toThrow();
     });
 
     it('should create ComfyUI subdirectory when it is missing', () => {
@@ -40,7 +40,7 @@ describe('ComfyConfigManager', () => {
         return true;
       });
 
-      ComfyConfigManager.setUpComfyUI(path.normalize('/some/base/path/ComfyUI'));
+      ComfyConfigManager.createComfyDirectories(path.normalize('/some/base/path/ComfyUI'));
     });
   });
 

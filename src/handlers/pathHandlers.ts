@@ -33,7 +33,7 @@ export class PathHandlers {
       return {
         appData: app.getPath('appData'),
         appPath: app.getAppPath(),
-        defaultInstallPath: app.getPath('documents'),
+        defaultInstallPath: path.join(app.getPath('documents'), 'ComfyUI'),
       };
     });
 
@@ -48,12 +48,6 @@ export class PathHandlers {
           // Check if path exists
           if (!fs.existsSync(inputPath)) {
             return { isValid: false, error: 'Path does not exist' };
-          }
-
-          // Check if `path/ComfyUI` exists
-          // We are going to create a ComfyUI directory in the selected path
-          if (fs.existsSync(path.join(inputPath, 'ComfyUI'))) {
-            return { isValid: false, error: 'Path already contains ComfyUI/' };
           }
 
           // Check if path is writable

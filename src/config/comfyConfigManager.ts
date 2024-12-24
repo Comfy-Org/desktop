@@ -47,13 +47,6 @@ export class ComfyConfigManager {
     ],
   ];
 
-  public static setUpComfyUI(localComfyDirectory: string) {
-    if (fs.existsSync(localComfyDirectory)) {
-      throw new Error(`Selected directory ${localComfyDirectory} already exists`);
-    }
-    this.createComfyDirectories(localComfyDirectory);
-  }
-
   public static isComfyUIDirectory(directory: string): boolean {
     const requiredSubdirs = ['models', 'input', 'user', 'output', 'custom_nodes'];
     return requiredSubdirs.every((subdir) => fs.existsSync(path.join(directory, subdir)));
