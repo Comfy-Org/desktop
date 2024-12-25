@@ -8,7 +8,6 @@ import { ComfySettings } from '../config/comfySettings';
 import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
-import fs from 'node:fs';
 import { type ElectronContextMenuOptions } from '../preload';
 import path from 'node:path';
 import { ansiCodes, getModelsDirectory } from '../utils';
@@ -18,6 +17,7 @@ import { Terminal } from '../shell/terminal';
 import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { restoreCustomNodes } from '../services/backup';
 import { CmCli } from '../services/cmCli';
+import { rm } from 'node:fs/promises';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
@@ -116,10 +116,9 @@ export class ComfyDesktopApp {
     ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
       return !ComfyServerConfig.exists();
     });
-    // eslint-disable-next-line @typescript-eslint/require-await
     ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
       log.info('Reinstalling...');
-      this.reinstall();
+      await this.reinstall();
     });
     type SentryErrorDetail = {
       error: string;
@@ -238,12 +237,13 @@ export class ComfyDesktopApp {
     return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow);
   }
 
-  uninstall(): void {
-    fs.rmSync(ComfyServerConfig.configPath);
+  async uninstall(): Promise<void> {
+    await rm(ComfyServerConfig.configPath);
+    await useDesktopConfig().permanentlyDeleteConfigFile();
   }
 
-  reinstall(): void {
-    this.uninstall();
+  async reinstall(): Promise<void> {
+    await this.uninstall();
     this.restart();
   }
 

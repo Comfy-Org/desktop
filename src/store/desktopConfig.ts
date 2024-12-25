@@ -39,6 +39,10 @@ export class DesktopConfig {
     this.#store.delete(key);
   }
 
+  async permanentlyDeleteConfigFile() {
+    await fs.rm(path.join(app.getPath('userData'), 'config.json'));
+  }
+
   /**
    * Static factory method. Loads the config from disk.
    * @param shell Shell environment that can open file and folder views for the user
