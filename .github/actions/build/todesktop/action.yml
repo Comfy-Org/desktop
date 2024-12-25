@@ -66,22 +66,22 @@ runs:
           if [ -n "${{ inputs.RELEASE_TAG }}" ]; then
             # Create download links section
             DOWNLOAD_LINKS="
-            ### Download Latest:
-            Mac (Apple Silicon): https://download.comfy.org/mac/dmg/arm64
-            Windows: https://download.comfy.org/windows/nsis/x64
+        ### Download Latest:
+        Mac (Apple Silicon): https://download.comfy.org/mac/dmg/arm64
+        Windows: https://download.comfy.org/windows/nsis/x64
 
-            <details>
+        <details>
 
-            <summary>
+        <summary>
 
-            ### Artifacts of current release
+        ### Artifacts of current release
 
-            </summary>
+        </summary>
 
-            Mac (Apple Silicon): https://download.comfy.org/${BUILD_ID}/mac/dmg/arm64
-            Windows: https://download.comfy.org/${BUILD_ID}/windows/nsis/x64"
+        Mac (Apple Silicon): https://download.comfy.org/${BUILD_ID}/mac/dmg/arm64
+        Windows: https://download.comfy.org/${BUILD_ID}/windows/nsis/x64
 
-            </details>
+        </details>"
             
             # First get existing release notes
             EXISTING_NOTES=$(gh release view ${{ inputs.RELEASE_TAG }} --json body -q .body)
