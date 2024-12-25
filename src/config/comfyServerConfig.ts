@@ -219,6 +219,18 @@ export class ComfyServerConfig {
   /** @deprecated Do not use.  Tempoary workaround for validation only. */
   public static async setBasePathInDefaultConfig(basePath: string): Promise<boolean> {
     const parsedConfig = await ComfyServerConfig.readConfigFile(ComfyServerConfig.configPath);
+    // TODO: Prompt user to attempt this as a troubleshooting option.
+    if (parsedConfig === null) {
+      // File does not exist.  Just create default.
+      log.warn("Extra model paths config file doesn't exist.  Creating default.");
+
+      const comfyDesktopConfig = ComfyServerConfig.getBaseConfig();
+      comfyDesktopConfig['base_path'] = basePath;
+
+      return await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, {
+        comfyui_desktop: comfyDesktopConfig,
+      });
+    }
     if (!parsedConfig) return false;
 
     parsedConfig.comfyui_desktop ??= {};
