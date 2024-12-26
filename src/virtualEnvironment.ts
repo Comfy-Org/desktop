@@ -280,11 +280,11 @@ export class VirtualEnvironment {
     args: string[],
     env: Record<string, string>,
     callbacks?: ProcessCallbacks,
-    cwd?: string
+    cwd: string = this.venvRootPath
   ): ChildProcess {
-    log.info(`Running command: ${command} ${args.join(' ')} in ${this.venvRootPath}`);
+    log.info(`Running command: ${command} ${args.join(' ')} in ${cwd}`);
     const childProcess: ChildProcess = spawn(command, args, {
-      cwd: cwd ?? this.venvRootPath,
+      cwd,
       env: {
         ...process.env,
         ...env,
