@@ -9,4 +9,5 @@ export type {
   PathValidationResult,
   SystemPaths,
   DownloadProgressUpdate,
+  ElectronOverlayOptions,
 } from './preload';
