@@ -43,7 +43,11 @@ body:
     attributes:
       label: Debug Logs
       description: |
-        Please copy the output from your terminal logs here.
+        Please copy the output from your terminal logs here.  If the issue is related to app startup, please include the contents of `main.log`, located in the ComfyUI log directory:
+
+        on macOS: `~/Library/Logs/ComfyUI`
+        on Windows: `%AppData%\ComfyUI\logs`
+
         ![DebugLogs](https://github.com/user-attachments/assets/168b6ea3-ab93-445b-9cd2-670bd9c098a7)
       render: powershell
     validations:
