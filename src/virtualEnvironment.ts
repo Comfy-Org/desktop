@@ -50,7 +50,7 @@ export class VirtualEnvironment {
     return this.uvPty;
   }
 
-  constructor(venvPath: string, selectedDevice: TorchDeviceType | undefined, pythonVersion: string = '3.12.4') {
+  constructor(venvPath: string, selectedDevice: TorchDeviceType | undefined, pythonVersion: string = '3.12.8') {
     this.venvRootPath = venvPath;
     this.pythonVersion = pythonVersion;
     this.selectedDevice = selectedDevice;
