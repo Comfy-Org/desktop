@@ -70,6 +70,7 @@ async function startApp() {
     // Create native window
     const appWindow = new AppWindow();
     appWindow.onClose(() => {
+      if (quitting) return;
       log.info('App window closed. Quitting application.');
       app.quit();
     });
