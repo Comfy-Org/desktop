@@ -102,14 +102,15 @@ const electronAPI = {
     console.log('Sending ready event to main process');
     ipcRenderer.send(IPC_CHANNELS.RENDERER_READY);
   },
-  isPackaged: () => {
+  /** Emulates app.ispackaged in renderer */
+  isPackaged: (): Promise<boolean> => {
     return ipcRenderer.invoke(IPC_CHANNELS.IS_PACKAGED);
-  }, //Emulates app.ispackaged in renderer
+  },
   restartApp: (customMessage?: string, delay?: number): void => {
     console.log('Sending restarting app message to main process with custom message:', customMessage);
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
-  reinstall: () => {
+  reinstall: (): Promise<void> => {
     return ipcRenderer.invoke(IPC_CHANNELS.REINSTALL);
   },
   openDialog: (options: Electron.OpenDialogOptions) => {
@@ -177,9 +178,8 @@ const electronAPI = {
   getElectronVersion: () => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_ELECTRON_VERSION);
   },
-  getComfyUIVersion: () => {
-    return __COMFYUI_VERSION__;
-  },
+  /** The ComfyUI core version (as defined in package.json) */
+  getComfyUIVersion: () => __COMFYUI_VERSION__,
   /**
    * Send an error message to Sentry
    * @param error The error object or message to send
@@ -289,9 +289,8 @@ const electronAPI = {
     console.log('Restarting core process');
     await ipcRenderer.invoke(IPC_CHANNELS.RESTART_APP);
   },
-  getPlatform: (): NodeJS.Platform => {
-    return process.platform;
-  },
+  /** Gets the platform reported by node.js */
+  getPlatform: () => process.platform,
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
