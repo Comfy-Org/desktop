@@ -2,13 +2,13 @@ import * as Sentry from '@sentry/electron/main';
 import todesktop from '@todesktop/runtime';
 import { Notification, type TitleBarOverlayOptions, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
-import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { graphics } from 'systeminformation';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings } from '../config/comfySettings';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
+import { InstallationManager } from '../install/installationManager';
 import { DownloadManager } from '../models/DownloadManager';
 import { type ElectronContextMenuOptions } from '../preload';
 import { CmCli } from '../services/cmCli';
@@ -122,9 +122,12 @@ export class ComfyDesktopApp implements HasTelemetry {
     ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
       return !ComfyServerConfig.exists();
     });
+
+    // Replace the reinstall IPC handler.
+    ipcMain.removeHandler(IPC_CHANNELS.REINSTALL);
     ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
       log.info('Reinstalling...');
-      await this.reinstall();
+      await InstallationManager.reinstall(this.installation);
     });
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => {
@@ -201,16 +204,6 @@ export class ComfyDesktopApp implements HasTelemetry {
       // Always remove the flag so the user doesnt get stuck here
       config.delete('migrateCustomNodesFrom');
     }
-  }
-
-  async uninstall(): Promise<void> {
-    await rm(ComfyServerConfig.configPath);
-    await useDesktopConfig().permanentlyDeleteConfigFile();
-  }
-
-  async reinstall(): Promise<void> {
-    await this.uninstall();
-    this.restart();
   }
 
   restart({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {

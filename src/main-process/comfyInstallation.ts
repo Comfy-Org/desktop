@@ -1,15 +1,13 @@
 import log from 'electron-log/main';
+import { rm } from 'node:fs/promises';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
-import type { TorchDeviceType } from '../preload';
+import type { InstallValidation, TorchDeviceType } from '../preload';
 import { getTelemetry } from '../services/telemetry';
 import { useDesktopConfig } from '../store/desktopConfig';
 import type { DesktopSettings } from '../store/desktopSettings';
-import { containsDirectory, pathAccessible } from '../utils';
+import { canExecute, canExecuteShellCommand, pathAccessible } from '../utils';
 import { VirtualEnvironment } from '../virtualEnvironment';
-
-// TODO: | 'uvMissing' | 'venvMissing' | 'venvInvalid' | 'noPyTorch';
-export type ValidationIssue = 'invalidBasePath';
 
 type InstallState = Exclude<DesktopSettings['installState'], undefined>;
 
@@ -19,11 +17,18 @@ type InstallState = Exclude<DesktopSettings['installState'], undefined>;
  */
 export class ComfyInstallation {
   /** Installation issues, such as missing base path, no venv.  Populated by {@link validate}. */
-  readonly issues: Set<ValidationIssue> = new Set();
+  validation: InstallValidation = {
+    inProgress: false,
+    installState: 'started',
+  };
+
+  get hasIssues() {
+    return Object.values(this.validation).includes('error');
+  }
 
   /** Returns `true` if {@link state} is 'installed' and there are no issues, otherwise `false`. */
   get isValid() {
-    return this.state === 'installed' && this.issues.size === 0;
+    return this.state === 'installed' && !this.hasIssues;
   }
 
   virtualEnvironment: VirtualEnvironment;
@@ -38,6 +43,12 @@ export class ComfyInstallation {
     this._basePath = value;
     this.virtualEnvironment = new VirtualEnvironment(value, getTelemetry(), this.device);
   }
+
+  /**
+   * Called during/after each step of validation
+   * @param data The data to send to the renderer
+   */
+  onUpdate?: (data: InstallValidation) => void;
 
   constructor(
     /** Installation state, e.g. `started`, `installed`.  See {@link DesktopSettings}. */
@@ -54,6 +65,7 @@ export class ComfyInstallation {
   /**
    * Static factory method. Creates a ComfyInstallation object if previously saved config can be read.
    * @returns A ComfyInstallation (not validated) object if config is saved, otherwise `undefined`.
+   * @throws If YAML config is unreadable due to access restrictions
    */
   static fromConfig(): ComfyInstallation | undefined {
     const config = useDesktopConfig();
@@ -66,36 +78,94 @@ export class ComfyInstallation {
   /**
    * Validate the installation and add any results to {@link issues}.
    * @returns The validated installation state, along with a list of any issues detected.
+   * @throws When the YAML file is present but not readable (access denied, FS error, etc).
    */
   async validate(): Promise<InstallState> {
     log.info(`Validating installation. Recorded state: [${this.state}]`);
-
-    let { state } = this;
+    const validation: InstallValidation = {
+      inProgress: true,
+      installState: this.state,
+    };
+    this.validation = validation;
+    this.onUpdate?.(validation);
 
     // Upgraded from a version prior to 0.3.18
     // TODO: Validate more than just the existence of one file
-    if (!state && ComfyServerConfig.exists()) {
+    if (!validation.installState && ComfyServerConfig.exists()) {
       log.info('Found extra_models_config.yaml but no recorded state - assuming upgrade from <= 0.3.18');
-      state = 'upgraded';
+      validation.installState = 'upgraded';
+      this.onUpdate?.(validation);
     }
 
     // Validate base path
     const basePath = await this.loadBasePath();
-    if (basePath === undefined || !(await pathAccessible(basePath))) {
-      log.warn('"base_path" is inaccessible or undefined.');
-      this.issues.add('invalidBasePath');
+    if (basePath && (await pathAccessible(basePath))) {
+      validation.basePath = 'OK';
+      this.onUpdate?.(validation);
+
+      const venv = new VirtualEnvironment(basePath, getTelemetry(), this.device);
+      if (await venv.exists()) {
+        validation.venvDirectory = 'OK';
+        this.onUpdate?.(validation);
+
+        // Python interpreter
+        validation.pythonInterpreter = (await canExecute(venv.pythonInterpreterPath)) ? 'OK' : 'error';
+        if (validation.pythonInterpreter !== 'OK') log.warn('Python interpreter is missing or not executable.');
+        this.onUpdate?.(validation);
+
+        // uv
+        if (await canExecute(venv.uvPath)) {
+          validation.uv = 'OK';
+          this.onUpdate?.(validation);
+
+          // Python packages
+          try {
+            validation.pythonPackages = (await venv.hasRequirements()) ? 'OK' : 'error';
+            if (validation.pythonPackages !== 'OK') log.error('Virtual environment is incomplete.');
+          } catch (error) {
+            log.error('Failed to read venv packages.', error);
+            validation.pythonPackages = 'error';
+          }
+        } else {
+          log.warn('uv is missing or not executable.');
+          validation.uv = 'error';
+        }
+      } else {
+        log.warn('Virtual environment is missing.');
+        validation.venvDirectory = 'error';
+      }
+    } else {
+      log.error('"base_path" is inaccessible or undefined.');
+      validation.basePath = 'error';
     }
+    this.onUpdate?.(validation);
 
-    // TODO: Validate python, venv, etc.
+    // Git
+    validation.git = (await canExecuteShellCommand('git --help')) ? 'OK' : 'error';
+    if (validation.git !== 'OK') log.warn('git not found in path.');
+    this.onUpdate?.(validation);
 
-    log.info(`Validation result: isValid:${this.isValid}, state:${state}, issues:${this.issues.size}`);
-    return state;
+    if (process.platform === 'win32') {
+      const vcDllPath = `${process.env.SYSTEMROOT}\\System32\\vcruntime140.dll`;
+      validation.vcRedist = (await pathAccessible(vcDllPath)) ? 'OK' : 'error';
+      if (validation.vcRedist !== 'OK') log.warn(`Visual C++ Redistributable was not found [${vcDllPath}]`);
+    } else {
+      validation.vcRedist = 'skipped';
+    }
+    this.onUpdate?.(validation);
+
+    // Complete
+    validation.inProgress = false;
+    log.info(`Validation result: isValid:${this.isValid}, state:${validation.installState}`, validation);
+    this.onUpdate?.(validation);
+
+    return validation.installState;
   }
 
   /**
    * Loads the base path from YAML config. If it is unreadable, warns the user and quits.
    * @returns The base path if read successfully, or `undefined`
-   * @throws If the config file is unreadable
+   * @throws If the config file is present but not readable
    */
   async loadBasePath(): Promise<string | undefined> {
     const readResult = await ComfyServerConfig.readBasePathFromConfig(ComfyServerConfig.configPath);
@@ -129,28 +199,12 @@ If this problem persists, back up and delete the config file, then restart the a
   upgradeConfig() {
     log.verbose(`Upgrading config to latest format.  Current state: [${this.state}]`);
     // Migrate config
-    if (!this.issues.has('invalidBasePath')) {
+    if (this.validation.basePath !== 'error') {
       useDesktopConfig().set('basePath', this.basePath);
     } else {
       log.warn('Skipping save of basePath.');
     }
     this.setState('installed');
-  }
-
-  /**
-   * Set a new base path in the YAML config file.
-   * @param newBasePath The new base path to use.
-   * @returns `true` if the new base path is valid and can be written to the config file, otherwise `false`
-   */
-  async updateBasePath(newBasePath: string): Promise<boolean> {
-    if (!newBasePath) return false;
-
-    // TODO: Allow creation of new venv
-    if (!(await containsDirectory(newBasePath, '.venv'))) return false;
-
-    this.basePath = newBasePath;
-    // TODO: SoC violation
-    return await ComfyServerConfig.setBasePathInDefaultConfig(newBasePath);
   }
 
   /**
@@ -160,5 +214,14 @@ If this problem persists, back up and delete the config file, then restart the a
   setState(state: InstallState) {
     this.state = state;
     useDesktopConfig().set('installState', state);
+  }
+
+  /**
+   * Removes the config files. Clean up is not yet impl.
+   * @todo Allow normal removal of the app and its effects.
+   */
+  async uninstall(): Promise<void> {
+    await rm(ComfyServerConfig.configPath);
+    await useDesktopConfig().permanentlyDeleteConfigFile();
   }
 }

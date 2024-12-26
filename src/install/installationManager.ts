@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
 import { IPC_CHANNELS } from '../constants';
@@ -21,32 +21,99 @@ export class InstallationManager {
    * Ensures that ComfyUI is installed and ready to run.
    *
    * First checks for an existing installation and validates it. If missing or invalid, a fresh install is started.
+   * Will not resolve until the installation is valid.
    * @returns A valid {@link ComfyInstallation} object.
    */
   async ensureInstalled(): Promise<ComfyInstallation> {
     const installation = ComfyInstallation.fromConfig();
-    log.verbose(`Install state: ${installation?.state ?? 'not installed'}`);
+    log.info(`Install state: ${installation?.state ?? 'not installed'}`);
 
     // Fresh install
     if (!installation) return await this.freshInstall();
 
-    // Validate installation
-    const state = await installation.validate();
-    log.verbose(`Validated install state: ${state}`);
-    if (state !== 'installed') await this.resumeInstallation(installation);
+    try {
+      // Send updates to renderer
+      this.#setupIpc(installation);
 
-    // Resolve issues and re-run validation
-    if (installation.issues.size > 0) {
-      await this.resolveIssues(installation);
-      await installation.validate();
+      // Validate installation
+      const state = await installation.validate();
+      if (state !== 'installed') await this.resumeInstallation(installation);
+
+      // Resolve issues and re-run validation
+      if (installation.hasIssues) {
+        while (!(await this.resolveIssues(installation))) {
+          // Re-run validation
+          log.verbose('Re-validating installation.');
+        }
+      }
+
+      // Return validated installation
+      return installation;
+    } finally {
+      delete installation.onUpdate;
+      this.#removeIpcHandlers();
     }
+  }
 
-    // TODO: Confirm this is no longer possible after resolveIssues and remove.
-    if (!installation.basePath) throw new Error('Base path was invalid after installation validation.');
-    if (installation.issues.size > 0) throw new Error('Installation issues remain after validation.');
+  /** Removes all handlers created by {@link #setupIpc} */
+  #removeIpcHandlers() {
+    ipcMain.removeHandler(IPC_CHANNELS.GET_VALIDATION_STATE);
+    ipcMain.removeHandler(IPC_CHANNELS.VALIDATE_INSTALLATION);
+    ipcMain.removeHandler(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS);
+    ipcMain.removeHandler(IPC_CHANNELS.UV_CLEAR_CACHE);
+    ipcMain.removeHandler(IPC_CHANNELS.UV_RESET_VENV);
+  }
 
-    // Return validated installation
-    return installation;
+  /** Set to `true` the first time an error is found during validation. @todo Move to app state singleton once impl. */
+  #onMaintenancePage = false;
+
+  /** Creates IPC handlers for the installation instance. */
+  #setupIpc(installation: ComfyInstallation) {
+    this.#onMaintenancePage = false;
+    installation.onUpdate = (data) => {
+      this.appWindow.send(IPC_CHANNELS.VALIDATION_UPDATE, data);
+
+      // Load maintenance page the first time any error is found.
+      if (!this.#onMaintenancePage && Object.values(data).includes('error')) {
+        this.#onMaintenancePage = true;
+
+        log.info('Validation error - loading maintenance page.');
+        this.appWindow.loadRenderer('maintenance').catch((error) => {
+          log.error('Error loading maintenance page.', error);
+          const message = `An error was detected with your installation, and the maintenance page could not be loaded to resolve it. The app will close now. Please reinstall if this issue persists.\n\nError message:\n\n${error}`;
+          dialog.showErrorBox('Critical Error', message);
+          app.quit();
+        });
+      }
+    };
+    const sendLogIpc = (data: string) => this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+
+    ipcMain.handle(IPC_CHANNELS.GET_VALIDATION_STATE, () => {
+      installation.onUpdate?.(installation.validation);
+      return installation.validation;
+    });
+    ipcMain.handle(IPC_CHANNELS.VALIDATE_INSTALLATION, async () => await installation.validate());
+    ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, () =>
+      installation.virtualEnvironment.reinstallRequirements(sendLogIpc)
+    );
+    ipcMain.handle(IPC_CHANNELS.UV_CLEAR_CACHE, async () => await installation.virtualEnvironment.clearUvCache());
+    ipcMain.handle(IPC_CHANNELS.UV_RESET_VENV, async (): Promise<boolean> => {
+      const venv = installation.virtualEnvironment;
+      const deleted = await venv.removeVenvDirectory();
+      if (!deleted) return false;
+
+      const created = await venv.createVenv(sendLogIpc);
+      if (!created) return false;
+
+      return await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
+    });
+
+    // Replace the reinstall IPC handler.
+    ipcMain.removeHandler(IPC_CHANNELS.REINSTALL);
+    ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
+      log.info('Reinstalling...');
+      await InstallationManager.reinstall(installation);
+    });
   }
 
   /**
@@ -135,40 +202,35 @@ export class InstallationManager {
     return filePaths[0];
   }
 
-  /** Notify user that the provided base apth is not valid. */
-  async #showInvalidBasePathMessage() {
-    await this.appWindow.showMessageBox({
-      title: 'Invalid base path',
-      message:
-        'ComfyUI needs a valid directory set as its base path.  Inside, models, custom nodes, etc will be stored.\n\nClick OK, then selected a new base path.',
-      type: 'error',
-    });
-  }
-
   /**
    * Resolves any issues found during installation validation.
    * @param installation The installation to resolve issues for
    * @throws If the base path is invalid or cannot be saved
    */
   async resolveIssues(installation: ComfyInstallation) {
-    const issues = [...installation.issues];
-    for (const issue of issues) {
-      switch (issue) {
-        // TODO: Other issues (uv mising, venv etc)
-        case 'invalidBasePath': {
-          // TODO: Add IPC listeners and proper UI for this
-          await this.#showInvalidBasePathMessage();
+    log.verbose('Resolving issues - awaiting user response:', installation.validation);
 
-          const path = await this.showBasePathPicker();
-          if (!path) return;
+    // Await user close window request, validate if any errors remain
+    const isValid = await new Promise<boolean>((resolve) => {
+      ipcMain.handleOnce(IPC_CHANNELS.COMPLETE_VALIDATION, async (): Promise<boolean> => {
+        log.verbose('Attempting to close validation window');
+        // Check if issues have been resolved externally
+        if (!installation.isValid) await installation.validate();
 
-          const success = await installation.updateBasePath(path);
-          if (!success) throw new Error('No base path selected or failed to save in config.');
+        // Resolve main thread & renderer
+        const { isValid } = installation;
+        resolve(isValid);
+        return isValid;
+      });
+    });
 
-          installation.issues.delete('invalidBasePath');
-          break;
-        }
-      }
-    }
+    log.verbose('Resolution complete:', installation.validation);
+    return isValid;
+  }
+
+  static async reinstall(installation: ComfyInstallation): Promise<void> {
+    await installation.uninstall();
+    app.relaunch();
+    app.quit();
   }
 }

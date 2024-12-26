@@ -2,6 +2,7 @@ import { app } from 'electron';
 import log from 'electron-log/main';
 import pty from 'node-pty';
 import { ChildProcess, spawn } from 'node:child_process';
+import { rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
@@ -184,12 +185,9 @@ export class VirtualEnvironment implements HasTelemetry {
 
   @trackEvent('install_flow:virtual_environment_ensurepip')
   public async ensurePip(callbacks?: ProcessCallbacks): Promise<void> {
-    const { exitCode: ensurepipExitCode } = await this.runPythonCommandAsync(
-      ['-m', 'ensurepip', '--upgrade'],
-      callbacks
-    );
-    if (ensurepipExitCode !== 0) {
-      throw new Error(`Failed to upgrade pip: exit code ${ensurepipExitCode}`);
+    const { exitCode } = await this.runPythonCommandAsync(['-m', 'ensurepip', '--upgrade'], callbacks);
+    if (exitCode !== 0) {
+      throw new Error(`Failed to upgrade pip: exit code ${exitCode}`);
     }
   }
 
@@ -338,12 +336,12 @@ export class VirtualEnvironment implements HasTelemetry {
     env: Record<string, string>,
     callbacks?: ProcessCallbacks,
     cwd?: string
-  ): Promise<{ exitCode: number | null }> {
+  ): Promise<{ exitCode: number | null; signal: NodeJS.Signals | null }> {
     return new Promise((resolve, reject) => {
       const childProcess = this.runCommand(command, args, env, callbacks, cwd);
 
-      childProcess.on('close', (code) => {
-        resolve({ exitCode: code });
+      childProcess.on('close', (code, signal) => {
+        resolve({ exitCode: code, signal });
       });
 
       childProcess.on('error', (error) => {
@@ -419,7 +417,131 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
-  private async exists(): Promise<boolean> {
+  async exists(): Promise<boolean> {
     return await pathAccessible(this.venvPath);
+  }
+
+  /**
+   * Checks if the virtual environment has all the required packages of ComfyUI core.
+   *
+   * Parses the text output of `uv pip install --dry-run -r requirements.txt`.
+   * @returns `true` if pip install does not detect any missing packages, otherwise `false`
+   */
+  async hasRequirements() {
+    const args = ['pip', 'install', '--dry-run', '-r', this.comfyUIRequirementsPath];
+    log.info(`Running direct process command: ${args.join(' ')}`);
+
+    // Get packages as json string
+    let output = '';
+    const callbacks: ProcessCallbacks = {
+      onStdout: (data) => (output += data.toString()),
+      onStderr: (data) => (output += data.toString()),
+    };
+    const result = await this.runCommandAsync(
+      this.uvPath,
+      args,
+      { PYTHONIOENCODING: 'utf8' },
+      callbacks,
+      this.venvRootPath
+    );
+
+    if (result.exitCode !== 0)
+      throw new Error(`Failed to get packages: Exit code ${result.exitCode}, signal ${result.signal}`);
+    if (!output) throw new Error('Failed to get packages: uv output was empty');
+
+    const venvOk = output.search(/\bWould make no changes\s+$/) !== -1;
+    if (!venvOk) log.warn(output);
+
+    return venvOk;
+  }
+
+  async clearUvCache(): Promise<boolean> {
+    return await this.#rmdir(this.cacheDir, 'uv cache');
+  }
+
+  async removeVenvDirectory(): Promise<boolean> {
+    return await this.#rmdir(this.venvPath, '.venv directory');
+  }
+
+  async #rmdir(dir: string, logName: string): Promise<boolean> {
+    if (await pathAccessible(dir)) {
+      log.info(`Removing ${logName} [${dir}]`);
+      try {
+        await rm(dir, { recursive: true });
+      } catch (error) {
+        log.error(`Error removing ${logName}: ${error}`);
+        return false;
+      }
+    } else {
+      log.warn(`Attempted to remove ${logName}, but directory does not exist [${dir}]`);
+    }
+    return true;
+  }
+
+  /**
+   * Reinstalls the required packages for ComfyUI core.
+   */
+  async reinstallRequirements(onData: (data: string) => void) {
+    const callbacks = { onStdout: onData };
+
+    try {
+      await this.#using(() => this.manualInstall(callbacks));
+    } catch (error) {
+      log.error(`Failed to reinstall requirements: ${error}`);
+
+      const created = await this.createVenv(onData);
+      if (!created) return false;
+
+      const pipEnsured = await this.upgradePip(callbacks);
+      if (!pipEnsured) return false;
+
+      await this.#using(() => this.manualInstall(callbacks));
+    }
+    return true;
+  }
+
+  /**
+   * Upgrades pip in the virtual environment.
+   * @returns `true` if the virtual environment was created successfully, otherwise `false`
+   */
+  async upgradePip(callbacks?: ProcessCallbacks): Promise<boolean> {
+    try {
+      await this.#using(() => this.ensurePip(callbacks));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Create virtual environment using uv
+   * @returns `true` if the virtual environment was created successfully, otherwise `false`
+   */
+  async createVenv(onData: ((data: string) => void) | undefined): Promise<boolean> {
+    try {
+      const callbacks: ProcessCallbacks = { onStdout: onData };
+      await this.#using(() => this.createVenvWithPython(callbacks));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Similar to `using` functionality, this ensures that {@link uvPty} is terminated after the command has run.
+   * @param command The command to run
+   * @returns The result of the command
+   * @todo Refactor to `using`
+   */
+  async #using<T>(command: () => Promise<T>): Promise<T> {
+    try {
+      return await command();
+    } finally {
+      const pid = this.uvPty?.pid;
+      if (pid) {
+        process.kill(pid);
+        this.uvPty = undefined;
+      }
+    }
   }
 }

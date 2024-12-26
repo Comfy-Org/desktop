@@ -108,8 +108,6 @@ async function startApp() {
       // Install / validate installation is complete
       const installManager = new InstallationManager(appWindow, telemetry);
       const installation = await installManager.ensureInstalled();
-      if (!installation.isValid)
-        throw new Error(`Fatal: Could not validate installation: [${installation.state}/${installation.issues.size}]`);
 
       // Initialize app
       const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);

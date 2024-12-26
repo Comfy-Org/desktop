@@ -20,6 +20,34 @@ export async function pathAccessible(path: string): Promise<boolean> {
   }
 }
 
+export async function canExecute(path: string): Promise<boolean> {
+  try {
+    await fsPromises.access(path, fsPromises.constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Attempts to execute a command in the native shell, ignoring output and only examining the exit code.
+ * e.g. Check if `git` is present in path and executable, without reimpl. cross-platform PATH search logic or using ancient imports.
+ * Returns false if killed, times out, or returns a non-zero exit code.
+ * @param command The command to execute
+ * @param timeout The maximum time the command may run for before being killed, in milliseconds
+ * @returns `true` if the command executed successfully, otherwise `false`
+ */
+export async function canExecuteShellCommand(command: string, timeout = 5000): Promise<boolean> {
+  const proc = exec(command);
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      proc.kill();
+      reject(new Error('Timed out attempting to execute git'));
+    }, timeout);
+    proc.on('exit', (code) => resolve(code === 0));
+  });
+}
+
 export async function containsDirectory(path: string, contains: string): Promise<boolean> {
   if (await pathAccessible(path)) {
     const contents = await fsPromises.readdir(path, { withFileTypes: true });
