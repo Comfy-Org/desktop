@@ -1,10 +1,9 @@
 import { session, DownloadItem, ipcMain } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
-import { IPC_CHANNELS } from '../constants';
+import { DownloadStatus, IPC_CHANNELS } from '../constants';
 import log from 'electron-log/main';
 import type { AppWindow } from '../main-process/appWindow';
-import { DownloadStatus } from '../main_types';
 
 export interface Download {
   url: string;
