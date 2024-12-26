@@ -34,6 +34,7 @@ export const IPC_CHANNELS = {
   SHOW_CONTEXT_MENU: 'show-context-menu',
   RESTART_CORE: 'restart-core',
   GET_GPU: 'get-gpu',
+  SET_WINDOW_STYLE: 'set-window-style',
 } as const;
 
 export enum ProgressStatus {

@@ -2,6 +2,7 @@ import { app, ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../constants';
 import { useDesktopConfig } from '../store/desktopConfig';
 import type { TorchDeviceType } from '../preload';
+import type { DesktopSettings } from '../store/desktopSettings';
 
 /**
  * Handles information about the app and current state in IPC channels.
@@ -20,5 +21,11 @@ export class AppInfoHandlers {
     ipcMain.handle(IPC_CHANNELS.GET_GPU, async (): Promise<TorchDeviceType | undefined> => {
       return await useDesktopConfig().getAsync('detectedGpu');
     });
+    ipcMain.handle(
+      IPC_CHANNELS.SET_WINDOW_STYLE,
+      async (_event: Electron.IpcMainInvokeEvent, style: DesktopSettings['windowStyle']): Promise<void> => {
+        await useDesktopConfig().setAsync('windowStyle', style);
+      }
+    );
   }
 }

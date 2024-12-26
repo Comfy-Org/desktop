@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus, DownloadStatus } from './constants';
 import type { DownloadState } from './models/DownloadManager';
 import path from 'node:path';
+import type { DesktopSettings } from './store/desktopSettings';
 
 /**
  * Open a folder in the system's default file explorer.
@@ -282,6 +283,10 @@ const electronAPI = {
     getDetectedGpu: async (): Promise<GpuType | undefined> => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return await ipcRenderer.invoke(IPC_CHANNELS.GET_GPU);
+    },
+    /** Sets the window style */
+    setWindowStyle: (style: DesktopSettings['windowStyle']): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.SET_WINDOW_STYLE, style);
     },
   },
   /** Restart the python server without restarting desktop. */
