@@ -105,9 +105,12 @@ If this problem persists, back up and delete the config file, then restart the a
    * Called during app startup, this function ensures that config is in the expected state.
    */
   upgradeConfig() {
+    log.verbose(`Upgrading config to latest format.  Current state: [${this.state}]`);
     // Migrate config
     if (!this.issues.has('invalidBasePath')) {
       useDesktopConfig().set('basePath', this.basePath);
+    } else {
+      log.warn('Skipping save of basePath.');
     }
     this.setState('installed');
   }
