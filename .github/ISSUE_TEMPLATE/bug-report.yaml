@@ -43,7 +43,7 @@ body:
     attributes:
       label: Debug Logs
       description: |
-        Please copy the output from your terminal logs here.  If the issue is related to app startup, please include the contents of `main.log`, located in the ComfyUI log directory:
+        Please copy the output from your terminal logs here.  If the issue is related to app startup, please include `main.log` and `comfyui.log`, located in the ComfyUI log directory:
 
         on macOS: `~/Library/Logs/ComfyUI`
         on Windows: `%AppData%\ComfyUI\logs`
