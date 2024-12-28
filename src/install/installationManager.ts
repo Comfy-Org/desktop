@@ -101,7 +101,9 @@ export class InstallationManager {
       useDesktopConfig().set('migrateCustomNodesFrom', installWizard.migrationSource);
     }
 
-    return new ComfyInstallation('installed', installWizard.basePath);
+    const installation = new ComfyInstallation('installed', installWizard.basePath);
+    installation.setState('installed');
+    return installation;
   }
 
   /**

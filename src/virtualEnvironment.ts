@@ -50,7 +50,7 @@ export class VirtualEnvironment {
     return this.uvPty;
   }
 
-  constructor(venvPath: string, selectedDevice: TorchDeviceType | undefined, pythonVersion: string = '3.12.4') {
+  constructor(venvPath: string, selectedDevice: TorchDeviceType | undefined, pythonVersion: string = '3.12.8') {
     this.venvRootPath = venvPath;
     this.pythonVersion = pythonVersion;
     this.selectedDevice = selectedDevice;
@@ -108,17 +108,8 @@ export class VirtualEnvironment {
     try {
       await this.createEnvironment(callbacks);
     } finally {
-      if (this.uvPty) {
-        // If we have a pty instance then we need to kill it on a delay
-        // else you may get an EPIPE error on reading the stream if it is
-        // reading/writing as you kill it
-        const pty = this.uvPty;
-        this.uvPty = undefined;
-        pty.pause();
-        setTimeout(() => {
-          this.uvPty?.kill();
-        }, 100);
-      }
+      const pid = this.uvPty?.pid;
+      if (pid) process.kill(pid);
     }
   }
 
