@@ -85,9 +85,11 @@ export class AppWindow {
         webviewTag: true,
         devTools: true,
       },
+      show: false,
       autoHideMenuBar: true,
       ...customChrome,
     });
+    this.window.once('ready-to-show', () => this.window.show());
 
     if (!installed && storedX === undefined) this.window.center();
     if (store.get('windowMaximized')) this.window.maximize();
