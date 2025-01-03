@@ -314,7 +314,7 @@ __metadata:
     node-pty: "npm:^1.0.0"
     prettier: "npm:^3.3.3"
     rimraf: "npm:^6.0.1"
-    systeminformation: "npm:^5.23.5"
+    systeminformation: "npm:^5.24.8"
     tar: "npm:^7.4.3"
     tmp: "npm:^0.2.3"
     ts-node: "npm:^10.0.0"
@@ -11437,12 +11437,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"systeminformation@npm:^5.23.5":
-  version: 5.23.5
-  resolution: "systeminformation@npm:5.23.5"
+"systeminformation@npm:^5.24.8":
+  version: 5.24.8
+  resolution: "systeminformation@npm:5.24.8"
   bin:
     systeminformation: lib/cli.js
-  checksum: 10c0/849283b2886c46ff5e79594e939c87202b5283b8aa16cd0d665c595781dba51913060728bae95b94837b78c3a515a0f00ab0a0471604990c5c778f555bd075ea
+  checksum: 10c0/d23b41a4deb23d368b0b8e7991598e0534a818a76aa79f528fd2b724b575c41bc5faf9264f9adffac8ea34768371fc619384207d081d7f7e2542c330499ceddc
   conditions: (os=darwin | os=linux | os=win32 | os=freebsd | os=openbsd | os=netbsd | os=sunos | os=android)
   languageName: node
   linkType: hard
