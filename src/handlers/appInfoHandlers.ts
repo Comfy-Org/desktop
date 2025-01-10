@@ -27,5 +27,8 @@ export class AppInfoHandlers {
         await useDesktopConfig().setAsync('windowStyle', style);
       }
     );
+    ipcMain.handle(IPC_CHANNELS.GET_WINDOW_STYLE, async (): Promise<DesktopSettings['windowStyle']> => {
+      return await useDesktopConfig().getAsync('windowStyle');
+    });
   }
 }

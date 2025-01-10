@@ -288,6 +288,9 @@ const electronAPI = {
     setWindowStyle: (style: DesktopSettings['windowStyle']): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.SET_WINDOW_STYLE, style);
     },
+    getWindowStyle: (): Promise<DesktopSettings['windowStyle']> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.GET_WINDOW_STYLE);
+    },
   },
   /** Restart the python server without restarting desktop. */
   restartCore: async (): Promise<void> => {
