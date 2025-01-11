@@ -56,8 +56,7 @@ export class AppWindow {
     const storedY = store.get('windowY');
 
     // macOS requires different handling to linux / win32
-    const customChrome: Pick<Electron.BrowserWindowConstructorOptions, 'titleBarStyle' | 'titleBarOverlay'> = this
-      .customWindowEnabled
+    const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
       ? {
           titleBarStyle: 'hidden',
           titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
