@@ -38,6 +38,9 @@ export class AppWindow {
   private menu: Electron.Menu | null;
   /** The "edit" menu - cut/copy/paste etc. */
   private editMenu?: Menu;
+  /** Whether this window was created with title bar overlay enabled. When `false`, Electron throws when calling {@link BrowserWindow.setTitleBarOverlay}. */
+  public readonly customWindowEnabled: boolean =
+    process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom';
 
   public constructor() {
     const installed = useDesktopConfig().get('installState') === 'installed';
@@ -53,13 +56,13 @@ export class AppWindow {
     const storedY = store.get('windowY');
 
     // macOS requires different handling to linux / win32
-    const customChrome: Pick<Electron.BrowserWindowConstructorOptions, 'titleBarStyle' | 'titleBarOverlay'> =
-      process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom'
-        ? {
-            titleBarStyle: 'hidden',
-            titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
-          }
-        : {};
+    const customChrome: Pick<Electron.BrowserWindowConstructorOptions, 'titleBarStyle' | 'titleBarOverlay'> = this
+      .customWindowEnabled
+      ? {
+          titleBarStyle: 'hidden',
+          titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
+        }
+      : {};
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
@@ -272,9 +275,9 @@ export class AppWindow {
   }
 
   changeTheme(options: TitleBarOverlayOptions): void {
-    if (process.platform === 'darwin' || useDesktopConfig().get('windowStyle') !== 'custom') return;
+    if (!this.customWindowEnabled) return;
 
-    if (options.height) options.height = Math.round(options.height);
+    options.height &&= Math.round(options.height);
     if (!options.height) delete options.height;
     this.window.setTitleBarOverlay(options);
   }
