@@ -132,7 +132,8 @@ export class AppWindow {
 
   public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
-    await this.window.loadURL(`http://${host}:${serverArgs.port}`);
+    const devUrl = !app.isPackaged ? process.env.DEV_SERVER_URL : undefined;
+    await this.window.loadURL(devUrl ?? `http://${host}:${serverArgs.port}`);
   }
 
   public openDevTools(): void {
@@ -164,9 +165,8 @@ export class AppWindow {
   }
 
   public async loadRenderer(urlPath: string = ''): Promise<void> {
-    if (process.env.DEV_SERVER_URL) {
+    if (!app.isPackaged && process.env.DEV_SERVER_URL) {
       const url = `${process.env.DEV_SERVER_URL}/${urlPath}`;
-      this.rendererReady = true; // TODO: Look into why dev server ready event is not being sent to main process.
       log.info(`Loading development server ${url}`);
       await this.window.loadURL(url);
       this.window.webContents.openDevTools();
