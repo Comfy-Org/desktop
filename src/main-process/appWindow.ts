@@ -39,6 +39,11 @@ export class AppWindow {
   /** The "edit" menu - cut/copy/paste etc. */
   private editMenu?: Menu;
 
+  /** Always returns `undefined` in production. When running unpackaged, returns `DEV_SERVER_URL` if set, otherwise `undefined`. */
+  private get devUrlOverride() {
+    if (!app.isPackaged) return process.env.DEV_SERVER_URL;
+  }
+
   public constructor() {
     const installed = useDesktopConfig().get('installState') === 'installed';
     const primaryDisplay = screen.getPrimaryDisplay();
@@ -132,8 +137,7 @@ export class AppWindow {
 
   public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
-    const url =
-      !app.isPackaged && process.env.DEV_SERVER_URL ? process.env.DEV_SERVER_URL : `http://${host}:${serverArgs.port}`;
+    const url = this.devUrlOverride ?? `http://${host}:${serverArgs.port}`;
     await this.window.loadURL(url);
   }
 
@@ -166,8 +170,9 @@ export class AppWindow {
   }
 
   public async loadRenderer(urlPath: string = ''): Promise<void> {
-    if (!app.isPackaged && process.env.DEV_SERVER_URL) {
-      const url = `${process.env.DEV_SERVER_URL}/${urlPath}`;
+    const { devUrlOverride } = this;
+    if (devUrlOverride) {
+      const url = `${devUrlOverride}/${urlPath}`;
       log.info(`Loading development server ${url}`);
       await this.window.loadURL(url);
       this.window.webContents.openDevTools();
