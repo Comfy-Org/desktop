@@ -97,22 +97,22 @@ async function startApp() {
       SentryLogging.comfyDesktopApp = comfyDesktopApp;
 
       // Construct core launch args
-      const useExternalServer = process.env.USE_EXTERNAL_SERVER === 'true';
+      const useDevServer = !app.isPackaged && process.env.DEV_SERVER_URL;
       const cpuOnly: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { cpu: '' } : {};
       const extraServerArgs: Record<string, string> = {
         ...comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs'),
         ...cpuOnly,
       };
-      const host = process.env.COMFY_HOST ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
-      const targetPort = Number(process.env.COMFY_PORT ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
-      const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
+      const host = extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
+      const targetPort = Number(extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
+      const port = useDevServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
 
       // Remove listen and port from extraServerArgs so core launch args are used instead.
       delete extraServerArgs.listen;
       delete extraServerArgs.port;
 
       // Start server
-      if (!useExternalServer) {
+      if (!useDevServer) {
         try {
           await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
         } catch (error) {
