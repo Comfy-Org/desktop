@@ -132,9 +132,8 @@ export class AppWindow {
 
   public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
-    const url = !app.isPackaged && process.env.DEV_SERVER_URL 
-              ? process.env.DEV_SERVER_URL 
-              : `http://${host}:${serverArgs.port}`;
+    const url =
+      !app.isPackaged && process.env.DEV_SERVER_URL ? process.env.DEV_SERVER_URL : `http://${host}:${serverArgs.port}`;
     await this.window.loadURL(url);
   }
 
