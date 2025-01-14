@@ -17,7 +17,6 @@ jobs:
       - name: Build
         uses: ./.github/actions/build/windows/todesktop
         with:
-          build-gpu: 'cpu'
           build-targets: '--targets=@electron-forge/maker-zip'
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           TODESKTOP_ACCESS_TOKEN: ${{secrets.TODESKTOP_ACCESS_TOKEN}}

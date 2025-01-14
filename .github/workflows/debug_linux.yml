@@ -17,7 +17,6 @@ jobs:
       - name: Build
         uses: ./.github/actions/build/linux/app
         with:
-          build-gpu: 'cpu'
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload Build
