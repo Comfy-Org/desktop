@@ -11,7 +11,7 @@ import { LevelOption } from 'electron-log';
 import SentryLogging from './services/sentry';
 import { DesktopConfig } from './store/desktopConfig';
 import { InstallationManager } from './install/installationManager';
-import { telemetry } from './services/telemetry';
+import { getTelemetry } from './services/telemetry';
 
 dotenv.config();
 log.initialize();
@@ -19,6 +19,7 @@ log.transports.file.level = (process.env.LOG_LEVEL as LevelOption) ?? 'info';
 
 const allowDevVars = app.commandLine.hasSwitch('dev-mode');
 
+const telemetry = getTelemetry();
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -91,13 +92,13 @@ async function startApp() {
 
     try {
       // Install / validate installation is complete
-      const installManager = new InstallationManager(appWindow);
+      const installManager = new InstallationManager(appWindow, telemetry);
       const installation = await installManager.ensureInstalled();
       if (!installation.isValid)
         throw new Error(`Fatal: Could not validate installation: [${installation.state}/${installation.issues.size}]`);
 
       // Initialize app
-      const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation.basePath);
+      const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation.basePath, telemetry);
       await comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.

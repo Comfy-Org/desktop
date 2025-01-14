@@ -7,14 +7,24 @@ import log from 'electron-log/main';
 import { IPC_CHANNELS } from '../constants';
 import { InstallOptions } from '../preload';
 
+let instance: ITelemetry | null = null;
+export interface ITelemetry {
+  hasConsent: boolean;
+  track(eventName: string, properties?: PropertyDict): void;
+  flush(): void;
+  registerHandlers(): void;
+}
+
 const MIXPANEL_TOKEN = '6a7f9f6ae2084b4e7ff7ced98a6b5988';
 export class MixpanelTelemetry {
   public hasConsent: boolean = false;
   private distinctId: string;
   private readonly storageFile: string;
   private queue: { eventName: string; properties: PropertyDict }[] = [];
-  constructor() {
-    mixpanel.init(MIXPANEL_TOKEN);
+  private mixpanelClient: mixpanel.Mixpanel;
+  constructor(mixpanelClient: mixpanel.Mixpanel) {
+    this.mixpanelClient = mixpanelClient;
+    this.mixpanelClient.init(MIXPANEL_TOKEN);
     // Store the distinct ID in a file in the user data directory for easy access.
     this.storageFile = path.join(app.getPath('userData'), 'telemetry.txt');
     this.distinctId = this.getOrCreateDistinctId(this.storageFile);
@@ -102,4 +112,9 @@ export class MixpanelTelemetry {
 }
 
 // Export a singleton instance
-export const telemetry = new MixpanelTelemetry();
+export function getTelemetry(): ITelemetry {
+  if (!instance) {
+    instance = new MixpanelTelemetry(mixpanel);
+  }
+  return instance;
+}

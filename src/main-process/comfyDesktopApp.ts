@@ -17,16 +17,16 @@ import { Terminal } from '../shell/terminal';
 import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { CmCli } from '../services/cmCli';
 import { rm } from 'node:fs/promises';
-import { telemetry } from '../services/telemetry';
+import { ITelemetry } from '../services/telemetry';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
   private terminal: Terminal | null = null; // Only created after server starts.
-
   constructor(
     public basePath: string,
     public comfySettings: ComfySettings,
-    public appWindow: AppWindow
+    public appWindow: AppWindow,
+    private readonly telemetry: ITelemetry
   ) {}
 
   get pythonInstallPath() {
@@ -151,7 +151,7 @@ export class ComfyDesktopApp {
 
     const config = useDesktopConfig();
     const selectedDevice = config.get('selectedDevice');
-    const virtualEnvironment = new VirtualEnvironment(this.basePath, selectedDevice);
+    const virtualEnvironment = new VirtualEnvironment(this.basePath, this.telemetry, selectedDevice);
 
     const processCallbacks: ProcessCallbacks = {
       onStdout: (data) => {
@@ -169,12 +169,12 @@ export class ComfyDesktopApp {
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);
-    telemetry.track('desktop:comfy_server_start');
+    this.telemetry.track('desktop:comfy_server_start');
     await this.comfyServer.start().catch((error) => {
-      telemetry.track('desktop:comfy_server_start_error', { error: error.message });
+      this.telemetry.track('desktop:comfy_server_start_error', { error: error.message });
       throw error;
     });
-    telemetry.track('desktop:comfy_server_start_success');
+    this.telemetry.track('desktop:comfy_server_start_success');
     this.initializeTerminal(virtualEnvironment);
 
     if (customNodeMigrationError) {
@@ -188,7 +188,7 @@ export class ComfyDesktopApp {
 
   /** @returns `undefined` if successful, or an error `string` on failure. */
   async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {
-    telemetry.track('desktop:migrate_custom_nodes_start');
+    this.telemetry.track('desktop:migrate_custom_nodes_start');
     const fromPath = config.get('migrateCustomNodesFrom');
     if (!fromPath) return;
 
@@ -196,10 +196,10 @@ export class ComfyDesktopApp {
     try {
       const cmCli = new CmCli(virtualEnvironment);
       await cmCli.restoreCustomNodes(fromPath, callbacks);
-      telemetry.track('desktop:migrate_custom_nodes_end');
+      this.telemetry.track('desktop:migrate_custom_nodes_end');
     } catch (error) {
       log.error('Error migrating custom nodes:', error);
-      telemetry.track('desktop:migrate_custom_nodes_error');
+      this.telemetry.track('desktop:migrate_custom_nodes_error');
       // TODO: Replace with IPC callback to handle i18n (SoC).
       return error?.toString?.() ?? 'Error migrating custom nodes.';
     } finally {
@@ -208,8 +208,8 @@ export class ComfyDesktopApp {
     }
   }
 
-  static create(appWindow: AppWindow, basePath: string): ComfyDesktopApp {
-    return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow);
+  static create(appWindow: AppWindow, basePath: string, telemetry: ITelemetry): ComfyDesktopApp {
+    return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow, telemetry);
   }
 
   async uninstall(): Promise<void> {

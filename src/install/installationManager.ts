@@ -7,11 +7,14 @@ import type { InstallOptions } from '../preload';
 import { IPC_CHANNELS } from '../constants';
 import { InstallWizard } from './installWizard';
 import { validateHardware } from '../utils';
-import { telemetry } from '../services/telemetry';
+import { ITelemetry } from '../services/telemetry';
 
 /** High-level / UI control over the installation of ComfyUI server. */
 export class InstallationManager {
-  constructor(public readonly appWindow: AppWindow) {}
+  constructor(
+    public readonly appWindow: AppWindow,
+    private readonly telemetry: ITelemetry
+  ) {}
 
   /**
    * Ensures that ComfyUI is installed and ready to run.
@@ -61,7 +64,7 @@ export class InstallationManager {
    */
   async freshInstall(): Promise<ComfyInstallation> {
     log.info('Starting installation.');
-    telemetry.track('desktop:fresh_install_start');
+    this.telemetry.track('desktop:fresh_install_start');
     const config = useDesktopConfig();
     config.set('installState', 'started');
 
@@ -78,7 +81,7 @@ export class InstallationManager {
     if (!hardware.isValid) {
       log.error(hardware.error);
       log.verbose('Loading not-supported renderer.');
-      telemetry.track('desktop:hardware_not_supported');
+      this.telemetry.track('desktop:hardware_not_supported');
       await this.appWindow.loadRenderer('not-supported');
     } else {
       log.verbose('Loading welcome renderer.');
@@ -86,12 +89,12 @@ export class InstallationManager {
     }
 
     const installOptions = await optionsPromise;
-    telemetry.track('desktop:install_options_received', {
+    this.telemetry.track('desktop:install_options_received', {
       gpuType: installOptions.device,
       autoUpdate: installOptions.autoUpdate,
     });
 
-    const installWizard = new InstallWizard(installOptions);
+    const installWizard = new InstallWizard(installOptions, this.telemetry);
     useDesktopConfig().set('basePath', installWizard.basePath);
 
     const { device } = installOptions;
