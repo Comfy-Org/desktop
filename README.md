@@ -153,7 +153,7 @@ This project uses `yarn` as its package manager. If you do not already have a `y
 ```bash
 # corepack is a set of utilities included with all recent distributions of node
 corepack enable
-yarn set version v4.5.0 # Look at the packageManager key in package.json for the exact version.
+yarn set version 4.5.0 # Look at the packageManager key in package.json for the exact version.
 ```
 
 This will install a usable `yarn` binary. Then, in the root directory of this repo (ie adjacent to the top-level package.json file), run:
@@ -224,11 +224,11 @@ npx electron-rebuild
 or if that fails
 
 ```
-yarn install -D @electron/rebuild
+yarn add -D @electron/rebuild
 rm -rf node_modules
 rm yarn.lock
 yarn install
-electron-rebuild
+npx electron-rebuild
 ```
 
 #### Missing libraries
