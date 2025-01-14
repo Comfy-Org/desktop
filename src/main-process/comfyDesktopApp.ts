@@ -119,9 +119,6 @@ export class ComfyDesktopApp implements HasTelemetry {
         }
       }
     );
-    ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, (): string => {
-      return this.basePath;
-    });
     ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
       return !ComfyServerConfig.exists();
     });
