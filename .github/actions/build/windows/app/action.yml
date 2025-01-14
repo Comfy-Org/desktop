@@ -51,7 +51,6 @@ runs:
         DIGICERT_FINGERPRINT: ${{ inputs.DIGICERT_FINGERPRINT }}
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
-        COMFYUI_CPU_ONLY: ${{inputs.build-gpu == 'cpu'}}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       run: yarn run make
     - name: Print SignLogs

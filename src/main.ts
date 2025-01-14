@@ -99,11 +99,11 @@ async function startApp() {
 
       // Construct core launch args
       const useDevServer = !app.isPackaged && process.env.DEV_SERVER_URL;
-      const cpuOnly: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { cpu: '' } : {};
-      const extraServerArgs: Record<string, string> = {
-        ...comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs'),
-        ...cpuOnly,
-      };
+      // Shallow-clone the setting launch args to avoid mutation.
+      const extraServerArgs: Record<string, string> = Object.assign(
+        {},
+        comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs')
+      );
       const host = extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
       const targetPort = Number(extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
       const port = useDevServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
