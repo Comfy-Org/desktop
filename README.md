@@ -164,26 +164,13 @@ yarn install
 
 ## ComfyUI Assets
 
-Before you can start the electron application, you need to download the ComfyUI source code and other things that are usually bundled with the application. We use [comfy-cli](https://github.com/Comfy-Org/comfy-cli) to install everything.
-
-### Install comfy-cli
-
-With the python environment activated, install comfy-cli:
-
-```bash
-pip install -U comfy-cli
-```
+Before you can start the electron application, you need to download the ComfyUI source code and other things that are usually bundled with the application.
 
 ### ComfyUI and other dependencies
 
-First, initialize the application resources by running `make:assets:<gpu>`:
+First, initialize the application resources by running `yarn make:assets`:
 
-```bash
-# populate the assets/ dir (Installs a fresh ComfyUI instance under assets/)
-yarn make:assets:[amd|cpu|nvidia|macos]
-```
-
-This command will install ComfyUI under `assets`, as well ComfyUI-Manager, and the frontend [extension](https://github.com/Comfy-Org/DesktopSettingsExtension) responsible for electron settings menu. The exact versions of each package is defined in `package.json`.
+This command will install ComfyUI and ComfyUI-Manager under `assets/`. The exact versions of each package is defined in `package.json`.
 
 Second, you need to install `uv`. This will be bundled with the distributable, but we also need it locally.
 
