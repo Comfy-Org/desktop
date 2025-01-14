@@ -137,7 +137,7 @@ export class VirtualEnvironment implements HasTelemetry {
     throw new Error(`Unsupported platform: ${process.platform}`);
   }
 
-  @trackEvent('desktop:virtual_environment_create')
+  @trackEvent('install_flow:virtual_environment_create')
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
     if (this.selectedDevice === 'unsupported') {
       log.info('User elected to manually configure their environment.  Skipping python configuration.');
@@ -161,7 +161,7 @@ export class VirtualEnvironment implements HasTelemetry {
     await this.installRequirements(callbacks);
   }
 
-  @trackEvent('desktop:virtual_environment_create_python')
+  @trackEvent('install_flow:virtual_environment_create_python')
   public async createVenvWithPython(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Creating virtual environment at ${this.venvPath} with python ${this.pythonVersion}`);
     const args = ['venv', '--python', this.pythonVersion];
@@ -172,7 +172,7 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
-  @trackEvent('desktop:virtual_environment_create_ensurepip')
+  @trackEvent('install_flow:virtual_environment_create_ensurepip')
   public async ensurePip(callbacks?: ProcessCallbacks): Promise<void> {
     const { exitCode: ensurepipExitCode } = await this.runPythonCommandAsync(
       ['-m', 'ensurepip', '--upgrade'],
@@ -183,7 +183,7 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
-  @trackEvent('desktop:virtual_environment_install_requirements')
+  @trackEvent('install_flow:virtual_environment_install_requirements')
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     // pytorch nightly is required for MPS
     if (process.platform === 'darwin') {

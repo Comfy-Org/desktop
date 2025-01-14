@@ -98,7 +98,7 @@ export class ComfyServer implements HasTelemetry {
     });
   }
 
-  @trackEvent('desktop:comfy_server_start')
+  @trackEvent('comfyui:server_start')
   async start() {
     await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
     return new Promise<void>((resolve, reject) => {
