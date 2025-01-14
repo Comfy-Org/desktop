@@ -181,14 +181,6 @@ const electronAPI = {
   },
   /** The ComfyUI core version (as defined in package.json) */
   getComfyUIVersion: () => __COMFYUI_VERSION__,
-  /**
-   * Send an error message to Sentry
-   * @param error The error object or message to send
-   * @param extras Optional additional context/data to attach
-   */
-  sendErrorToSentry: (error: string, extras?: Record<string, unknown>) => {
-    return ipcRenderer.invoke(IPC_CHANNELS.SEND_ERROR_TO_SENTRY, { error, extras });
-  },
   Terminal: {
     /**
      * Writes the data to the terminal

@@ -14,7 +14,6 @@ export const IPC_CHANNELS = {
   DELETE_MODEL: 'delete-model',
   GET_ALL_DOWNLOADS: 'get-all-downloads',
   GET_ELECTRON_VERSION: 'get-electron-version',
-  SEND_ERROR_TO_SENTRY: 'send-error-to-sentry',
   GET_BASE_PATH: 'get-base-path',
   GET_MODEL_CONFIG_PATH: 'get-model-config-path',
   OPEN_PATH: 'open-path',

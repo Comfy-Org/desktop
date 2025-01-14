@@ -122,29 +122,6 @@ export class ComfyDesktopApp {
       log.info('Reinstalling...');
       await this.reinstall();
     });
-    type SentryErrorDetail = {
-      error: string;
-      extras?: Record<string, unknown>;
-    };
-
-    ipcMain.handle(
-      IPC_CHANNELS.SEND_ERROR_TO_SENTRY,
-      // eslint-disable-next-line @typescript-eslint/require-await
-      async (_event, { error, extras }: SentryErrorDetail): Promise<string | null> => {
-        try {
-          return Sentry.captureMessage(error, {
-            level: 'error',
-            extra: { ...extras, comfyUIExecutionError: true },
-            tags: {
-              comfyorigin: 'core',
-            },
-          });
-        } catch (error_) {
-          log.error('Failed to send error to Sentry:', error_);
-          return null;
-        }
-      }
-    );
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => {
       if (!this.comfyServer) return false;

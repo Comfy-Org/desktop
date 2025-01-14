@@ -14,10 +14,7 @@ class SentryLogging {
       beforeSend: async (event) => {
         this.filterEvent(event);
 
-        if (
-          event.extra?.comfyUIExecutionError ||
-          this.comfyDesktopApp?.comfySettings.get('Comfy-Desktop.SendStatistics')
-        ) {
+        if (this.comfyDesktopApp?.comfySettings.get('Comfy-Desktop.SendStatistics')) {
           return event;
         }
 
