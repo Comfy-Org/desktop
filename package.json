@@ -100,6 +100,7 @@
     "dotenv": "^16.4.5",
     "electron-log": "^5.2.0",
     "electron-store": "8.2.0",
+    "mixpanel": "^0.18.0",
     "node-pty": "^1.0.0",
     "systeminformation": "^5.24.8",
     "tar": "^7.4.3",

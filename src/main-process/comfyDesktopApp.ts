@@ -17,6 +17,7 @@ import { Terminal } from '../shell/terminal';
 import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { CmCli } from '../services/cmCli';
 import { rm } from 'node:fs/promises';
+import { telemetry } from '../services/telemetry';
 
 export class ComfyDesktopApp {
   public comfyServer: ComfyServer | null = null;
@@ -162,14 +163,18 @@ export class ComfyDesktopApp {
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     };
-
     await virtualEnvironment.create(processCallbacks);
 
     const customNodeMigrationError = await this.migrateCustomNodes(config, virtualEnvironment, processCallbacks);
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);
-    await this.comfyServer.start();
+    telemetry.track('desktop:comfy_server_start');
+    await this.comfyServer.start().catch((error) => {
+      telemetry.track('desktop:comfy_server_start_error', { error: error.message });
+      throw error;
+    });
+    telemetry.track('desktop:comfy_server_start_success');
     this.initializeTerminal(virtualEnvironment);
 
     if (customNodeMigrationError) {
@@ -183,6 +188,7 @@ export class ComfyDesktopApp {
 
   /** @returns `undefined` if successful, or an error `string` on failure. */
   async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {
+    telemetry.track('desktop:migrate_custom_nodes_start');
     const fromPath = config.get('migrateCustomNodesFrom');
     if (!fromPath) return;
 
@@ -190,8 +196,10 @@ export class ComfyDesktopApp {
     try {
       const cmCli = new CmCli(virtualEnvironment);
       await cmCli.restoreCustomNodes(fromPath, callbacks);
+      telemetry.track('desktop:migrate_custom_nodes_end');
     } catch (error) {
       log.error('Error migrating custom nodes:', error);
+      telemetry.track('desktop:migrate_custom_nodes_error');
       // TODO: Replace with IPC callback to handle i18n (SoC).
       return error?.toString?.() ?? 'Error migrating custom nodes.';
     } finally {

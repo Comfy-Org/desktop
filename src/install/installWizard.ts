@@ -5,6 +5,7 @@ import { InstallOptions } from '../preload';
 import { DEFAULT_SETTINGS, type ComfySettingsData } from '../config/comfySettings';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
+import { telemetry } from '../services/telemetry';
 
 export class InstallWizard {
   public migrationItemIds: Set<string> = new Set();
@@ -22,11 +23,13 @@ export class InstallWizard {
   }
 
   public async install() {
+    telemetry.track('desktop:install_wizard_start');
     // Setup the ComfyUI folder structure.
     ComfyConfigManager.createComfyDirectories(this.basePath);
     this.initializeUserFiles();
     this.initializeSettings();
     await this.initializeModelPaths();
+    telemetry.track('desktop:install_wizard_end');
   }
 
   /**

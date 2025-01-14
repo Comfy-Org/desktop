@@ -140,6 +140,7 @@ export class AppWindow {
   public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
     const url = this.devUrlOverride ?? `http://${host}:${serverArgs.port}`;
+    log.info(`Loading ComfyUI at ${url}`);
     await this.window.loadURL(url);
   }
 

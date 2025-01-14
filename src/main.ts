@@ -11,6 +11,7 @@ import { LevelOption } from 'electron-log';
 import SentryLogging from './services/sentry';
 import { DesktopConfig } from './store/desktopConfig';
 import { InstallationManager } from './install/installationManager';
+import { telemetry } from './services/telemetry';
 
 dotenv.config();
 log.initialize();
@@ -47,7 +48,8 @@ if (!gotTheLock) {
 } else {
   app.on('ready', () => {
     log.debug('App ready');
-
+    telemetry.registerHandlers();
+    telemetry.track('desktop:app_ready');
     startApp().catch((error) => {
       log.error('Unhandled exception in app startup', error);
       app.exit(2020);
@@ -97,8 +99,13 @@ async function startApp() {
       // Initialize app
       const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation.basePath);
       await comfyDesktopApp.initialize();
-      SentryLogging.comfyDesktopApp = comfyDesktopApp;
 
+      // At this point, user has gone through the onboarding flow.
+      SentryLogging.comfyDesktopApp = comfyDesktopApp;
+      if (comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics')) {
+        telemetry.hasConsent = true;
+        telemetry.flush();
+      }
       // Construct core launch args
       const useExternalServer = devOverride('USE_EXTERNAL_SERVER') === 'true';
       // Shallow-clone the setting launch args to avoid mutation.
