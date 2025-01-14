@@ -19,6 +19,7 @@ import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { useDesktopConfig } from '../store/desktopConfig';
 import type { ElectronContextMenuOptions } from '../preload';
+import * as Sentry from '@sentry/electron/main';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
@@ -128,6 +129,12 @@ export class AppWindow {
   sendServerStartProgress(status: ProgressStatus): void {
     this.send(IPC_CHANNELS.LOADING_PROGRESS, {
       status,
+    });
+    Sentry.captureMessage(status, {
+      level: status === ProgressStatus.ERROR ? 'error' : 'info',
+      tags: {
+        comfyorigin: 'core',
+      },
     });
   }
 
