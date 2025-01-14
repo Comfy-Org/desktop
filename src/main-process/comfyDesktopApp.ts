@@ -17,16 +17,16 @@ import { Terminal } from '../shell/terminal';
 import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { CmCli } from '../services/cmCli';
 import { rm } from 'node:fs/promises';
-import { ITelemetry } from '../services/telemetry';
+import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 
-export class ComfyDesktopApp {
+export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;
   private terminal: Terminal | null = null; // Only created after server starts.
   constructor(
     public basePath: string,
     public comfySettings: ComfySettings,
     public appWindow: AppWindow,
-    private readonly telemetry: ITelemetry
+    readonly telemetry: ITelemetry
   ) {}
 
   get pythonInstallPath() {
@@ -168,13 +168,8 @@ export class ComfyDesktopApp {
     const customNodeMigrationError = await this.migrateCustomNodes(config, virtualEnvironment, processCallbacks);
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
-    this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);
-    this.telemetry.track('desktop:comfy_server_start');
-    await this.comfyServer.start().catch((error) => {
-      this.telemetry.track('desktop:comfy_server_start_error', { error: error.message });
-      throw error;
-    });
-    this.telemetry.track('desktop:comfy_server_start_success');
+    this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
+    await this.comfyServer.start();
     this.initializeTerminal(virtualEnvironment);
 
     if (customNodeMigrationError) {
@@ -187,8 +182,8 @@ export class ComfyDesktopApp {
   }
 
   /** @returns `undefined` if successful, or an error `string` on failure. */
+  @trackEvent('desktop:migrate_custom_nodes')
   async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {
-    this.telemetry.track('desktop:migrate_custom_nodes_start');
     const fromPath = config.get('migrateCustomNodesFrom');
     if (!fromPath) return;
 
@@ -196,10 +191,8 @@ export class ComfyDesktopApp {
     try {
       const cmCli = new CmCli(virtualEnvironment);
       await cmCli.restoreCustomNodes(fromPath, callbacks);
-      this.telemetry.track('desktop:migrate_custom_nodes_end');
     } catch (error) {
       log.error('Error migrating custom nodes:', error);
-      this.telemetry.track('desktop:migrate_custom_nodes_error');
       // TODO: Replace with IPC callback to handle i18n (SoC).
       return error?.toString?.() ?? 'Error migrating custom nodes.';
     } finally {

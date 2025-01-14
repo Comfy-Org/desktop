@@ -5,18 +5,16 @@ import { InstallOptions } from '../preload';
 import { DEFAULT_SETTINGS, type ComfySettingsData } from '../config/comfySettings';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
-import { ITelemetry } from '../services/telemetry';
+import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 
-export class InstallWizard {
+export class InstallWizard implements HasTelemetry {
   public migrationItemIds: Set<string> = new Set();
-  private telemetry: ITelemetry;
 
   constructor(
     public installOptions: InstallOptions,
-    telemetry: ITelemetry
+    readonly telemetry: ITelemetry
   ) {
     this.migrationItemIds = new Set(installOptions.migrationItemIds ?? []);
-    this.telemetry = telemetry;
   }
 
   get migrationSource(): string | undefined {
@@ -27,14 +25,13 @@ export class InstallWizard {
     return this.installOptions.installPath;
   }
 
+  @trackEvent('desktop:install_wizard_install')
   public async install() {
-    this.telemetry.track('desktop:install_wizard_start');
     // Setup the ComfyUI folder structure.
     ComfyConfigManager.createComfyDirectories(this.basePath);
     this.initializeUserFiles();
     this.initializeSettings();
     await this.initializeModelPaths();
-    this.telemetry.track('desktop:install_wizard_end');
   }
 
   /**

@@ -64,7 +64,6 @@ export class InstallationManager {
    */
   async freshInstall(): Promise<ComfyInstallation> {
     log.info('Starting installation.');
-    this.telemetry.track('desktop:fresh_install_start');
     const config = useDesktopConfig();
     config.set('installState', 'started');
 
