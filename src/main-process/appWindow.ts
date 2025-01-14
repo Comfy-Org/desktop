@@ -38,6 +38,14 @@ export class AppWindow {
   private menu: Electron.Menu | null;
   /** The "edit" menu - cut/copy/paste etc. */
   private editMenu?: Menu;
+  /** Whether this window was created with title bar overlay enabled. When `false`, Electron throws when calling {@link BrowserWindow.setTitleBarOverlay}. */
+  public readonly customWindowEnabled: boolean =
+    process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom';
+
+  /** Always returns `undefined` in production. When running unpackaged, returns `DEV_SERVER_URL` if set, otherwise `undefined`. */
+  private get devUrlOverride() {
+    if (!app.isPackaged) return process.env.DEV_SERVER_URL;
+  }
 
   public constructor() {
     const installed = useDesktopConfig().get('installState') === 'installed';
@@ -53,13 +61,12 @@ export class AppWindow {
     const storedY = store.get('windowY');
 
     // macOS requires different handling to linux / win32
-    const customChrome: Pick<Electron.BrowserWindowConstructorOptions, 'titleBarStyle' | 'titleBarOverlay'> =
-      process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom'
-        ? {
-            titleBarStyle: 'hidden',
-            titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
-          }
-        : {};
+    const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
+      ? {
+          titleBarStyle: 'hidden',
+          titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
+        }
+      : {};
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
@@ -132,7 +139,8 @@ export class AppWindow {
 
   public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
-    await this.window.loadURL(`http://${host}:${serverArgs.port}`);
+    const url = this.devUrlOverride ?? `http://${host}:${serverArgs.port}`;
+    await this.window.loadURL(url);
   }
 
   public openDevTools(): void {
@@ -164,9 +172,9 @@ export class AppWindow {
   }
 
   public async loadRenderer(urlPath: string = ''): Promise<void> {
-    if (process.env.DEV_SERVER_URL) {
-      const url = `${process.env.DEV_SERVER_URL}/${urlPath}`;
-      this.rendererReady = true; // TODO: Look into why dev server ready event is not being sent to main process.
+    const { devUrlOverride } = this;
+    if (devUrlOverride) {
+      const url = `${devUrlOverride}/${urlPath}`;
       log.info(`Loading development server ${url}`);
       await this.window.loadURL(url);
       this.window.webContents.openDevTools();
@@ -272,9 +280,9 @@ export class AppWindow {
   }
 
   changeTheme(options: TitleBarOverlayOptions): void {
-    if (process.platform === 'darwin' || useDesktopConfig().get('windowStyle') !== 'custom') return;
+    if (!this.customWindowEnabled) return;
 
-    if (options.height) options.height = Math.round(options.height);
+    options.height &&= Math.round(options.height);
     if (!options.height) delete options.height;
     this.window.setTitleBarOverlay(options);
   }

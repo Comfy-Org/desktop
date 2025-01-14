@@ -15,7 +15,6 @@ import { DownloadManager } from '../models/DownloadManager';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { Terminal } from '../shell/terminal';
 import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
-import { restoreCustomNodes } from '../services/backup';
 import { CmCli } from '../services/cmCli';
 import { rm } from 'node:fs/promises';
 
@@ -192,16 +191,6 @@ export class ComfyDesktopApp {
     await virtualEnvironment.create(processCallbacks);
 
     const customNodeMigrationError = await this.migrateCustomNodes(config, virtualEnvironment, processCallbacks);
-
-    if (!config.get('Comfy-Desktop.RestoredCustomNodes', false)) {
-      try {
-        await restoreCustomNodes(virtualEnvironment, this.appWindow);
-        config.set('Comfy-Desktop.RestoredCustomNodes', true);
-      } catch (error) {
-        log.error('Failed to restore custom nodes:', error);
-        config.set('Comfy-Desktop.RestoredCustomNodes', false);
-      }
-    }
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow);

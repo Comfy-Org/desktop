@@ -62,15 +62,6 @@ export enum ProgressStatus {
   ERROR = 'error',
 }
 
-export const ProgressMessages = {
-  [ProgressStatus.INITIAL_STATE]: 'Loading...',
-  [ProgressStatus.PYTHON_SETUP]: 'Setting up Python Environment...',
-  [ProgressStatus.STARTING_SERVER]: 'Starting ComfyUI server...',
-  [ProgressStatus.READY]: 'Finishing...',
-  [ProgressStatus.ERROR]:
-    'Was not able to start ComfyUI. Please check the logs for more details. You can open it from the Help menu. Please report issues to: https://forum.comfy.org',
-} as const;
-
 export type IPCChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 
 export const ELECTRON_BRIDGE_API = 'electronAPI';
