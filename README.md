@@ -247,6 +247,10 @@ The launch environment can be customised, e.g. add a `"linux"` section to source
 }
 ```
 
+### Troubleshooting the packaged app
+
+To enable development environment variables when using a packaged app, use the `--dev-mode` command line argument.
+
 # Release
 
 We use Todesktop to build and codesign our distributables. To make a new release:
