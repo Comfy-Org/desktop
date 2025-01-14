@@ -110,9 +110,7 @@ export class ComfyDesktopApp {
         }
       }
     );
-
-    // eslint-disable-next-line @typescript-eslint/require-await
-    ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, async (): Promise<string> => {
+    ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, (): string => {
       return this.basePath;
     });
     ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
