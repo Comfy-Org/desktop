@@ -30,7 +30,7 @@ const preMake = () => {
       { shell: true, stdio: 'pipe' }
     ).stdout.toString();
     const localPythonModulePath = `PATH=${result.replaceAll('\\', '\\\\').trim()};%PATH%`;
-    spawnSync(`set ${localPythonModulePath} && yarn run make:assets:${isNvidia ? 'nvidia' : 'cpu'}`, [''], {
+    spawnSync(`set ${localPythonModulePath} && yarn run make:assets`, [''], {
       shell: true,
       stdio: 'inherit',
     });

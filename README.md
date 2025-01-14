@@ -275,7 +275,7 @@ A number of utility scripts are defined under the "scripts" field of package.jso
 ```bash
 yarn clean
 
-# Remove files created by yarn make:assets:<gpu>
+# Remove files created by yarn make:assets
 yarn:clean:assets
 
 # clean:slate also removes node_modules
