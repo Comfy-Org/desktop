@@ -118,3 +118,34 @@ export function getTelemetry(): ITelemetry {
   }
   return instance;
 }
+
+// Classes that use the trackEvent decorator must implement this interface.
+export interface HasTelemetry {
+  telemetry: ITelemetry;
+}
+
+export function trackEvent(eventName: string) {
+  return function <T extends HasTelemetry>(target: T, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
+
+    descriptor.value = async function (this: T, ...args: any[]) {
+      const startTime = performance.now();
+
+      this.telemetry.track(`${eventName}_start`);
+
+      try {
+        const result = await originalMethod.apply(this, args);
+        this.telemetry.track(`${eventName}_complete`);
+        return result;
+      } catch (error: any) {
+        this.telemetry.track(`${eventName}_error`, {
+          error_message: error.message,
+          error_name: error.name,
+        });
+        throw error;
+      }
+    };
+
+    return descriptor;
+  };
+}

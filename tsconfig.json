@@ -15,6 +15,7 @@
     "outDir": "dist",
     "moduleResolution": "node10",
     "resolveJsonModule": true,
+    "experimentalDecorators": true,
     "paths": {
       "/*": ["./*"]
     }

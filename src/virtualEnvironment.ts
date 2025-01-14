@@ -7,7 +7,7 @@ import pty from 'node-pty';
 import os, { EOL } from 'node:os';
 import { getDefaultShell } from './shell/util';
 import type { TorchDeviceType } from './preload';
-import { ITelemetry } from './services/telemetry';
+import { ITelemetry, trackEvent, HasTelemetry } from './services/telemetry';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -20,7 +20,7 @@ export type ProcessCallbacks = {
  * Maintains its own node-pty instance; output from this is piped to the virtual terminal.
  * @todo Split either installation or terminal management to a separate class.
  */
-export class VirtualEnvironment {
+export class VirtualEnvironment implements HasTelemetry {
   readonly venvRootPath: string;
   readonly venvPath: string;
   readonly pythonVersion: string;
@@ -56,7 +56,7 @@ export class VirtualEnvironment {
 
   constructor(
     venvPath: string,
-    private readonly telemetry: ITelemetry,
+    readonly telemetry: ITelemetry,
     selectedDevice: TorchDeviceType | undefined,
     pythonVersion: string = '3.12.8'
   ) {
@@ -114,12 +114,9 @@ export class VirtualEnvironment {
   }
 
   public async create(callbacks?: ProcessCallbacks): Promise<void> {
-    this.telemetry.track('desktop:virtual_environment_create_start');
     try {
       await this.createEnvironment(callbacks);
-      this.telemetry.track('desktop:virtual_environment_create_end');
     } catch (error) {
-      this.telemetry.track('desktop:virtual_environment_create_error');
       throw error;
     } finally {
       const pid = this.uvPty?.pid;
@@ -140,6 +137,7 @@ export class VirtualEnvironment {
     throw new Error(`Unsupported platform: ${process.platform}`);
   }
 
+  @trackEvent('desktop:virtual_environment_create')
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
     if (this.selectedDevice === 'unsupported') {
       log.info('User elected to manually configure their environment.  Skipping python configuration.');
@@ -151,26 +149,8 @@ export class VirtualEnvironment {
         log.info(`Virtual environment already exists at ${this.venvPath}`);
         return;
       }
-      this.telemetry.track('desktop:virtual_environment_create_python_start');
-      log.info(`Creating virtual environment at ${this.venvPath} with python ${this.pythonVersion}`);
-
-      // Create virtual environment using uv
-      const args = ['venv', '--python', this.pythonVersion];
-      const { exitCode } = await this.runUvCommandAsync(args, callbacks);
-
-      if (exitCode !== 0) {
-        this.telemetry.track('desktop:virtual_environment_create_python_error');
-        throw new Error(`Failed to create virtual environment: exit code ${exitCode}`);
-      }
-      this.telemetry.track('desktop:virtual_environment_create_python_end');
-
-      this.telemetry.track('desktop:virtual_environment_create_ensurepip_start');
-      const { exitCode: ensurepipExitCode } = await this.runPythonCommandAsync(['-m', 'ensurepip', '--upgrade']);
-      if (ensurepipExitCode !== 0) {
-        this.telemetry.track('desktop:virtual_environment_create_ensurepip_error');
-        throw new Error(`Failed to upgrade pip: exit code ${ensurepipExitCode}`);
-      }
-      this.telemetry.track('desktop:virtual_environment_create_ensurepip_end');
+      await this.createVenvWithPython(callbacks);
+      await this.ensurePip(callbacks);
 
       log.info(`Successfully created virtual environment at ${this.venvPath}`);
     } catch (error) {
@@ -181,9 +161,31 @@ export class VirtualEnvironment {
     await this.installRequirements(callbacks);
   }
 
+  @trackEvent('desktop:virtual_environment_create_python')
+  public async createVenvWithPython(callbacks?: ProcessCallbacks): Promise<void> {
+    log.info(`Creating virtual environment at ${this.venvPath} with python ${this.pythonVersion}`);
+    const args = ['venv', '--python', this.pythonVersion];
+    const { exitCode } = await this.runUvCommandAsync(args, callbacks);
+
+    if (exitCode !== 0) {
+      throw new Error(`Failed to create virtual environment: exit code ${exitCode}`);
+    }
+  }
+
+  @trackEvent('desktop:virtual_environment_create_ensurepip')
+  public async ensurePip(callbacks?: ProcessCallbacks): Promise<void> {
+    const { exitCode: ensurepipExitCode } = await this.runPythonCommandAsync(
+      ['-m', 'ensurepip', '--upgrade'],
+      callbacks
+    );
+    if (ensurepipExitCode !== 0) {
+      throw new Error(`Failed to upgrade pip: exit code ${ensurepipExitCode}`);
+    }
+  }
+
+  @trackEvent('desktop:virtual_environment_install_requirements')
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     // pytorch nightly is required for MPS
-    this.telemetry.track('desktop:virtual_environment_install_requirements_start');
     if (process.platform === 'darwin') {
       return this.manualInstall(callbacks);
     }
@@ -191,13 +193,11 @@ export class VirtualEnvironment {
     const installCmd = ['pip', 'install', '-r', this.requirementsCompiledPath, '--index-strategy', 'unsafe-best-match'];
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
-      this.telemetry.track('desktop:virtual_environment_install_requirements_error');
       log.error(
         `Failed to install requirements.compiled: exit code ${exitCode}. Falling back to installing requirements.txt`
       );
       return this.manualInstall(callbacks);
     }
-    this.telemetry.track('desktop:virtual_environment_install_requirements_end');
   }
 
   /**
