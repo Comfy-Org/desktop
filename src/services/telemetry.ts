@@ -25,8 +25,6 @@ export class MixpanelTelemetry {
   private mixpanelClient: mixpanel.Mixpanel;
   constructor(mixpanelClass: mixpanel.Mixpanel) {
     this.mixpanelClient = mixpanelClass.init(MIXPANEL_TOKEN, {
-      debug: true,
-      verbose: true,
       geolocate: true,
     });
     // Store the distinct ID in a file in the user data directory for easy access.
@@ -136,7 +134,7 @@ export class MixpanelTelemetry {
   }
 
   private mixpanelTrack(eventName: string, properties: PropertyDict): void {
-    if (!app.isPackaged) {
+    if (app.isPackaged) {
       log.info(`Tracking ${eventName} with properties ${JSON.stringify(properties)}`);
       this.mixpanelClient.track(eventName, properties);
     } else {
