@@ -26,13 +26,15 @@ vi.mock('mixpanel', () => ({
 
 describe('MixpanelTelemetry', () => {
   let telemetry: MixpanelTelemetry;
-  const mockMixpanelClient = {
-    init: vi.fn(),
+  const mockInitializedMixpanelClient = {
     track: vi.fn(),
     default: {
       init: vi.fn(),
       track: vi.fn(),
     },
+  };
+  const mockMixpanelClient = {
+    init: vi.fn().mockReturnValue(mockInitializedMixpanelClient),
   };
 
   beforeEach(() => {
@@ -92,7 +94,7 @@ describe('MixpanelTelemetry', () => {
       telemetry.track('another_event');
 
       expect(telemetry['queue'].length).toBe(0);
-      expect(mockMixpanelClient.track).toHaveBeenCalledTimes(2);
+      expect(mockInitializedMixpanelClient.track).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -124,5 +126,24 @@ describe('MixpanelTelemetry', () => {
       // Since consent is false by default, it should be queued
       expect(telemetry['queue'].length).toBe(1);
     });
+  });
+});
+
+describe('MixpanelTelemetry', () => {
+  it('should properly initialize mixpanel client', () => {
+    // Create a mock mixpanel client
+    const mockInitializedClient = { track: vi.fn(), people: { set: vi.fn() } };
+    const mockMixpanelClient = {
+      init: vi.fn().mockReturnValue(mockInitializedClient),
+    };
+
+    // Create telemetry instance with mock client
+    const telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
+
+    // Verify init was called
+    expect(mockMixpanelClient.init).toHaveBeenCalled();
+
+    // This will fail because the initialized client isn't being assigned
+    expect(telemetry['mixpanelClient']).toBe(mockInitializedClient);
   });
 });

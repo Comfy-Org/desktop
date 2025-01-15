@@ -6,7 +6,8 @@ import * as fs from 'fs';
 import log from 'electron-log/main';
 import { IPC_CHANNELS } from '../constants';
 import { InstallOptions } from '../preload';
-
+import * as os from 'os';
+import si from 'systeminformation';
 let instance: ITelemetry | null = null;
 export interface ITelemetry {
   hasConsent: boolean;
@@ -15,16 +16,19 @@ export interface ITelemetry {
   registerHandlers(): void;
 }
 
-const MIXPANEL_TOKEN = '6a7f9f6ae2084b4e7ff7ced98a6b5988';
+const MIXPANEL_TOKEN = '246a5311a264a5d3bc99835b28d564c5';
 export class MixpanelTelemetry {
   public hasConsent: boolean = false;
   private distinctId: string;
   private readonly storageFile: string;
   private queue: { eventName: string; properties: PropertyDict }[] = [];
   private mixpanelClient: mixpanel.Mixpanel;
-  constructor(mixpanelClient: mixpanel.Mixpanel) {
-    this.mixpanelClient = mixpanelClient;
-    this.mixpanelClient.init(MIXPANEL_TOKEN);
+  constructor(mixpanelClass: mixpanel.Mixpanel) {
+    this.mixpanelClient = mixpanelClass.init(MIXPANEL_TOKEN, {
+      debug: true,
+      verbose: true,
+      geolocate: true,
+    });
     // Store the distinct ID in a file in the user data directory for easy access.
     this.storageFile = path.join(app.getPath('userData'), 'telemetry.txt');
     this.distinctId = this.getOrCreateDistinctId(this.storageFile);
@@ -59,14 +63,19 @@ export class MixpanelTelemetry {
    * @param properties
    */
   track(eventName: string, properties?: PropertyDict): void {
+    const defaultProperties = {
+      distinct_id: this.distinctId,
+      time: new Date(),
+      $os: os.platform(),
+    };
+
     if (!this.hasConsent) {
       log.debug(`Queueing event ${eventName} with properties ${JSON.stringify(properties)}`);
       this.queue.push({
         eventName,
         properties: {
+          ...defaultProperties,
           ...properties,
-          time: new Date(),
-          distinct_id: this.distinctId,
         },
       });
       return;
@@ -76,10 +85,11 @@ export class MixpanelTelemetry {
 
     try {
       const enrichedProperties = {
+        ...defaultProperties,
         ...properties,
-        distinct_id: this.distinctId,
       };
       this.mixpanelTrack(eventName, enrichedProperties);
+      this.identify();
     } catch (error) {
       log.error('Failed to track event:', error);
     }
@@ -101,8 +111,33 @@ export class MixpanelTelemetry {
     });
   }
 
+  private async identify(): Promise<void> {
+    try {
+      const gpuData = await si.graphics();
+      const gpus = gpuData.controllers.map((gpu) => ({
+        model: gpu.model,
+        vendor: gpu.vendor,
+        vram: gpu.vram,
+      }));
+
+      this.mixpanelClient.people.set(this.distinctId, {
+        platform: process.platform,
+        arch: os.arch(),
+        gpus: gpus,
+        app_version: app.getVersion(),
+      });
+    } catch (error) {
+      log.error('Failed to get GPU information:', error);
+      this.mixpanelClient.people.set(this.distinctId, {
+        platform: process.platform,
+        arch: os.arch(),
+      });
+    }
+  }
+
   private mixpanelTrack(eventName: string, properties: PropertyDict): void {
-    if (app.isPackaged) {
+    if (!app.isPackaged) {
+      log.info(`Tracking ${eventName} with properties ${JSON.stringify(properties)}`);
       this.mixpanelClient.track(eventName, properties);
     } else {
       log.info(`Would have tracked ${eventName} with properties ${JSON.stringify(properties)}`);
