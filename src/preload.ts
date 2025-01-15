@@ -3,7 +3,6 @@ import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus, DownloadStatus } fro
 import type { DownloadState } from './models/DownloadManager';
 import path from 'node:path';
 import type { DesktopSettings } from './store/desktopSettings';
-import { PropertyDict } from 'mixpanel';
 
 /**
  * Open a folder in the system's default file explorer.
@@ -284,7 +283,7 @@ const electronAPI = {
     getWindowStyle: (): Promise<DesktopSettings['windowStyle']> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_WINDOW_STYLE);
     },
-    trackEvent: (eventName: string, properties?: PropertyDict): void => {
+    trackEvent: (eventName: string, properties?: Record<string, unknown>): void => {
       ipcRenderer.send(IPC_CHANNELS.TRACK_EVENT, eventName, properties);
     },
   },
