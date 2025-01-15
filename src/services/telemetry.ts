@@ -124,19 +124,21 @@ export interface HasTelemetry {
   telemetry: ITelemetry;
 }
 
+/**
+ * Decorator to track the start, error, and end of a function.
+ * @param eventName
+ * @returns
+ */
 export function trackEvent(eventName: string) {
   return function <T extends HasTelemetry>(target: T, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (this: T, ...args: any[]) {
-      const startTime = performance.now();
-
       this.telemetry.track(`${eventName}_start`);
-
       try {
-        const result = await originalMethod.apply(this, args);
-        this.telemetry.track(`${eventName}_complete`);
-        return result;
+        return originalMethod.apply(this, args).then(() => {
+          this.telemetry.track(`${eventName}_end`);
+        });
       } catch (error: any) {
         this.telemetry.track(`${eventName}_error`, {
           error_message: error.message,
