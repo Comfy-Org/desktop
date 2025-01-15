@@ -41,6 +41,7 @@ export class InstallWizard implements HasTelemetry {
     const shouldMigrateUserFiles = !!this.migrationSource && this.migrationItemIds.has('user_files');
     if (!shouldMigrateUserFiles) return;
 
+    this.telemetry.track('migrate_flow:migrate_user_files');
     // Copy user files from migration source to the new ComfyUI folder.
     const srcUserFilesDir = path.join(this.migrationSource, 'user');
     const destUserFilesDir = path.join(this.basePath, 'user');
@@ -87,6 +88,7 @@ export class InstallWizard implements HasTelemetry {
     const shouldMigrateModels = !!migrationSource && this.migrationItemIds.has('models');
 
     if (shouldMigrateModels) {
+      this.telemetry.track('migrate_flow:migrate_models');
       // The yaml file exists in migration source repo.
       const migrationServerConfigs = await ComfyServerConfig.getConfigFromRepoPath(migrationSource);
 

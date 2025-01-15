@@ -32,7 +32,6 @@ export class MixpanelTelemetry {
     this.distinctId = this.getOrCreateDistinctId(this.storageFile);
     this.queue = [];
     ipcMain.once(IPC_CHANNELS.INSTALL_COMFYUI, (_event, installOptions: InstallOptions) => {
-      log.verbose('Received INSTALL_COMFYUI.');
       if (installOptions.allowMetrics) {
         this.hasConsent = true;
       }
@@ -51,7 +50,7 @@ export class MixpanelTelemetry {
       return newId;
     } catch (error) {
       log.error('Failed to manage distinct ID:', error);
-      return randomUUID(); // Fallback to temporary ID
+      return '';
     }
   }
 
