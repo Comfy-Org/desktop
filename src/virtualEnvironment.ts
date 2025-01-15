@@ -116,8 +116,6 @@ export class VirtualEnvironment implements HasTelemetry {
   public async create(callbacks?: ProcessCallbacks): Promise<void> {
     try {
       await this.createEnvironment(callbacks);
-    } catch (error) {
-      throw error;
     } finally {
       const pid = this.uvPty?.pid;
       if (pid) process.kill(pid);

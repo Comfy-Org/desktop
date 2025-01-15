@@ -91,6 +91,8 @@ export class InstallationManager {
     this.telemetry.track('desktop:install_options_received', {
       gpuType: installOptions.device,
       autoUpdate: installOptions.autoUpdate,
+      allowMetrics: installOptions.allowMetrics,
+      migrationItemIds: installOptions.migrationItemIds,
     });
 
     const installWizard = new InstallWizard(installOptions, this.telemetry);
