@@ -137,7 +137,6 @@ export class VirtualEnvironment implements HasTelemetry {
     throw new Error(`Unsupported platform: ${process.platform}`);
   }
 
-  @trackEvent('install_flow:virtual_environment_create')
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
     if (this.selectedDevice === 'unsupported') {
       log.info('User elected to manually configure their environment.  Skipping python configuration.');
@@ -149,16 +148,24 @@ export class VirtualEnvironment implements HasTelemetry {
         log.info(`Virtual environment already exists at ${this.venvPath}`);
         return;
       }
+      this.telemetry.track(`install_flow:virtual_environment_create_start`, {
+        python_version: this.pythonVersion,
+        device: this.selectedDevice,
+      });
       await this.createVenvWithPython(callbacks);
       await this.ensurePip(callbacks);
-
+      await this.installRequirements(callbacks);
+      this.telemetry.track(`install_flow:virtual_environment_create_end`);
       log.info(`Successfully created virtual environment at ${this.venvPath}`);
     } catch (error) {
+      this.telemetry.track(`install_flow:virtual_environment_create_error`, {
+        error_name: error instanceof Error ? error.name : 'UnknownError',
+        error_type: error instanceof Error ? error.constructor.name : typeof error,
+        error_message: error instanceof Error ? error.message : 'Unknown error occurred',
+      });
       log.error(`Error creating virtual environment: ${error}`);
       throw error;
     }
-
-    await this.installRequirements(callbacks);
   }
 
   @trackEvent('install_flow:virtual_environment_create_python')
@@ -172,7 +179,7 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
-  @trackEvent('install_flow:virtual_environment_create_ensurepip')
+  @trackEvent('install_flow:virtual_environment_ensurepip')
   public async ensurePip(callbacks?: ProcessCallbacks): Promise<void> {
     const { exitCode: ensurepipExitCode } = await this.runPythonCommandAsync(
       ['-m', 'ensurepip', '--upgrade'],

@@ -3,12 +3,16 @@ import path from 'node:path';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { fileSync } from 'tmp';
+import { trackEvent, HasTelemetry, ITelemetry } from './telemetry';
 
-export class CmCli {
+export class CmCli implements HasTelemetry {
   private cliPath: string;
   private virtualEnvironment: VirtualEnvironment;
 
-  constructor(virtualEnvironment: VirtualEnvironment) {
+  constructor(
+    virtualEnvironment: VirtualEnvironment,
+    readonly telemetry: ITelemetry
+  ) {
     this.virtualEnvironment = virtualEnvironment;
     this.cliPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager', 'cm-cli.py');
   }
@@ -59,6 +63,7 @@ export class CmCli {
     return output;
   }
 
+  @trackEvent('migrate_flow:migrate_custom_nodes')
   public async restoreCustomNodes(fromComfyDir: string, callbacks: ProcessCallbacks) {
     const tmpFile = fileSync({ postfix: '.json' });
     try {

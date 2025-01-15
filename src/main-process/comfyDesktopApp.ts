@@ -182,14 +182,13 @@ export class ComfyDesktopApp implements HasTelemetry {
   }
 
   /** @returns `undefined` if successful, or an error `string` on failure. */
-  @trackEvent('migrate_flow:migrate_custom_nodes')
   async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {
     const fromPath = config.get('migrateCustomNodesFrom');
     if (!fromPath) return;
 
     log.info('Migrating custom nodes from:', fromPath);
     try {
-      const cmCli = new CmCli(virtualEnvironment);
+      const cmCli = new CmCli(virtualEnvironment, virtualEnvironment.telemetry);
       await cmCli.restoreCustomNodes(fromPath, callbacks);
     } catch (error) {
       log.error('Error migrating custom nodes:', error);
