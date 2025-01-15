@@ -43,7 +43,6 @@ export class MixpanelTelemetry {
       if (fs.existsSync(filePath)) {
         return fs.readFileSync(filePath, 'utf8');
       }
-
       // Generate new ID if none exists
       const newId = randomUUID();
       fs.writeFileSync(filePath, newId);
@@ -104,7 +103,7 @@ export class MixpanelTelemetry {
 
   private mixpanelTrack(eventName: string, properties: PropertyDict): void {
     if (app.isPackaged) {
-      mixpanel.track(eventName, properties);
+      this.mixpanelClient.track(eventName, properties);
     } else {
       log.info(`Would have tracked ${eventName} with properties ${JSON.stringify(properties)}`);
     }
@@ -135,17 +134,19 @@ export function trackEvent(eventName: string) {
 
     descriptor.value = async function (this: T, ...args: any[]) {
       this.telemetry.track(`${eventName}_start`);
-      try {
-        return originalMethod.apply(this, args).then(() => {
+
+      return originalMethod
+        .apply(this, args)
+        .then(() => {
           this.telemetry.track(`${eventName}_end`);
+        })
+        .catch((error: any) => {
+          this.telemetry.track(`${eventName}_error`, {
+            error_message: error.message,
+            error_name: error.name,
+          });
+          throw error;
         });
-      } catch (error: any) {
-        this.telemetry.track(`${eventName}_error`, {
-          error_message: error.message,
-          error_name: error.name,
-        });
-        throw error;
-      }
     };
 
     return descriptor;
