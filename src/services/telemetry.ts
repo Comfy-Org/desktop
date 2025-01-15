@@ -16,7 +16,7 @@ export interface ITelemetry {
   registerHandlers(): void;
 }
 
-const MIXPANEL_TOKEN = '246a5311a264a5d3bc99835b28d564c5';
+const MIXPANEL_TOKEN = '6a7f9f6ae2084b4e7ff7ced98a6b5988';
 export class MixpanelTelemetry {
   public hasConsent: boolean = false;
   private distinctId: string;
