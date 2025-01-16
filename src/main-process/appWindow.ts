@@ -178,7 +178,13 @@ export class AppWindow {
     const { devUrlOverride } = this;
     if (devUrlOverride) {
       const url = `${devUrlOverride}/${urlPath}`;
-      this.rendererReady = true; // TODO: Look into why dev server ready event is not being sent to main process.
+      /**
+       * rendererReady should be set by the frontend via electronAPI. However,
+       * for some reason, the event is not being received if we load the app
+       * from the external server.
+       * TODO: Look into why dev server ready event is not being received.
+       */
+      this.rendererReady = true;
       log.info(`Loading development server ${url}`);
       await this.window.loadURL(url);
       this.window.webContents.openDevTools();
