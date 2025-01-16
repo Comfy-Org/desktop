@@ -1,12 +1,12 @@
 import mixpanel, { PropertyDict } from 'mixpanel';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { app, ipcMain } from 'electron';
-import * as path from 'path';
-import * as fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 import log from 'electron-log/main';
 import { IPC_CHANNELS } from '../constants';
 import { InstallOptions } from '../preload';
-import * as os from 'os';
+import os from 'node:os';
 import si from 'systeminformation';
 let instance: ITelemetry | null = null;
 export interface ITelemetry {
@@ -86,6 +86,7 @@ export class MixpanelTelemetry {
         ...properties,
       };
       this.mixpanelTrack(eventName, enrichedProperties);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.identify();
     } catch (error) {
       log.error('Failed to track event:', error);
@@ -162,23 +163,34 @@ export interface HasTelemetry {
  */
 export function trackEvent(eventName: string) {
   return function <T extends HasTelemetry>(target: T, propertyKey: string, descriptor: PropertyDescriptor) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const originalMethod = descriptor.value;
 
+    // eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-explicit-any
     descriptor.value = async function (this: T, ...args: any[]) {
       this.telemetry.track(`${eventName}_start`);
 
-      return originalMethod
-        .apply(this, args)
-        .then(() => {
-          this.telemetry.track(`${eventName}_end`);
-        })
-        .catch((error: any) => {
-          this.telemetry.track(`${eventName}_error`, {
-            error_message: error.message,
-            error_name: error.name,
-          });
-          throw error;
-        });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return (
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        originalMethod
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          .apply(this, args)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          .then(() => {
+            this.telemetry.track(`${eventName}_end`);
+          })
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+          .catch((error: any) => {
+            this.telemetry.track(`${eventName}_error`, {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+              error_message: error.message,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+              error_name: error.name,
+            });
+            throw error;
+          })
+      );
     };
 
     return descriptor;

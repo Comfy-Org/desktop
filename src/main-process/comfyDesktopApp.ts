@@ -17,7 +17,7 @@ import { Terminal } from '../shell/terminal';
 import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { CmCli } from '../services/cmCli';
 import { rm } from 'node:fs/promises';
-import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
+import { HasTelemetry, ITelemetry } from '../services/telemetry';
 
 export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;
