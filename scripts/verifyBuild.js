@@ -19,8 +19,8 @@ const PATHS = {
       'ComfyUI',
       'ComfyUI/custom_nodes/ComfyUI-Manager',
       'UI',
-      'uv/win/uv',
-      'uv/win/uvx',
+      'uv/win/uv.exe',
+      'uv/win/uvx.exe',
     ],
   },
 };
