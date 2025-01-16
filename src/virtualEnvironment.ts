@@ -288,9 +288,7 @@ export class VirtualEnvironment implements HasTelemetry {
               }
             }
             dataReader.dispose();
-            res({
-              exitCode,
-            });
+            res({ exitCode });
             break;
           }
         }
