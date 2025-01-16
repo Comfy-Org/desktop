@@ -9,8 +9,9 @@ import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { AppWindow } from './appWindow';
 import waitOn from 'wait-on';
 import { ChildProcess } from 'node:child_process';
+import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 
-export class ComfyServer {
+export class ComfyServer implements HasTelemetry {
   /**
    * The maximum amount of time to wait for the server to start.
    * Installing custom nodes dependencies like ffmpeg can take a long time,
@@ -29,7 +30,8 @@ export class ComfyServer {
     public basePath: string,
     public serverArgs: ServerArgs,
     public virtualEnvironment: VirtualEnvironment,
-    public appWindow: AppWindow
+    public appWindow: AppWindow,
+    readonly telemetry: ITelemetry
   ) {}
 
   get baseUrl() {
@@ -96,6 +98,7 @@ export class ComfyServer {
     });
   }
 
+  @trackEvent('comfyui:server_start')
   async start() {
     await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
     return new Promise<void>((resolve, reject) => {

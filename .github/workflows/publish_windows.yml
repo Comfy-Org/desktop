@@ -31,7 +31,6 @@ jobs:
       - name: Build
         uses: ./.github/actions/build/windows/app
         with:
-          build-gpu: 'nvidia'
           sign-and-publish: true
           DIGICERT_FINGERPRINT: ${{secrets.DIGICERT_FINGERPRINT}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

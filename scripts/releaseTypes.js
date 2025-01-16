@@ -20,7 +20,7 @@ try {
   const newVersion = packageJson.version;
 
   // Commit the version bump
-  execSync(`git commit -am "Bump version ${newVersion}" --no-verify`, { stdio: 'inherit' });
+  execSync(`git commit -am "Bump version ${newVersion} (types)" --no-verify`, { stdio: 'inherit' });
 
   // Create the PR
   console.log('Creating PR...');

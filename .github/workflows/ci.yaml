@@ -25,6 +25,9 @@ jobs:
       - name: Run type check
         run: yarn tsc --noEmit --strict
 
+      - name: Run lint
+        run: yarn lint
+
       - name: Run Unit Tests
         run: yarn run test:unit
 

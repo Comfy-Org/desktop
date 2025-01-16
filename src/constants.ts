@@ -35,6 +35,7 @@ export const IPC_CHANNELS = {
   GET_GPU: 'get-gpu',
   SET_WINDOW_STYLE: 'set-window-style',
   GET_WINDOW_STYLE: 'get-window-style',
+  TRACK_EVENT: 'track-event',
 } as const;
 
 export enum ProgressStatus {

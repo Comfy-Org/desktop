@@ -43,7 +43,6 @@ export default defineConfig((env) => {
     ],
     define: {
       VITE_NAME: JSON.stringify('COMFY'),
-      'process.env.COMFYUI_CPU_ONLY': `"${process.env.COMFYUI_CPU_ONLY}"`,
       'process.env.PUBLISH': `"${process.env.PUBLISH}"`,
     },
     resolve: {

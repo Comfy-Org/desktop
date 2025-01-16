@@ -164,26 +164,13 @@ yarn install
 
 ## ComfyUI Assets
 
-Before you can start the electron application, you need to download the ComfyUI source code and other things that are usually bundled with the application. We use [comfy-cli](https://github.com/Comfy-Org/comfy-cli) to install everything.
-
-### Install comfy-cli
-
-With the python environment activated, install comfy-cli:
-
-```bash
-pip install -U comfy-cli
-```
+Before you can start the electron application, you need to download the ComfyUI source code and other things that are usually bundled with the application.
 
 ### ComfyUI and other dependencies
 
-First, initialize the application resources by running `make:assets:<gpu>`:
+First, initialize the application resources by running `yarn make:assets`:
 
-```bash
-# populate the assets/ dir (Installs a fresh ComfyUI instance under assets/)
-yarn make:assets:[amd|cpu|nvidia|macos]
-```
-
-This command will install ComfyUI under `assets`, as well ComfyUI-Manager, and the frontend [extension](https://github.com/Comfy-Org/DesktopSettingsExtension) responsible for electron settings menu. The exact versions of each package is defined in `package.json`.
+This command will install ComfyUI and ComfyUI-Manager under `assets/`. The exact versions of each package is defined in `package.json`.
 
 Second, you need to install `uv`. This will be bundled with the distributable, but we also need it locally.
 
@@ -260,6 +247,10 @@ The launch environment can be customised, e.g. add a `"linux"` section to source
 }
 ```
 
+### Troubleshooting the packaged app
+
+When the app has been packaged for use as a production app, it ignores environment variables used to configure development settings. To force the app to read env vars when packaged, use the `--dev-mode` command line argument to launch the app.
+
 # Release
 
 We use Todesktop to build and codesign our distributables. To make a new release:
@@ -288,7 +279,7 @@ A number of utility scripts are defined under the "scripts" field of package.jso
 ```bash
 yarn clean
 
-# Remove files created by yarn make:assets:<gpu>
+# Remove files created by yarn make:assets
 yarn clean:assets
 
 # clean:slate also removes node_modules

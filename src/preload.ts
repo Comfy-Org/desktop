@@ -24,7 +24,7 @@ export interface InstallOptions {
   migrationSourcePath?: string;
   migrationItemIds?: string[];
   /** Torch compute device */
-  device?: TorchDeviceType;
+  device: TorchDeviceType;
 }
 
 export interface SystemPaths {
@@ -282,6 +282,9 @@ const electronAPI = {
     },
     getWindowStyle: (): Promise<DesktopSettings['windowStyle']> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_WINDOW_STYLE);
+    },
+    trackEvent: (eventName: string, properties?: Record<string, unknown>): void => {
+      ipcRenderer.send(IPC_CHANNELS.TRACK_EVENT, eventName, properties);
     },
   },
   /** Restart the python server without restarting desktop. */

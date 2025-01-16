@@ -5,11 +5,15 @@ import { InstallOptions } from '../preload';
 import { DEFAULT_SETTINGS, type ComfySettingsData } from '../config/comfySettings';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
+import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 
-export class InstallWizard {
+export class InstallWizard implements HasTelemetry {
   public migrationItemIds: Set<string> = new Set();
 
-  constructor(public installOptions: InstallOptions) {
+  constructor(
+    public installOptions: InstallOptions,
+    readonly telemetry: ITelemetry
+  ) {
     this.migrationItemIds = new Set(installOptions.migrationItemIds ?? []);
   }
 
@@ -21,6 +25,7 @@ export class InstallWizard {
     return this.installOptions.installPath;
   }
 
+  @trackEvent('install_flow:create_comfy_directories')
   public async install() {
     // Setup the ComfyUI folder structure.
     ComfyConfigManager.createComfyDirectories(this.basePath);
@@ -36,6 +41,7 @@ export class InstallWizard {
     const shouldMigrateUserFiles = !!this.migrationSource && this.migrationItemIds.has('user_files');
     if (!shouldMigrateUserFiles) return;
 
+    this.telemetry.track('migrate_flow:migrate_user_files');
     // Copy user files from migration source to the new ComfyUI folder.
     const srcUserFilesDir = path.join(this.migrationSource, 'user');
     const destUserFilesDir = path.join(this.basePath, 'user');
@@ -82,6 +88,7 @@ export class InstallWizard {
     const shouldMigrateModels = !!migrationSource && this.migrationItemIds.has('models');
 
     if (shouldMigrateModels) {
+      this.telemetry.track('migrate_flow:migrate_models');
       // The yaml file exists in migration source repo.
       const migrationServerConfigs = await ComfyServerConfig.getConfigFromRepoPath(migrationSource);
 

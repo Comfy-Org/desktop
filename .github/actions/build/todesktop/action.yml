@@ -39,8 +39,7 @@ runs:
       shell: bash
       run: |
         set -x
-        pip install comfy-cli
-        yarn make:assets:cpu
+        yarn make:assets
         yarn clean:assets:git
     - name: Make app
       shell: bash

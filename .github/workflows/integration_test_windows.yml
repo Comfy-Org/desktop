@@ -35,13 +35,12 @@ jobs:
       - name: Build
         uses: ./.github/actions/build/windows/app
         with:
-          build-gpu: 'cpu'
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Run Playwright Tests
         run: npm run test:e2e
       - name: Upload screenshots
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: screenshot
           path: screenshot*.png

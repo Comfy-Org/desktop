@@ -11,11 +11,15 @@ import { LevelOption } from 'electron-log';
 import SentryLogging from './services/sentry';
 import { DesktopConfig } from './store/desktopConfig';
 import { InstallationManager } from './install/installationManager';
+import { getTelemetry } from './services/telemetry';
 
 dotenv.config();
 log.initialize();
 log.transports.file.level = (process.env.LOG_LEVEL as LevelOption) ?? 'info';
 
+const allowDevVars = app.commandLine.hasSwitch('dev-mode');
+
+const telemetry = getTelemetry();
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -45,7 +49,8 @@ if (!gotTheLock) {
 } else {
   app.on('ready', () => {
     log.debug('App ready');
-
+    telemetry.registerHandlers();
+    telemetry.track('desktop:app_ready');
     startApp().catch((error) => {
       log.error('Unhandled exception in app startup', error);
       app.exit(2020);
@@ -70,6 +75,7 @@ async function startApp() {
     // Create native window
     const appWindow = new AppWindow();
     appWindow.onClose(() => {
+      if (quitting) return;
       log.info('App window closed. Quitting application.');
       app.quit();
     });
@@ -86,33 +92,38 @@ async function startApp() {
 
     try {
       // Install / validate installation is complete
-      const installManager = new InstallationManager(appWindow);
+      const installManager = new InstallationManager(appWindow, telemetry);
       const installation = await installManager.ensureInstalled();
       if (!installation.isValid)
         throw new Error(`Fatal: Could not validate installation: [${installation.state}/${installation.issues.size}]`);
 
       // Initialize app
-      const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation.basePath);
+      const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation.basePath, telemetry);
       await comfyDesktopApp.initialize();
-      SentryLogging.comfyDesktopApp = comfyDesktopApp;
 
+      // At this point, user has gone through the onboarding flow.
+      SentryLogging.comfyDesktopApp = comfyDesktopApp;
+      if (comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics')) {
+        telemetry.hasConsent = true;
+        telemetry.flush();
+      }
       // Construct core launch args
-      const useDevServer = !app.isPackaged && process.env.DEV_SERVER_URL;
-      const cpuOnly: Record<string, string> = process.env.COMFYUI_CPU_ONLY === 'true' ? { cpu: '' } : {};
-      const extraServerArgs: Record<string, string> = {
-        ...comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs'),
-        ...cpuOnly,
-      };
-      const host = extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
-      const targetPort = Number(extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
-      const port = useDevServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
+      const useExternalServer = devOverride('USE_EXTERNAL_SERVER') === 'true';
+      // Shallow-clone the setting launch args to avoid mutation.
+      const extraServerArgs: Record<string, string> = Object.assign(
+        {},
+        comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs')
+      );
+      const host = devOverride('COMFY_HOST') ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
+      const targetPort = Number(devOverride('COMFY_PORT') ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
+      const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
 
       // Remove listen and port from extraServerArgs so core launch args are used instead.
       delete extraServerArgs.listen;
       delete extraServerArgs.port;
 
       // Start server
-      if (!useDevServer) {
+      if (!useExternalServer) {
         try {
           await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
         } catch (error) {
@@ -140,4 +151,14 @@ async function startApp() {
     log.error('Fatal error occurred during app pre-startup.', error);
     app.exit(2024);
   }
+}
+
+/**
+ * Always returns `undefined` in production, unless the `--dev-mode` command line argument is present.
+ *
+ * When running unpackaged or if the `--dev-mode` argument is present,
+ * the requested environment variable is returned, otherwise `undefined`.
+ */
+function devOverride(value: string) {
+  if (allowDevVars || !app.isPackaged) return process.env[value];
 }

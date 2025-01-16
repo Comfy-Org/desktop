@@ -15,10 +15,7 @@ inputs:
     description: Override the default targets and build the passed targets. Comma separated list. Include '--target' and full names, eg '--targets=@electron-forge/maker-squirrel, ...etc'
     required: false
     default: ''
-  build-gpu:
-    description: which gpu to download pytorch for when building the assets bundle
-    required: false
-    default: 'cpu'
+
 runs:
   using: composite
   steps:
@@ -55,8 +52,7 @@ runs:
     - name: Install ComfyUI and create standalone package
       run: |
         set -x
-        pip install comfy-cli
-        yarn make:assets:${{inputs.build-gpu}}
+        yarn make:assets
       shell: bash
     - name: Make app
       shell: bash
@@ -65,7 +61,6 @@ runs:
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        COMFYUI_CPU_ONLY: ${{inputs.sign-and-publish != 'true'}}
       run: |
         set -x
         yarn ${{inputs.sign-and-publish == true && 'publish' || 'make'}}

@@ -17,9 +17,7 @@ jobs:
       - name: Build
         uses: ./.github/actions/build/linux/app
         with:
-          build-gpu: 'cpu'
           sign-and-publish: false
-          COMFYUI_CPU_ONLY: true
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Upload Build
         uses: actions/upload-artifact@v4

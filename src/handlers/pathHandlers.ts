@@ -94,8 +94,7 @@ export class PathHandlers {
      */
     ipcMain.handle(
       IPC_CHANNELS.VALIDATE_COMFYUI_SOURCE,
-      // eslint-disable-next-line @typescript-eslint/require-await
-      async (event, path: string): Promise<{ isValid: boolean; error?: string }> => {
+      (event, path: string): { isValid: boolean; error?: string } => {
         const isValid = ComfyConfigManager.isComfyUIDirectory(path);
         return {
           isValid,

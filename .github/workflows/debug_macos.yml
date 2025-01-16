@@ -29,7 +29,6 @@ jobs:
         env:
           PUBLISH: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMFYUI_CPU_ONLY: true
         run: yarn run make
       - name: Upload Build
         uses: actions/upload-artifact@v4

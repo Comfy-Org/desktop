@@ -140,7 +140,7 @@ networkx==3.4.2
     #   --override assets/override.txt
     #   torch
     # from https://pypi.org/simple
-numpy==2.1.3
+numpy==1.26.4
     # via
     #   --override assets/override.txt
     #   scipy
