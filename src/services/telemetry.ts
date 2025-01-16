@@ -18,6 +18,12 @@ export interface ITelemetry {
   registerHandlers(): void;
 }
 
+interface GpuInfo {
+  model: string;
+  vendor: string;
+  vram: number | null;
+}
+
 const MIXPANEL_TOKEN = '6a7f9f6ae2084b4e7ff7ced98a6b5988';
 export class MixpanelTelemetry {
   public hasConsent: boolean = false;
@@ -25,6 +31,7 @@ export class MixpanelTelemetry {
   private readonly storageFile: string;
   private queue: { eventName: string; properties: PropertyDict }[] = [];
   private mixpanelClient: mixpanel.Mixpanel;
+  private cachedGpuInfo: GpuInfo[] | null = null;
   constructor(mixpanelClass: mixpanel.Mixpanel) {
     this.mixpanelClient = mixpanelClass.init(MIXPANEL_TOKEN, {
       geolocate: true,
@@ -113,17 +120,19 @@ export class MixpanelTelemetry {
 
   private async identify(): Promise<void> {
     try {
-      const gpuData = await si.graphics();
-      const gpus = gpuData.controllers.map((gpu) => ({
-        model: gpu.model,
-        vendor: gpu.vendor,
-        vram: gpu.vram,
-      }));
+      if (!this.cachedGpuInfo) {
+        const gpuData = await si.graphics();
+        this.cachedGpuInfo = gpuData.controllers.map((gpu) => ({
+          model: gpu.model,
+          vendor: gpu.vendor,
+          vram: gpu.vram,
+        }));
+      }
 
       this.mixpanelClient.people.set(this.distinctId, {
         platform: process.platform,
         arch: os.arch(),
-        gpus: gpus,
+        gpus: this.cachedGpuInfo,
         app_version: app.getVersion(),
       });
     } catch (error) {
