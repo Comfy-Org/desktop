@@ -1,9 +1,10 @@
-import { MixpanelTelemetry } from '../../src/services/telemetry';
-import { IPC_CHANNELS } from '/src/constants';
-import { ipcMain, IpcMainEvent } from 'electron';
+import { IpcMainEvent, ipcMain } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { MixpanelTelemetry } from '../../src/services/telemetry';
+import { IPC_CHANNELS } from '/src/constants';
 
 vi.mock('electron', () => ({
   app: {

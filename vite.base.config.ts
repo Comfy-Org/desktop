@@ -1,6 +1,7 @@
-import pkg from './package.json';
 import { builtinModules } from 'node:module';
 import type { ConfigEnv, UserConfig } from 'vite';
+
+import pkg from './package.json';
 
 export const builtins = ['electron', ...builtinModules.flatMap((m) => [m, `node:${m}`])];
 

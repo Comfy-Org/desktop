@@ -1,4 +1,3 @@
-import type { GpuType } from './preload';
 import log from 'electron-log/main';
 import { exec } from 'node:child_process';
 import fs from 'node:fs';
@@ -7,6 +6,8 @@ import net from 'node:net';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import si from 'systeminformation';
+
+import type { GpuType } from './preload';
 
 export const ansiCodes = /[\u001B\u009B][#();?[]*(?:\d{1,4}(?:;\d{0,4})*)?[\d<=>A-ORZcf-nqry]/g;
 

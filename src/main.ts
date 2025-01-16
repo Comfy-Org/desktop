@@ -1,4 +1,9 @@
-import { IPC_CHANNELS, DEFAULT_SERVER_ARGS, ProgressStatus } from './constants';
+import dotenv from 'dotenv';
+import { app, dialog, ipcMain, shell } from 'electron';
+import { LevelOption } from 'electron-log';
+import log from 'electron-log/main';
+
+import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus } from './constants';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
 import { PathHandlers } from './handlers/pathHandlers';
 import { InstallationManager } from './install/installationManager';
@@ -8,10 +13,6 @@ import SentryLogging from './services/sentry';
 import { getTelemetry } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
 import { findAvailablePort } from './utils';
-import dotenv from 'dotenv';
-import { app, dialog, ipcMain, shell } from 'electron';
-import { LevelOption } from 'electron-log';
-import log from 'electron-log/main';
 
 dotenv.config();
 log.initialize();

@@ -1,9 +1,10 @@
-import { ComfyServerConfig } from '../../src/config/comfyServerConfig';
 import { app } from 'electron';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+
+import { ComfyServerConfig } from '../../src/config/comfyServerConfig';
 
 // Mock electron
 vi.mock('electron', () => ({

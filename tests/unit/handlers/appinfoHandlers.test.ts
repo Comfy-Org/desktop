@@ -1,7 +1,8 @@
-import { IPC_CHANNELS } from '../../../src/constants';
-import { AppInfoHandlers } from '../../../src/handlers/appInfoHandlers';
 import { ipcMain } from 'electron';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { IPC_CHANNELS } from '../../../src/constants';
+import { AppInfoHandlers } from '../../../src/handlers/appInfoHandlers';
 
 vi.mock('electron', () => ({
   ipcMain: {

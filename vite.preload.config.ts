@@ -1,6 +1,7 @@
-import { getBuildConfig, external } from './vite.base.config';
 import type { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
+
+import { external, getBuildConfig } from './vite.base.config';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {

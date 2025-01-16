@@ -1,3 +1,11 @@
+import * as Sentry from '@sentry/electron/main';
+import todesktop from '@todesktop/runtime';
+import { Notification, type TitleBarOverlayOptions, app, dialog, ipcMain } from 'electron';
+import log from 'electron-log/main';
+import { rm } from 'node:fs/promises';
+import path from 'node:path';
+import { graphics } from 'systeminformation';
+
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings } from '../config/comfySettings';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
@@ -11,13 +19,6 @@ import { ansiCodes, getModelsDirectory } from '../utils';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { AppWindow } from './appWindow';
 import { ComfyServer } from './comfyServer';
-import * as Sentry from '@sentry/electron/main';
-import todesktop from '@todesktop/runtime';
-import { app, dialog, ipcMain, Notification, type TitleBarOverlayOptions } from 'electron';
-import log from 'electron-log/main';
-import { rm } from 'node:fs/promises';
-import path from 'node:path';
-import { graphics } from 'systeminformation';
 
 export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;

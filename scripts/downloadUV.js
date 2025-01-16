@@ -1,10 +1,11 @@
-import packageJson from './getPackage.js';
 import axios from 'axios';
 import extractZip from 'extract-zip';
 import fs from 'fs-extra';
 import os from 'node:os';
 import path from 'node:path';
 import * as tar from 'tar';
+
+import packageJson from './getPackage.js';
 
 const uvVer = packageJson.config.uvVersion;
 
