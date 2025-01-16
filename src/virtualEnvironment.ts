@@ -119,7 +119,10 @@ export class VirtualEnvironment implements HasTelemetry {
       await this.createEnvironment(callbacks);
     } finally {
       const pid = this.uvPty?.pid;
-      if (pid) process.kill(pid);
+      if (pid) {
+        process.kill(pid);
+        this.uvPty = undefined;
+      }
     }
   }
 
