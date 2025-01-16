@@ -21,7 +21,6 @@ export interface InstallOptions {
   installPath: string;
   autoUpdate: boolean;
   allowMetrics: boolean;
-  hasSeenMetricsUpdate: boolean;
   migrationSourcePath?: string;
   migrationItemIds?: string[];
   /** Torch compute device */
