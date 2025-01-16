@@ -30,5 +30,11 @@ export class AppInfoHandlers {
     ipcMain.handle(IPC_CHANNELS.GET_WINDOW_STYLE, async (): Promise<DesktopSettings['windowStyle']> => {
       return await useDesktopConfig().getAsync('windowStyle');
     });
+    ipcMain.handle(
+      IPC_CHANNELS.SET_METRICS_CONSENT,
+      (_event: Electron.IpcMainInvokeEvent, consent: boolean) => {
+        ipcMain.emit(IPC_CHANNELS.SET_METRICS_CONSENT, null, consent);
+      }
+    );
   }
 }

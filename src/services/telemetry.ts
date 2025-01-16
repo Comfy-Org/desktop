@@ -8,6 +8,9 @@ import { IPC_CHANNELS } from '../constants';
 import { InstallOptions } from '../preload';
 import * as os from 'os';
 import si from 'systeminformation';
+import { DesktopConfig } from '../store/desktopConfig';
+import { AppWindow } from '../main-process/appWindow';
+import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
 let instance: ITelemetry | null = null;
 export interface ITelemetry {
   hasConsent: boolean;
@@ -183,4 +186,27 @@ export function trackEvent(eventName: string) {
 
     return descriptor;
   };
+}
+
+/** @returns Whether the user has consented to sending metrics. */
+export async function promptMetricsConsent(
+  store: DesktopConfig,
+  appWindow: AppWindow,
+  comfyDesktopApp: ComfyDesktopApp
+): Promise<boolean> {
+  const isMetricsEnabled = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics') ?? false;
+  if (store.get('updatedMetricsConsent')) return isMetricsEnabled;
+
+  store.set('updatedMetricsConsent', true);
+  if (isMetricsEnabled) {
+    await appWindow.loadRenderer('metrics-consent');
+
+    return new Promise<boolean>((resolve) => {
+      ipcMain.once(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => {
+        resolve(consent);
+      });
+    });
+  }
+
+  return isMetricsEnabled;
 }

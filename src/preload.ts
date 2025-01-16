@@ -287,12 +287,9 @@ const electronAPI = {
     trackEvent: (eventName: string, properties?: Record<string, unknown>): void => {
       ipcRenderer.send(IPC_CHANNELS.TRACK_EVENT, eventName, properties);
     },
-  },
-  /**
-   * Notify the main process of metrics consent acknowledgment.
-   */
-  acknowledgeMetricsConsent: (consent: boolean) => {
-    ipcRenderer.send('METRICS_CONSENT_ACKNOWLEDGED', consent);
+    setMetricsConsent: async (consent: boolean): Promise<void> => {
+      await ipcRenderer.invoke(IPC_CHANNELS.SET_METRICS_CONSENT, consent);
+    },
   },
   /** Restart the python server without restarting desktop. */
   restartCore: async (): Promise<void> => {

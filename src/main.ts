@@ -11,7 +11,7 @@ import { LevelOption } from 'electron-log';
 import SentryLogging from './services/sentry';
 import { DesktopConfig } from './store/desktopConfig';
 import { InstallationManager } from './install/installationManager';
-import { getTelemetry } from './services/telemetry';
+import { getTelemetry, promptMetricsConsent } from './services/telemetry';
 
 dotenv.config();
 log.initialize();
@@ -103,11 +103,10 @@ async function startApp() {
       await comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.
-      SentryLogging.comfyDesktopApp = comfyDesktopApp;
-      if (comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics')) {
-        telemetry.hasConsent = true;
-        telemetry.flush();
-      }
+      const allowMetrics = await promptMetricsConsent(store, appWindow, comfyDesktopApp);
+      telemetry.hasConsent = allowMetrics;
+      if (allowMetrics) telemetry.flush();
+
       // Construct core launch args
       const useExternalServer = devOverride('USE_EXTERNAL_SERVER') === 'true';
       // Shallow-clone the setting launch args to avoid mutation.
@@ -135,20 +134,6 @@ async function startApp() {
         }
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
-
-      const allowMetrics = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics');
-      const hasSeenMetricsUpdate = comfyDesktopApp.comfySettings.get('Comfy-Desktop.HasSeenMetricsUpdate');
-      if (allowMetrics && !hasSeenMetricsUpdate) {
-        await appWindow.loadRenderer('metrics-consent');
-
-        await new Promise((resolve: (c: void) => void) => {
-          ipcMain.once('METRICS_CONSENT_ACKNOWLEDGED', (_event, consent) => {
-            store.set('hasSeenMetricsUpdate', true);
-            if (typeof consent === 'boolean') store.set('allowMetrics', consent);
-            resolve();
-          });
-        });
-      }
 
       await appWindow.loadComfyUI({ host, port, extraServerArgs });
     } catch (error) {
