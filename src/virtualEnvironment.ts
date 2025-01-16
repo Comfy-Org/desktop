@@ -267,12 +267,11 @@ export class VirtualEnvironment implements HasTelemetry {
       const endMarker = `_-end-${id}:`;
       const input = `${command}\recho "${endMarker}$?"`;
       const dataReader = this.uvPtyInstance.onData((data) => {
-        const lines = data.split(/(\r\n|\n)/);
+        // Remove ansi sequences to see if this the exit marker
+        const lines = data.replaceAll(/\u001B\[[\d;?]*[A-Za-z]/g, '').split(/(\r\n|\n)/);
         for (const line of lines) {
-          // Remove ansi sequences to see if this the exit marker
-          const clean = line.replaceAll(/\u001B\[[\d;?]*[A-Za-z]/g, '');
-          if (clean.startsWith(endMarker)) {
-            const exit = clean.substring(endMarker.length).trim();
+          if (line.startsWith(endMarker)) {
+            const exit = line.substring(endMarker.length).trim();
             let exitCode: number;
             // Powershell outputs True / False for success
             if (exit === 'True') {
