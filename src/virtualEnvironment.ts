@@ -34,6 +34,7 @@ export class VirtualEnvironment implements HasTelemetry {
   readonly selectedDevice?: string;
   uvPty: pty.IPty | undefined;
 
+  /** @todo Refactor to `using` */
   get uvPtyInstance() {
     if (!this.uvPty) {
       const shell = getDefaultShell();
