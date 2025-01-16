@@ -265,7 +265,7 @@ export class VirtualEnvironment implements HasTelemetry {
     const id = Date.now();
     return new Promise((res) => {
       const endMarker = `_-end-${id}:`;
-      const input = `clear${EOL}${command}${EOL}echo "${endMarker}$?"`;
+      const input = `${command}\recho "${endMarker}$?"`;
       const dataReader = this.uvPtyInstance.onData((data) => {
         const lines = data.split(/(\r\n|\n)/);
         for (const line of lines) {
@@ -296,7 +296,7 @@ export class VirtualEnvironment implements HasTelemetry {
         }
         onData?.(data);
       });
-      this.uvPtyInstance.write(`${input}${EOL}`);
+      this.uvPtyInstance.write(`${input}\r`);
     });
   }
 
