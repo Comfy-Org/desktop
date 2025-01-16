@@ -36,6 +36,7 @@ export const IPC_CHANNELS = {
   SET_WINDOW_STYLE: 'set-window-style',
   GET_WINDOW_STYLE: 'get-window-style',
   TRACK_EVENT: 'track-event',
+  SHOW_METRICS_CONSENT: 'show-metrics-consent',
 } as const;
 
 export enum ProgressStatus {

@@ -27,4 +27,6 @@ export type DesktopSettings = {
    * - `default`: Impersonal, static, plain - default window title bar
    */
   windowStyle?: 'custom' | 'default';
+  allowMetrics?: boolean;
+  hasSeenMetricsUpdate?: boolean;
 };

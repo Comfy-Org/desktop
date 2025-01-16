@@ -61,8 +61,9 @@ if (!gotTheLock) {
 // Async app start
 async function startApp() {
   // Load config or exit
+  let store: DesktopConfig | undefined;
   try {
-    const store = await DesktopConfig.load(shell);
+    store = await DesktopConfig.load(shell);
     if (!store) throw new Error('Unknown error loading app config on startup.');
   } catch (error) {
     log.error('Unhandled exception during config load', error);
@@ -134,6 +135,21 @@ async function startApp() {
         }
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
+
+      const allowMetrics = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics');
+      const hasSeenMetricsUpdate = comfyDesktopApp.comfySettings.get('Comfy-Desktop.HasSeenMetricsUpdate');
+      if (allowMetrics && !hasSeenMetricsUpdate) {
+        await appWindow.loadRenderer('metrics-consent');
+
+        await new Promise((resolve: (c: void) => void) => {
+          ipcMain.once('METRICS_CONSENT_ACKNOWLEDGED', (_event, consent) => {
+            store.set('hasSeenMetricsUpdate', true);
+            if (typeof consent === 'boolean') store.set('allowMetrics', consent);
+            resolve();
+          });
+        });
+      }
+
       await appWindow.loadComfyUI({ host, port, extraServerArgs });
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
