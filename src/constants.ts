@@ -36,7 +36,6 @@ export const IPC_CHANNELS = {
   SET_WINDOW_STYLE: 'set-window-style',
   GET_WINDOW_STYLE: 'get-window-style',
   TRACK_EVENT: 'track-event',
-  PROMPT_METRICS_CONSENT: 'prompt-metrics-consent',
   SET_METRICS_CONSENT: 'set-metrics-consent',
 } as const;
 
