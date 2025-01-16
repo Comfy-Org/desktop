@@ -18,22 +18,17 @@ import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { ansiCodes, getModelsDirectory } from '../utils';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { AppWindow } from './appWindow';
-import { type ComfyInstallation } from './comfyInstallation';
 import { ComfyServer } from './comfyServer';
 
 export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;
   private terminal: Terminal | null = null; // Only created after server starts.
   constructor(
-    public readonly installation: ComfyInstallation,
+    public basePath: string,
     public comfySettings: ComfySettings,
     public appWindow: AppWindow,
     readonly telemetry: ITelemetry
   ) {}
-
-  get basePath() {
-    return this.installation.basePath;
-  }
 
   get pythonInstallPath() {
     return app.isPackaged ? this.basePath : path.join(app.getAppPath(), 'assets');
@@ -206,8 +201,8 @@ export class ComfyDesktopApp implements HasTelemetry {
     }
   }
 
-  static create(appWindow: AppWindow, installation: ComfyInstallation, telemetry: ITelemetry): ComfyDesktopApp {
-    return new ComfyDesktopApp(installation, new ComfySettings(installation.basePath), appWindow, telemetry);
+  static create(appWindow: AppWindow, basePath: string, telemetry: ITelemetry): ComfyDesktopApp {
+    return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow, telemetry);
   }
 
   async uninstall(): Promise<void> {
