@@ -224,9 +224,10 @@ export async function promptMetricsConsent(
   comfyDesktopApp: ComfyDesktopApp
 ): Promise<boolean> {
   const isMetricsEnabled = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics') ?? false;
-  if (store.get('updatedMetricsConsent')) return isMetricsEnabled;
+  const updatedOn = store.get('metricsConsentDate');
+  if (updatedOn && updatedOn >= new Date('2025-01-16')) return isMetricsEnabled;
 
-  store.set('updatedMetricsConsent', true);
+  store.set('metricsConsentDate', new Date());
   if (isMetricsEnabled) {
     const consentPromise = new Promise<boolean>((resolve) => {
       ipcMain.handle(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => {

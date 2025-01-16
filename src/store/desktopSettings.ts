@@ -27,6 +27,6 @@ export type DesktopSettings = {
    * - `default`: Impersonal, static, plain - default window title bar
    */
   windowStyle?: 'custom' | 'default';
-  /** Whether the user has consented to updated metrics collection policy (1/16/24) */
-  updatedMetricsConsent?: boolean;
+  /** The date when the user consented to metrics collection */
+  metricsConsentDate?: Date;
 };
