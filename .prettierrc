@@ -11,6 +11,16 @@
       "options": {
         "printWidth": 80
       }
+    },
+    {
+      "files": "*.{js,cjs,mjs,ts,cts,mts}",
+      "options": {
+        "plugins": ["@trivago/prettier-plugin-sort-imports"],
+        "importOrderParserPlugins": ["typescript", "decorators"],
+        "importOrder": ["^@core/(.*)$", "<THIRD_PARTY_MODULES>", "^@/(.*)$", "^[./]"],
+        "importOrderSeparation": true,
+        "importOrderSortSpecifiers": true
+      }
     }
   ]
 }

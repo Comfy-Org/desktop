@@ -1,22 +1,30 @@
-import mixpanel, { PropertyDict } from 'mixpanel';
-import { randomUUID } from 'crypto';
 import { app, ipcMain } from 'electron';
-import * as path from 'path';
-import * as fs from 'fs';
 import log from 'electron-log/main';
-import { IPC_CHANNELS } from '../constants';
-import { InstallOptions } from '../preload';
-import * as os from 'os';
+import mixpanel, { PropertyDict } from 'mixpanel';
+import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import si from 'systeminformation';
-import { DesktopConfig } from '../store/desktopConfig';
+
 import { AppWindow } from '../main-process/appWindow';
 import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
+import { DesktopConfig } from '../store/desktopConfig';
+import { IPC_CHANNELS } from '../constants';
+import { InstallOptions } from '../preload';
+
 let instance: ITelemetry | null = null;
 export interface ITelemetry {
   hasConsent: boolean;
   track(eventName: string, properties?: PropertyDict): void;
   flush(): void;
   registerHandlers(): void;
+}
+
+interface GpuInfo {
+  model: string;
+  vendor: string;
+  vram: number | null;
 }
 
 const MIXPANEL_TOKEN = '6a7f9f6ae2084b4e7ff7ced98a6b5988';
@@ -26,6 +34,7 @@ export class MixpanelTelemetry {
   private readonly storageFile: string;
   private queue: { eventName: string; properties: PropertyDict }[] = [];
   private mixpanelClient: mixpanel.Mixpanel;
+  private cachedGpuInfo: GpuInfo[] | null = null;
   constructor(mixpanelClass: mixpanel.Mixpanel) {
     this.mixpanelClient = mixpanelClass.init(MIXPANEL_TOKEN, {
       geolocate: true,
@@ -39,6 +48,8 @@ export class MixpanelTelemetry {
         this.hasConsent = true;
       }
     });
+    // Eagerly fetch GPU info
+    void this.fetchAndCacheGpuInformation();
   }
 
   private getOrCreateDistinctId(filePath: string): string {
@@ -89,6 +100,7 @@ export class MixpanelTelemetry {
         ...properties,
       };
       this.mixpanelTrack(eventName, enrichedProperties);
+
       this.identify();
     } catch (error) {
       log.error('Failed to track event:', error);
@@ -109,30 +121,36 @@ export class MixpanelTelemetry {
     ipcMain.on(IPC_CHANNELS.TRACK_EVENT, (event, eventName: string, properties?: PropertyDict) => {
       this.track(eventName, properties);
     });
+
+    ipcMain.on(IPC_CHANNELS.INCREMENT_USER_PROPERTY, (event, propertyName: string, number: number) => {
+      this.mixpanelClient.people.increment(this.distinctId, propertyName, number);
+    });
   }
 
-  private async identify(): Promise<void> {
+  /**
+   * Fetch GPU information and cache it.
+   */
+  private async fetchAndCacheGpuInformation(): Promise<void> {
     try {
       const gpuData = await si.graphics();
-      const gpus = gpuData.controllers.map((gpu) => ({
+      this.cachedGpuInfo = gpuData.controllers.map((gpu) => ({
         model: gpu.model,
         vendor: gpu.vendor,
         vram: gpu.vram,
       }));
-
-      this.mixpanelClient.people.set(this.distinctId, {
-        platform: process.platform,
-        arch: os.arch(),
-        gpus: gpus,
-        app_version: app.getVersion(),
-      });
     } catch (error) {
       log.error('Failed to get GPU information:', error);
-      this.mixpanelClient.people.set(this.distinctId, {
-        platform: process.platform,
-        arch: os.arch(),
-      });
+      this.cachedGpuInfo = [];
     }
+  }
+
+  private identify(): void {
+    this.mixpanelClient.people.set(this.distinctId, {
+      platform: process.platform,
+      arch: os.arch(),
+      gpus: this.cachedGpuInfo || [],
+      app_version: app.getVersion(),
+    });
   }
 
   private mixpanelTrack(eventName: string, properties: PropertyDict): void {
@@ -165,23 +183,34 @@ export interface HasTelemetry {
  */
 export function trackEvent(eventName: string) {
   return function <T extends HasTelemetry>(target: T, propertyKey: string, descriptor: PropertyDescriptor) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const originalMethod = descriptor.value;
 
+    // eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-explicit-any
     descriptor.value = async function (this: T, ...args: any[]) {
       this.telemetry.track(`${eventName}_start`);
 
-      return originalMethod
-        .apply(this, args)
-        .then(() => {
-          this.telemetry.track(`${eventName}_end`);
-        })
-        .catch((error: any) => {
-          this.telemetry.track(`${eventName}_error`, {
-            error_message: error.message,
-            error_name: error.name,
-          });
-          throw error;
-        });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return (
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        originalMethod
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          .apply(this, args)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          .then(() => {
+            this.telemetry.track(`${eventName}_end`);
+          })
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+          .catch((error: any) => {
+            this.telemetry.track(`${eventName}_error`, {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+              error_message: error.message,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+              error_name: error.name,
+            });
+            throw error;
+          })
+      );
     };
 
     return descriptor;

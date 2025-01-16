@@ -1,15 +1,16 @@
 import { app } from 'electron';
-import { IPC_CHANNELS, ServerArgs } from '../constants';
-import { VirtualEnvironment } from '../virtualEnvironment';
-import { ansiCodes, rotateLogFiles } from '../utils';
-import { getAppResourcesPath } from '../install/resourcePaths';
 import log from 'electron-log/main';
-import path from 'node:path';
-import { ComfyServerConfig } from '../config/comfyServerConfig';
-import { AppWindow } from './appWindow';
-import waitOn from 'wait-on';
 import { ChildProcess } from 'node:child_process';
+import path from 'node:path';
+import waitOn from 'wait-on';
+
+import { ComfyServerConfig } from '../config/comfyServerConfig';
+import { IPC_CHANNELS, ServerArgs } from '../constants';
+import { getAppResourcesPath } from '../install/resourcePaths';
 import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
+import { ansiCodes, rotateLogFiles } from '../utils';
+import { VirtualEnvironment } from '../virtualEnvironment';
+import { AppWindow } from './appWindow';
 
 export class ComfyServer implements HasTelemetry {
   /**

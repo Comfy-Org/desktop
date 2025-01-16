@@ -1,8 +1,9 @@
 import pty from 'node-pty';
-import { AppWindow } from '../main-process/appWindow';
-import { IPC_CHANNELS } from '../constants';
-import { getDefaultShell } from './util';
 import { EOL } from 'node:os';
+
+import { IPC_CHANNELS } from '../constants';
+import { AppWindow } from '../main-process/appWindow';
+import { getDefaultShell } from './util';
 
 export class Terminal {
   #pty: pty.IPty | undefined;

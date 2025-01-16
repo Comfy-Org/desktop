@@ -11,7 +11,7 @@
   "type": "module",
   "config": {
     "frontendVersion": "1.7.10",
-    "comfyVersion": "0.3.10",
+    "comfyVersion": "0.3.11",
     "managerCommit": "b4e52e65ec87978fc6294e82d55e1b91c5b02d55",
     "uvVersion": "0.5.11"
   },
@@ -26,8 +26,8 @@
     "make:frontend": "yarn run download-frontend",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "lint": "eslint --ext .ts,.tsx .",
-    "lint:fix": "eslint --fix --ext .ts,.tsx .",
+    "lint": "eslint src",
+    "lint:fix": "eslint --fix src",
     "make": "yarn run vite:compile && electron-builder build --config=builder-debug.config.ts",
     "make:assets": "node scripts/makeComfy.js",
     "make:nvidia": "yarn run make -- --nvidia",
@@ -59,6 +59,7 @@
     "@playwright/test": "^1.47.2",
     "@sentry/wizard": "^3.30.0",
     "@todesktop/cli": "^1.9.7",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.1",
     "@types/adm-zip": "^0.5.5",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@types/eslint__js": "^8.42.3",

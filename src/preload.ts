@@ -1,7 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS, ELECTRON_BRIDGE_API, ProgressStatus, DownloadStatus } from './constants';
-import type { DownloadState } from './models/DownloadManager';
 import path from 'node:path';
+
+import { DownloadStatus, ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
+import type { DownloadState } from './models/DownloadManager';
 import type { DesktopSettings } from './store/desktopSettings';
 
 /**
@@ -283,8 +284,14 @@ const electronAPI = {
     getWindowStyle: (): Promise<DesktopSettings['windowStyle']> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_WINDOW_STYLE);
     },
+  },
+  Events: {
     trackEvent: (eventName: string, properties?: Record<string, unknown>): void => {
       ipcRenderer.send(IPC_CHANNELS.TRACK_EVENT, eventName, properties);
+    },
+
+    incrementUserProperty: (propertyName: string, number: number): void => {
+      ipcRenderer.send(IPC_CHANNELS.INCREMENT_USER_PROPERTY, propertyName, number);
     },
   },
   /** Restart the python server without restarting desktop. */

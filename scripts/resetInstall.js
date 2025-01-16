@@ -1,8 +1,8 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import os from 'node:os';
-import * as yaml from 'yaml';
+import path from 'node:path';
 import * as readline from 'node:readline';
+import * as yaml from 'yaml';
 
 /**
  * Get the path to the extra_models_config.yaml file based on the platform.

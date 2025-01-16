@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron';
-
-import { PathHandlers } from '../../../src/handlers/pathHandlers';
-import { IPC_CHANNELS } from '../../../src/constants';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { IPC_CHANNELS } from '../../../src/constants';
+import { PathHandlers } from '../../../src/handlers/pathHandlers';
 
 vi.mock('electron', () => ({
   ipcMain: {

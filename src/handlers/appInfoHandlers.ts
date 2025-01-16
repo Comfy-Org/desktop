@@ -1,7 +1,8 @@
 import { app, ipcMain } from 'electron';
+
 import { IPC_CHANNELS } from '../constants';
-import { useDesktopConfig } from '../store/desktopConfig';
 import type { TorchDeviceType } from '../preload';
+import { useDesktopConfig } from '../store/desktopConfig';
 import type { DesktopSettings } from '../store/desktopSettings';
 
 /**

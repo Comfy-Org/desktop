@@ -1,8 +1,9 @@
-import { session, DownloadItem, ipcMain } from 'electron';
-import path from 'node:path';
-import fs from 'node:fs';
-import { DownloadStatus, IPC_CHANNELS } from '../constants';
+import { DownloadItem, ipcMain, session } from 'electron';
 import log from 'electron-log/main';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { DownloadStatus, IPC_CHANNELS } from '../constants';
 import type { AppWindow } from '../main-process/appWindow';
 
 export interface Download {

@@ -1,4 +1,4 @@
-import { test, expect, type Locator } from '@playwright/test';
+import { type Locator, expect, test } from '@playwright/test';
 import { chromium } from '@playwright/test';
 
 test('has title', async () => {

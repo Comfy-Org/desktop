@@ -1,7 +1,7 @@
-import globals from 'globals';
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   // Baseline include / exclude

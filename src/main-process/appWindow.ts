@@ -1,24 +1,25 @@
 import {
   BrowserWindow,
-  screen,
-  app,
-  shell,
-  ipcMain,
-  Tray,
   Menu,
-  dialog,
   MenuItem,
-  nativeTheme,
   type TitleBarOverlayOptions,
+  Tray,
+  app,
+  dialog,
+  ipcMain,
+  nativeTheme,
+  screen,
+  shell,
 } from 'electron';
-import path from 'node:path';
-import Store from 'electron-store';
-import { AppWindowSettings } from '../store/AppWindowSettings';
 import log from 'electron-log/main';
+import Store from 'electron-store';
+import path from 'node:path';
+
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
-import { useDesktopConfig } from '../store/desktopConfig';
 import type { ElectronContextMenuOptions } from '../preload';
+import { AppWindowSettings } from '../store/AppWindowSettings';
+import { useDesktopConfig } from '../store/desktopConfig';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.

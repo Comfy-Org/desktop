@@ -1,33 +1,39 @@
-import { app, dialog, ipcMain, Notification, type TitleBarOverlayOptions } from 'electron';
-import log from 'electron-log/main';
 import * as Sentry from '@sentry/electron/main';
-import { graphics } from 'systeminformation';
 import todesktop from '@todesktop/runtime';
-import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
-import { ComfySettings } from '../config/comfySettings';
-import { AppWindow } from './appWindow';
-import { ComfyServer } from './comfyServer';
-import { ComfyServerConfig } from '../config/comfyServerConfig';
-import { type ElectronContextMenuOptions } from '../preload';
+import { Notification, type TitleBarOverlayOptions, app, dialog, ipcMain } from 'electron';
+import log from 'electron-log/main';
+import { rm } from 'node:fs/promises';
 import path from 'node:path';
-import { ansiCodes, getModelsDirectory } from '../utils';
+import { graphics } from 'systeminformation';
+
+import { ComfyServerConfig } from '../config/comfyServerConfig';
+import { ComfySettings } from '../config/comfySettings';
+import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { DownloadManager } from '../models/DownloadManager';
-import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
+import { type ElectronContextMenuOptions } from '../preload';
+import { CmCli } from '../services/cmCli';
+import { HasTelemetry, ITelemetry } from '../services/telemetry';
 import { Terminal } from '../shell/terminal';
 import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
-import { CmCli } from '../services/cmCli';
-import { rm } from 'node:fs/promises';
-import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
+import { ansiCodes, getModelsDirectory } from '../utils';
+import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
+import { AppWindow } from './appWindow';
+import { type ComfyInstallation } from './comfyInstallation';
+import { ComfyServer } from './comfyServer';
 
 export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;
   private terminal: Terminal | null = null; // Only created after server starts.
   constructor(
-    public basePath: string,
+    public readonly installation: ComfyInstallation,
     public comfySettings: ComfySettings,
     public appWindow: AppWindow,
     readonly telemetry: ITelemetry
   ) {}
+
+  get basePath() {
+    return this.installation.basePath;
+  }
 
   get pythonInstallPath() {
     return app.isPackaged ? this.basePath : path.join(app.getAppPath(), 'assets');
@@ -200,8 +206,8 @@ export class ComfyDesktopApp implements HasTelemetry {
     }
   }
 
-  static create(appWindow: AppWindow, basePath: string, telemetry: ITelemetry): ComfyDesktopApp {
-    return new ComfyDesktopApp(basePath, new ComfySettings(basePath), appWindow, telemetry);
+  static create(appWindow: AppWindow, installation: ComfyInstallation, telemetry: ITelemetry): ComfyDesktopApp {
+    return new ComfyDesktopApp(installation, new ComfySettings(installation.basePath), appWindow, telemetry);
   }
 
   async uninstall(): Promise<void> {

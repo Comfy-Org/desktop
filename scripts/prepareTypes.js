@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import mainPackage from './getPackage.js';
 
 // Create the types-only package.json

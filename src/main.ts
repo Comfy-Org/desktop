@@ -1,17 +1,18 @@
-import { IPC_CHANNELS, DEFAULT_SERVER_ARGS, ProgressStatus } from './constants';
-import { app, dialog, ipcMain, shell } from 'electron';
-import log from 'electron-log/main';
-import { findAvailablePort } from './utils';
 import dotenv from 'dotenv';
-import { AppWindow } from './main-process/appWindow';
-import { PathHandlers } from './handlers/pathHandlers';
-import { AppInfoHandlers } from './handlers/appInfoHandlers';
-import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
+import { app, dialog, ipcMain, shell } from 'electron';
 import { LevelOption } from 'electron-log';
+import log from 'electron-log/main';
+
+import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus } from './constants';
+import { AppInfoHandlers } from './handlers/appInfoHandlers';
+import { PathHandlers } from './handlers/pathHandlers';
+import { InstallationManager } from './install/installationManager';
+import { AppWindow } from './main-process/appWindow';
+import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import SentryLogging from './services/sentry';
 import { DesktopConfig } from './store/desktopConfig';
-import { InstallationManager } from './install/installationManager';
 import { getTelemetry, promptMetricsConsent } from './services/telemetry';
+import { findAvailablePort } from './utils';
 
 dotenv.config();
 log.initialize();
@@ -99,7 +100,7 @@ async function startApp() {
         throw new Error(`Fatal: Could not validate installation: [${installation.state}/${installation.issues.size}]`);
 
       // Initialize app
-      const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation.basePath, telemetry);
+      const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation, telemetry);
       await comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.

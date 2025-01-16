@@ -1,6 +1,6 @@
-import { build } from 'vite';
 import electronPath from 'electron';
 import { spawn } from 'node:child_process';
+import { build } from 'vite';
 
 // Starts the app using the vite dev server, for use in playwright e2e testing.
 // Needs to be replaced with something more permanent at some point.

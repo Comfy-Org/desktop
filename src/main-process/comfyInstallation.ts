@@ -1,8 +1,9 @@
+import log from 'electron-log/main';
+
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { useDesktopConfig } from '../store/desktopConfig';
-import { containsDirectory, pathAccessible } from '../utils';
 import type { DesktopSettings } from '../store/desktopSettings';
-import log from 'electron-log/main';
+import { containsDirectory, pathAccessible } from '../utils';
 
 // TODO: | 'uvMissing' | 'venvMissing' | 'venvInvalid' | 'noPyTorch';
 export type ValidationIssue = 'invalidBasePath';

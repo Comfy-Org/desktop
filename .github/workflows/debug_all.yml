@@ -35,6 +35,3 @@ jobs:
   build-apple-debug-all:
     secrets: inherit
     uses: ./.github/workflows/debug_macos.yml
-  build-linux-debug-all:
-    secrets: inherit
-    uses: ./.github/workflows/debug_linux.yml

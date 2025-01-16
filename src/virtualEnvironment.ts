@@ -1,13 +1,14 @@
-import path from 'node:path';
-import { spawn, ChildProcess } from 'node:child_process';
-import log from 'electron-log/main';
-import { pathAccessible } from './utils';
 import { app } from 'electron';
+import log from 'electron-log/main';
 import pty from 'node-pty';
+import { ChildProcess, spawn } from 'node:child_process';
 import os, { EOL } from 'node:os';
-import { getDefaultShell } from './shell/util';
+import path from 'node:path';
+
 import type { TorchDeviceType } from './preload';
-import { ITelemetry, trackEvent, HasTelemetry } from './services/telemetry';
+import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
+import { getDefaultShell } from './shell/util';
+import { pathAccessible } from './utils';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;

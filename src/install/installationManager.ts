@@ -1,13 +1,14 @@
 import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
-import { ComfyInstallation } from '../main-process/comfyInstallation';
-import type { AppWindow } from '../main-process/appWindow';
-import { useDesktopConfig } from '../store/desktopConfig';
-import type { InstallOptions } from '../preload';
+
 import { IPC_CHANNELS } from '../constants';
-import { InstallWizard } from './installWizard';
-import { validateHardware } from '../utils';
+import type { AppWindow } from '../main-process/appWindow';
+import { ComfyInstallation } from '../main-process/comfyInstallation';
+import type { InstallOptions } from '../preload';
 import { ITelemetry } from '../services/telemetry';
+import { useDesktopConfig } from '../store/desktopConfig';
+import { validateHardware } from '../utils';
+import { InstallWizard } from './installWizard';
 
 /** High-level / UI control over the installation of ComfyUI server. */
 export class InstallationManager {

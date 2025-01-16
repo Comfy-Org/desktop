@@ -1,9 +1,9 @@
+import { app } from 'electron';
+import log from 'electron-log/main';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
-import log from 'electron-log/main';
-import yaml, { type YAMLParseError } from 'yaml';
 import path from 'node:path';
-import { app } from 'electron';
+import yaml, { type YAMLParseError } from 'yaml';
 
 const knownModelKeys = [
   'checkpoints',
