@@ -199,13 +199,15 @@ export async function promptMetricsConsent(
 
   store.set('updatedMetricsConsent', true);
   if (isMetricsEnabled) {
-    await appWindow.loadRenderer('metrics-consent');
-
-    return new Promise<boolean>((resolve) => {
-      ipcMain.once(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => {
+    const consentPromise = new Promise<boolean>((resolve) => {
+      ipcMain.handle(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => {
         resolve(consent);
+        ipcMain.removeHandler(IPC_CHANNELS.SET_METRICS_CONSENT);
       });
     });
+
+    await appWindow.loadRenderer('metrics-consent');
+    return consentPromise;
   }
 
   return isMetricsEnabled;

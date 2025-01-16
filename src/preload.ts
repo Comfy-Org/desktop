@@ -286,9 +286,6 @@ const electronAPI = {
     trackEvent: (eventName: string, properties?: Record<string, unknown>): void => {
       ipcRenderer.send(IPC_CHANNELS.TRACK_EVENT, eventName, properties);
     },
-    setMetricsConsent: async (consent: boolean) => {
-      await ipcRenderer.invoke(IPC_CHANNELS.SET_METRICS_CONSENT, consent);
-    },
   },
   /** Restart the python server without restarting desktop. */
   restartCore: async (): Promise<void> => {
@@ -297,6 +294,9 @@ const electronAPI = {
   },
   /** Gets the platform reported by node.js */
   getPlatform: () => process.platform,
+  setMetricsConsent: async (consent: boolean) => {
+    await ipcRenderer.invoke(IPC_CHANNELS.SET_METRICS_CONSENT, consent);
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
