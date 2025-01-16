@@ -7,11 +7,11 @@ import os from 'node:os';
 import path from 'node:path';
 import si from 'systeminformation';
 
+import { IPC_CHANNELS } from '../constants';
 import { AppWindow } from '../main-process/appWindow';
 import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
-import { DesktopConfig } from '../store/desktopConfig';
-import { IPC_CHANNELS } from '../constants';
 import { InstallOptions } from '../preload';
+import { DesktopConfig } from '../store/desktopConfig';
 
 let instance: ITelemetry | null = null;
 export interface ITelemetry {

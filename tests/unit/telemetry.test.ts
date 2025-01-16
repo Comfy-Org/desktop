@@ -1,7 +1,7 @@
 import { IpcMainEvent, ipcMain } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import { beforeEach, describe, expect, it, vi, Mock } from 'vitest';
+import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MixpanelTelemetry, promptMetricsConsent } from '../../src/services/telemetry';
 import { IPC_CHANNELS } from '/src/constants';
@@ -198,9 +198,6 @@ describe('promptMetricsConsent', () => {
     store = { get: vi.fn(), set: vi.fn() };
     appWindow = { loadRenderer: vi.fn() };
     comfyDesktopApp = { comfySettings: { get: vi.fn() } };
-
-    // vi.mocked(ipcMain.handle).mockClear();
-    // ipcMain.removeHandler(IPC_CHANNELS.SET_METRICS_CONSENT);
   });
 
   const runTest = async (
@@ -209,7 +206,6 @@ describe('promptMetricsConsent', () => {
     expectedResult: boolean,
     { mockConsent, promptUser }: { mockConsent?: boolean; promptUser?: boolean } = {}
   ) => {
-    // Set mock return values for store and settings
     store.get.mockReturnValue(storeValue);
     comfyDesktopApp.comfySettings.get.mockReturnValue(settingsValue);
 

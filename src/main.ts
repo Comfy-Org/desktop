@@ -10,8 +10,8 @@ import { InstallationManager } from './install/installationManager';
 import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import SentryLogging from './services/sentry';
-import { DesktopConfig } from './store/desktopConfig';
 import { getTelemetry, promptMetricsConsent } from './services/telemetry';
+import { DesktopConfig } from './store/desktopConfig';
 import { findAvailablePort } from './utils';
 
 dotenv.config();
