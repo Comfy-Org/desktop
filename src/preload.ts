@@ -287,7 +287,7 @@ const electronAPI = {
     trackEvent: (eventName: string, properties?: Record<string, unknown>): void => {
       ipcRenderer.send(IPC_CHANNELS.TRACK_EVENT, eventName, properties);
     },
-    setMetricsConsent: async (consent: boolean): Promise<void> => {
+    setMetricsConsent: async (consent: boolean) => {
       await ipcRenderer.invoke(IPC_CHANNELS.SET_METRICS_CONSENT, consent);
     },
   },

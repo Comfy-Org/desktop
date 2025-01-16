@@ -103,6 +103,7 @@ async function startApp() {
       await comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.
+      SentryLogging.comfyDesktopApp = comfyDesktopApp;
       const allowMetrics = await promptMetricsConsent(store, appWindow, comfyDesktopApp);
       telemetry.hasConsent = allowMetrics;
       if (allowMetrics) telemetry.flush();
@@ -134,7 +135,6 @@ async function startApp() {
         }
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
-
       await appWindow.loadComfyUI({ host, port, extraServerArgs });
     } catch (error) {
       log.error('Unhandled exception during app startup', error);

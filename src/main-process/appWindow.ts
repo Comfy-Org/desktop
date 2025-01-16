@@ -118,7 +118,7 @@ export class AppWindow {
     }
 
     // Send current message
-    this.window?.webContents.send(channel, data);
+    this.window.webContents.send(channel, data);
   }
 
   /**

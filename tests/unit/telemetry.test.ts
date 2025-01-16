@@ -1,4 +1,4 @@
-// @ts-strict-ignore
+//@ts-strict-ignore
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MixpanelTelemetry, promptMetricsConsent } from '../../src/services/telemetry';
 import * as fs from 'fs';
