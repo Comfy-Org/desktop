@@ -1,12 +1,12 @@
-import { app, dialog, ipcMain, shell } from 'electron';
-import { IPC_CHANNELS } from '../constants';
-import log from 'electron-log/main';
-import { ComfyServerConfig } from '../config/comfyServerConfig';
-import type { PathValidationResult, SystemPaths } from '../preload';
-import fs from 'node:fs';
-import si from 'systeminformation';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
+import { ComfyServerConfig } from '../config/comfyServerConfig';
+import { IPC_CHANNELS } from '../constants';
+import type { PathValidationResult, SystemPaths } from '../preload';
+import { app, dialog, ipcMain, shell } from 'electron';
+import log from 'electron-log/main';
+import fs from 'node:fs';
 import path from 'node:path';
+import si from 'systeminformation';
 
 export class PathHandlers {
   static readonly REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes

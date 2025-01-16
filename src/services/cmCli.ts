@@ -1,9 +1,9 @@
-import log from 'electron-log/main';
-import path from 'node:path';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
-import { fileSync } from 'tmp';
 import { trackEvent, HasTelemetry, ITelemetry } from './telemetry';
+import log from 'electron-log/main';
+import path from 'node:path';
+import { fileSync } from 'tmp';
 
 export class CmCli implements HasTelemetry {
   private cliPath: string;

@@ -1,11 +1,11 @@
-import path from 'node:path';
+import { ComfyConfigManager } from '../config/comfyConfigManager';
+import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
+import { DEFAULT_SETTINGS, type ComfySettingsData } from '../config/comfySettings';
+import { InstallOptions } from '../preload';
+import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import log from 'electron-log/main';
 import fs from 'node:fs';
-import { InstallOptions } from '../preload';
-import { DEFAULT_SETTINGS, type ComfySettingsData } from '../config/comfySettings';
-import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
-import { ComfyConfigManager } from '../config/comfyConfigManager';
-import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
+import path from 'node:path';
 
 export class InstallWizard implements HasTelemetry {
   public migrationItemIds: Set<string> = new Set();

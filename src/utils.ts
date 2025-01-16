@@ -1,12 +1,12 @@
-import net from 'node:net';
-import fsPromises from 'node:fs/promises';
-import path from 'node:path';
-import fs from 'node:fs';
-import si from 'systeminformation';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import log from 'electron-log/main';
 import type { GpuType } from './preload';
+import log from 'electron-log/main';
+import { exec } from 'node:child_process';
+import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
+import net from 'node:net';
+import path from 'node:path';
+import { promisify } from 'node:util';
+import si from 'systeminformation';
 
 export const ansiCodes = /[\u001B\u009B][#();?[]*(?:\d{1,4}(?:;\d{0,4})*)?[\d<=>A-ORZcf-nqry]/g;
 

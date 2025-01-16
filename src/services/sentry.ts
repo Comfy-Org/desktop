@@ -1,6 +1,6 @@
-import * as Sentry from '@sentry/electron/main';
 import { SENTRY_URL_ENDPOINT } from '../constants';
 import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
+import * as Sentry from '@sentry/electron/main';
 import { app, dialog } from 'electron';
 
 class SentryLogging {

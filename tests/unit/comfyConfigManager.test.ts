@@ -1,7 +1,7 @@
-import fs, { type PathLike } from 'node:fs';
 import { ComfyConfigManager, DirectoryStructure } from '../../src/config/comfyConfigManager';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import fs, { type PathLike } from 'node:fs';
 import path from 'node:path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Workaround for mock impls.
 const { normalize } = path;

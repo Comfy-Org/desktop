@@ -1,13 +1,14 @@
-import mixpanel, { PropertyDict } from 'mixpanel';
-import { randomUUID } from 'node:crypto';
-import { app, ipcMain } from 'electron';
-import path from 'node:path';
-import fs from 'node:fs';
-import log from 'electron-log/main';
 import { IPC_CHANNELS } from '../constants';
 import { InstallOptions } from '../preload';
+import { app, ipcMain } from 'electron';
+import log from 'electron-log/main';
+import mixpanel, { PropertyDict } from 'mixpanel';
+import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
 import os from 'node:os';
+import path from 'node:path';
 import si from 'systeminformation';
+
 let instance: ITelemetry | null = null;
 export interface ITelemetry {
   hasConsent: boolean;

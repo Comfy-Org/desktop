@@ -1,6 +1,6 @@
-import type { PluginOption } from 'vite';
-import { spawn, type ChildProcess } from 'node:child_process';
 import electronPath from 'electron';
+import { spawn, type ChildProcess } from 'node:child_process';
+import type { PluginOption } from 'vite';
 
 /**
  * Loads the electron app whenever vite is loaded in watch mode.
@@ -10,7 +10,9 @@ import electronPath from 'electron';
  */
 export function viteElectronAppPlugin(): PluginOption {
   const startApp = () => {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     electronApp = spawn(String(electronPath), ['--inspect=9223', '.'], { stdio: 'inherit' });
+    // eslint-disable-next-line unicorn/no-process-exit
     electronApp.addListener('exit', () => process.exit());
   };
 

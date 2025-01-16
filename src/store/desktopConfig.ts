@@ -1,9 +1,9 @@
+import type { DesktopSettings } from './desktopSettings';
+import { app, dialog } from 'electron';
 import log from 'electron-log/main';
 import ElectronStore from 'electron-store';
-import { app, dialog } from 'electron';
-import path from 'node:path';
 import fs from 'node:fs/promises';
-import type { DesktopSettings } from './desktopSettings';
+import path from 'node:path';
 
 /** Backing ref for the singleton config instance. */
 let current: DesktopConfig;

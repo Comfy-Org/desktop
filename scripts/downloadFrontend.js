@@ -1,9 +1,8 @@
+import packageJson from './getPackage.js';
 import axios from 'axios';
 import extract from 'extract-zip';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-
-import packageJson from './getPackage.js';
 
 // Example "v1.3.34"
 const version = process.argv[2] || packageJson.config.frontendVersion;

@@ -1,10 +1,10 @@
 /// <reference types="vitest/config" />
+import { viteElectronAppPlugin } from './infrastructure/viteElectronAppPlugin';
+import { version } from './package.json';
+import { getBuildConfig, external } from './vite.base.config';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { UserConfig } from 'vite';
 import { defineConfig, mergeConfig } from 'vite';
-import { getBuildConfig, external } from './vite.base.config';
-import { viteElectronAppPlugin } from './infrastructure/viteElectronAppPlugin';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
-import { version } from './package.json';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {

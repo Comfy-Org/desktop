@@ -1,6 +1,6 @@
+import log from 'electron-log/main';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import log from 'electron-log/main';
 
 export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.AutoUpdate': true,

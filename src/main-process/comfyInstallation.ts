@@ -1,7 +1,7 @@
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { useDesktopConfig } from '../store/desktopConfig';
-import { containsDirectory, pathAccessible } from '../utils';
 import type { DesktopSettings } from '../store/desktopSettings';
+import { containsDirectory, pathAccessible } from '../utils';
 import log from 'electron-log/main';
 
 // TODO: | 'uvMissing' | 'venvMissing' | 'venvInvalid' | 'noPyTorch';

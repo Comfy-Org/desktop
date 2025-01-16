@@ -1,7 +1,7 @@
+import fs from 'fs-extra';
 import { spawnSync } from 'node:child_process';
 import * as os from 'node:os';
 import process from 'node:process';
-import fs from 'fs-extra';
 
 /** @param {{ appOutDir, packager, outDir }} arg0 */
 const preMake = () => {

@@ -1,23 +1,23 @@
-import { app, dialog, ipcMain, Notification, type TitleBarOverlayOptions } from 'electron';
-import log from 'electron-log/main';
-import * as Sentry from '@sentry/electron/main';
-import { graphics } from 'systeminformation';
-import todesktop from '@todesktop/runtime';
-import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
-import { ComfySettings } from '../config/comfySettings';
-import { AppWindow } from './appWindow';
-import { ComfyServer } from './comfyServer';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
-import { type ElectronContextMenuOptions } from '../preload';
-import path from 'node:path';
-import { ansiCodes, getModelsDirectory } from '../utils';
+import { ComfySettings } from '../config/comfySettings';
+import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { DownloadManager } from '../models/DownloadManager';
-import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
+import { type ElectronContextMenuOptions } from '../preload';
+import { CmCli } from '../services/cmCli';
+import { HasTelemetry, ITelemetry } from '../services/telemetry';
 import { Terminal } from '../shell/terminal';
 import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
-import { CmCli } from '../services/cmCli';
+import { ansiCodes, getModelsDirectory } from '../utils';
+import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
+import { AppWindow } from './appWindow';
+import { ComfyServer } from './comfyServer';
+import * as Sentry from '@sentry/electron/main';
+import todesktop from '@todesktop/runtime';
+import { app, dialog, ipcMain, Notification, type TitleBarOverlayOptions } from 'electron';
+import log from 'electron-log/main';
 import { rm } from 'node:fs/promises';
-import { HasTelemetry, ITelemetry } from '../services/telemetry';
+import path from 'node:path';
+import { graphics } from 'systeminformation';
 
 export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;
