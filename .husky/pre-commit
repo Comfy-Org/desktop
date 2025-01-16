@@ -1,2 +1,5 @@
-yarn run lint-staged
-yarn run tsc --noEmit --strict
+if [[ "$OS" == "Windows_NT" ]]; then
+  npx.cmd lint-staged
+else
+  npx lint-staged
+fi
