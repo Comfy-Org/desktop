@@ -16,7 +16,6 @@ export interface ComfySettingsData {
   'Comfy-Desktop.AutoUpdate': boolean;
   'Comfy-Desktop.SendStatistics': boolean;
   'Comfy.Server.LaunchArgs': Record<string, string>;
-  'Comfy-Desktop.HasSeenMetricsUpdate'?: boolean;
   [key: string]: unknown;
 }
 
