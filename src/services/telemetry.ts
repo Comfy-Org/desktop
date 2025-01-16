@@ -45,6 +45,8 @@ export class MixpanelTelemetry {
         this.hasConsent = true;
       }
     });
+    // Eagerly fetch GPU info
+    void this.fetchAndCacheGpuInformation();
   }
 
   private getOrCreateDistinctId(filePath: string): string {
@@ -95,7 +97,7 @@ export class MixpanelTelemetry {
         ...properties,
       };
       this.mixpanelTrack(eventName, enrichedProperties);
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+       
       this.identify();
     } catch (error) {
       log.error('Failed to track event:', error);
@@ -118,30 +120,27 @@ export class MixpanelTelemetry {
     });
   }
 
-  private async identify(): Promise<void> {
+  private async fetchAndCacheGpuInformation(): Promise<void> {
     try {
-      if (!this.cachedGpuInfo) {
-        const gpuData = await si.graphics();
-        this.cachedGpuInfo = gpuData.controllers.map((gpu) => ({
-          model: gpu.model,
-          vendor: gpu.vendor,
-          vram: gpu.vram,
-        }));
-      }
-
-      this.mixpanelClient.people.set(this.distinctId, {
-        platform: process.platform,
-        arch: os.arch(),
-        gpus: this.cachedGpuInfo,
-        app_version: app.getVersion(),
-      });
+      const gpuData = await si.graphics();
+      this.cachedGpuInfo = gpuData.controllers.map((gpu) => ({
+        model: gpu.model,
+        vendor: gpu.vendor,
+        vram: gpu.vram,
+      }));
     } catch (error) {
       log.error('Failed to get GPU information:', error);
-      this.mixpanelClient.people.set(this.distinctId, {
-        platform: process.platform,
-        arch: os.arch(),
-      });
+      this.cachedGpuInfo = [];
     }
+  }
+
+  private identify(): void {
+    this.mixpanelClient.people.set(this.distinctId, {
+      platform: process.platform,
+      arch: os.arch(),
+      gpus: this.cachedGpuInfo || [],
+      app_version: app.getVersion(),
+    });
   }
 
   private mixpanelTrack(eventName: string, properties: PropertyDict): void {
