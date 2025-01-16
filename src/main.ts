@@ -101,7 +101,7 @@ async function startApp() {
         throw new Error(`Fatal: Could not validate installation: [${installation.state}/${installation.issues.size}]`);
 
       // Initialize app
-      const comfyDesktopApp = ComfyDesktopApp.create(appWindow, installation.basePath, telemetry);
+      const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
       await comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.
