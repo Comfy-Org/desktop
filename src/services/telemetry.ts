@@ -97,7 +97,7 @@ export class MixpanelTelemetry {
         ...properties,
       };
       this.mixpanelTrack(eventName, enrichedProperties);
-       
+
       this.identify();
     } catch (error) {
       log.error('Failed to track event:', error);
@@ -120,6 +120,9 @@ export class MixpanelTelemetry {
     });
   }
 
+  /**
+   * Fetch GPU information and cache it.
+   */
   private async fetchAndCacheGpuInformation(): Promise<void> {
     try {
       const gpuData = await si.graphics();
