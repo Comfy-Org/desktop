@@ -360,44 +360,44 @@ export class VirtualEnvironment implements HasTelemetry {
 
   private async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
     const { selectedDevice } = this;
+    const packages = ['torch', 'torchvision', 'torchaudio'];
 
     if (selectedDevice === 'cpu') {
       // CPU mode
       log.info('Installing PyTorch CPU');
-      await this.runUvCommandAsync(['pip', 'install', 'torch', 'torchvision', 'torchaudio'], callbacks);
+      const { exitCode } = await this.runUvCommandAsync(['pip', 'install', ...packages], callbacks);
+      if (exitCode !== 0) {
+        throw new Error(`Failed to install PyTorch CPU: exit code ${exitCode}`);
+      }
     } else if (selectedDevice === 'nvidia' || process.platform === 'win32') {
       // Win32 default
       log.info('Installing PyTorch CUDA 12.1');
-      await this.runUvCommandAsync(
-        [
-          'pip',
-          'install',
-          'torch',
-          'torchvision',
-          'torchaudio',
-          '--index-url',
-          'https://download.pytorch.org/whl/cu121',
-        ],
+      const { exitCode } = await this.runUvCommandAsync(
+        ['pip', 'install', ...packages, '--index-url', 'https://download.pytorch.org/whl/cu121'],
         callbacks
       );
+      if (exitCode !== 0) {
+        throw new Error(`Failed to install PyTorch CUDA 12.1: exit code ${exitCode}`);
+      }
     } else if (selectedDevice === 'mps' || process.platform === 'darwin') {
       // macOS default
       log.info('Installing PyTorch Nightly for macOS.');
-      await this.runUvCommandAsync(
+      const { exitCode } = await this.runUvCommandAsync(
         [
           'pip',
           'install',
           '-U',
           '--prerelease',
           'allow',
-          'torch',
-          'torchvision',
-          'torchaudio',
+          ...packages,
           '--extra-index-url',
           'https://download.pytorch.org/whl/nightly/cpu',
         ],
         callbacks
       );
+      if (exitCode !== 0) {
+        throw new Error(`Failed to install PyTorch Nightly: exit code ${exitCode}`);
+      }
     }
   }
 
