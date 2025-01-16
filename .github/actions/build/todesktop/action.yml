@@ -29,8 +29,6 @@ runs:
       shell: bash
     - run: yarn set version --yarn-path self
       shell: bash
-    - run: yarn run download:uv all
-      shell: bash
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
