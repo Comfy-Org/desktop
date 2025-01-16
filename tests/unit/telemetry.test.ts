@@ -21,6 +21,9 @@ vi.mock('mixpanel', () => ({
   default: {
     init: vi.fn(),
     track: vi.fn(),
+    people: {
+      increment: vi.fn(),
+    },
   },
 }));
 
@@ -28,9 +31,9 @@ describe('MixpanelTelemetry', () => {
   let telemetry: MixpanelTelemetry;
   const mockInitializedMixpanelClient = {
     track: vi.fn(),
-    default: {
-      init: vi.fn(),
-      track: vi.fn(),
+    people: {
+      set: vi.fn(),
+      increment: vi.fn(),
     },
   };
   const mockMixpanelClient = {
@@ -125,6 +128,32 @@ describe('MixpanelTelemetry', () => {
 
       // Since consent is false by default, it should be queued
       expect(telemetry['queue'].length).toBe(1);
+    });
+
+    it('should register ipc handler for INCREMENT_USER_PROPERTY', () => {
+      telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
+      telemetry.registerHandlers();
+
+      expect(ipcMain.on).toHaveBeenCalledWith(IPC_CHANNELS.INCREMENT_USER_PROPERTY, expect.any(Function));
+    });
+
+    it('should handle INCREMENT_USER_PROPERTY messages', () => {
+      telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
+      telemetry.registerHandlers();
+      // Get the callback that was registered
+      const [channel, callback] = (ipcMain.on as any).mock.calls.find(
+        ([channel]: any) => channel === IPC_CHANNELS.INCREMENT_USER_PROPERTY
+      );
+
+      // Simulate IPC call
+      callback({}, 'test_property', 5);
+
+      // Verify mixpanel client was called correctly
+      expect(mockInitializedMixpanelClient.people.increment).toHaveBeenCalledWith(
+        telemetry['distinctId'],
+        'test_property',
+        5
+      );
     });
   });
 });

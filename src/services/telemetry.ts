@@ -106,6 +106,10 @@ export class MixpanelTelemetry {
     ipcMain.on(IPC_CHANNELS.TRACK_EVENT, (event, eventName: string, properties?: PropertyDict) => {
       this.track(eventName, properties);
     });
+
+    ipcMain.on(IPC_CHANNELS.INCREMENT_USER_PROPERTY, (event, propertyName: string, number: number) => {
+      this.mixpanelClient.people.increment(this.distinctId, propertyName, number);
+    });
   }
 
   private async identify(): Promise<void> {

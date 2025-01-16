@@ -283,8 +283,14 @@ const electronAPI = {
     getWindowStyle: (): Promise<DesktopSettings['windowStyle']> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_WINDOW_STYLE);
     },
+  },
+  Events: {
     trackEvent: (eventName: string, properties?: Record<string, unknown>): void => {
       ipcRenderer.send(IPC_CHANNELS.TRACK_EVENT, eventName, properties);
+    },
+
+    incrementUserProperty: (propertyName: string, number: number): void => {
+      ipcRenderer.send(IPC_CHANNELS.INCREMENT_USER_PROPERTY, propertyName, number);
     },
   },
   /** Restart the python server without restarting desktop. */
