@@ -1,5 +1,6 @@
+// @ts-strict-ignore
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MixpanelTelemetry } from '../../src/services/telemetry';
+import { MixpanelTelemetry, promptMetricsConsent } from '../../src/services/telemetry';
 import * as fs from 'fs';
 import * as path from 'path';
 import { IPC_CHANNELS } from '/src/constants';
@@ -145,5 +146,92 @@ describe('MixpanelTelemetry', () => {
 
     // This will fail because the initialized client isn't being assigned
     expect(telemetry['mixpanelClient']).toBe(mockInitializedClient);
+  });
+});
+
+describe('promptMetricsConsent', () => {
+  let store: { get: vi.Mock; set: vi.Mock };
+  let appWindow: { loadRenderer: vi.Mock };
+  let comfyDesktopApp: { comfySettings: { get: vi.Mock } };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    store = { get: vi.fn(), set: vi.fn() };
+    appWindow = { loadRenderer: vi.fn() };
+    comfyDesktopApp = { comfySettings: { get: vi.fn() } };
+  });
+
+  const runTest = async (
+    storeValue: any,
+    settingsValue: any,
+    expectedResult: any,
+    { mockConsent, promptUser }: { mockConsent?: boolean; promptUser?: boolean } = {}
+  ) => {
+    store.get.mockReturnValue(storeValue);
+    comfyDesktopApp.comfySettings.get.mockReturnValue(settingsValue);
+
+    if (promptUser) {
+      vi.mocked(ipcMain.once).mockImplementationOnce((_, handler) => handler(null, mockConsent));
+    }
+
+    const result = await promptMetricsConsent(store as any, appWindow as any, comfyDesktopApp as any);
+    expect(result).toBe(expectedResult);
+  };
+
+  it('should return consent immediately if already updated', async () => {
+    await runTest(true, true, true);
+    expect(store.get).toHaveBeenCalledWith('updatedMetricsConsent');
+    expect(store.set).not.toHaveBeenCalled();
+    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(ipcMain.once).not.toHaveBeenCalled();
+  });
+
+  it('should return false immediately if metrics are disabled', async () => {
+    await runTest(false, false, false);
+    expect(store.set).toHaveBeenCalledWith('updatedMetricsConsent', true);
+    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(ipcMain.once).not.toHaveBeenCalled();
+  });
+
+  it('should prompt for update if metrics were previously enabled', async () => {
+    await runTest(false, true, true, { mockConsent: true, promptUser: true });
+    expect(store.set).toHaveBeenCalledWith('updatedMetricsConsent', true);
+    expect(appWindow.loadRenderer).toHaveBeenCalledWith('metrics-consent');
+    expect(ipcMain.once).toHaveBeenCalledWith(IPC_CHANNELS.SET_METRICS_CONSENT, expect.any(Function));
+  });
+
+  it('should update consent to false if the user denies', async () => {
+    await runTest(false, true, false, { mockConsent: false, promptUser: true });
+    expect(store.set).toHaveBeenCalledWith('updatedMetricsConsent', true);
+    expect(appWindow.loadRenderer).toHaveBeenCalledWith('metrics-consent');
+    expect(ipcMain.once).toHaveBeenCalledWith(IPC_CHANNELS.SET_METRICS_CONSENT, expect.any(Function));
+  });
+
+  it('should return false if previous metrics setting is null or undefined', async () => {
+    await runTest(false, null, false);
+    expect(store.set).toHaveBeenCalledWith('updatedMetricsConsent', true);
+    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(ipcMain.once).not.toHaveBeenCalled();
+  });
+
+  it('should prompt for update if updatedMetricsConsent is null or undefined', async () => {
+    await runTest(null, true, true, { mockConsent: true, promptUser: true });
+    expect(store.set).toHaveBeenCalledWith('updatedMetricsConsent', true);
+    expect(appWindow.loadRenderer).toHaveBeenCalledWith('metrics-consent');
+    expect(ipcMain.once).toHaveBeenCalledWith(IPC_CHANNELS.SET_METRICS_CONSENT, expect.any(Function));
+  });
+
+  it('should return false if both settings are null or undefined', async () => {
+    await runTest(null, null, false);
+    expect(store.set).toHaveBeenCalledWith('updatedMetricsConsent', true);
+    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(ipcMain.once).not.toHaveBeenCalled();
+  });
+
+  it('should return false if metrics are disabled and consent is null', async () => {
+    await runTest(null, false, false);
+    expect(store.set).toHaveBeenCalledWith('updatedMetricsConsent', true);
+    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(ipcMain.once).not.toHaveBeenCalled();
   });
 });
