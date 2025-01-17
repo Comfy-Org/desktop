@@ -85,7 +85,7 @@ async function startApp() {
 
     // Register basic handlers that are necessary during app's installation.
     new PathHandlers().registerHandlers();
-    new AppInfoHandlers().registerHandlers();
+    new AppInfoHandlers().registerHandlers(appWindow);
     ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
       log.debug('Open dialog');
       return dialog.showOpenDialogSync({
