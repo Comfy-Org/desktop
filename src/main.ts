@@ -83,6 +83,14 @@ async function startApp() {
       app.quit();
     });
 
+    // Load start screen - basic progress bar, no updates
+    try {
+      await appWindow.loadRenderer('desktop-start');
+    } catch (error) {
+      dialog.showErrorBox('Startup failed', `Unknown error whilst loading start screen.\n\n${error}`);
+      return app.quit();
+    }
+
     // Register basic handlers that are necessary during app's installation.
     new PathHandlers().registerHandlers();
     new AppInfoHandlers().registerHandlers();
