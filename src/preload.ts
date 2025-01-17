@@ -326,7 +326,35 @@ const electronAPI = {
   /** Gets the platform reported by node.js */
   getPlatform: () => process.platform,
 
-  /** Interfaces related to installation / install validation */
+  /**
+   *  Interfaces related to installation / install validation
+   *
+   * Example usage:
+   * ```typescript
+   * // Set up validation listener
+   * electronAPI.Validation.onUpdate((update) => {
+   *   const validationInProgress.value = update.inProgress;
+   *
+   *   for (const [task, state] of Object.entries(update)) {
+   *     if (task === 'installState' && !state) installApp();
+   *     if (task === 'git' && state === 'error') downloadGit();
+   *   }
+   * });
+   *
+   * // Start installation validation
+   * await electronAPI.Validation.validateInstallation((update) => {
+   *   if (update.pythonInterpreter === 'error') {
+   *     console.error('Python interpreter validation failed');
+   *   }
+   * });
+   *
+   * // Get current validation state
+   * const status = await electronAPI.Validation.getStatus();
+   *
+   * // Clean up when done
+   * electronAPI.Validation.dispose();
+   * ```
+   */
   Validation: {
     /**
      * Sets a callback to receive updates during validation.
