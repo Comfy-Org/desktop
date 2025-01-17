@@ -28,5 +28,5 @@ export type DesktopSettings = {
    */
   windowStyle?: 'custom' | 'default';
   /** The version of comfyui-electron on which the user last consented to metrics. */
-  versionConsentedMetrics?: string
+  versionConsentedMetrics?: string;
 };
