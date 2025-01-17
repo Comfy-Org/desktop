@@ -1,6 +1,7 @@
 import { app, ipcMain } from 'electron';
 
 import { IPC_CHANNELS } from '../constants';
+import type { AppWindow } from '../main-process/appWindow';
 import type { TorchDeviceType } from '../preload';
 import { useDesktopConfig } from '../store/desktopConfig';
 import type { DesktopSettings } from '../store/desktopSettings';
@@ -16,6 +17,10 @@ export class AppInfoHandlers {
 
     ipcMain.handle(IPC_CHANNELS.GET_ELECTRON_VERSION, () => {
       return app.getVersion();
+    });
+
+    ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, (): string | undefined => {
+      return useDesktopConfig().get('basePath');
     });
 
     // Config
