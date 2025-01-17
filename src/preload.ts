@@ -356,7 +356,7 @@ const electronAPI = {
      * @param callback Called with every update during validation
      * @returns A promise that resolves when validation is complete. The final {@link onUpdate} callback will have run in the main process, but the IPC event may not yet have hit the renderer when this promise resolves.
      */
-    installation: async (callback: (update: InstallValidation) => void) => {
+    validateInstallation: async (callback: (update: InstallValidation) => void) => {
       electronAPI.Validation.onUpdate(callback);
       await ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_INSTALLATION);
     },
