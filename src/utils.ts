@@ -172,15 +172,15 @@ export async function validateHardware(): Promise<HardwareValidation> {
   }
 }
 
+const normalize = (version: string) =>
+  version
+    .split(/[+.-]/)
+    .map(Number)
+    .filter((part) => !Number.isNaN(part));
+
 export function compareVersions(versionA: string, versionB: string): number {
   versionA ??= '0.0.0';
   versionB ??= '0.0.0';
-
-  const normalize = (version: string) =>
-    version
-      .split(/[+.-]/)
-      .map(Number)
-      .filter((part) => !Number.isNaN(part));
 
   const aParts = normalize(versionA);
   const bParts = normalize(versionB);
