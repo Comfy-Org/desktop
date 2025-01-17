@@ -1,7 +1,7 @@
 import type { GpuType, TorchDeviceType } from '../preload';
 
 export type DesktopSettings = {
-  basePath?: string | null;
+  basePath?: string;
   /**
    * The state of the installation.
    * - `started`: The installation has started.

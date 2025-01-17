@@ -25,12 +25,14 @@ export class InstallationManager {
    */
   async ensureInstalled(): Promise<ComfyInstallation> {
     const installation = ComfyInstallation.fromConfig();
+    log.verbose(`Install state: ${installation?.state ?? 'not installed'}`);
 
     // Fresh install
     if (!installation) return await this.freshInstall();
 
     // Validate installation
     const state = await installation.validate();
+    log.verbose(`Validated install state: ${state}`);
     if (state !== 'installed') await this.resumeInstallation(installation);
 
     // Resolve issues and re-run validation
@@ -52,6 +54,7 @@ export class InstallationManager {
    * @param installation The installation to resume
    */
   async resumeInstallation(installation: ComfyInstallation) {
+    log.verbose('Resuming installation.');
     // TODO: Resume install at point of interruption
     if (installation.state === 'started') {
       await this.freshInstall();
@@ -113,7 +116,7 @@ export class InstallationManager {
       useDesktopConfig().set('migrateCustomNodesFrom', installWizard.migrationSource);
     }
 
-    const installation = new ComfyInstallation('installed', installWizard.basePath);
+    const installation = new ComfyInstallation('installed', installWizard.basePath, device);
     installation.setState('installed');
     return installation;
   }

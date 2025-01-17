@@ -85,9 +85,11 @@ export class AppWindow {
         webviewTag: true,
         devTools: true,
       },
+      show: false,
       autoHideMenuBar: true,
       ...customChrome,
     });
+    this.window.once('ready-to-show', () => this.window.show());
 
     if (!installed && storedX === undefined) this.window.center();
     if (store.get('windowMaximized')) this.window.maximize();
@@ -176,6 +178,13 @@ export class AppWindow {
     const { devUrlOverride } = this;
     if (devUrlOverride) {
       const url = `${devUrlOverride}/${urlPath}`;
+      /**
+       * rendererReady should be set by the frontend via electronAPI. However,
+       * for some reason, the event is not being received if we load the app
+       * from the external server.
+       * TODO: Look into why dev server ready event is not being received.
+       */
+      this.rendererReady = true;
       log.info(`Loading development server ${url}`);
       await this.window.loadURL(url);
       this.window.webContents.openDevTools();

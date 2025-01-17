@@ -34,6 +34,7 @@ export class VirtualEnvironment implements HasTelemetry {
   readonly selectedDevice?: string;
   uvPty: pty.IPty | undefined;
 
+  /** @todo Refactor to `using` */
   get uvPtyInstance() {
     if (!this.uvPty) {
       const shell = getDefaultShell();
@@ -119,7 +120,10 @@ export class VirtualEnvironment implements HasTelemetry {
       await this.createEnvironment(callbacks);
     } finally {
       const pid = this.uvPty?.pid;
-      if (pid) process.kill(pid);
+      if (pid) {
+        process.kill(pid);
+        this.uvPty = undefined;
+      }
     }
   }
 
@@ -255,7 +259,7 @@ export class VirtualEnvironment implements HasTelemetry {
    * @param args
    * @returns
    */
-  public async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
+  private async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
     const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
     log.info(`Running uv command: ${uvCommand} ${args.join(' ')}`);
     return this.runPtyCommandAsync(`${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`, callbacks?.onStdout);
@@ -265,14 +269,13 @@ export class VirtualEnvironment implements HasTelemetry {
     const id = Date.now();
     return new Promise((res) => {
       const endMarker = `_-end-${id}:`;
-      const input = `clear${EOL}${command}${EOL}echo "${endMarker}$?"`;
+      const input = `${command}\recho "${endMarker}$?"`;
       const dataReader = this.uvPtyInstance.onData((data) => {
-        const lines = data.split(/(\r\n|\n)/);
+        // Remove ansi sequences to see if this the exit marker
+        const lines = data.replaceAll(/\u001B\[[\d;?]*[A-Za-z]/g, '').split(/(\r\n|\n)/);
         for (const line of lines) {
-          // Remove ansi sequences to see if this the exit marker
-          const clean = line.replaceAll(/\u001B\[[\d;?]*[A-Za-z]/g, '');
-          if (clean.startsWith(endMarker)) {
-            const exit = clean.substring(endMarker.length).trim();
+          if (line.startsWith(endMarker)) {
+            const exit = line.substring(endMarker.length).trim();
             let exitCode: number;
             // Powershell outputs True / False for success
             if (exit === 'True') {
@@ -288,15 +291,13 @@ export class VirtualEnvironment implements HasTelemetry {
               }
             }
             dataReader.dispose();
-            res({
-              exitCode,
-            });
+            res({ exitCode });
             break;
           }
         }
         onData?.(data);
       });
-      this.uvPtyInstance.write(`${input}${EOL}`);
+      this.uvPtyInstance.write(`${input}\r`);
     });
   }
 
@@ -359,44 +360,44 @@ export class VirtualEnvironment implements HasTelemetry {
 
   private async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
     const { selectedDevice } = this;
+    const packages = ['torch', 'torchvision', 'torchaudio'];
 
     if (selectedDevice === 'cpu') {
       // CPU mode
       log.info('Installing PyTorch CPU');
-      await this.runUvCommandAsync(['pip', 'install', 'torch', 'torchvision', 'torchaudio'], callbacks);
+      const { exitCode } = await this.runUvCommandAsync(['pip', 'install', ...packages], callbacks);
+      if (exitCode !== 0) {
+        throw new Error(`Failed to install PyTorch CPU: exit code ${exitCode}`);
+      }
     } else if (selectedDevice === 'nvidia' || process.platform === 'win32') {
       // Win32 default
       log.info('Installing PyTorch CUDA 12.1');
-      await this.runUvCommandAsync(
-        [
-          'pip',
-          'install',
-          'torch',
-          'torchvision',
-          'torchaudio',
-          '--index-url',
-          'https://download.pytorch.org/whl/cu121',
-        ],
+      const { exitCode } = await this.runUvCommandAsync(
+        ['pip', 'install', ...packages, '--index-url', 'https://download.pytorch.org/whl/cu121'],
         callbacks
       );
+      if (exitCode !== 0) {
+        throw new Error(`Failed to install PyTorch CUDA 12.1: exit code ${exitCode}`);
+      }
     } else if (selectedDevice === 'mps' || process.platform === 'darwin') {
       // macOS default
       log.info('Installing PyTorch Nightly for macOS.');
-      await this.runUvCommandAsync(
+      const { exitCode } = await this.runUvCommandAsync(
         [
           'pip',
           'install',
           '-U',
           '--prerelease',
           'allow',
-          'torch',
-          'torchvision',
-          'torchaudio',
+          ...packages,
           '--extra-index-url',
           'https://download.pytorch.org/whl/nightly/cpu',
         ],
         callbacks
       );
+      if (exitCode !== 0) {
+        throw new Error(`Failed to install PyTorch Nightly: exit code ${exitCode}`);
+      }
     }
   }
 

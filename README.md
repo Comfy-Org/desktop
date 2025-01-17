@@ -172,12 +172,6 @@ First, initialize the application resources by running `yarn make:assets`:
 
 This command will install ComfyUI and ComfyUI-Manager under `assets/`. The exact versions of each package is defined in `package.json`.
 
-Second, you need to install `uv`. This will be bundled with the distributable, but we also need it locally.
-
-```bash
-yarn download:uv
-```
-
 You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
 
 ```bash

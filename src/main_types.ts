@@ -10,4 +10,5 @@ export type {
   SystemPaths,
   DownloadProgressUpdate,
   ElectronOverlayOptions,
+  InstallValidation,
 } from './preload';

@@ -15,7 +15,7 @@ describe('AppInfoHandlers', () => {
   let handler: AppInfoHandlers;
   beforeEach(() => {
     handler = new AppInfoHandlers();
-    handler.registerHandlers();
+    handler.registerHandlers(null!);
   });
 
   it('should register all expected handle channels', () => {
