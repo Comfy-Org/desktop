@@ -83,7 +83,7 @@ async function startApp() {
       app.quit();
     });
 
-    // Load start screen - basic progress bar, no updates
+    // Load start screen - basic spinner
     try {
       await appWindow.loadRenderer('desktop-start');
     } catch (error) {
