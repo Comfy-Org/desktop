@@ -24,10 +24,6 @@ export class AppInfoHandlers {
       return useDesktopConfig().get('basePath');
     });
 
-    ipcMain.handle(IPC_CHANNELS.GET_BASE_PATH, (): string | undefined => {
-      return useDesktopConfig().get('basePath');
-    });
-
     ipcMain.handle(IPC_CHANNELS.SET_BASE_PATH, async (): Promise<boolean> => {
       const currentBasePath = useDesktopConfig().get('basePath');
 
