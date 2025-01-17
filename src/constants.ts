@@ -15,6 +15,7 @@ export const IPC_CHANNELS = {
   GET_ALL_DOWNLOADS: 'get-all-downloads',
   GET_ELECTRON_VERSION: 'get-electron-version',
   GET_BASE_PATH: 'get-base-path',
+  SET_BASE_PATH: 'set-base-path',
   GET_MODEL_CONFIG_PATH: 'get-model-config-path',
   OPEN_PATH: 'open-path',
   OPEN_LOGS_PATH: 'open-logs-path',

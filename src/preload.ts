@@ -126,6 +126,12 @@ const electronAPI = {
   getBasePath: (): Promise<string> => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_BASE_PATH);
   },
+  /**
+   * Opens a directory picker, saves the result as the base path if not cancelled.
+   * @returns `true` if a new base path was selected and set successfully, otherwise `false`
+   */
+  setBasePath: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.SET_BASE_PATH),
+
   getModelConfigPath: (): Promise<string> => {
     return ipcRenderer.invoke(IPC_CHANNELS.GET_MODEL_CONFIG_PATH);
   },
