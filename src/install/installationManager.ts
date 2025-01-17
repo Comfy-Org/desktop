@@ -98,7 +98,7 @@ export class InstallationManager {
 
     const installWizard = new InstallWizard(installOptions, this.telemetry);
     useDesktopConfig().set('basePath', installWizard.basePath);
-    useDesktopConfig().set('metricsConsentDate', new Date());
+    useDesktopConfig().set('versionConsentedMetrics', __COMFYUI_DESKTOP_VERSION__);
 
     const { device } = installOptions;
     if (device !== undefined) {

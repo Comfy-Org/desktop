@@ -171,3 +171,26 @@ export async function validateHardware(): Promise<HardwareValidation> {
     };
   }
 }
+
+export function compareVersions(versionA: string, versionB: string): number {
+  versionA ??= '0.0.0';
+  versionB ??= '0.0.0';
+
+  const normalize = (version: string) =>
+    version
+      .split(/[+.-]/)
+      .map(Number)
+      .filter((part) => !Number.isNaN(part));
+
+  const aParts = normalize(versionA);
+  const bParts = normalize(versionB);
+
+  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+    const aPart = aParts[i] ?? 0;
+    const bPart = bParts[i] ?? 0;
+    if (aPart < bPart) return -1;
+    if (aPart > bPart) return 1;
+  }
+
+  return 0;
+}

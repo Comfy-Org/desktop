@@ -193,8 +193,8 @@ describe('promptMetricsConsent', () => {
   let appWindow: { loadRenderer: Mock };
   let comfyDesktopApp: { comfySettings: { get: Mock } };
 
-  const dateBeforeUpdate = new Date('2022-01-01');
-  const dateAfterUpdate = new Date('2027-01-01');
+  const versionBeforeUpdate = '0.4.1';
+  const versionAfterUpdate = '1.0.1';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -210,7 +210,7 @@ describe('promptMetricsConsent', () => {
     mockConsent,
     promptUser,
   }: {
-    storeValue: Date | null | undefined;
+    storeValue: string | null | undefined;
     settingsValue: boolean | null | undefined;
     expectedResult: boolean;
     mockConsent?: boolean;
@@ -237,7 +237,7 @@ describe('promptMetricsConsent', () => {
 
   it('should prompt for update if metrics were previously enabled', async () => {
     await runTest({
-      storeValue: dateBeforeUpdate,
+      storeValue: versionBeforeUpdate,
       settingsValue: true,
       expectedResult: true,
       mockConsent: true,
@@ -250,11 +250,11 @@ describe('promptMetricsConsent', () => {
 
   it('should not show prompt if consent is up-to-date', async () => {
     await runTest({
-      storeValue: dateAfterUpdate,
+      storeValue: versionAfterUpdate,
       settingsValue: true,
       expectedResult: true,
     });
-    expect(store.get).toHaveBeenCalledWith('metricsConsentDate');
+    expect(store.get).toHaveBeenCalledWith('versionConsentedMetrics');
     expect(store.set).not.toHaveBeenCalled();
     expect(appWindow.loadRenderer).not.toHaveBeenCalled();
     expect(ipcMain.handle).not.toHaveBeenCalled();
@@ -262,7 +262,7 @@ describe('promptMetricsConsent', () => {
 
   it('should return true if consent is up-to-date and metrics enabled', async () => {
     await runTest({
-      storeValue: dateAfterUpdate,
+      storeValue: versionAfterUpdate,
       settingsValue: true,
       expectedResult: true,
     });
@@ -271,7 +271,7 @@ describe('promptMetricsConsent', () => {
 
   it('should return false if consent is up-to-date and metrics are disabled', async () => {
     await runTest({
-      storeValue: dateAfterUpdate,
+      storeValue: versionAfterUpdate,
       settingsValue: false,
       expectedResult: false,
     });
@@ -282,7 +282,7 @@ describe('promptMetricsConsent', () => {
 
   it('should return false if consent is out-of-date and metrics are disabled', async () => {
     await runTest({
-      storeValue: dateBeforeUpdate,
+      storeValue: versionBeforeUpdate,
       settingsValue: false,
       expectedResult: false,
     });
@@ -293,7 +293,7 @@ describe('promptMetricsConsent', () => {
 
   it('should update consent to false if the user denies', async () => {
     await runTest({
-      storeValue: dateBeforeUpdate,
+      storeValue: versionBeforeUpdate,
       settingsValue: true,
       expectedResult: false,
       mockConsent: false,
@@ -306,7 +306,7 @@ describe('promptMetricsConsent', () => {
 
   it('should return false if previous metrics setting is null', async () => {
     await runTest({
-      storeValue: dateBeforeUpdate,
+      storeValue: versionBeforeUpdate,
       settingsValue: null,
       expectedResult: false,
     });
@@ -315,7 +315,7 @@ describe('promptMetricsConsent', () => {
     expect(ipcMain.handle).not.toHaveBeenCalled();
   });
 
-  it('should prompt for update if metricsConsentDate is undefined', async () => {
+  it('should prompt for update if versionConsentedMetrics is undefined', async () => {
     await runTest({
       storeValue: undefined,
       settingsValue: true,
@@ -341,7 +341,7 @@ describe('promptMetricsConsent', () => {
 
   it('should return false if metrics are disabled and consent is null', async () => {
     await runTest({
-      storeValue: dateBeforeUpdate,
+      storeValue: versionBeforeUpdate,
       settingsValue: null,
       expectedResult: false,
     });

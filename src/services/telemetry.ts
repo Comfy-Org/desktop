@@ -12,6 +12,7 @@ import { AppWindow } from '../main-process/appWindow';
 import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
 import { InstallOptions } from '../preload';
 import { DesktopConfig } from '../store/desktopConfig';
+import { compareVersions } from '../utils';
 
 let instance: ITelemetry | null = null;
 export interface ITelemetry {
@@ -224,10 +225,11 @@ export async function promptMetricsConsent(
   comfyDesktopApp: ComfyDesktopApp
 ): Promise<boolean> {
   const isMetricsEnabled = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics') ?? false;
-  const updatedOn = store.get('metricsConsentDate');
-  if (updatedOn && updatedOn >= new Date('2025-01-16')) return isMetricsEnabled;
+  const consentedOn = store.get('versionConsentedMetrics');
+  const isOutdated = !consentedOn || compareVersions(consentedOn, '0.4.8') < 0;
+  if (!isOutdated) return isMetricsEnabled;
 
-  store.set('metricsConsentDate', new Date());
+  store.set('versionConsentedMetrics', __COMFYUI_DESKTOP_VERSION__);
   if (isMetricsEnabled) {
     const consentPromise = new Promise<boolean>((resolve) => {
       ipcMain.handle(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => {

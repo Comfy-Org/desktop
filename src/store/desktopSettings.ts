@@ -27,6 +27,6 @@ export type DesktopSettings = {
    * - `default`: Impersonal, static, plain - default window title bar
    */
   windowStyle?: 'custom' | 'default';
-  /** The date when the user consented to metrics collection */
-  metricsConsentDate?: Date;
+  /** The version of comfyui-electron on which the user last consented to metrics. */
+  versionConsentedMetrics?: string
 };
