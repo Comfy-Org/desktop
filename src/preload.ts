@@ -81,6 +81,24 @@ export type PathValidationResult = {
   error?: string;
 };
 
+/** Whether the app just been installed, upgraded, or install is complete and the server has been started at least once. */
+export type InstallState = Exclude<DesktopSettings['installState'], undefined>;
+
+export type ValidationIssueState = 'OK' | 'warning' | 'error' | 'skipped';
+
+export interface InstallValidation {
+  inProgress: boolean;
+  installState: InstallState;
+
+  basePath?: ValidationIssueState;
+  venvDirectory?: ValidationIssueState;
+  pythonInterpreter?: ValidationIssueState;
+  pythonPackages?: ValidationIssueState;
+  uv?: ValidationIssueState;
+  git?: ValidationIssueState;
+  vcRedist?: ValidationIssueState;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -112,6 +130,7 @@ const electronAPI = {
     console.log('Sending restarting app message to main process with custom message:', customMessage);
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
+  /** @todo Move to {@link electronAPI.Validation} */
   reinstall: (): Promise<void> => {
     return ipcRenderer.invoke(IPC_CHANNELS.REINSTALL);
   },
@@ -213,7 +232,11 @@ const electronAPI = {
         callback(value);
       };
       ipcRenderer.on(IPC_CHANNELS.TERMINAL_ON_OUTPUT, handler);
-      return () => ipcRenderer.off(IPC_CHANNELS.TERMINAL_ON_OUTPUT, handler);
+
+      // Ensure discard of return value (Electron.IpcRenderer)
+      return () => {
+        ipcRenderer.off(IPC_CHANNELS.TERMINAL_ON_OUTPUT, handler);
+      };
     },
   },
   /**
@@ -249,6 +272,7 @@ const electronAPI = {
   },
   /**
    * Install ComfyUI with given options.
+   * @todo Move to {@link electronAPI.Validation}
    */
   installComfyUI: (installOptions: InstallOptions) => {
     ipcRenderer.send(IPC_CHANNELS.INSTALL_COMFYUI, installOptions);
@@ -301,6 +325,69 @@ const electronAPI = {
   },
   /** Gets the platform reported by node.js */
   getPlatform: () => process.platform,
+
+  /** Interfaces related to installation / install validation */
+  Validation: {
+    /**
+     * Sets a callback to receive updates during validation.
+     * If an existing callback is set, it will be replaced.
+     * @param callback Called with every update during validation
+     */
+    onUpdate(callback: (update: InstallValidation) => void) {
+      ipcRenderer.removeAllListeners(IPC_CHANNELS.VALIDATION_UPDATE);
+      ipcRenderer.on(IPC_CHANNELS.VALIDATION_UPDATE, (_event, value: InstallValidation) => {
+        console.debug(`Received ${IPC_CHANNELS.VALIDATION_UPDATE} event`, value);
+        callback(value);
+      });
+    },
+
+    /** Requests the current state of validation, for use by UI when initialising a component.  */
+    getStatus: (): Promise<InstallValidation> => ipcRenderer.invoke(IPC_CHANNELS.GET_VALIDATION_STATE),
+
+    /**
+     * Attempts to complete validation, returning `true` if successful.
+     * @returns A promise that resolves when validation is complete, `true` if validation was successful, otherwise `false`
+     */
+    complete: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.COMPLETE_VALIDATION),
+
+    /**
+     * Initiates validation.  Notifies updates via callback.
+     * If an existing callback is set, it will be replaced.
+     * @param callback Called with every update during validation
+     * @returns A promise that resolves when validation is complete. The final {@link onUpdate} callback will have run in the main process, but the IPC event may not yet have hit the renderer when this promise resolves.
+     */
+    installation: async (callback: (update: InstallValidation) => void) => {
+      electronAPI.Validation.onUpdate(callback);
+      await ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_INSTALLATION);
+    },
+
+    // TODO: Add cancel validation IPC method to offer a way out of slow validation (e.g. filesystem unresponsive)
+
+    /** Removes the validation update listener. Simpler than verifying determinism of UPDATE and COMPLETE. */
+    dispose: () => {
+      ipcRenderer.removeAllListeners(IPC_CHANNELS.VALIDATION_UPDATE);
+    },
+  },
+
+  uv: {
+    /**
+     * Install the requirements for the ComfyUI server.
+     * @returns A promise that resolves when the uv command is complete.
+     */
+    installRequirements: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS),
+
+    /**
+     * Clears the uv cache of all downloaded packages.
+     * @returns `true` if the cache was cleared successfully, otherwise `false`
+     */
+    clearCache: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.UV_CLEAR_CACHE),
+
+    /**
+     * Resets the virtual environment by deleting the venv directory.
+     * @returns `true` if the virtual environment was reset successfully, otherwise `false`
+     */
+    resetVenv: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.UV_RESET_VENV),
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;

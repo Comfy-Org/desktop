@@ -34,9 +34,17 @@ export const IPC_CHANNELS = {
   RESTART_CORE: 'restart-core',
   GET_GPU: 'get-gpu',
   SET_WINDOW_STYLE: 'set-window-style',
+  GET_VALIDATION_STATE: 'get-validation-state',
+  VALIDATION_UPDATE: 'validation-update',
+  COMPLETE_VALIDATION: 'complete-validation',
+  CANCEL_VALIDATION: 'cancel-validation',
+  VALIDATE_INSTALLATION: 'start-validation',
+  UV_INSTALL_REQUIREMENTS: 'uv-install-requirements',
   GET_WINDOW_STYLE: 'get-window-style',
   TRACK_EVENT: 'track-event',
   INCREMENT_USER_PROPERTY: 'increment-user-property',
+  UV_CLEAR_CACHE: 'uv-clear-cache',
+  UV_RESET_VENV: 'uv-delete-venv',
 } as const;
 
 export enum ProgressStatus {
