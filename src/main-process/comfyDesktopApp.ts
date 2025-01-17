@@ -157,10 +157,6 @@ export class ComfyDesktopApp implements HasTelemetry {
 
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
 
-    const config = useDesktopConfig();
-    const selectedDevice = config.get('selectedDevice');
-    const virtualEnvironment = new VirtualEnvironment(this.basePath, this.telemetry, selectedDevice);
-
     const processCallbacks: ProcessCallbacks = {
       onStdout: (data) => {
         log.info(data.replaceAll(ansiCodes, ''));
@@ -171,8 +167,10 @@ export class ComfyDesktopApp implements HasTelemetry {
         this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
       },
     };
+    const { virtualEnvironment } = this.installation;
     await virtualEnvironment.create(processCallbacks);
 
+    const config = useDesktopConfig();
     const customNodeMigrationError = await this.migrateCustomNodes(config, virtualEnvironment, processCallbacks);
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);

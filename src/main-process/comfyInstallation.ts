@@ -1,9 +1,12 @@
 import log from 'electron-log/main';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
+import type { TorchDeviceType } from '../preload';
+import { getTelemetry } from '../services/telemetry';
 import { useDesktopConfig } from '../store/desktopConfig';
 import type { DesktopSettings } from '../store/desktopSettings';
 import { containsDirectory, pathAccessible } from '../utils';
+import { VirtualEnvironment } from '../virtualEnvironment';
 
 // TODO: | 'uvMissing' | 'venvMissing' | 'venvInvalid' | 'noPyTorch';
 export type ValidationIssue = 'invalidBasePath';
@@ -23,12 +26,30 @@ export class ComfyInstallation {
     return this.state === 'installed' && this.issues.size === 0;
   }
 
+  virtualEnvironment: VirtualEnvironment;
+
+  _basePath: string;
+  /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
+  get basePath() {
+    return this._basePath;
+  }
+  set basePath(value: string) {
+    // Duplicated in constructor to avoid non-nullable type assertions.
+    this._basePath = value;
+    this.virtualEnvironment = new VirtualEnvironment(value, getTelemetry(), this.device);
+  }
+
   constructor(
     /** Installation state, e.g. `started`, `installed`.  See {@link DesktopSettings}. */
     public state: InstallState,
     /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
-    public basePath: string
-  ) {}
+    basePath: string,
+    public device?: TorchDeviceType
+  ) {
+    // TypeScript workaround: duplication of basePath setter
+    this._basePath = basePath;
+    this.virtualEnvironment = new VirtualEnvironment(basePath, getTelemetry(), this.device);
+  }
 
   /**
    * Static factory method. Creates a ComfyInstallation object if previously saved config can be read.
@@ -38,7 +59,8 @@ export class ComfyInstallation {
     const config = useDesktopConfig();
     const state = config.get('installState');
     const basePath = config.get('basePath');
-    if (state && basePath) return new ComfyInstallation(state, basePath);
+    const device = config.get('selectedDevice');
+    if (state && basePath) return new ComfyInstallation(state, basePath, device);
   }
 
   /**
