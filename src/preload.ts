@@ -130,6 +130,8 @@ const electronAPI = {
     console.log('Sending restarting app message to main process with custom message:', customMessage);
     ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
+  /** Exits the application gracefully. */
+  quit: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.QUIT),
   /** @todo Move to {@link electronAPI.Validation} */
   reinstall: (): Promise<void> => {
     return ipcRenderer.invoke(IPC_CHANNELS.REINSTALL);
