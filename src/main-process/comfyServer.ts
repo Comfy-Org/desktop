@@ -5,6 +5,7 @@ import path from 'node:path';
 import waitOn from 'wait-on';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
+import { ComfySettings } from '../config/comfySettings';
 import { IPC_CHANNELS, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
@@ -101,6 +102,7 @@ export class ComfyServer implements HasTelemetry {
 
   @trackEvent('comfyui:server_start')
   async start() {
+    ComfySettings.lockWrites();
     await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
     return new Promise<void>((resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });

@@ -22,14 +22,25 @@ export interface ComfySettingsData {
 /**
  * ComfySettings is a class that loads settings from the comfy.settings.json file.
  *
- * No save or write methods are exposed; this file is exclusively written to by ComfyUI core.
+ * This file is exclusively written to by the ComfyUI server once it starts.
+ * The Electron process can only write to this file during initialization, before
+ * the ComfyUI server starts.
  */
 export class ComfySettings {
   public readonly filePath: string;
   private settings: ComfySettingsData = structuredClone(DEFAULT_SETTINGS);
+  private static writeLocked = false;
 
   constructor(basePath: string) {
     this.filePath = path.join(basePath, 'user', 'default', 'comfy.settings.json');
+  }
+
+  /**
+   * Locks the settings to prevent further modifications.
+   * Called when the ComfyUI server starts, as it takes ownership of the settings file.
+   */
+  static lockWrites() {
+    ComfySettings.writeLocked = true;
   }
 
   public async loadSettings() {
@@ -47,6 +58,34 @@ export class ComfySettings {
     } catch (error) {
       log.error(`Settings file cannot be loaded.`, error);
     }
+  }
+
+  /**
+   * Saves settings to disk. Can only be called before the ComfyUI server starts.
+   * @throws Error if called after the ComfyUI server has started
+   */
+  async saveSettings() {
+    if (!this.settings) return;
+
+    if (ComfySettings.writeLocked) {
+      const error = new Error('Settings are locked and cannot be modified');
+      log.error(error);
+      throw error;
+    }
+
+    try {
+      await fs.writeFile(this.filePath, JSON.stringify(this.settings, null, 2));
+    } catch (error) {
+      log.error('Failed to save settings:', error);
+      throw error;
+    }
+  }
+
+  set<K extends keyof ComfySettingsData>(key: K, value: ComfySettingsData[K]) {
+    if (ComfySettings.writeLocked) {
+      throw new Error('Settings are locked and cannot be modified');
+    }
+    this.settings[key] = value;
   }
 
   get<K extends keyof ComfySettingsData>(key: K): ComfySettingsData[K] {
