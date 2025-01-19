@@ -29,7 +29,7 @@ interface GpuInfo {
 }
 
 const MIXPANEL_TOKEN = '6a7f9f6ae2084b4e7ff7ced98a6b5988';
-export class MixpanelTelemetry {
+export class MixpanelTelemetry implements ITelemetry {
   public hasConsent: boolean = false;
   private distinctId: string;
   private readonly storageFile: string;
