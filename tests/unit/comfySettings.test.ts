@@ -30,7 +30,7 @@ describe('ComfySettings', () => {
     vi.clearAllMocks();
   });
 
-  describe('Write locking', () => {
+  describe('write locking', () => {
     it('should allow writes before being locked', async () => {
       await settings.saveSettings();
       expect(vi.mocked(fs).writeFile).toHaveBeenCalled();
@@ -62,16 +62,15 @@ describe('ComfySettings', () => {
       expect(() => settings2.set('Comfy-Desktop.AutoUpdate', false)).toThrow('Settings are locked');
     });
 
-    it('should log error when attempting to save while locked', async () => {
+    it('should log error when saving locked settings', async () => {
       ComfySettings.lockWrites();
-      await expect(settings.saveSettings()).rejects.toThrow();
+      await expect(settings.saveSettings()).rejects.toThrow('Settings are locked');
       const log = await import('electron-log/main');
-      await expect(settings.saveSettings()).rejects.toThrow();
       expect(vi.mocked(log.default.error)).toHaveBeenCalled();
     });
   });
 
-  describe('File operations', () => {
+  describe('file operations', () => {
     it('should use correct file path', () => {
       expect(settings.filePath).toBe(path.join(testBasePath, 'user', 'default', 'comfy.settings.json'));
     });
