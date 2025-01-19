@@ -224,13 +224,13 @@ export async function promptMetricsConsent(
   appWindow: AppWindow,
   comfyDesktopApp: ComfyDesktopApp
 ): Promise<boolean> {
-  const isMetricsEnabled = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics') ?? false;
+  const consent = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics') ?? false;
   const consentedOn = store.get('versionConsentedMetrics');
-  const isOutdated = !consentedOn || compareVersions(consentedOn, '0.4.8') < 0;
-  if (!isOutdated) return isMetricsEnabled;
+  const isOutdated = !consentedOn || compareVersions(consentedOn, '0.4.12') < 0;
+  if (!isOutdated) return consent;
 
   store.set('versionConsentedMetrics', __COMFYUI_DESKTOP_VERSION__);
-  if (isMetricsEnabled) {
+  if (consent) {
     const consentPromise = new Promise<boolean>((resolve) => {
       ipcMain.handle(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => {
         resolve(consent);
@@ -239,8 +239,14 @@ export async function promptMetricsConsent(
     });
 
     await appWindow.loadRenderer('metrics-consent');
-    return consentPromise;
+    const newConsent = await consentPromise;
+    if (newConsent !== consent) {
+      comfyDesktopApp.comfySettings.set('Comfy-Desktop.SendStatistics', newConsent);
+      await comfyDesktopApp.comfySettings.saveSettings();
+    }
+
+    return newConsent;
   }
 
-  return isMetricsEnabled;
+  return consent;
 }

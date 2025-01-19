@@ -120,8 +120,6 @@ async function startApp() {
       const allowMetrics = await promptMetricsConsent(store, appWindow, comfyDesktopApp);
       telemetry.hasConsent = allowMetrics;
       if (allowMetrics) telemetry.flush();
-      comfyDesktopApp.comfySettings.set('Comfy-Desktop.SendStatistics', allowMetrics);
-      await comfyDesktopApp.comfySettings.saveSettings();
 
       // Construct core launch args
       const useExternalServer = devOverride('USE_EXTERNAL_SERVER') === 'true';

@@ -191,7 +191,7 @@ describe('MixpanelTelemetry', () => {
 describe('promptMetricsConsent', () => {
   let store: { get: Mock; set: Mock };
   let appWindow: { loadRenderer: Mock };
-  let comfyDesktopApp: { comfySettings: { get: Mock } };
+  let comfyDesktopApp: { comfySettings: { get: Mock; set: Mock; saveSettings: Mock } };
 
   const versionBeforeUpdate = '0.4.1';
   const versionAfterUpdate = '1.0.1';
@@ -200,7 +200,7 @@ describe('promptMetricsConsent', () => {
     vi.clearAllMocks();
     store = { get: vi.fn(), set: vi.fn() };
     appWindow = { loadRenderer: vi.fn() };
-    comfyDesktopApp = { comfySettings: { get: vi.fn() } };
+    comfyDesktopApp = { comfySettings: { get: vi.fn(), set: vi.fn(), saveSettings: vi.fn() } };
   });
 
   const runTest = async ({
