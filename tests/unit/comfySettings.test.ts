@@ -61,6 +61,14 @@ describe('ComfySettings', () => {
       expect(() => settings1.set('Comfy-Desktop.AutoUpdate', false)).toThrow('Settings are locked');
       expect(() => settings2.set('Comfy-Desktop.AutoUpdate', false)).toThrow('Settings are locked');
     });
+
+    it('should log error when attempting to save while locked', async () => {
+      ComfySettings.lockWrites();
+      await expect(settings.saveSettings()).rejects.toThrow();
+      const log = await import('electron-log/main');
+      await expect(settings.saveSettings()).rejects.toThrow();
+      expect(vi.mocked(log.default.error)).toHaveBeenCalled();
+    });
   });
 
   describe('File operations', () => {
@@ -90,6 +98,19 @@ describe('ComfySettings', () => {
       await settings.loadSettings();
       expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(true);
       expect(settings.get('Comfy-Desktop.SendStatistics')).toBe(true);
+    });
+
+    it('should save settings to correct path with proper formatting', async () => {
+      settings.set('Comfy-Desktop.AutoUpdate', false);
+      await settings.saveSettings();
+
+      const writeCall = vi.mocked(fs).writeFile.mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const savedJson = JSON.parse(writeCall[1] as string);
+
+      expect(writeCall[0]).toBe(settings.filePath);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(savedJson['Comfy-Desktop.AutoUpdate']).toBe(false);
     });
   });
 });
