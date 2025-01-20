@@ -23,7 +23,7 @@ vi.mock('electron-log/main', () => ({
 
 async function createTmpDir() {
   const prefix = path.join(tmpdir(), 'vitest-');
-  return await mkdtemp(prefix);
+  return mkdtemp(prefix);
 }
 
 async function copyFixture(fixturePath: string, targetPath: string) {
@@ -32,46 +32,44 @@ async function copyFixture(fixturePath: string, targetPath: string) {
 }
 
 describe('ComfyServerConfig', () => {
+  let tempDir = '';
+  const originalPlatform = process.platform;
+  const originalEnv = process.env;
+
+  beforeAll(async () => {
+    tempDir = await createTmpDir();
+  });
+
+  afterAll(async () => {
+    await rm(tempDir, { recursive: true });
+    Object.defineProperty(process, 'platform', { value: originalPlatform });
+    process.env = originalEnv;
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   describe('configPath', () => {
     it('should return the correct path', () => {
-      // Mock the userData path
       const mockUserDataPath = '/fake/user/data';
-      vi.mocked(app.getPath).mockImplementation((key: string) => {
+      const { getPath } = app;
+      vi.mocked(getPath).mockImplementation((key: string) => {
         if (key === 'userData') {
           return mockUserDataPath;
         }
         throw new Error(`Unexpected getPath key: ${key}`);
       });
 
-      // Access the static property
-      const configPath = ComfyServerConfig.configPath;
-
-      // Verify the path is correctly joined
+      const { configPath } = ComfyServerConfig;
       expect(configPath).toBe(path.join(mockUserDataPath, 'extra_models_config.yaml'));
-
-      // Verify app.getPath was called with correct argument
-      expect(app.getPath).toHaveBeenCalledWith('userData');
+      expect(getPath).toHaveBeenCalledWith('userData');
     });
   });
 
   describe('readBasePathFromConfig', () => {
-    let tempDir = '';
-    let testConfigPath = '';
-
-    beforeAll(async () => {
-      tempDir = await createTmpDir();
-      testConfigPath = path.join(tempDir, 'test_config.yaml');
-    });
-
-    afterAll(async () => {
-      await rm(tempDir, { recursive: true });
-    });
-
     it('should read base_path from valid config file', async () => {
+      const testConfigPath = path.join(tempDir, 'test_config.yaml');
       await copyFixture('valid-config.yaml', testConfigPath);
       const readResult = await ComfyServerConfig.readBasePathFromConfig(testConfigPath);
       expect(readResult.status).toBe('success');
@@ -85,6 +83,7 @@ describe('ComfyServerConfig', () => {
     });
 
     it('should handle missing base path', async () => {
+      const testConfigPath = path.join(tempDir, 'test_config.yaml');
       await copyFixture('missing-base-path.yaml', testConfigPath);
       const readResult = await ComfyServerConfig.readBasePathFromConfig(testConfigPath);
       expect(readResult.status).toBe('invalid');
@@ -92,6 +91,7 @@ describe('ComfyServerConfig', () => {
     });
 
     it('should handle wrong base path type', async () => {
+      const testConfigPath = path.join(tempDir, 'test_config.yaml');
       await copyFixture('wrong-type.yaml', testConfigPath);
       const readResult = await ComfyServerConfig.readBasePathFromConfig(testConfigPath);
       expect(readResult.status).toBe('invalid');
@@ -99,20 +99,23 @@ describe('ComfyServerConfig', () => {
     });
 
     it('should handle malformed YAML', async () => {
+      const testConfigPath = path.join(tempDir, 'test_config.yaml');
       await copyFixture('malformed.yaml', testConfigPath);
       const readResult = await ComfyServerConfig.readBasePathFromConfig(testConfigPath);
       expect(readResult.status).toBe('invalid');
       expect(readResult.path).toBeUndefined();
     });
+
+    it('should handle legacy format config', async () => {
+      const legacyConfigPath = path.join(tempDir, 'legacy-format.yaml');
+      await copyFixture('legacy-format.yaml', legacyConfigPath);
+      const readResult = await ComfyServerConfig.readBasePathFromConfig(legacyConfigPath);
+      expect(readResult.status).toBe('success');
+      expect(readResult.path).toBe('/old/style/path');
+    });
   });
 
   describe('generateConfigFileContent', () => {
-    const originalPlatform = process.platform;
-
-    afterAll(() => {
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
-    });
-
     it('should generate valid YAML with model paths', () => {
       const testModelConfig = {
         comfyui_desktop: {
@@ -141,7 +144,6 @@ describe('ComfyServerConfig', () => {
     it('should handle empty configs', () => {
       const generatedYaml = ComfyServerConfig.generateConfigFileContent({});
       expect(generatedYaml).toContain(`# ComfyUI extra_model_paths.yaml for ${process.platform}`);
-      // The rest should just be an empty object
       expect(generatedYaml.split('\n')[1]).toBe('{}');
     });
   });
@@ -187,27 +189,10 @@ describe('ComfyServerConfig', () => {
   });
 
   describe('getBaseConfig', () => {
-    const originalPlatform = process.platform;
-
-    afterAll(() => {
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
-    });
-
-    it.each([
-      {
-        platform: 'win32',
-      },
-      {
-        platform: 'darwin',
-      },
-      {
-        platform: 'linux',
-      },
-    ])('should return platform-specific config for $platform', ({ platform }) => {
+    it.each(['win32', 'darwin', 'linux'] as const)('should return platform-specific config for %s', (platform) => {
       Object.defineProperty(process, 'platform', { value: platform });
       const platformConfig = ComfyServerConfig.getBaseConfig();
 
-      // All platforms should have these common paths
       expect(platformConfig.checkpoints).toContain('models/checkpoints');
       expect(platformConfig.loras).toContain('models/loras');
       expect(platformConfig.custom_nodes).toBe('custom_nodes/');
@@ -221,18 +206,6 @@ describe('ComfyServerConfig', () => {
   });
 
   describe('readConfigFile', () => {
-    let tempDir = '';
-    const originalPlatform = process.platform;
-
-    beforeAll(async () => {
-      tempDir = await createTmpDir();
-    });
-
-    afterAll(async () => {
-      await rm(tempDir, { recursive: true });
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
-    });
-
     it('should handle missing files', async () => {
       const configContent = await ComfyServerConfig.readConfigFile('/non/existent/path.yaml');
       expect(configContent).toBeNull();
@@ -243,31 +216,6 @@ describe('ComfyServerConfig', () => {
       await copyFixture('malformed.yaml', invalidConfigPath);
       const configContent = await ComfyServerConfig.readConfigFile(invalidConfigPath);
       expect(configContent).toBeNull();
-    });
-  });
-
-  describe('readConfigFile edge cases', () => {
-    let tempDir = '';
-    const originalPlatform = process.platform;
-    const originalEnv = process.env;
-
-    beforeAll(async () => {
-      tempDir = await createTmpDir();
-    });
-
-    afterAll(async () => {
-      await rm(tempDir, { recursive: true });
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
-      process.env = originalEnv;
-    });
-
-    it('should handle legacy format config', async () => {
-      const legacyConfigPath = path.join(tempDir, 'legacy-format.yaml');
-      await copyFixture('legacy-format.yaml', legacyConfigPath);
-      const readResult = await ComfyServerConfig.readBasePathFromConfig(legacyConfigPath);
-
-      expect(readResult.status).toBe('success');
-      expect(readResult.path).toBe('/old/style/path');
     });
 
     it('should handle multiple sections and special values', async () => {
