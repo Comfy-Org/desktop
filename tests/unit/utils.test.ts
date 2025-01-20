@@ -6,7 +6,7 @@ import { validateHardware } from '../../src/utils';
 
 vi.mock('systeminformation');
 
-describe('Hardware Validation', () => {
+describe('validateHardware', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.resetAllMocks();
