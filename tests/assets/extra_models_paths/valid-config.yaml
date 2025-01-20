@@ -1,0 +1,8 @@
+# Test ComfyUI config
+comfyui_desktop:
+  base_path: /test/path
+  checkpoints: /test/path/models/checkpoints/
+  loras: /test/path/models/loras/
+comfyui_migration:
+  base_path: /other/path
+  models: /other/path/models/ 

@@ -1,0 +1,2 @@
+comfyui_desktop:
+  base_path: [/path1, /path2]

@@ -1,0 +1,12 @@
+# Config with multiple sections and edge cases
+comfyui_desktop:
+  base_path: "/primary/path"
+  checkpoints: "/primary/path/models/checkpoints/"
+  empty_path: ""
+  null_path: null
+comfyui_migration:
+  base_path: "/migration/path"
+  models: "/migration/path/models/"
+unknown_section:
+  some_key: "some_value"
+  another_key: 123 

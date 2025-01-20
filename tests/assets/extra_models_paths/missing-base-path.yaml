@@ -1,0 +1,3 @@
+comfyui_desktop:
+  checkpoints: models/checkpoints/
+  loras: models/loras/ 

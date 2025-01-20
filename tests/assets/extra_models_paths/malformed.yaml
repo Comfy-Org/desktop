@@ -1,0 +1,4 @@
+comfyui_desktop:
+  base_path: 
+    - this is malformed
+  - incorrect indentation 
