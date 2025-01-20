@@ -232,10 +232,7 @@ export async function promptMetricsConsent(
   store.set('versionConsentedMetrics', __COMFYUI_DESKTOP_VERSION__);
   if (consent) {
     const consentPromise = new Promise<boolean>((resolve) => {
-      ipcMain.handle(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => {
-        resolve(consent);
-        ipcMain.removeHandler(IPC_CHANNELS.SET_METRICS_CONSENT);
-      });
+      ipcMain.handleOnce(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => resolve(consent));
     });
 
     await appWindow.loadRenderer('metrics-consent');
