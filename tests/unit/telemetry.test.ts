@@ -15,6 +15,7 @@ vi.mock('electron', () => ({
     on: vi.fn(),
     once: vi.fn(),
     handle: vi.fn(),
+    handleOnce: vi.fn(),
     removeHandler: vi.fn(),
   },
 }));
