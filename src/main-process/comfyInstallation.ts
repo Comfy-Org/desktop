@@ -3,7 +3,7 @@ import { rm } from 'node:fs/promises';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import type { InstallValidation, TorchDeviceType } from '../preload';
-import { getTelemetry } from '../services/telemetry';
+import { type ITelemetry, getTelemetry } from '../services/telemetry';
 import { useDesktopConfig } from '../store/desktopConfig';
 import type { DesktopSettings } from '../store/desktopSettings';
 import { canExecute, canExecuteShellCommand, pathAccessible } from '../utils';
@@ -41,7 +41,7 @@ export class ComfyInstallation {
   set basePath(value: string) {
     // Duplicated in constructor to avoid non-nullable type assertions.
     this._basePath = value;
-    this.virtualEnvironment = new VirtualEnvironment(value, getTelemetry(), this.device);
+    this.virtualEnvironment = new VirtualEnvironment(value, this.telemetry, this.device);
   }
 
   /**
@@ -55,11 +55,13 @@ export class ComfyInstallation {
     public state: InstallState,
     /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
     basePath: string,
+    /** The device type to use for the installation. */
+    public readonly telemetry: ITelemetry,
     public device?: TorchDeviceType
   ) {
     // TypeScript workaround: duplication of basePath setter
     this._basePath = basePath;
-    this.virtualEnvironment = new VirtualEnvironment(basePath, getTelemetry(), this.device);
+    this.virtualEnvironment = new VirtualEnvironment(basePath, telemetry, device);
   }
 
   /**
@@ -72,7 +74,7 @@ export class ComfyInstallation {
     const state = config.get('installState');
     const basePath = config.get('basePath');
     const device = config.get('selectedDevice');
-    if (state && basePath) return new ComfyInstallation(state, basePath, device);
+    if (state && basePath) return new ComfyInstallation(state, basePath, getTelemetry(), device);
   }
 
   /**
@@ -103,7 +105,7 @@ export class ComfyInstallation {
       validation.basePath = 'OK';
       this.onUpdate?.(validation);
 
-      const venv = new VirtualEnvironment(basePath, getTelemetry(), this.device);
+      const venv = new VirtualEnvironment(basePath, this.telemetry, this.device);
       if (await venv.exists()) {
         validation.venvDirectory = 'OK';
         this.onUpdate?.(validation);
