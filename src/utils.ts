@@ -162,6 +162,11 @@ export async function validateHardware(): Promise<HardwareValidation> {
       const graphics = await si.graphics();
       const hasNvidia = graphics.controllers.some((controller) => controller.vendor.toLowerCase().includes('nvidia'));
 
+      if (process.env.SKIP_HARDWARE_VALIDATION) {
+        console.log('Skipping hardware validation');
+        return { isValid: true };
+      }
+
       if (!hasNvidia) {
         try {
           // wmic is unreliable. Check in PS.
