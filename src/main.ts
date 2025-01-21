@@ -36,6 +36,13 @@ app.on('before-quit', () => {
   quitting = true;
 });
 
+app.on('quit', (event, exitCode) => {
+  telemetry.track('desktop:app_quit', {
+    reason: event,
+    exitCode,
+  });
+});
+
 // Sentry needs to be initialized at the top level.
 log.verbose('Initializing Sentry');
 SentryLogging.init();
@@ -73,7 +80,7 @@ async function startApp() {
 
   try {
     // Create native window
-    const appWindow = new AppWindow(telemetry);
+    const appWindow = new AppWindow();
     appWindow.onClose(() => log.info('App window closed.'));
 
     // Load start screen - basic spinner
