@@ -287,7 +287,11 @@ describe('ComfyServerConfig', () => {
       vi.spyOn(ComfyServerConfig, 'generateConfigFileContent').mockImplementationOnce(() => {
         throw new Error('YAML generation failed');
       });
+
+      const log = await import('electron-log/main');
       const result = await ComfyServerConfig.createConfigFile('/test/path', {});
+
+      expect(vi.mocked(log.default.error)).toHaveBeenCalled();
       expect(result).toBe(false);
     });
   });
