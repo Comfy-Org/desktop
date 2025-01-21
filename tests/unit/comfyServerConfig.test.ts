@@ -1,5 +1,7 @@
 import { app } from 'electron';
+import fs from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -112,6 +114,13 @@ describe('ComfyServerConfig', () => {
       const readResult = await ComfyServerConfig.readBasePathFromConfig(legacyConfigPath);
       expect(readResult.status).toBe('success');
       expect(readResult.path).toBe('/old/style/path');
+    });
+
+    it('should handle filesystem errors', async () => {
+      vi.spyOn(fsPromises, 'readFile').mockRejectedValueOnce(new Error('Disk error'));
+      const readResult = await ComfyServerConfig.readBasePathFromConfig('/test/path');
+      expect(readResult.status).toBe('error');
+      expect(readResult.path).toBeUndefined();
     });
   });
 
@@ -226,6 +235,76 @@ describe('ComfyServerConfig', () => {
       expect(configContent).not.toBeNull();
       expect(configContent!.comfyui_desktop.base_path).toBe('/primary/path');
       expect(configContent!.comfyui_migration.base_path).toBe('/migration/path');
+    });
+  });
+
+  describe('exists', () => {
+    it('should return true when config file exists', () => {
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      expect(ComfyServerConfig.exists()).toBe(true);
+    });
+
+    it('should return false when config file does not exist', () => {
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+      expect(ComfyServerConfig.exists()).toBe(false);
+    });
+  });
+
+  describe('writeConfigFile', () => {
+    it('should write config file successfully', async () => {
+      const testPath = path.join(tempDir, 'test-write.yaml');
+      const result = await ComfyServerConfig.writeConfigFile(testPath, 'test content');
+      expect(result).toBe(true);
+      const content = await readFile(testPath, 'utf8');
+      expect(content).toBe('test content');
+    });
+
+    it('should handle write errors', async () => {
+      vi.spyOn(fsPromises, 'writeFile').mockRejectedValueOnce(new Error('Write failed'));
+      const result = await ComfyServerConfig.writeConfigFile('/invalid/path', 'test');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('createConfigFile', () => {
+    it('should create config file successfully', async () => {
+      const testPath = path.join(tempDir, 'test-create.yaml');
+      const testConfig = { test: { path: '/test' } };
+      const result = await ComfyServerConfig.createConfigFile(testPath, testConfig);
+      expect(result).toBe(true);
+      const content = await readFile(testPath, 'utf8');
+      expect(content).toContain('test:');
+      expect(content).toContain('path: /test');
+    });
+
+    it('should handle creation errors', async () => {
+      vi.spyOn(ComfyServerConfig, 'writeConfigFile').mockResolvedValueOnce(false);
+      const result = await ComfyServerConfig.createConfigFile('/invalid/path', {});
+      expect(result).toBe(false);
+    });
+
+    it('should handle YAML generation errors', async () => {
+      vi.spyOn(ComfyServerConfig, 'generateConfigFileContent').mockImplementationOnce(() => {
+        throw new Error('YAML generation failed');
+      });
+      const result = await ComfyServerConfig.createConfigFile('/test/path', {});
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('getConfigFromRepoPath', () => {
+    it('should read config from repo path', async () => {
+      const testConfig: Record<string, { path: string }> = { test: { path: '/test' } };
+      const mockReadConfigFile = vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(testConfig);
+      const result = await ComfyServerConfig.getConfigFromRepoPath('/test/repo');
+      expect(result).toEqual(testConfig);
+      expect(mockReadConfigFile).toHaveBeenCalledWith('/test/repo/extra_model_paths.yaml');
+    });
+
+    it('should return empty object when config read fails', async () => {
+      vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(null);
+      const result = await ComfyServerConfig.getConfigFromRepoPath('/test/repo');
+      expect(result).toEqual({});
     });
   });
 });
