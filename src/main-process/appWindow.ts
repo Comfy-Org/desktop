@@ -64,8 +64,8 @@ export class AppWindow {
     // macOS requires different handling to linux / win32
     const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
       ? {
-          titleBarStyle: 'hidden',
-          titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
+          // titleBarStyle: 'hidden',
+          // titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
         }
       : {};
 
