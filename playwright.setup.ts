@@ -10,7 +10,12 @@ async function globalSetup() {
       reject(new Error('process failed to start'));
     });
 
+    electron.stderr.on('data', (data: string | Buffer) => {
+      console.error('Electron error:', data.toString());
+    });
+
     electron.stdout.on('data', (data: string | Buffer) => {
+      console.log('Electron output:', data.toString());
       if (data.includes('App ready')) {
         resolve();
       }
