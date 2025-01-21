@@ -140,9 +140,6 @@ interface HardwareValidation {
  */
 export async function validateHardware(): Promise<HardwareValidation> {
   log.verbose('Validating hardware.');
-  if (process.env.SKIP_HARDWARE_VALIDATION) {
-    return { isValid: true };
-  }
 
   try {
     // Only ARM Macs are supported.
@@ -158,6 +155,11 @@ export async function validateHardware(): Promise<HardwareValidation> {
       }
 
       return { isValid: true, gpu: 'mps' };
+    }
+
+    if (process.env.SKIP_HARDWARE_VALIDATION) {
+      console.log('Skipping hardware validation');
+      return { isValid: true };
     }
 
     // Windows NVIDIA GPU validation
