@@ -8,7 +8,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 
 import { ComfyServerConfig } from '../../src/config/comfyServerConfig';
 
-// Mock electron
 vi.mock('electron', () => ({
   app: {
     getPath: vi.fn().mockReturnValue('/fake/user/data'),
