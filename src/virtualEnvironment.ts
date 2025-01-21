@@ -142,24 +142,33 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
+    this.telemetry.track(`install_flow:virtual_environment_create_start`, {
+      python_version: this.pythonVersion,
+      device: this.selectedDevice,
+    });
     if (this.selectedDevice === 'unsupported') {
       log.info('User elected to manually configure their environment.  Skipping python configuration.');
+      this.telemetry.track(`install_flow:virtual_environment_create_end`, {
+        reason: 'unsupported_device',
+      });
       return;
     }
 
     try {
       if (await this.exists()) {
+        this.telemetry.track(`install_flow:virtual_environment_create_end`, {
+          reason: 'already_exists',
+        });
         log.info(`Virtual environment already exists at ${this.venvPath}`);
         return;
       }
-      this.telemetry.track(`install_flow:virtual_environment_create_start`, {
-        python_version: this.pythonVersion,
-        device: this.selectedDevice,
-      });
+
       await this.createVenvWithPython(callbacks);
       await this.ensurePip(callbacks);
       await this.installRequirements(callbacks);
-      this.telemetry.track(`install_flow:virtual_environment_create_end`);
+      this.telemetry.track(`install_flow:virtual_environment_create_end`, {
+        reason: 'success',
+      });
       log.info(`Successfully created virtual environment at ${this.venvPath}`);
     } catch (error) {
       this.telemetry.track(`install_flow:virtual_environment_create_error`, {

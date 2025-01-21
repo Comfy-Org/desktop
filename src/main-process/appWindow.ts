@@ -18,6 +18,7 @@ import path from 'node:path';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import type { ElectronContextMenuOptions } from '../preload';
+import { ITelemetry } from '../services/telemetry';
 import { AppWindowSettings } from '../store/AppWindowSettings';
 import { useDesktopConfig } from '../store/desktopConfig';
 
@@ -48,7 +49,7 @@ export class AppWindow {
     if (!app.isPackaged) return process.env.DEV_SERVER_URL;
   }
 
-  public constructor() {
+  public constructor(readonly telemetry: ITelemetry) {
     const installed = useDesktopConfig().get('installState') === 'installed';
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = installed ? primaryDisplay.workAreaSize : { width: 1024, height: 768 };
@@ -340,6 +341,7 @@ export class AppWindow {
       {
         label: 'Quit Comfy',
         click: () => {
+          this.telemetry.track('desktop:app_quit');
           app.quit();
         },
       },
