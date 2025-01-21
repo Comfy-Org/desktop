@@ -290,11 +290,10 @@ export class AppWindow {
   }
 
   changeTheme(options: TitleBarOverlayOptions): void {
-    if (!this.customWindowEnabled) return;
-
-    options.height &&= Math.round(options.height);
-    if (!options.height) delete options.height;
-    this.window.setTitleBarOverlay(options);
+    // if (!this.customWindowEnabled) return;
+    // options.height &&= Math.round(options.height);
+    // if (!options.height) delete options.height;
+    // this.window.setTitleBarOverlay(options);
   }
 
   showSystemContextMenu(options?: ElectronContextMenuOptions): void {
