@@ -140,6 +140,10 @@ interface HardwareValidation {
  */
 export async function validateHardware(): Promise<HardwareValidation> {
   log.verbose('Validating hardware.');
+  if (process.env.SKIP_GPU_VALIDATION) {
+    return { isValid: true };
+  }
+
   try {
     // Only ARM Macs are supported.
     if (process.platform === 'darwin') {

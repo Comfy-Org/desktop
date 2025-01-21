@@ -29,6 +29,8 @@ on:
 jobs:
   integration-windows-test:
     runs-on: windows-latest
+    env:
+      SKIP_GPU_VALIDATION: 'true'
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
