@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ComfySettings, type ComfySettingsData } from '../../src/config/comfySettings';
+import { ComfySettings, type ComfySettingsData, DEFAULT_SETTINGS } from '../../src/config/comfySettings';
 
 vi.mock('electron-log/main', () => ({
   default: {
@@ -19,13 +19,17 @@ vi.mock('node:fs/promises', () => ({
   },
 }));
 
+async function expectLogError() {
+  const log = await import('electron-log/main');
+  expect(vi.mocked(log.default.error)).toHaveBeenCalled();
+}
+
 describe('ComfySettings', () => {
   let settings: ComfySettings;
   const testBasePath = '/test/path';
 
   beforeEach(() => {
     settings = new ComfySettings(testBasePath);
-    // Reset static state between tests
     ComfySettings['writeLocked'] = false;
     vi.clearAllMocks();
   });
@@ -65,8 +69,7 @@ describe('ComfySettings', () => {
     it('should log error when saving locked settings', async () => {
       ComfySettings.lockWrites();
       await expect(settings.saveSettings()).rejects.toThrow('Settings are locked');
-      const log = await import('electron-log/main');
-      expect(vi.mocked(log.default.error)).toHaveBeenCalled();
+      await expectLogError();
     });
   });
 
@@ -110,6 +113,55 @@ describe('ComfySettings', () => {
       expect(writeCall[0]).toBe(settings.filePath);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(savedJson['Comfy-Desktop.AutoUpdate']).toBe(false);
+    });
+
+    it('should fall back to defaults on file read error', async () => {
+      vi.mocked(fs.access).mockResolvedValue();
+      vi.mocked(fs.readFile).mockRejectedValue(new Error('Permission denied'));
+
+      await settings.loadSettings();
+      await expectLogError();
+      expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(DEFAULT_SETTINGS['Comfy-Desktop.AutoUpdate']);
+    });
+  });
+
+  describe('settings operations', () => {
+    it('should handle nested objects correctly', () => {
+      const customLaunchArgs = { '--port': '8188', '--listen': '0.0.0.0' };
+      settings.set('Comfy.Server.LaunchArgs', customLaunchArgs);
+      expect(settings.get('Comfy.Server.LaunchArgs')).toEqual(customLaunchArgs);
+    });
+
+    it('should preserve primitive and object types when getting/setting values', () => {
+      settings.set('Comfy-Desktop.AutoUpdate', false);
+      expect(typeof settings.get('Comfy-Desktop.AutoUpdate')).toBe('boolean');
+
+      const serverArgs = { test: 'value' };
+      settings.set('Comfy.Server.LaunchArgs', serverArgs);
+      expect(typeof settings.get('Comfy.Server.LaunchArgs')).toBe('object');
+    });
+
+    it('should fall back to defaults for null/undefined values in settings file', async () => {
+      const invalidSettings = {
+        'Comfy-Desktop.AutoUpdate': undefined,
+        'Comfy.Server.LaunchArgs': null,
+      };
+
+      vi.mocked(fs.access).mockResolvedValue();
+      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(invalidSettings));
+
+      await settings.loadSettings();
+      expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(DEFAULT_SETTINGS['Comfy-Desktop.AutoUpdate']);
+      expect(settings.get('Comfy.Server.LaunchArgs')).toEqual(DEFAULT_SETTINGS['Comfy.Server.LaunchArgs']);
+    });
+
+    it('should fall back to defaults when settings file contains invalid JSON', async () => {
+      vi.mocked(fs.access).mockResolvedValue();
+      vi.mocked(fs.readFile).mockResolvedValue('{ invalid json }');
+
+      await settings.loadSettings();
+      await expectLogError();
+      expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(DEFAULT_SETTINGS['Comfy-Desktop.AutoUpdate']);
     });
   });
 });
