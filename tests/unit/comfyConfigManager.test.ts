@@ -91,6 +91,18 @@ describe('ComfyConfigManager', () => {
       expect(fs.mkdirSync).toHaveBeenCalledWith(path.normalize('/fake/path/ComfyUI/output'), { recursive: true });
       expect(fs.mkdirSync).toHaveBeenCalledWith(path.normalize('/fake/path/ComfyUI/custom_nodes'), { recursive: true });
     });
+
+    it('should catch and log errors when creating directories', async () => {
+      vi.mocked(fs.mkdirSync).mockImplementationOnce(() => {
+        throw new Error('Permission denied');
+      });
+
+      const log = await import('electron-log/main');
+      ComfyConfigManager.createComfyDirectories('/fake/path/ComfyUI');
+
+      expect(fs.mkdirSync).toHaveBeenCalled();
+      expect(vi.mocked(log.default.error)).toHaveBeenCalledWith(expect.stringContaining('Permission denied'));
+    });
   });
 
   describe('createNestedDirectories', () => {
