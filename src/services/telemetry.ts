@@ -156,7 +156,7 @@ export class MixpanelTelemetry implements ITelemetry {
 
   private mixpanelTrack(eventName: string, properties: PropertyDict): void {
     if (app.isPackaged) {
-      log.info(`Tracking ${eventName} with properties ${JSON.stringify(properties)}`);
+      log.debug(`Tracking ${eventName} with properties ${JSON.stringify(properties)}`);
       this.mixpanelClient.track(eventName, properties);
     } else {
       log.info(`Would have tracked ${eventName} with properties ${JSON.stringify(properties)}`);
