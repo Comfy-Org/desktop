@@ -140,7 +140,7 @@ interface HardwareValidation {
  */
 export async function validateHardware(): Promise<HardwareValidation> {
   log.verbose('Validating hardware.');
-  if (process.env.SKIP_GPU_VALIDATION) {
+  if (process.env.SKIP_HARDWARE_VALIDATION) {
     return { isValid: true };
   }
 
