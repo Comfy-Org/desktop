@@ -157,11 +157,6 @@ export async function validateHardware(): Promise<HardwareValidation> {
       return { isValid: true, gpu: 'mps' };
     }
 
-    if (process.env.SKIP_HARDWARE_VALIDATION) {
-      console.log('Skipping hardware validation');
-      return { isValid: true };
-    }
-
     // Windows NVIDIA GPU validation
     if (process.platform === 'win32') {
       const graphics = await si.graphics();
