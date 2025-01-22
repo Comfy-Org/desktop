@@ -26,17 +26,17 @@ import { useDesktopConfig } from '../store/desktopConfig';
  * Closes the application when the window is closed.
  */
 export class AppWindow {
-  private window: BrowserWindow;
+  private readonly window: BrowserWindow;
   /** Volatile store containing window config - saves window state between launches. */
-  private store: Store<AppWindowSettings>;
-  private messageQueue: Array<{ channel: string; data: unknown }> = [];
+  private readonly store: Store<AppWindowSettings>;
+  private readonly messageQueue: Array<{ channel: string; data: unknown }> = [];
   private rendererReady: boolean = false;
   /** Default dark mode config for system window overlay (min/max/close window). */
-  private darkOverlay = { color: '#00000000', symbolColor: '#ddd' };
+  private readonly darkOverlay = { color: '#00000000', symbolColor: '#ddd' };
   /** Default light mode config for system window overlay (min/max/close window). */
-  private lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
+  private readonly lightOverlay = { ...this.darkOverlay, symbolColor: '#333' };
   /** The application menu. */
-  private menu: Electron.Menu | null;
+  private readonly menu: Electron.Menu | null;
   /** The "edit" menu - cut/copy/paste etc. */
   private editMenu?: Menu;
   /** Whether this window was created with title bar overlay enabled. When `false`, Electron throws when calling {@link BrowserWindow.setTitleBarOverlay}. */

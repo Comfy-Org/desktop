@@ -28,9 +28,9 @@ export interface DownloadState {
  */
 export class DownloadManager {
   private static instance: DownloadManager;
-  private downloads: Map<string, Download>;
-  private mainWindow: AppWindow;
-  private modelsDirectory: string;
+  private readonly downloads: Map<string, Download>;
+  private readonly mainWindow: AppWindow;
+  private readonly modelsDirectory: string;
   private constructor(mainWindow: AppWindow, modelsDirectory: string) {
     this.downloads = new Map();
     this.mainWindow = mainWindow;

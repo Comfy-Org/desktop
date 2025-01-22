@@ -7,9 +7,9 @@ import { getDefaultShell } from './util';
 
 export class Terminal {
   #pty: pty.IPty | undefined;
-  #window: AppWindow | undefined;
-  #cwd: string | undefined;
-  #uvPath: string | undefined;
+  readonly #window: AppWindow | undefined;
+  readonly #cwd: string | undefined;
+  readonly #uvPath: string | undefined;
 
   readonly sessionBuffer: string[] = [];
   readonly size = { cols: 80, rows: 30 };

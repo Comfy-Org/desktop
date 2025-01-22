@@ -17,7 +17,7 @@ export function useDesktopConfig() {
 
 /** Handles loading of electron-store config, pre-window errors, and provides a non-null interface for the store. */
 export class DesktopConfig {
-  #store: ElectronStore<DesktopSettings>;
+  readonly #store: ElectronStore<DesktopSettings>;
 
   private constructor(store: ElectronStore<DesktopSettings>) {
     this.#store = store;

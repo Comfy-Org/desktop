@@ -7,8 +7,8 @@ import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { HasTelemetry, ITelemetry, trackEvent } from './telemetry';
 
 export class CmCli implements HasTelemetry {
-  private cliPath: string;
-  private virtualEnvironment: VirtualEnvironment;
+  private readonly cliPath: string;
+  private readonly virtualEnvironment: VirtualEnvironment;
 
   constructor(
     virtualEnvironment: VirtualEnvironment,

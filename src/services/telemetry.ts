@@ -31,10 +31,10 @@ interface GpuInfo {
 const MIXPANEL_TOKEN = '6a7f9f6ae2084b4e7ff7ced98a6b5988';
 export class MixpanelTelemetry implements ITelemetry {
   public hasConsent: boolean = false;
-  private distinctId: string;
+  private readonly distinctId: string;
   private readonly storageFile: string;
-  private queue: { eventName: string; properties: PropertyDict }[] = [];
-  private mixpanelClient: mixpanel.Mixpanel;
+  private readonly queue: { eventName: string; properties: PropertyDict }[] = [];
+  private readonly mixpanelClient: mixpanel.Mixpanel;
   private cachedGpuInfo: GpuInfo[] | null = null;
   constructor(mixpanelClass: mixpanel.Mixpanel) {
     this.mixpanelClient = mixpanelClass.init(MIXPANEL_TOKEN, {
