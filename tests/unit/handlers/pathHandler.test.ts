@@ -97,13 +97,6 @@ const mockFileSystem = ({ exists = true, writable = true } = {}) => {
   }
 };
 
-interface ValidationResult {
-  isValid: boolean;
-  error?: string;
-  freeSpace: number;
-  requiredSpace: number;
-}
-
 type HandlerType<T extends (...args: never[]) => unknown> = T;
 type IpcHandler = (event: IpcMainEvent, ...args: unknown[]) => unknown;
 
@@ -187,6 +180,23 @@ describe('PathHandlers', () => {
         freeSpace: DEFAULT_FREE_SPACE,
         requiredSpace: REQUIRED_SPACE,
       });
+    });
+
+    it('should handle and log errors during validation', async () => {
+      const mockError = new Error('Test error');
+      vi.mocked(fs.existsSync).mockImplementation(() => {
+        throw mockError;
+      });
+      vi.spyOn(log, 'error').mockImplementation(() => {});
+
+      const result = await validateHandler({}, '/error/path');
+      expect(result).toEqual({
+        isValid: false,
+        error: 'Error: Test error',
+        freeSpace: -1,
+        requiredSpace: PathHandlers.REQUIRED_SPACE,
+      });
+      expect(log.error).toHaveBeenCalledWith('Error validating install path:', mockError);
     });
   });
 
@@ -285,34 +295,6 @@ describe('PathHandlers', () => {
       expect(dialog.showOpenDialog).toHaveBeenCalledWith({
         properties: ['openDirectory'],
       });
-    });
-  });
-
-  describe('validate-install-path error handling', () => {
-    let validateHandler: HandlerType<(event: unknown, path: string) => Promise<ValidationResult>>;
-
-    beforeEach(() => {
-      validateHandler = getRegisteredHandler<(event: unknown, path: string) => Promise<ValidationResult>>(
-        IPC_CHANNELS.VALIDATE_INSTALL_PATH
-      );
-      mockDiskSpace(DEFAULT_FREE_SPACE);
-    });
-
-    it('should handle and log errors during validation', async () => {
-      const mockError = new Error('Test error');
-      vi.mocked(fs.existsSync).mockImplementation(() => {
-        throw mockError;
-      });
-      vi.spyOn(log, 'error').mockImplementation(() => {});
-
-      const result = await validateHandler({}, '/error/path');
-      expect(result).toEqual({
-        isValid: false,
-        error: 'Error: Test error',
-        freeSpace: -1,
-        requiredSpace: PathHandlers.REQUIRED_SPACE,
-      });
-      expect(log.error).toHaveBeenCalledWith('Error validating install path:', mockError);
     });
   });
 });
