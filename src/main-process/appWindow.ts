@@ -385,7 +385,7 @@ export class AppWindow {
         },
       };
       const helpMenuItem = menu.items.find((item) => item.role === 'help');
-      if (helpMenuItem?.submenu) {
+      if (helpMenuItem && helpMenuItem.submenu) {
         helpMenuItem.submenu.append(new MenuItem(aboutMenuItem));
         Menu.setApplicationMenu(menu);
       } else {

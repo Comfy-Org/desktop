@@ -233,7 +233,7 @@ export class ComfyDesktopApp implements HasTelemetry {
         buttons: ['Yes', 'No'],
         defaultId: 0,
         title: 'Restart ComfyUI',
-        message: customMessage,
+        message: customMessage || 'Are you sure you want to restart ComfyUI?',
         detail: 'The application will close and restart automatically.',
       })
       .then(({ response }) => {
