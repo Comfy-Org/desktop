@@ -371,12 +371,16 @@ export class AppWindow {
       const aboutMenuItem = {
         label: 'About ComfyUI',
         click: async () => {
-          await dialog.showMessageBox({
-            title: 'About',
-            message: `ComfyUI v${app.getVersion()}`,
-            detail: 'Created by Comfy Org\nCopyright © 2024',
-            buttons: ['OK'],
-          });
+          await dialog
+            .showMessageBox({
+              title: 'About',
+              message: `ComfyUI v${app.getVersion()}`,
+              detail: 'Created by Comfy Org\nCopyright © 2024',
+              buttons: ['OK'],
+            })
+            .catch((error) => {
+              log.error('Error showing about dialog', error);
+            });
         },
       };
       const helpMenuItem = menu.items.find((item) => item.role === 'help');
