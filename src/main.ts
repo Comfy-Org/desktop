@@ -29,10 +29,10 @@ const telemetry = getTelemetry();
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   log.info('Window all closed');
-  if (process.platform !== 'darwin') {
-    log.info('Quitting ComfyUI because window all closed');
-    app.quit();
-  }
+  // if (process.platform !== 'darwin') {
+  //   log.info('Quitting ComfyUI because window all closed');
+  //   app.quit();
+  // }
 });
 
 // Suppress unhandled exception dialog when already quitting.
