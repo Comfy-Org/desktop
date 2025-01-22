@@ -329,6 +329,7 @@ export class AppWindow {
         label: 'Show Comfy Window',
         click: () => {
           this.show();
+          // Mac Only
           if (process.platform === 'darwin') {
             app.dock.show().catch((error) => {
               log.error('Error showing dock', error);
