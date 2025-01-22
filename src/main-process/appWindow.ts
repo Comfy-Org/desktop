@@ -258,7 +258,8 @@ export class AppWindow {
     this.window.on('move', updateBounds);
 
     this.window.webContents.setWindowOpenHandler(({ url }) => {
-      void shell.openExternal(url);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      shell.openExternal(url);
       return { action: 'deny' };
     });
   }
