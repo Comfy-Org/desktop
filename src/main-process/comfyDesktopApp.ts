@@ -227,14 +227,13 @@ export class ComfyDesktopApp implements HasTelemetry {
       return relaunchApplication(delay);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     dialog
       .showMessageBox({
         type: 'question',
         buttons: ['Yes', 'No'],
         defaultId: 0,
         title: 'Restart ComfyUI',
-        message: customMessage || 'Are you sure you want to restart ComfyUI?',
+        message: customMessage,
         detail: 'The application will close and restart automatically.',
       })
       .then(({ response }) => {
@@ -245,6 +244,9 @@ export class ComfyDesktopApp implements HasTelemetry {
         } else {
           log.info('User cancelled restart');
         }
+      })
+      .catch((error) => {
+        log.error('Error showing restart confirmation dialog:', error);
       });
   }
 }

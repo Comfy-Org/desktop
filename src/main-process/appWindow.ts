@@ -197,12 +197,12 @@ export class AppWindow {
 
   /** Opens a modal file/folder picker. @inheritdoc {@link Electron.Dialog.showOpenDialog} */
   public async showOpenDialog(options: Electron.OpenDialogOptions) {
-    return await dialog.showOpenDialog(this.window, options);
+    return dialog.showOpenDialog(this.window, options);
   }
 
   /** Opens a modal message box. @inheritdoc {@link Electron.Dialog.showMessageBox} */
   public async showMessageBox(options: Electron.MessageBoxOptions) {
-    return await dialog.showMessageBox(this.window, options);
+    return dialog.showMessageBox(this.window, options);
   }
 
   /**
@@ -258,8 +258,7 @@ export class AppWindow {
     this.window.on('move', updateBounds);
 
     this.window.webContents.setWindowOpenHandler(({ url }) => {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      shell.openExternal(url);
+      void shell.openExternal(url);
       return { action: 'deny' };
     });
   }
@@ -329,10 +328,10 @@ export class AppWindow {
         label: 'Show Comfy Window',
         click: () => {
           this.show();
-          // Mac Only
           if (process.platform === 'darwin') {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            app.dock.show();
+            void (async () => {
+              await app.dock.show();
+            })();
           }
         },
       },
@@ -370,9 +369,8 @@ export class AppWindow {
     if (menu) {
       const aboutMenuItem = {
         label: 'About ComfyUI',
-        click: () => {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          dialog.showMessageBox({
+        click: async () => {
+          await dialog.showMessageBox({
             title: 'About',
             message: `ComfyUI v${app.getVersion()}`,
             detail: 'Created by Comfy Org\nCopyright © 2024',
@@ -381,7 +379,7 @@ export class AppWindow {
         },
       };
       const helpMenuItem = menu.items.find((item) => item.role === 'help');
-      if (helpMenuItem && helpMenuItem.submenu) {
+      if (helpMenuItem?.submenu) {
         helpMenuItem.submenu.append(new MenuItem(aboutMenuItem));
         Menu.setApplicationMenu(menu);
       } else {
