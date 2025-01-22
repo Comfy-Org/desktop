@@ -330,9 +330,9 @@ export class AppWindow {
         click: () => {
           this.show();
           if (process.platform === 'darwin') {
-            void (async () => {
-              await app.dock.show();
-            })();
+            app.dock.show().catch((error) => {
+              log.error('Error showing dock', error);
+            });
           }
         },
       },
