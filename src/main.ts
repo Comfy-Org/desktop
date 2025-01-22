@@ -24,9 +24,7 @@ const allowDevVars = app.commandLine.hasSwitch('dev-mode');
 
 const telemetry = getTelemetry();
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// Quit when all windows are closed.
 app.on('window-all-closed', () => {
   log.info('Quitting ComfyUI because window all closed');
   app.quit();
