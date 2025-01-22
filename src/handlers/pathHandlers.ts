@@ -16,7 +16,8 @@ export class PathHandlers {
 
   registerHandlers() {
     ipcMain.on(IPC_CHANNELS.OPEN_LOGS_PATH, (): void => {
-      void shell.openPath(app.getPath('logs'));
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      shell.openPath(app.getPath('logs'));
     });
 
     ipcMain.handle(IPC_CHANNELS.GET_MODEL_CONFIG_PATH, (): string => {
@@ -25,7 +26,8 @@ export class PathHandlers {
 
     ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string): void => {
       log.info(`Opening path: ${folderPath}`);
-      void shell.openPath(folderPath);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      shell.openPath(folderPath);
     });
 
     ipcMain.handle(IPC_CHANNELS.GET_SYSTEM_PATHS, (): SystemPaths => {
