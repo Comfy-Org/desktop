@@ -197,12 +197,12 @@ export class AppWindow {
 
   /** Opens a modal file/folder picker. @inheritdoc {@link Electron.Dialog.showOpenDialog} */
   public async showOpenDialog(options: Electron.OpenDialogOptions) {
-    return dialog.showOpenDialog(this.window, options);
+    return await dialog.showOpenDialog(this.window, options);
   }
 
   /** Opens a modal message box. @inheritdoc {@link Electron.Dialog.showMessageBox} */
   public async showMessageBox(options: Electron.MessageBoxOptions) {
-    return dialog.showMessageBox(this.window, options);
+    return await dialog.showMessageBox(this.window, options);
   }
 
   /**
