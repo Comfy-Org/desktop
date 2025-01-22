@@ -370,8 +370,8 @@ export class AppWindow {
     if (menu) {
       const aboutMenuItem = {
         label: 'About ComfyUI',
-        click: async () => {
-          await dialog
+        click: () => {
+          dialog
             .showMessageBox({
               title: 'About',
               message: `ComfyUI v${app.getVersion()}`,
