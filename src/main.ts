@@ -28,8 +28,11 @@ const telemetry = getTelemetry();
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  log.info('Quitting ComfyUI because window all closed');
-  app.quit();
+  log.info('Window all closed');
+  if (process.platform !== 'darwin') {
+    log.info('Quitting ComfyUI because window all closed');
+    app.quit();
+  }
 });
 
 // Suppress unhandled exception dialog when already quitting.
