@@ -326,6 +326,11 @@ const electronAPI = {
       ipcRenderer.send(IPC_CHANNELS.INCREMENT_USER_PROPERTY, propertyName, number);
     },
   },
+  NetWork: {
+    canAccessUrl: (url: string, options?: { timeout?: number }): Promise<boolean> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.CAN_ACCESS_URL, url, options);
+    },
+  },
   /** Restart the python server without restarting desktop. */
   restartCore: async (): Promise<void> => {
     console.log('Restarting core process');

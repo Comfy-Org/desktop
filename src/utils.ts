@@ -2,6 +2,7 @@ import log from 'electron-log/main';
 import { exec } from 'node:child_process';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
+import https from 'node:https';
 import net from 'node:net';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -223,4 +224,32 @@ export function compareVersions(versionA: string, versionB: string): number {
   }
 
   return 0;
+}
+
+/**
+ * Check if a URL is accessible.
+ * @param url The URL to check
+ * @param options The options to use for the request
+ * @returns `true` if the URL is accessible, otherwise `false`
+ */
+export function canAccessUrl(url: string, options?: { timeout?: number }): Promise<boolean> {
+  const timeout = options?.timeout ?? 5000;
+
+  return new Promise((resolve) => {
+    const req = https.get(url, { timeout }, (res) => {
+      const statusCode = res.statusCode ?? 0;
+      res.destroy(); // Clean up the stream
+      resolve(statusCode >= 200 && statusCode < 300);
+    });
+
+    req.on('error', (error) => {
+      log.error('Error checking URL access:', error);
+      resolve(false);
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
 }

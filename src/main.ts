@@ -6,6 +6,7 @@ import log from 'electron-log/main';
 import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus } from './constants';
 import { AppHandlers } from './handlers/AppHandlers';
 import { AppInfoHandlers } from './handlers/appInfoHandlers';
+import { NetworkHandlers } from './handlers/networkHandlers';
 import { PathHandlers } from './handlers/pathHandlers';
 import { InstallationManager } from './install/installationManager';
 import { AppWindow } from './main-process/appWindow';
@@ -93,6 +94,7 @@ async function startApp() {
 
     // Register basic handlers that are necessary during app's installation.
     new PathHandlers().registerHandlers();
+    new NetworkHandlers().registerHandlers();
     new AppInfoHandlers().registerHandlers(appWindow);
     new AppHandlers().registerHandlers();
     ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
