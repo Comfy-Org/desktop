@@ -76,7 +76,8 @@ export class InstallationManager {
       // Load maintenance page the first time any error is found.
       if (!this.#onMaintenancePage && Object.values(data).includes('error')) {
         this.#onMaintenancePage = true;
-        this.telemetry.track('validation:installation_error_found');
+        const error = Object.entries(data).find(([, value]) => value === 'error')?.[0];
+        this.telemetry.track('validation:error_found', { error });
 
         log.info('Validation error - loading maintenance page.');
         this.appWindow.loadRenderer('maintenance').catch((error) => {
