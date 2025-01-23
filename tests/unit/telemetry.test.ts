@@ -141,6 +141,7 @@ describe('MixpanelTelemetry', () => {
     it('should handle INCREMENT_USER_PROPERTY messages', () => {
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       telemetry.registerHandlers();
+      // Get the callback that was registered
       const [, callback] = (ipcMain.on as any).mock.calls.find(
         ([channel]: any) => channel === IPC_CHANNELS.INCREMENT_USER_PROPERTY
       );
