@@ -27,7 +27,6 @@ describe('validateHardware', () => {
     const result = await validateHardware();
     expect(result).toStrictEqual({
       isValid: false,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       error: expect.stringContaining('Intel-based Macs are not supported'),
     });
   });
@@ -52,7 +51,6 @@ describe('validateHardware', () => {
     const result = await validateHardware();
     expect(result).toStrictEqual({
       isValid: false,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       error: expect.stringContaining('No NVIDIA GPU was detected'),
     });
   });

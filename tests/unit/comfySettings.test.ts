@@ -107,11 +107,9 @@ describe('ComfySettings', () => {
       await settings.saveSettings();
 
       const writeCall = vi.mocked(fs).writeFile.mock.calls[0];
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const savedJson = JSON.parse(writeCall[1] as string);
 
       expect(writeCall[0]).toBe(settings.filePath);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(savedJson['Comfy-Desktop.AutoUpdate']).toBe(false);
     });
 

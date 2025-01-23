@@ -52,7 +52,6 @@ describe('MixpanelTelemetry', () => {
       const existingId = 'existing-uuid';
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockReturnValue(existingId);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       expect(fs.readFileSync).toHaveBeenCalledWith(path.join('/mock/user/data', 'telemetry.txt'), 'utf8');
       expect(fs.writeFileSync).not.toHaveBeenCalled();
@@ -60,7 +59,6 @@ describe('MixpanelTelemetry', () => {
 
     it('should create new distinct ID if file does not exist', () => {
       vi.mocked(fs.existsSync).mockReturnValue(false);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
 
       expect(fs.writeFileSync).toHaveBeenCalled();
@@ -74,7 +72,6 @@ describe('MixpanelTelemetry', () => {
     it('should queue events when consent is not given', () => {
       const eventName = 'test_event';
       const properties = { foo: 'bar' };
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       telemetry.track(eventName, properties);
 
@@ -82,16 +79,13 @@ describe('MixpanelTelemetry', () => {
       expect(telemetry['queue'][0].eventName).toBe(eventName);
       expect(telemetry['queue'][0].properties).toMatchObject({
         ...properties,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         distinct_id: expect.any(String),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         time: expect.any(Date),
       });
     });
 
     it('should flush queue when consent is given', () => {
       const eventName = 'test_event';
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       telemetry.track(eventName);
 
@@ -110,7 +104,6 @@ describe('MixpanelTelemetry', () => {
 
   describe('IPC event handling', () => {
     it('should handle INSTALL_COMFYUI event and update consent', () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       const mockIpcEvent = {} as IpcMainEvent;
       const installOptionsHandler = vi.mocked(ipcMain.once).mock.calls[0][1];
@@ -119,7 +112,6 @@ describe('MixpanelTelemetry', () => {
     });
 
     it('should register ipc handler for TRACK_EVENT', () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       telemetry.registerHandlers();
 
@@ -127,7 +119,6 @@ describe('MixpanelTelemetry', () => {
     });
 
     it('should handle TRACK_EVENT messages', () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       telemetry.registerHandlers();
       const trackEventHandler = vi.mocked(ipcMain.on).mock.calls[0][1];
@@ -150,8 +141,7 @@ describe('MixpanelTelemetry', () => {
     it('should handle INCREMENT_USER_PROPERTY messages', () => {
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       telemetry.registerHandlers();
-      // Get the callback that was registered
-      const [channel, callback] = (ipcMain.on as any).mock.calls.find(
+      const [, callback] = (ipcMain.on as any).mock.calls.find(
         ([channel]: any) => channel === IPC_CHANNELS.INCREMENT_USER_PROPERTY
       );
 
@@ -177,7 +167,6 @@ describe('MixpanelTelemetry', () => {
     };
 
     // Create telemetry instance with mock client
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
     const telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
 
     // Verify init was called
