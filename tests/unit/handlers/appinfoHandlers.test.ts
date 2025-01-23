@@ -45,6 +45,7 @@ interface TestCase {
   expected: any;
   args?: any[];
 }
+
 const getHandler = (channel: string) => {
   const [, handlerFn] = (ipcMain.handle as Mock).mock.calls.find(([ch]) => ch === channel) || [];
   return handlerFn;

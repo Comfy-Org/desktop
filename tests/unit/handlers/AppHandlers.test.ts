@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { IPC_CHANNELS } from '../../../src/constants';
@@ -34,16 +34,16 @@ describe('AppHandlers', () => {
 
   const testCases: TestCase[] = [{ channel: IPC_CHANNELS.QUIT, expected: undefined }];
 
+  beforeEach(() => {
+    handler = new AppHandlers();
+    handler.registerHandlers();
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   describe('registerHandlers', () => {
-    beforeEach(() => {
-      handler = new AppHandlers();
-      handler.registerHandlers();
-    });
-
     it.each(testCases)('should register handler for $channel', ({ channel }) => {
       expect(ipcMain.handle).toHaveBeenCalledWith(channel, expect.any(Function));
     });
@@ -57,5 +57,11 @@ describe('AppHandlers', () => {
         expect(result).toEqual(expected);
       }
     );
+  });
+
+  it('quit handler should call app.quit', async () => {
+    const handlerFn = getHandler(IPC_CHANNELS.QUIT);
+    await handlerFn();
+    expect(app.quit).toHaveBeenCalled();
   });
 });
