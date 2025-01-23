@@ -4,6 +4,10 @@ import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { IPC_CHANNELS } from '../../../src/constants';
 import { AppInfoHandlers } from '../../../src/handlers/appInfoHandlers';
 
+const MOCK_WINDOW_STYLE = 'default';
+const MOCK_GPU_NAME = 'mock-gpu';
+const MOCK_BASE_PATH = '/set/user/changed/base/path';
+
 vi.mock('electron', () => ({
   app: {
     isPackaged: false,
@@ -16,19 +20,15 @@ vi.mock('electron', () => ({
   },
 }));
 
-const mockWindowStyle = 'light';
-const mockGpuName = 'mock-gpu';
-const mockBasePath = '/set/user/changed/base/path';
-
 vi.mock('../../../src/store/desktopConfig', () => ({
   useDesktopConfig: vi.fn().mockReturnValue({
     get: vi.fn().mockImplementation((key) => {
-      if (key === 'basePath') return mockBasePath;
+      if (key === 'basePath') return MOCK_BASE_PATH;
     }),
     set: vi.fn().mockReturnValue(true),
     getAsync: vi.fn().mockImplementation((key) => {
-      if (key === 'windowStyle') return Promise.resolve(mockWindowStyle);
-      if (key === 'detectedGpu') return Promise.resolve(mockGpuName);
+      if (key === 'windowStyle') return Promise.resolve(MOCK_WINDOW_STYLE);
+      if (key === 'detectedGpu') return Promise.resolve(MOCK_GPU_NAME);
     }),
     setAsync: vi.fn().mockReturnValue(Promise.resolve(true)),
   }),
@@ -61,11 +61,11 @@ describe('AppInfoHandlers', () => {
   const testCases: TestCase[] = [
     { channel: IPC_CHANNELS.IS_PACKAGED, expected: false },
     { channel: IPC_CHANNELS.GET_ELECTRON_VERSION, expected: '1.0.0' },
-    { channel: IPC_CHANNELS.GET_BASE_PATH, expected: mockBasePath },
-    { channel: IPC_CHANNELS.SET_BASE_PATH, expected: true, args: [null, mockBasePath] },
-    { channel: IPC_CHANNELS.GET_GPU, expected: mockGpuName },
-    { channel: IPC_CHANNELS.SET_WINDOW_STYLE, expected: undefined, args: [null, mockWindowStyle] },
-    { channel: IPC_CHANNELS.GET_WINDOW_STYLE, expected: mockWindowStyle },
+    { channel: IPC_CHANNELS.GET_BASE_PATH, expected: MOCK_BASE_PATH },
+    { channel: IPC_CHANNELS.SET_BASE_PATH, expected: true, args: [null, MOCK_BASE_PATH] },
+    { channel: IPC_CHANNELS.GET_GPU, expected: MOCK_GPU_NAME },
+    { channel: IPC_CHANNELS.SET_WINDOW_STYLE, expected: undefined, args: [null, MOCK_WINDOW_STYLE] },
+    { channel: IPC_CHANNELS.GET_WINDOW_STYLE, expected: MOCK_WINDOW_STYLE },
   ];
 
   afterEach(() => {
@@ -77,7 +77,7 @@ describe('AppInfoHandlers', () => {
       handler = new AppInfoHandlers();
       appWindow = {
         loadRenderer: vi.fn(),
-        showOpenDialog: vi.fn().mockReturnValue({ canceled: false, filePaths: [mockBasePath] }),
+        showOpenDialog: vi.fn().mockReturnValue({ canceled: false, filePaths: [MOCK_BASE_PATH] }),
       };
       handler.registerHandlers(appWindow as any);
     });
@@ -106,7 +106,7 @@ describe('AppInfoHandlers', () => {
       };
       handler.registerHandlers(appWindow as any);
 
-      const result = await getHandler(IPC_CHANNELS.SET_BASE_PATH)(null, mockBasePath);
+      const result = await getHandler(IPC_CHANNELS.SET_BASE_PATH)(null, MOCK_BASE_PATH);
 
       expect(result).toBe(false);
     });
