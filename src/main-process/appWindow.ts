@@ -187,7 +187,7 @@ export class AppWindow {
       this.rendererReady = true;
       log.info(`Loading development server ${url}`);
       await this.window.loadURL(url);
-      this.window.webContents.openDevTools();
+      if (process.env.DEV_TOOLS_AUTO === 'true') this.window.webContents.openDevTools();
     } else {
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
