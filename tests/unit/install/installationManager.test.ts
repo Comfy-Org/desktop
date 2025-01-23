@@ -88,7 +88,7 @@ const createMockInstallation = (params: {
     isValid,
     validate: vi.fn().mockImplementation(() => {
       // Simulate validation steps
-      if (mockInstallation.onUpdate) {
+      if (mockInstallation?.onUpdate) {
         for (const step of validationSteps) {
           mockInstallation.onUpdate(step as InstallValidation);
         }
@@ -128,12 +128,12 @@ describe('InstallationManager', () => {
       isValid: true,
     } as const;
 
-    it('returns existing valid installation', async () => {
+    it('returns existing valid installation', () => {
       const mockInstallation = createMockInstallation(validInstallation);
       vi.spyOn(mockInstallation, 'validate').mockResolvedValue('installed');
       vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() => mockInstallation);
 
-      const result = await manager.ensureInstalled();
+      const result = manager.ensureInstalled();
 
       expect(result).toBe(mockInstallation);
     });
