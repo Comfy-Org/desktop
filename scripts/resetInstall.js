@@ -50,7 +50,7 @@ async function main() {
     if (fs.existsSync(configPath)) {
       const configContent = fs.readFileSync(configPath, 'utf8');
 
-      /** @type {import('../src/store/desktopSettings').DesktopSettings} */
+      /** @type {import('@/store/desktopSettings').DesktopSettings} */
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const parsed = JSON.parse(configContent);
       desktopBasePath = parsed?.basePath;

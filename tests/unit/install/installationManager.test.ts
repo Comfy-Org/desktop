@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ComfyServerConfig } from '../../../src/config/comfyServerConfig';
-import { IPC_CHANNELS } from '../../../src/constants';
-import { InstallationManager } from '../../../src/install/installationManager';
-import type { AppWindow } from '../../../src/main-process/appWindow';
-import { ComfyInstallation } from '../../../src/main-process/comfyInstallation';
-import type { InstallValidation } from '../../../src/preload';
-import type { ITelemetry } from '../../../src/services/telemetry';
-import * as utils from '../../../src/utils';
+import { ComfyServerConfig } from '@/config/comfyServerConfig';
+import { IPC_CHANNELS } from '@/constants';
+import { InstallationManager } from '@/install/installationManager';
+import type { AppWindow } from '@/main-process/appWindow';
+import { ComfyInstallation } from '@/main-process/comfyInstallation';
+import type { InstallValidation } from '@/preload';
+import type { ITelemetry } from '@/services/telemetry';
+import * as utils from '@/utils';
 
 vi.mock('electron', () => ({
   ipcMain: {
@@ -32,11 +32,11 @@ vi.mock('node:fs/promises', () => ({
   rm: vi.fn(),
 }));
 
-vi.mock('../../../src/store/desktopConfig');
+vi.mock('@/store/desktopConfig');
 vi.mock('electron-log/main');
 
-vi.mock('../../../src/utils', async () => {
-  const actual = await vi.importActual<typeof utils>('../../../src/utils');
+vi.mock('@/utils', async () => {
+  const actual = await vi.importActual<typeof utils>('@/utils');
   return {
     ...actual,
     pathAccessible: vi.fn().mockImplementation((path: string) => {
@@ -47,7 +47,7 @@ vi.mock('../../../src/utils', async () => {
   };
 });
 
-vi.mock('../../../src/config/comfyServerConfig', () => {
+vi.mock('@/config/comfyServerConfig', () => {
   return {
     ComfyServerConfig: {
       configPath: 'valid/extra_models_config.yaml',
@@ -61,7 +61,7 @@ vi.mock('../../../src/config/comfyServerConfig', () => {
 });
 
 // Mock VirtualEnvironment with basic implementation
-vi.mock('../../../src/virtualEnvironment', () => {
+vi.mock('@/virtualEnvironment', () => {
   return {
     VirtualEnvironment: vi.fn().mockImplementation(() => ({
       exists: vi.fn().mockResolvedValue(true),

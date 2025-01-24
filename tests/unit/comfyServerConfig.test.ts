@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { ComfyServerConfig } from '../../src/config/comfyServerConfig';
+import { ComfyServerConfig } from '@/config/comfyServerConfig';
 
 vi.mock('electron', () => ({
   app: {

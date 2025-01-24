@@ -2,7 +2,7 @@ import type { Systeminformation } from 'systeminformation';
 import si from 'systeminformation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { validateHardware } from '../../src/utils';
+import { validateHardware } from '@/utils';
 
 vi.mock('systeminformation');
 

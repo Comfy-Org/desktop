@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron';
 import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { IPC_CHANNELS } from '../../../src/constants';
-import { registerAppInfoHandlers } from '../../../src/handlers/appInfoHandlers';
+import { IPC_CHANNELS } from '@/constants';
+import { registerAppInfoHandlers } from '@/handlers/appInfoHandlers';
 
 const MOCK_WINDOW_STYLE = 'default';
 const MOCK_GPU_NAME = 'mock-gpu';
@@ -20,7 +20,7 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('../../../src/store/desktopConfig', () => ({
+vi.mock('@/store/desktopConfig', () => ({
   useDesktopConfig: vi.fn().mockReturnValue({
     get: vi.fn().mockImplementation((key) => {
       if (key === 'basePath') return MOCK_BASE_PATH;
@@ -34,7 +34,7 @@ vi.mock('../../../src/store/desktopConfig', () => ({
   }),
 }));
 
-vi.mock('../../../src/config/comfyServerConfig', () => ({
+vi.mock('@/config/comfyServerConfig', () => ({
   ComfyServerConfig: {
     setBasePathInDefaultConfig: vi.fn().mockReturnValue(Promise.resolve(true)),
   },

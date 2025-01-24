@@ -6,11 +6,11 @@ import path from 'node:path';
 import si from 'systeminformation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ComfyConfigManager } from '../../../src/config/comfyConfigManager';
-import { ComfyServerConfig } from '../../../src/config/comfyServerConfig';
-import { IPC_CHANNELS } from '../../../src/constants';
-import { REQUIRED_SPACE, registerPathHandlers } from '../../../src/handlers/pathHandlers';
-import type { SystemPaths } from '../../../src/preload';
+import { ComfyConfigManager } from '@/config/comfyConfigManager';
+import { ComfyServerConfig } from '@/config/comfyServerConfig';
+import { IPC_CHANNELS } from '@/constants';
+import { REQUIRED_SPACE, registerPathHandlers } from '@/handlers/pathHandlers';
+import type { SystemPaths } from '@/preload';
 
 const DEFAULT_FREE_SPACE = 20 * 1024 * 1024 * 1024; // 20GB
 const LOW_FREE_SPACE = 5 * 1024 * 1024 * 1024; // 5GB
@@ -57,14 +57,14 @@ vi.mock('electron', () => {
 
 vi.mock('systeminformation');
 vi.mock('node:fs');
-vi.mock('../../../src/config/comfyServerConfig', () => ({
+vi.mock('@/config/comfyServerConfig', () => ({
   ComfyServerConfig: {
     EXTRA_MODEL_CONFIG_PATH: 'extra_models_config.yaml',
     configPath: '/mock/user/data/extra_models_config.yaml',
   },
 }));
 
-vi.mock('../../../src/config/comfyConfigManager', () => ({
+vi.mock('@/config/comfyConfigManager', () => ({
   ComfyConfigManager: {
     isComfyUIDirectory: vi.fn(),
   },

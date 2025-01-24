@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DesktopConfig, useDesktopConfig } from '../../../src/store/desktopConfig';
+import { DesktopConfig, useDesktopConfig } from '@/store/desktopConfig';
 
 vi.mock('electron', () => ({
   app: {

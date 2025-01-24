@@ -1,8 +1,8 @@
 import { app, ipcMain } from 'electron';
 import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { IPC_CHANNELS } from '../../../src/constants';
-import { registerAppHandlers } from '../../../src/handlers/AppHandlers';
+import { IPC_CHANNELS } from '@/constants';
+import { registerAppHandlers } from '@/handlers/AppHandlers';
 
 vi.mock('electron', () => ({
   app: {

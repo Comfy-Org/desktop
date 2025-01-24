@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ComfySettings, type ComfySettingsData, DEFAULT_SETTINGS } from '../../src/config/comfySettings';
+import { ComfySettings, type ComfySettingsData, DEFAULT_SETTINGS } from '@/config/comfySettings';
 
 vi.mock('electron-log/main', () => ({
   default: {
