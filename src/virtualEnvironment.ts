@@ -38,8 +38,9 @@ export class VirtualEnvironment implements HasTelemetry {
   readonly pypiMirror?: string;
   uvPty: pty.IPty | undefined;
 
-  getEnv() {
-    return {
+  /** @todo Refactor to `using` */
+  get uvPtyInstance() {
+    const env = {
       ...(process.env as Record<string, string>),
       UV_CACHE_DIR: this.cacheDir,
       UV_TOOL_DIR: this.cacheDir,
@@ -51,10 +52,7 @@ export class VirtualEnvironment implements HasTelemetry {
       UV_PYTHON_INSTALL_MIRROR: this.pythonMirror || undefined,
       UV_PYPI_INSTALL_MIRROR: this.pypiMirror || undefined,
     };
-  }
 
-  /** @todo Refactor to `using` */
-  get uvPtyInstance() {
     if (!this.uvPty) {
       const shell = getDefaultShell();
       this.uvPty = pty.spawn(shell, [], {
@@ -62,7 +60,7 @@ export class VirtualEnvironment implements HasTelemetry {
         conptyInheritCursor: false,
         name: 'xterm',
         cwd: this.venvRootPath,
-        env: this.getEnv(),
+        env,
       });
     }
     return this.uvPty;
