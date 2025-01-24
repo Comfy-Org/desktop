@@ -1,5 +1,9 @@
 import type { GpuType, TorchDeviceType } from '../preload';
 
+export type DesktopInstallState = 'started' | 'installingVenv' | 'installed' | 'upgraded';
+
+export type DesktopWindowStyle = 'custom' | 'default';
+
 export type DesktopSettings = {
   basePath?: string;
   /**
@@ -9,7 +13,7 @@ export type DesktopSettings = {
    * - `upgraded`: An upgrade from a previous version that stores the base path
    * in the yaml config.
    */
-  installState?: 'started' | 'installed' | 'upgraded';
+  installState?: DesktopInstallState;
   /**
    * The path to the migration installation to migrate custom nodes from
    */
@@ -26,7 +30,7 @@ export type DesktopSettings = {
    * - `custom`: Modern, theme-reactive, feels like an integral part of the UI
    * - `default`: Impersonal, static, plain - default window title bar
    */
-  windowStyle?: 'custom' | 'default';
+  windowStyle?: DesktopWindowStyle;
   /** The version of comfyui-electron on which the user last consented to metrics. */
   versionConsentedMetrics?: string;
 };

@@ -12,3 +12,4 @@ export type {
   ElectronOverlayOptions,
   InstallValidation,
 } from './preload';
+export type { DesktopInstallState, DesktopWindowStyle } from './store/desktopSettings';
