@@ -1,13 +1,15 @@
-import { app, dialog, ipcMain } from 'electron';
+import { Notification, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
-import { IPC_CHANNELS } from '../constants';
+import { IPC_CHANNELS, ProgressStatus } from '../constants';
 import type { AppWindow } from '../main-process/appWindow';
 import { ComfyInstallation } from '../main-process/comfyInstallation';
 import type { InstallOptions } from '../preload';
+import { CmCli } from '../services/cmCli';
 import { ITelemetry } from '../services/telemetry';
-import { useDesktopConfig } from '../store/desktopConfig';
-import { validateHardware } from '../utils';
+import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
+import { ansiCodes, validateHardware } from '../utils';
+import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
 
 /** High-level / UI control over the installation of ComfyUI server. */
@@ -185,10 +187,57 @@ export class InstallationManager {
     if (shouldMigrateCustomNodes) {
       useDesktopConfig().set('migrateCustomNodesFrom', installWizard.migrationSource);
     }
+    await this.appWindow.loadPage('server-start');
+    this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
 
     const installation = new ComfyInstallation('installed', installWizard.basePath, this.telemetry, device);
+    const { virtualEnvironment } = installation;
+
     installation.setState('installed');
+
+    const processCallbacks: ProcessCallbacks = {
+      onStdout: (data) => {
+        log.info(data.replaceAll(ansiCodes, ''));
+        this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+      onStderr: (data) => {
+        log.error(data.replaceAll(ansiCodes, ''));
+        this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+      },
+    };
+
+    this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
+    await virtualEnvironment.create(processCallbacks);
+    const customNodeMigrationError = await this.migrateCustomNodes(config, virtualEnvironment, processCallbacks);
+
+    if (customNodeMigrationError) {
+      // TODO: Replace with IPC callback to handle i18n (SoC).
+      new Notification({
+        title: 'Failed to migrate custom nodes',
+        body: customNodeMigrationError,
+      }).show();
+    }
+
     return installation;
+  }
+
+  /** @returns `undefined` if successful, or an error `string` on failure. */
+  async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {
+    const fromPath = config.get('migrateCustomNodesFrom');
+    if (!fromPath) return;
+
+    log.info('Migrating custom nodes from:', fromPath);
+    try {
+      const cmCli = new CmCli(virtualEnvironment, virtualEnvironment.telemetry);
+      await cmCli.restoreCustomNodes(fromPath, callbacks);
+    } catch (error) {
+      log.error('Error migrating custom nodes:', error);
+      // TODO: Replace with IPC callback to handle i18n (SoC).
+      return error?.toString?.() ?? 'Error migrating custom nodes.';
+    } finally {
+      // Always remove the flag so the user doesnt get stuck here
+      config.delete('migrateCustomNodesFrom');
+    }
   }
 
   /**

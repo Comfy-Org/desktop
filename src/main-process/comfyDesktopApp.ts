@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/electron/main';
 import todesktop from '@todesktop/runtime';
-import { Notification, type TitleBarOverlayOptions, app, dialog, ipcMain } from 'electron';
+import { type TitleBarOverlayOptions, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import path from 'node:path';
 import { graphics } from 'systeminformation';
@@ -10,12 +10,10 @@ import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { InstallationManager } from '../install/installationManager';
 import { DownloadManager } from '../models/DownloadManager';
 import { type ElectronContextMenuOptions } from '../preload';
-import { CmCli } from '../services/cmCli';
 import { HasTelemetry, ITelemetry } from '../services/telemetry';
 import { Terminal } from '../shell/terminal';
-import { DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
-import { ansiCodes, getModelsDirectory } from '../utils';
-import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
+import { getModelsDirectory } from '../utils';
+import { VirtualEnvironment } from '../virtualEnvironment';
 import { AppWindow } from './appWindow';
 import type { ComfyInstallation } from './comfyInstallation';
 import { ComfyServer } from './comfyServer';
@@ -151,59 +149,18 @@ export class ComfyDesktopApp implements HasTelemetry {
       });
     });
     log.info('Server start');
-    await this.appWindow.loadPage('server-start');
+    if (!this.appWindow.isOnPage('server-start')) {
+      await this.appWindow.loadPage('server-start');
+    }
 
     DownloadManager.getInstance(this.appWindow, getModelsDirectory(this.basePath));
 
-    this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
-
-    const processCallbacks: ProcessCallbacks = {
-      onStdout: (data) => {
-        log.info(data.replaceAll(ansiCodes, ''));
-        this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-      },
-      onStderr: (data) => {
-        log.error(data.replaceAll(ansiCodes, ''));
-        this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-      },
-    };
     const { virtualEnvironment } = this.installation;
-    await virtualEnvironment.create(processCallbacks);
-
-    const config = useDesktopConfig();
-    const customNodeMigrationError = await this.migrateCustomNodes(config, virtualEnvironment, processCallbacks);
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
     await this.comfyServer.start();
     this.initializeTerminal(virtualEnvironment);
-
-    if (customNodeMigrationError) {
-      // TODO: Replace with IPC callback to handle i18n (SoC).
-      new Notification({
-        title: 'Failed to migrate custom nodes',
-        body: customNodeMigrationError,
-      }).show();
-    }
-  }
-
-  /** @returns `undefined` if successful, or an error `string` on failure. */
-  async migrateCustomNodes(config: DesktopConfig, virtualEnvironment: VirtualEnvironment, callbacks: ProcessCallbacks) {
-    const fromPath = config.get('migrateCustomNodesFrom');
-    if (!fromPath) return;
-
-    log.info('Migrating custom nodes from:', fromPath);
-    try {
-      const cmCli = new CmCli(virtualEnvironment, virtualEnvironment.telemetry);
-      await cmCli.restoreCustomNodes(fromPath, callbacks);
-    } catch (error) {
-      log.error('Error migrating custom nodes:', error);
-      // TODO: Replace with IPC callback to handle i18n (SoC).
-      return error?.toString?.() ?? 'Error migrating custom nodes.';
-    } finally {
-      // Always remove the flag so the user doesnt get stuck here
-      config.delete('migrateCustomNodesFrom');
-    }
   }
 
   restart({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
