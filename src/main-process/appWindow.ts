@@ -20,6 +20,7 @@ import { getAppResourcesPath } from '../install/resourcePaths';
 import type { ElectronContextMenuOptions } from '../preload';
 import { AppWindowSettings } from '../store/AppWindowSettings';
 import { useDesktopConfig } from '../store/desktopConfig';
+import type { DesktopSettings } from '../store/desktopSettings';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
@@ -40,8 +41,7 @@ export class AppWindow {
   /** The "edit" menu - cut/copy/paste etc. */
   private editMenu?: Menu;
   /** Whether this window was created with title bar overlay enabled. When `false`, Electron throws when calling {@link BrowserWindow.setTitleBarOverlay}. */
-  public readonly customWindowEnabled: boolean =
-    process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom';
+  private customWindowEnabled: boolean = false;
 
   /** Always returns `undefined` in production. When running unpackaged, returns `DEV_SERVER_URL` if set, otherwise `undefined`. */
   private get devUrlOverride() {
@@ -49,11 +49,22 @@ export class AppWindow {
   }
 
   public constructor() {
+    this.store = this.loadWindowStore();
+
+    this.window = this.#createWindow();
+
+    this.sendQueuedEventsOnReady();
+    this.setupTray();
+    this.menu = this.buildMenu();
+    this.buildTextMenu();
+  }
+
+  #createWindow() {
+    const { store } = this;
+
     const installed = useDesktopConfig().get('installState') === 'installed';
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = installed ? primaryDisplay.workAreaSize : { width: 1024, height: 768 };
-    const store = this.loadWindowStore();
-    this.store = store;
 
     // Retrieve stored window size, or use default if not available
     const storedWidth = store.get('windowWidth', width);
@@ -62,6 +73,7 @@ export class AppWindow {
     const storedY = store.get('windowY');
 
     // macOS requires different handling to linux / win32
+    this.customWindowEnabled = process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom';
     const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
       ? {
           titleBarStyle: 'hidden',
@@ -69,7 +81,7 @@ export class AppWindow {
         }
       : {};
 
-    this.window = new BrowserWindow({
+    const window = new BrowserWindow({
       title: 'ComfyUI',
       width: storedWidth,
       height: storedHeight,
@@ -89,17 +101,50 @@ export class AppWindow {
       autoHideMenuBar: true,
       ...customChrome,
     });
-    this.window.once('ready-to-show', () => this.window.show());
+    this.window = window;
+    window.once('ready-to-show', () => window.show());
 
-    if (!installed && storedX === undefined) this.window.center();
-    if (store.get('windowMaximized')) this.window.maximize();
+    if (!installed && storedX === undefined) window.center();
+    if (store.get('windowMaximized')) window.maximize();
 
-    this.setupWindowEvents();
+    this.setupWindowEvents(window);
     this.setupAppEvents();
-    this.sendQueuedEventsOnReady();
-    this.setupTray();
-    this.menu = this.buildMenu();
-    this.buildTextMenu();
+    return window;
+  }
+
+  /**
+   * Recreates the application window by closing the current window and creating a new one.
+   *
+   * After the new window is created, it reloads the last ComfyUI URL.
+   * @returns A promise that resolves after the recreated window has loaded the last ComfyUI URL
+   */
+  async recreateWindow(): Promise<void> {
+    const { window } = this;
+
+    this.window = this.#createWindow();
+    window.close();
+    await this.reloadLastComfyUIUrl();
+  }
+
+  /**
+   * Changes the custom window style for win32 / linux.  Recreates the window if the style is changed.
+   * @param style The new window style to be applied
+   * @returns A promise that resolves when the window style has been set and the window has been recreated.
+   * Ignores attempts to unset the style or set it to the current value.
+   */
+  async setWindowStyle(style: DesktopSettings['windowStyle']): Promise<void> {
+    log.info(`Setting window style:`, style);
+    if (!style) return;
+
+    const store = useDesktopConfig();
+    const current = store.get('windowStyle');
+    if (style === current) {
+      log.warn(`Ignoring attempt to set window style to current value [${current}]`);
+      // return;
+    }
+
+    store.set('windowStyle', style);
+    await this.recreateWindow();
   }
 
   public isReady(): boolean {
@@ -140,10 +185,21 @@ export class AppWindow {
     });
   }
 
+  /** The last set of server args that were used to form the window URL. */
+  private lastServerArgs?: ServerArgs;
+
   public async loadComfyUI(serverArgs: ServerArgs) {
+    this.lastServerArgs = serverArgs;
+
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
     const url = this.devUrlOverride ?? `http://${host}:${serverArgs.port}`;
     await this.window.loadURL(url);
+  }
+
+  /** Reloads using most recent used args from {@link loadComfyUI}. @throws When args have not yet been set. */
+  public async reloadLastComfyUIUrl() {
+    if (this.lastServerArgs) return await this.loadComfyUI(this.lastServerArgs);
+    throw new Error('Cannot reload ComfyUI URL without server args. loadComfyUI must be called first.');
   }
 
   public openDevTools(): void {
@@ -237,27 +293,27 @@ export class AppWindow {
     }
   }
 
-  private setupWindowEvents(): void {
-    // eslint-disable-next-line unicorn/consistent-function-scoping
+  private setupWindowEvents(window: BrowserWindow): void {
     const updateBounds = () => {
-      if (!this.window) return;
+      if (!window) return;
 
       // If maximized, do not update position / size.
-      const isMaximized = this.window.isMaximized();
-      this.store.set('windowMaximized', isMaximized);
+      const { store } = this;
+      const isMaximized = window.isMaximized();
+      store.set('windowMaximized', isMaximized);
       if (isMaximized) return;
 
-      const { width, height, x, y } = this.window.getBounds();
-      this.store.set('windowWidth', width);
-      this.store.set('windowHeight', height);
-      this.store.set('windowX', x);
-      this.store.set('windowY', y);
+      const { width, height, x, y } = window.getBounds();
+      store.set('windowWidth', width);
+      store.set('windowHeight', height);
+      store.set('windowX', x);
+      store.set('windowY', y);
     };
 
-    this.window.on('resize', updateBounds);
-    this.window.on('move', updateBounds);
+    window.on('resize', updateBounds);
+    window.on('move', updateBounds);
 
-    this.window.webContents.setWindowOpenHandler(({ url }) => {
+    window.webContents.setWindowOpenHandler(({ url }) => {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       shell.openExternal(url);
       return { action: 'deny' };
