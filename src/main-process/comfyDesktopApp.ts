@@ -126,7 +126,8 @@ export class ComfyDesktopApp implements HasTelemetry {
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => {
       if (!this.comfyServer) return false;
-      await this.comfyServer?.kill();
+
+      await this.comfyServer.kill();
       await this.comfyServer.start();
       return true;
     });
@@ -134,9 +135,7 @@ export class ComfyDesktopApp implements HasTelemetry {
 
   async startComfyServer(serverArgs: ServerArgs) {
     app.on('before-quit', () => {
-      if (!this.comfyServer) {
-        return;
-      }
+      if (!this.comfyServer) return;
 
       log.info('Before-quit: Killing Python server');
       this.comfyServer.kill().catch((error) => {
