@@ -109,8 +109,5 @@
     "tmp": "^0.2.3",
     "wait-on": "^8.0.1",
     "yaml": "^2.6.0"
-  },
-  "lint-staged": {
-    "./**/*.{js,ts,tsx}": "prettier --write"
   }
 }
