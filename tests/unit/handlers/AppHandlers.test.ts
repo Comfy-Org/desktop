@@ -2,7 +2,7 @@ import { app, ipcMain } from 'electron';
 import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { IPC_CHANNELS } from '../../../src/constants';
-import { AppHandlers } from '/src/handlers/AppHandlers';
+import { registerAppHandlers } from '../../../src/handlers/AppHandlers';
 
 vi.mock('electron', () => ({
   app: {
@@ -30,13 +30,10 @@ const getHandler = (channel: string) => {
 };
 
 describe('AppHandlers', () => {
-  let handler: AppHandlers;
-
   const testCases: TestCase[] = [{ channel: IPC_CHANNELS.QUIT, expected: undefined }];
 
   beforeEach(() => {
-    handler = new AppHandlers();
-    handler.registerHandlers();
+    registerAppHandlers();
   });
 
   afterEach(() => {

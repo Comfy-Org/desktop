@@ -4,10 +4,10 @@ import { LevelOption } from 'electron-log';
 import log from 'electron-log/main';
 
 import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus } from './constants';
-import { AppHandlers } from './handlers/AppHandlers';
-import { AppInfoHandlers } from './handlers/appInfoHandlers';
-import { NetworkHandlers } from './handlers/networkHandlers';
-import { PathHandlers } from './handlers/pathHandlers';
+import { registerAppHandlers } from './handlers/AppHandlers';
+import { registerAppInfoHandlers } from './handlers/appInfoHandlers';
+import { registerNetworkHandlers } from './handlers/networkHandlers';
+import { registerPathHandlers } from './handlers/pathHandlers';
 import { InstallationManager } from './install/installationManager';
 import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
@@ -93,10 +93,10 @@ async function startApp() {
     }
 
     // Register basic handlers that are necessary during app's installation.
-    new PathHandlers().registerHandlers();
-    new NetworkHandlers().registerHandlers();
-    new AppInfoHandlers().registerHandlers(appWindow);
-    new AppHandlers().registerHandlers();
+    registerPathHandlers();
+    registerNetworkHandlers();
+    registerAppInfoHandlers(appWindow);
+    registerAppHandlers();
     ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
       log.debug('Open dialog');
       return dialog.showOpenDialogSync({

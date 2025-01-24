@@ -9,10 +9,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComfyConfigManager } from '../../../src/config/comfyConfigManager';
 import { ComfyServerConfig } from '../../../src/config/comfyServerConfig';
 import { IPC_CHANNELS } from '../../../src/constants';
-import { PathHandlers } from '../../../src/handlers/pathHandlers';
+import { REQUIRED_SPACE, registerPathHandlers } from '../../../src/handlers/pathHandlers';
 import type { SystemPaths } from '../../../src/preload';
 
-const REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB
 const DEFAULT_FREE_SPACE = 20 * 1024 * 1024 * 1024; // 20GB
 const LOW_FREE_SPACE = 5 * 1024 * 1024 * 1024; // 5GB
 
@@ -110,8 +109,6 @@ const getRegisteredHandler = <T extends (...args: never[]) => unknown>(
 };
 
 describe('PathHandlers', () => {
-  let pathHandlers: PathHandlers;
-
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(app.getPath).mockImplementation(
@@ -120,8 +117,7 @@ describe('PathHandlers', () => {
     vi.mocked(app.getAppPath).mockReturnValue(MOCK_PATHS.appPath);
     vi.mocked(shell.openPath).mockResolvedValue('');
 
-    pathHandlers = new PathHandlers();
-    pathHandlers.registerHandlers();
+    registerPathHandlers();
   });
 
   describe('validate-install-path', () => {
@@ -194,7 +190,7 @@ describe('PathHandlers', () => {
         isValid: false,
         error: 'Error: Test error',
         freeSpace: -1,
-        requiredSpace: PathHandlers.REQUIRED_SPACE,
+        requiredSpace: REQUIRED_SPACE,
       });
       expect(log.error).toHaveBeenCalledWith('Error validating install path:', mockError);
     });

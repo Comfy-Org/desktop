@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { IPC_CHANNELS } from '../../../src/constants';
-import { AppInfoHandlers } from '../../../src/handlers/appInfoHandlers';
+import { registerAppInfoHandlers } from '../../../src/handlers/appInfoHandlers';
 
 const MOCK_WINDOW_STYLE = 'default';
 const MOCK_GPU_NAME = 'mock-gpu';
@@ -52,7 +52,6 @@ const getHandler = (channel: string) => {
 };
 
 describe('AppInfoHandlers', () => {
-  let handler: AppInfoHandlers;
   let appWindow: {
     loadRenderer: Mock;
     showOpenDialog: Mock;
@@ -74,12 +73,11 @@ describe('AppInfoHandlers', () => {
 
   describe('registerHandlers', () => {
     beforeEach(() => {
-      handler = new AppInfoHandlers();
       appWindow = {
         loadRenderer: vi.fn(),
         showOpenDialog: vi.fn().mockReturnValue({ canceled: false, filePaths: [MOCK_BASE_PATH] }),
       };
-      handler.registerHandlers(appWindow as any);
+      registerAppInfoHandlers(appWindow as any);
     });
 
     it.each(testCases)('should register handler for $channel', ({ channel }) => {
@@ -99,12 +97,11 @@ describe('AppInfoHandlers', () => {
 
   describe('set-base-path', () => {
     it('should return false when user cancels dialog', async () => {
-      handler = new AppInfoHandlers();
       appWindow = {
         loadRenderer: vi.fn(),
         showOpenDialog: vi.fn().mockReturnValue({ canceled: true, filePaths: [] }),
       };
-      handler.registerHandlers(appWindow as any);
+      registerAppInfoHandlers(appWindow as any);
 
       const result = await getHandler(IPC_CHANNELS.SET_BASE_PATH)(null, MOCK_BASE_PATH);
 
