@@ -181,12 +181,12 @@ export class AppWindow {
    * Loads a frontend page.
    *
    * In production, this is via the file:// protocol. Dev environments can utilise a dev server.
-   * @param urlPath The page to load; a valid entry in the frontend router.
+   * @param page The page to load; a valid entry in the frontend router.
    */
-  public async loadPage(urlPath: Page): Promise<void> {
+  public async loadPage(page: Page): Promise<void> {
     const { devUrlOverride } = this;
     if (devUrlOverride) {
-      const url = `${devUrlOverride}/${urlPath}`;
+      const url = `${devUrlOverride}/${page}`;
       /**
        * rendererReady should be set by the frontend via electronAPI. However,
        * for some reason, the event is not being received if we load the app
@@ -200,7 +200,7 @@ export class AppWindow {
     } else {
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
-      await this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: urlPath });
+      await this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: page });
     }
   }
 
