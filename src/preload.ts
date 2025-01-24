@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { DownloadStatus, ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
 import type { DownloadState } from './models/DownloadManager';
-import type { DesktopSettings } from './store/desktopSettings';
+import type { DesktopInstallState, DesktopWindowStyle } from './store/desktopSettings';
 
 /**
  * Open a folder in the system's default file explorer.
@@ -84,14 +84,12 @@ export type PathValidationResult = {
   error?: string;
 };
 
-/** Whether the app just been installed, upgraded, or install is complete and the server has been started at least once. */
-export type InstallState = Exclude<DesktopSettings['installState'], undefined>;
-
 export type ValidationIssueState = 'OK' | 'warning' | 'error' | 'skipped';
 
 export interface InstallValidation {
   inProgress: boolean;
-  installState: InstallState;
+  /** Whether the app just been installed, upgraded, or install is complete and the server has been started at least once. */
+  installState: DesktopInstallState;
 
   basePath?: ValidationIssueState;
   venvDirectory?: ValidationIssueState;
@@ -313,10 +311,10 @@ const electronAPI = {
       return await ipcRenderer.invoke(IPC_CHANNELS.GET_GPU);
     },
     /** Sets the window style */
-    setWindowStyle: (style: DesktopSettings['windowStyle']): Promise<void> => {
+    setWindowStyle: (style: DesktopWindowStyle): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.SET_WINDOW_STYLE, style);
     },
-    getWindowStyle: (): Promise<DesktopSettings['windowStyle']> => {
+    getWindowStyle: (): Promise<DesktopWindowStyle | undefined> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_WINDOW_STYLE);
     },
   },

@@ -3,14 +3,12 @@ import { rm } from 'node:fs/promises';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings } from '../config/comfySettings';
+import type { DesktopInstallState } from '../main_types';
 import type { InstallValidation, TorchDeviceType } from '../preload';
 import { type ITelemetry, getTelemetry } from '../services/telemetry';
 import { useDesktopConfig } from '../store/desktopConfig';
-import type { DesktopSettings } from '../store/desktopSettings';
 import { canExecute, canExecuteShellCommand, pathAccessible } from '../utils';
 import { VirtualEnvironment } from '../virtualEnvironment';
-
-type InstallState = Exclude<DesktopSettings['installState'], undefined>;
 
 /**
  * Object representing the desktop app installation itself.
@@ -54,7 +52,7 @@ export class ComfyInstallation {
 
   constructor(
     /** Installation state, e.g. `started`, `installed`.  See {@link DesktopSettings}. */
-    public state: InstallState,
+    public state: DesktopInstallState,
     /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
     basePath: string,
     /** The device type to use for the installation. */
@@ -94,7 +92,7 @@ export class ComfyInstallation {
    * @returns The validated installation state, along with a list of any issues detected.
    * @throws When the YAML file is present but not readable (access denied, FS error, etc).
    */
-  async validate(): Promise<InstallState> {
+  async validate(): Promise<DesktopInstallState> {
     log.info(`Validating installation. Recorded state: [${this.state}]`);
     const validation: InstallValidation = {
       inProgress: true,
@@ -225,7 +223,7 @@ If this problem persists, back up and delete the config file, then restart the a
    * Changes the installation state and persists it to disk.
    * @param state The new installation state to set.
    */
-  setState(state: InstallState) {
+  setState(state: DesktopInstallState) {
     this.state = state;
     useDesktopConfig().set('installState', state);
   }
