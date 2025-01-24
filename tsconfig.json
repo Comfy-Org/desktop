@@ -17,7 +17,7 @@
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "paths": {
-      "/*": ["./*"]
+      "@/*": ["src/*"]
     }
   },
   "exclude": [".history", ".vite", "assets", "dist", "node_modules", "out"],

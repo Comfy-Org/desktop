@@ -3,8 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { IPC_CHANNELS } from '../../src/constants';
 import { MixpanelTelemetry, promptMetricsConsent } from '../../src/services/telemetry';
-import { IPC_CHANNELS } from '/src/constants';
 
 vi.mock('electron', () => ({
   app: {
