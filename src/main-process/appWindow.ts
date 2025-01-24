@@ -14,6 +14,7 @@ import {
 import log from 'electron-log/main';
 import Store from 'electron-store';
 import path from 'node:path';
+import { URL } from 'node:url';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
@@ -21,7 +22,7 @@ import type { ElectronContextMenuOptions } from '../preload';
 import { AppWindowSettings } from '../store/AppWindowSettings';
 import { useDesktopConfig } from '../store/desktopConfig';
 
-/** A frontend page that can be loaded by the app. */
+/** A frontend page that can be loaded by the app. Must be a valid entry in the frontend router. @see {@link AppWindow.isOnPage} */
 type Page = 'desktop-start' | 'welcome' | 'not-supported' | 'metrics-consent' | 'server-start' | '' | 'maintenance';
 
 /**
@@ -175,6 +176,20 @@ export class AppWindow {
 
   public maximize(): void {
     this.window.maximize();
+  }
+
+  /**
+   * Checks if the window is currently on the specified page by parsing the browser URL.
+   * @param page The frontend route portion of the URL to match against
+   * @returns `true` if the window is currently on the specified page, otherwise `false`
+   */
+  isOnPage(page: Page): boolean {
+    const rawUrl = this.window.webContents.getURL();
+    const url = URL.parse(rawUrl);
+    if (!url) return page === '';
+
+    const prefixedPage = url.protocol === 'file:' ? url.hash : url.pathname;
+    return page === prefixedPage.slice(1);
   }
 
   /**
