@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ComfyServerConfig } from '../../../src/config/comfyServerConfig';
 import { IPC_CHANNELS } from '../../../src/constants';
 import { InstallationManager } from '../../../src/install/installationManager';
 import type { AppWindow } from '../../../src/main-process/appWindow';
 import { ComfyInstallation } from '../../../src/main-process/comfyInstallation';
 import type { InstallValidation } from '../../../src/preload';
 import type { ITelemetry } from '../../../src/services/telemetry';
+import * as utils from '../../../src/utils';
 
 vi.mock('electron', () => ({
   ipcMain: {
@@ -15,7 +17,9 @@ vi.mock('electron', () => ({
     once: vi.fn(),
   },
   app: {
-    getPath: vi.fn(),
+    getPath: vi.fn().mockReturnValue('/mock/path'),
+    getAppPath: vi.fn().mockReturnValue('/mock/app/path'),
+    isPackaged: false,
     quit: vi.fn(),
     relaunch: vi.fn(),
   },
@@ -23,38 +27,53 @@ vi.mock('electron', () => ({
     showErrorBox: vi.fn(),
   },
 }));
-vi.mock('../../../src/main-process/comfyInstallation');
+
+vi.mock('node:fs/promises', () => ({
+  rm: vi.fn(),
+}));
+
 vi.mock('../../../src/store/desktopConfig');
 vi.mock('electron-log/main');
 
-type ValidationStep = {
-  inProgress: boolean;
-  installState: string;
-  basePath?: 'OK' | 'error';
-  venvDirectory?: 'OK' | 'error';
-  pythonInterpreter?: 'OK' | 'error';
-};
+vi.mock('../../../src/utils', async () => {
+  const actual = await vi.importActual<typeof utils>('../../../src/utils');
+  return {
+    ...actual,
+    pathAccessible: vi.fn().mockImplementation((path: string) => {
+      return Promise.resolve(path.startsWith('valid/'));
+    }),
+    canExecute: vi.fn().mockResolvedValue(true),
+    canExecuteShellCommand: vi.fn().mockResolvedValue(true),
+  };
+});
 
-const commonValidationSteps: ValidationStep[] = [
-  {
-    inProgress: true,
-    installState: 'installed',
-    basePath: 'error',
-  },
-  {
-    inProgress: true,
-    installState: 'installed',
-    basePath: 'OK',
-    venvDirectory: 'error',
-  },
-  {
-    inProgress: true,
-    installState: 'installed',
-    basePath: 'OK',
-    venvDirectory: 'OK',
-    pythonInterpreter: 'error',
-  },
-];
+vi.mock('../../../src/config/comfyServerConfig', () => {
+  return {
+    ComfyServerConfig: {
+      configPath: 'valid/extra_models_config.yaml',
+      exists: vi.fn().mockReturnValue(true),
+      readBasePathFromConfig: vi.fn().mockResolvedValue({
+        status: 'success',
+        path: 'valid/base',
+      }),
+    },
+  };
+});
+
+// Mock VirtualEnvironment with basic implementation
+vi.mock('../../../src/virtualEnvironment', () => {
+  return {
+    VirtualEnvironment: vi.fn().mockImplementation(() => ({
+      exists: vi.fn().mockResolvedValue(true),
+      hasRequirements: vi.fn().mockResolvedValue(true),
+      pythonInterpreterPath: 'valid/python',
+      uvPath: 'valid/uv',
+      venvPath: 'valid/venv',
+      comfyUIRequirementsPath: 'valid/requirements.txt',
+      comfyUIManagerRequirementsPath: 'valid/manager-requirements.txt',
+    })),
+  };
+});
 
 const createMockAppWindow = () => {
   const mock = {
@@ -73,34 +92,6 @@ const createMockTelemetry = () => {
   return mock as unknown as ITelemetry;
 };
 
-const createMockInstallation = (params: {
-  state?: string;
-  hasIssues?: boolean;
-  isValid?: boolean;
-  validationSteps?: ValidationStep[];
-}) => {
-  const { state = 'installed', hasIssues = false, isValid = true, validationSteps = [] } = params;
-
-  const mockInstallation = {
-    state,
-    validation: {} as InstallValidation,
-    hasIssues,
-    isValid,
-    validate: vi.fn().mockImplementation(() => {
-      // Simulate validation steps
-      if (mockInstallation?.onUpdate) {
-        for (const step of validationSteps) {
-          mockInstallation.onUpdate(step as InstallValidation);
-        }
-      }
-      return state;
-    }),
-    onUpdate: undefined as ((data: InstallValidation) => void) | undefined,
-  };
-
-  return mockInstallation as unknown as ComfyInstallation;
-};
-
 describe('InstallationManager', () => {
   let manager: InstallationManager;
   let mockAppWindow: ReturnType<typeof createMockAppWindow>;
@@ -113,6 +104,11 @@ describe('InstallationManager', () => {
     mockAppWindow = createMockAppWindow();
     manager = new InstallationManager(mockAppWindow, createMockTelemetry());
 
+    vi.mocked(ComfyServerConfig.readBasePathFromConfig).mockResolvedValue({
+      status: 'success',
+      path: 'valid/base',
+    });
+
     // Capture validation updates
     vi.spyOn(mockAppWindow, 'send').mockImplementation((channel: string, data: unknown) => {
       if (channel === IPC_CHANNELS.VALIDATION_UPDATE) {
@@ -122,52 +118,56 @@ describe('InstallationManager', () => {
   });
 
   describe('ensureInstalled', () => {
-    const validInstallation = {
-      state: 'installed',
-      hasIssues: false,
-      isValid: true,
-    } as const;
+    it('returns existing valid installation', async () => {
+      const installation = new ComfyInstallation('installed', 'valid/base', createMockTelemetry());
+      vi.spyOn(ComfyInstallation, 'fromConfig').mockReturnValue(installation);
 
-    it('returns existing valid installation', () => {
-      const mockInstallation = createMockInstallation(validInstallation);
-      vi.spyOn(mockInstallation, 'validate').mockResolvedValue('installed');
-      vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() => mockInstallation);
+      const result = await manager.ensureInstalled();
 
-      const result = manager.ensureInstalled();
-
-      expect(result).toBe(mockInstallation);
+      expect(result).toBe(installation);
+      expect(result.hasIssues).toBe(false);
+      expect(result.isValid).toBe(true);
+      expect(mockAppWindow.loadRenderer).not.toHaveBeenCalledWith('maintenance');
     });
 
     it.each([
       {
-        scenario: 'validation errors trigger maintenance page',
-        installation: {
-          ...validInstallation,
-          hasIssues: true,
-          isValid: false,
-          validationSteps: commonValidationSteps,
+        scenario: 'detects invalid base path',
+        mockSetup: () => {
+          vi.mocked(ComfyServerConfig.readBasePathFromConfig).mockResolvedValue({
+            status: 'success',
+            path: 'invalid/base',
+          });
         },
-        expectMaintenancePage: true,
+        expectedErrors: ['basePath'],
       },
       {
-        scenario: 'no errors skip maintenance page',
-        installation: {
-          ...validInstallation,
-          validationSteps: [
-            {
-              inProgress: true,
-              installState: 'installed',
-              basePath: 'OK',
-              venvDirectory: 'OK',
-              pythonInterpreter: 'OK',
-            } satisfies ValidationStep,
-          ],
+        scenario: 'detects missing git',
+        mockSetup: () => {
+          vi.mocked(utils.canExecuteShellCommand).mockResolvedValue(false);
         },
-        expectMaintenancePage: false,
+        expectedErrors: ['git'],
       },
-    ])('$scenario', async ({ installation, expectMaintenancePage }) => {
-      const mockInstallation = createMockInstallation(installation);
-      vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() => mockInstallation);
+      {
+        scenario: 'detects missing VC Redist on Windows',
+        mockSetup: () => {
+          const originalPlatform = process.platform;
+          vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
+          vi.mocked(utils.pathAccessible).mockImplementation((path: string) =>
+            Promise.resolve(path !== `${process.env.SYSTEMROOT}\\System32\\vcruntime140.dll`)
+          );
+          return () => {
+            vi.spyOn(process, 'platform', 'get').mockReturnValue(originalPlatform);
+          };
+        },
+        expectedErrors: ['vcRedist'],
+      },
+    ])('$scenario', async ({ mockSetup, expectedErrors }) => {
+      const cleanup = mockSetup?.() as (() => void) | undefined;
+
+      const installation = new ComfyInstallation('installed', 'valid/base', createMockTelemetry());
+      vi.spyOn(ComfyInstallation, 'fromConfig').mockReturnValue(installation);
+
       vi.spyOn(
         manager as unknown as { resolveIssues: (installation: ComfyInstallation) => Promise<boolean> },
         'resolveIssues'
@@ -175,25 +175,15 @@ describe('InstallationManager', () => {
 
       await manager.ensureInstalled();
 
-      // Verify validation sequence
-      expect(validationUpdates).toHaveLength(installation.validationSteps?.length ?? 0);
-      if (installation.validationSteps) {
-        for (const [index, expectedStep] of installation.validationSteps.entries()) {
-          const actualStep = validationUpdates[index];
-          for (const [key, value] of Object.entries(expectedStep)) {
-            expect(actualStep[key as keyof InstallValidation]).toBe(value);
-          }
-        }
+      const finalValidation = validationUpdates.at(-1);
+      expect(finalValidation).toBeDefined();
+      for (const error of expectedErrors) {
+        expect(finalValidation?.[error as keyof InstallValidation]).toBe('error');
       }
 
-      // Verify maintenance page behavior
-      if (expectMaintenancePage) {
-        expect(manager['resolveIssues']).toHaveBeenCalledWith(mockInstallation);
-        expect(mockAppWindow.loadRenderer).toHaveBeenCalledWith('maintenance');
-      } else {
-        expect(manager['resolveIssues']).not.toHaveBeenCalled();
-        expect(mockAppWindow.loadRenderer).not.toHaveBeenCalled();
-      }
+      expect(mockAppWindow.loadRenderer).toHaveBeenCalledWith('maintenance');
+
+      cleanup?.();
     });
   });
 });
