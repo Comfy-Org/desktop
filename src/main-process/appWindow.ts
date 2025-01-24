@@ -21,6 +21,9 @@ import type { ElectronContextMenuOptions } from '../preload';
 import { AppWindowSettings } from '../store/AppWindowSettings';
 import { useDesktopConfig } from '../store/desktopConfig';
 
+/** A frontend page that can be loaded by the app. */
+type Page = 'desktop-start' | 'welcome' | 'not-supported' | 'metrics-consent' | 'server-start' | '' | 'maintenance';
+
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
  * Closes the application when the window is closed.
@@ -180,7 +183,7 @@ export class AppWindow {
    * In production, this is via the file:// protocol. Dev environments can utilise a dev server.
    * @param urlPath The page to load; a valid entry in the frontend router.
    */
-  public async loadPage(urlPath: string = ''): Promise<void> {
+  public async loadPage(urlPath: Page): Promise<void> {
     const { devUrlOverride } = this;
     if (devUrlOverride) {
       const url = `${devUrlOverride}/${urlPath}`;
