@@ -10,7 +10,7 @@ import { ComfyServerConfig } from '../../src/config/comfyServerConfig';
 
 vi.mock('electron', () => ({
   app: {
-    getPath: vi.fn().mockReturnValue('/fake/user/data'),
+    getPath: vi.fn(),
   },
 }));
 
@@ -39,6 +39,10 @@ describe('ComfyServerConfig', () => {
 
   beforeAll(async () => {
     tempDir = await createTmpDir();
+    vi.mocked(app.getPath).mockImplementation((name: string) => {
+      if (name === 'userData') return '/fake/user/data';
+      throw new Error(`Unexpected getPath key: ${name}`);
+    });
   });
 
   afterAll(async () => {
@@ -201,8 +205,8 @@ describe('ComfyServerConfig', () => {
       Object.defineProperty(process, 'platform', { value: platform });
       const platformConfig = ComfyServerConfig.getBaseConfig();
 
-      expect(platformConfig.checkpoints).toContain('models/checkpoints');
-      expect(platformConfig.loras).toContain('models/loras');
+      expect(platformConfig.checkpoints).toContain(path.join('models', 'checkpoints'));
+      expect(platformConfig.loras).toContain(path.join('models', 'loras'));
       expect(platformConfig.custom_nodes).toBe('custom_nodes/');
       expect(platformConfig.is_default).toBe('true');
     });
@@ -260,7 +264,7 @@ describe('ComfyServerConfig', () => {
 
     it('should handle write errors', async () => {
       vi.spyOn(fsPromises, 'writeFile').mockRejectedValueOnce(new Error('Write failed'));
-      const result = await ComfyServerConfig.writeConfigFile('/invalid/path', 'test');
+      const result = await ComfyServerConfig.writeConfigFile(path.join(path.sep, 'invalid', 'path'), 'test');
       expect(result).toBe(false);
     });
   });
@@ -278,7 +282,7 @@ describe('ComfyServerConfig', () => {
 
     it('should handle creation errors', async () => {
       vi.spyOn(ComfyServerConfig, 'writeConfigFile').mockResolvedValueOnce(false);
-      const result = await ComfyServerConfig.createConfigFile('/invalid/path', {});
+      const result = await ComfyServerConfig.createConfigFile(path.join(path.sep, 'invalid', 'path'), {});
       expect(result).toBe(false);
     });
 
@@ -288,7 +292,7 @@ describe('ComfyServerConfig', () => {
       });
 
       const log = await import('electron-log/main');
-      const result = await ComfyServerConfig.createConfigFile('/test/path', {});
+      const result = await ComfyServerConfig.createConfigFile(path.join(path.sep, 'test', 'path'), {});
 
       expect(vi.mocked(log.default.error)).toHaveBeenCalled();
       expect(result).toBe(false);
@@ -297,16 +301,16 @@ describe('ComfyServerConfig', () => {
 
   describe('getConfigFromRepoPath', () => {
     it('should read config from repo path', async () => {
-      const testConfig: Record<string, { path: string }> = { test: { path: '/test' } };
+      const testConfig: Record<string, { path: string }> = { test: { path: `${path.sep}test` } };
       const mockReadConfigFile = vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(testConfig);
-      const result = await ComfyServerConfig.getConfigFromRepoPath('/test/repo');
+      const result = await ComfyServerConfig.getConfigFromRepoPath(path.join(path.sep, 'test', 'repo'));
       expect(result).toEqual(testConfig);
-      expect(mockReadConfigFile).toHaveBeenCalledWith('/test/repo/extra_model_paths.yaml');
+      expect(mockReadConfigFile).toHaveBeenCalledWith(path.join(path.sep, 'test', 'repo', 'extra_model_paths.yaml'));
     });
 
     it('should return empty object when config read fails', async () => {
       vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(null);
-      const result = await ComfyServerConfig.getConfigFromRepoPath('/test/repo');
+      const result = await ComfyServerConfig.getConfigFromRepoPath(path.join(path.sep, 'test', 'repo'));
       expect(result).toEqual({});
     });
   });

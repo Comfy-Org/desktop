@@ -2,6 +2,7 @@ import { app, dialog, shell } from 'electron';
 import log from 'electron-log/main';
 import ElectronStore from 'electron-store';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DesktopConfig, useDesktopConfig } from '../../../src/store/desktopConfig';
@@ -92,7 +93,7 @@ describe('DesktopConfig', () => {
 
       await DesktopConfig.load(shell);
 
-      expect(shell.showItemInFolder).toHaveBeenCalledWith('/mock/user/data/config.json');
+      expect(shell.showItemInFolder).toHaveBeenCalledWith(path.join(path.sep, 'mock', 'user', 'data', 'config.json'));
       expect(app.quit).toHaveBeenCalled();
     });
 
@@ -109,7 +110,7 @@ describe('DesktopConfig', () => {
 
       const config = await DesktopConfig.load(shell);
 
-      expect(fs.rm).toHaveBeenCalledWith('/mock/user/data/config.json');
+      expect(fs.rm).toHaveBeenCalledWith(path.join(path.sep, 'mock', 'user', 'data', 'config.json'));
       expect(config).toBeInstanceOf(DesktopConfig);
     });
 
@@ -119,7 +120,9 @@ describe('DesktopConfig', () => {
         throw unknownError;
       });
 
-      await expect(DesktopConfig.load(shell)).rejects.toThrow('/mock/user/data/config.json');
+      await expect(DesktopConfig.load(shell)).rejects.toThrow(
+        path.join(path.sep, 'mock', 'user', 'data', 'config.json')
+      );
       expect(log.error).toHaveBeenCalled();
     });
   });
@@ -178,7 +181,7 @@ describe('DesktopConfig', () => {
 
       it('should permanently delete config file', async () => {
         await config.permanentlyDeleteConfigFile();
-        expect(fs.rm).toHaveBeenCalledWith('/mock/user/data/config.json');
+        expect(fs.rm).toHaveBeenCalledWith(path.join(path.sep, 'mock', 'user', 'data', 'config.json'));
       });
     });
   });
