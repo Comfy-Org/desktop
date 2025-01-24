@@ -86,7 +86,7 @@ export class InstallationManager {
         this.telemetry.track('validation:error_found', { error });
 
         log.info('Validation error - loading maintenance page.');
-        this.appWindow.loadRenderer('maintenance').catch((error) => {
+        this.appWindow.loadPage('maintenance').catch((error) => {
           log.error('Error loading maintenance page.', error);
           const message = `An error was detected with your installation, and the maintenance page could not be loaded to resolve it. The app will close now. Please reinstall if this issue persists.\n\nError message:\n\n${error}`;
           dialog.showErrorBox('Critical Error', message);
@@ -155,10 +155,10 @@ export class InstallationManager {
       log.error(hardware.error);
       log.verbose('Loading not-supported renderer.');
       this.telemetry.track('desktop:hardware_not_supported');
-      await this.appWindow.loadRenderer('not-supported');
+      await this.appWindow.loadPage('not-supported');
     } else {
       log.verbose('Loading welcome renderer.');
-      await this.appWindow.loadRenderer('welcome');
+      await this.appWindow.loadPage('welcome');
     }
 
     const installOptions = await optionsPromise;

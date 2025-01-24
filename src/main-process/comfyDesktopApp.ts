@@ -151,7 +151,7 @@ export class ComfyDesktopApp implements HasTelemetry {
       });
     });
     log.info('Server start');
-    await this.appWindow.loadRenderer('server-start');
+    await this.appWindow.loadPage('server-start');
 
     DownloadManager.getInstance(this.appWindow, getModelsDirectory(this.basePath));
 

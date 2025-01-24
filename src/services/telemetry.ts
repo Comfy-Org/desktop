@@ -235,7 +235,7 @@ export async function promptMetricsConsent(
       ipcMain.handleOnce(IPC_CHANNELS.SET_METRICS_CONSENT, (_event, consent: boolean) => resolve(consent));
     });
 
-    await appWindow.loadRenderer('metrics-consent');
+    await appWindow.loadPage('metrics-consent');
     const newConsent = await consentPromise;
     if (newConsent !== consent) {
       comfyDesktopApp.comfySettings.set('Comfy-Desktop.SendStatistics', newConsent);

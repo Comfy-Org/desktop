@@ -86,7 +86,7 @@ async function startApp() {
 
     // Load start screen - basic spinner
     try {
-      await appWindow.loadRenderer('desktop-start');
+      await appWindow.loadPage('desktop-start');
     } catch (error) {
       dialog.showErrorBox('Startup failed', `Unknown error whilst loading start screen.\n\n${error}`);
       return app.quit();
