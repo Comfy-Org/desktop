@@ -111,7 +111,7 @@ export class ComfyInstallation {
     }
 
     // Validate base path
-    const basePath = await this.loadBasePath();
+    const basePath = useDesktopConfig().get('basePath');
     if (basePath && (await pathAccessible(basePath))) {
       validation.basePath = 'OK';
       this.onUpdate?.(validation);
@@ -173,35 +173,6 @@ export class ComfyInstallation {
     this.onUpdate?.(validation);
 
     return validation.installState;
-  }
-
-  /**
-   * Loads the base path from YAML config. If it is unreadable, warns the user and quits.
-   * @returns The base path if read successfully, or `undefined`
-   * @throws If the config file is present but not readable
-   */
-  async loadBasePath(): Promise<string | undefined> {
-    const readResult = await ComfyServerConfig.readBasePathFromConfig(ComfyServerConfig.configPath);
-    switch (readResult.status) {
-      case 'success':
-        // TODO: Check if config.json basePath different, then determine why it has changed (intentional?)
-        this.basePath = readResult.path;
-        return readResult.path;
-      case 'invalid':
-        // TODO: File was there, and was valid YAML.  It just didn't have a valid base_path.
-        // Show path edit screen instead of reinstall.
-        return;
-      case 'notFound':
-        return;
-      default:
-        // 'error': Explain and quit
-        // TODO: Support link?  Something?
-        throw new Error(`Unable to read the YAML configuration file.  Please ensure this file is available and can be read:
-
-${ComfyServerConfig.configPath}
-
-If this problem persists, back up and delete the config file, then restart the app.`);
-    }
   }
 
   /**
