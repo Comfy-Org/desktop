@@ -185,7 +185,7 @@ export class AppWindow {
    */
   isOnPage(page: Page): boolean {
     const rawUrl = this.window.webContents.getURL();
-    const url = URL.parse(rawUrl);
+    const url = new URL(rawUrl);
     if (!url) return page === '';
 
     const prefixedPage = url.protocol === 'file:' ? url.hash : url.pathname;
