@@ -174,6 +174,12 @@ export class AppWindow {
     this.window.maximize();
   }
 
+  /**
+   * Loads a frontend page.
+   *
+   * In production, this is via the file:// protocol. Dev environments can utilise a dev server.
+   * @param urlPath The page to load; a valid entry in the frontend router.
+   */
   public async loadRenderer(urlPath: string = ''): Promise<void> {
     const { devUrlOverride } = this;
     if (devUrlOverride) {
