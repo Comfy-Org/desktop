@@ -1,6 +1,6 @@
 import type { GpuType, TorchDeviceType } from '../preload';
 
-export type DesktopInstallState = 'started' | 'installingVenv' | 'installed' | 'upgraded';
+export type DesktopInstallState = 'started' | 'installed' | 'upgraded';
 
 export type DesktopWindowStyle = 'custom' | 'default';
 
