@@ -26,6 +26,9 @@ export interface InstallOptions {
   migrationItemIds?: string[];
   /** Torch compute device */
   device: TorchDeviceType;
+  /** UV python mirrors */
+  pythonMirror?: string; // UV_PYTHON_INSTALL_MIRROR
+  pypiMirror?: string; // UV_PYPI_INSTALL_MIRROR
 }
 
 export interface SystemPaths {

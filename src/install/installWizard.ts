@@ -64,6 +64,8 @@ export class InstallWizard implements HasTelemetry {
       ...existingSettings,
       'Comfy-Desktop.AutoUpdate': this.installOptions.autoUpdate,
       'Comfy-Desktop.SendStatistics': this.installOptions.allowMetrics,
+      'Comfy-Desktop.PythonInstallMirror': this.installOptions.pythonMirror,
+      'Comfy-Desktop.PypiInstallMirror': this.installOptions.pypiMirror,
     };
 
     if (this.installOptions.device === 'cpu') {

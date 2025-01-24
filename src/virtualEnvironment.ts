@@ -33,6 +33,9 @@ export class VirtualEnvironment implements HasTelemetry {
   readonly comfyUIRequirementsPath: string;
   readonly comfyUIManagerRequirementsPath: string;
   readonly selectedDevice?: string;
+  readonly telemetry: ITelemetry;
+  readonly pythonMirror?: string;
+  readonly pypiMirror?: string;
   uvPty: pty.IPty | undefined;
 
   /** @todo Refactor to `using` */
@@ -51,6 +54,8 @@ export class VirtualEnvironment implements HasTelemetry {
           UV_TOOL_BIN_DIR: this.cacheDir,
           UV_PYTHON_INSTALL_DIR: this.cacheDir,
           VIRTUAL_ENV: this.venvPath,
+          UV_PYTHON_INSTALL_MIRROR: this.pythonMirror,
+          UV_PYPI_INSTALL_MIRROR: this.pypiMirror,
         },
       });
     }
@@ -59,13 +64,26 @@ export class VirtualEnvironment implements HasTelemetry {
 
   constructor(
     venvPath: string,
-    readonly telemetry: ITelemetry,
-    selectedDevice: TorchDeviceType | undefined,
-    pythonVersion: string = '3.12.8'
+    {
+      telemetry,
+      selectedDevice,
+      pythonVersion,
+      pythonMirror,
+      pypiMirror,
+    }: {
+      telemetry: ITelemetry;
+      selectedDevice?: TorchDeviceType;
+      pythonVersion?: string;
+      pythonMirror?: string;
+      pypiMirror?: string;
+    }
   ) {
     this.venvRootPath = venvPath;
-    this.pythonVersion = pythonVersion;
+    this.telemetry = telemetry;
+    this.pythonVersion = pythonVersion ?? '3.12';
     this.selectedDevice = selectedDevice;
+    this.pythonMirror = pythonMirror;
+    this.pypiMirror = pypiMirror;
 
     // uv defaults to .venv
     this.venvPath = path.join(venvPath, '.venv');

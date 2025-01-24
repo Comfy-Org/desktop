@@ -6,7 +6,6 @@ import path from 'node:path';
 import { graphics } from 'systeminformation';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
-import { ComfySettings } from '../config/comfySettings';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { InstallationManager } from '../install/installationManager';
 import { DownloadManager } from '../models/DownloadManager';
@@ -23,14 +22,15 @@ import { ComfyServer } from './comfyServer';
 
 export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;
-  public comfySettings: ComfySettings;
   private terminal: Terminal | null = null; // Only created after server starts.
   constructor(
     public installation: ComfyInstallation,
     public appWindow: AppWindow,
     readonly telemetry: ITelemetry
-  ) {
-    this.comfySettings = new ComfySettings(installation.basePath);
+  ) {}
+
+  get comfySettings() {
+    return this.installation.comfySettings;
   }
 
   get basePath() {

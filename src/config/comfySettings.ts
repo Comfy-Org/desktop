@@ -10,12 +10,16 @@ export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
   'Comfy.Workflow.ShowMissingModelsWarning': true,
   'Comfy.Server.LaunchArgs': {},
+  'Comfy-Desktop.PythonInstallMirror': '',
+  'Comfy-Desktop.PypiInstallMirror': '',
 } as const;
 
 export interface ComfySettingsData {
   'Comfy-Desktop.AutoUpdate': boolean;
   'Comfy-Desktop.SendStatistics': boolean;
   'Comfy.Server.LaunchArgs': Record<string, string>;
+  'Comfy-Desktop.PythonInstallMirror': string;
+  'Comfy-Desktop.PypiInstallMirror': string;
   [key: string]: unknown;
 }
 

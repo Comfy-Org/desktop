@@ -2,6 +2,7 @@ import log from 'electron-log/main';
 import { rm } from 'node:fs/promises';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
+import { ComfySettings } from '../config/comfySettings';
 import type { InstallValidation, TorchDeviceType } from '../preload';
 import { type ITelemetry, getTelemetry } from '../services/telemetry';
 import { useDesktopConfig } from '../store/desktopConfig';
@@ -32,6 +33,7 @@ export class ComfyInstallation {
   }
 
   virtualEnvironment: VirtualEnvironment;
+  comfySettings: ComfySettings;
 
   _basePath: string;
   /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
@@ -41,7 +43,7 @@ export class ComfyInstallation {
   set basePath(value: string) {
     // Duplicated in constructor to avoid non-nullable type assertions.
     this._basePath = value;
-    this.virtualEnvironment = new VirtualEnvironment(value, this.telemetry, this.device);
+    this.virtualEnvironment = this.createVirtualEnvironment(value);
   }
 
   /**
@@ -61,7 +63,17 @@ export class ComfyInstallation {
   ) {
     // TypeScript workaround: duplication of basePath setter
     this._basePath = basePath;
-    this.virtualEnvironment = new VirtualEnvironment(basePath, telemetry, device);
+    this.comfySettings = new ComfySettings(basePath);
+    this.virtualEnvironment = this.createVirtualEnvironment(basePath);
+  }
+
+  private createVirtualEnvironment(basePath: string) {
+    return new VirtualEnvironment(basePath, {
+      telemetry: this.telemetry,
+      selectedDevice: this.device,
+      pythonMirror: this.comfySettings.get('Comfy-Desktop.PythonInstallMirror'),
+      pypiMirror: this.comfySettings.get('Comfy-Desktop.PypiInstallMirror'),
+    });
   }
 
   /**
@@ -105,7 +117,7 @@ export class ComfyInstallation {
       validation.basePath = 'OK';
       this.onUpdate?.(validation);
 
-      const venv = new VirtualEnvironment(basePath, this.telemetry, this.device);
+      const venv = this.createVirtualEnvironment(basePath);
       if (await venv.exists()) {
         validation.venvDirectory = 'OK';
         this.onUpdate?.(validation);
