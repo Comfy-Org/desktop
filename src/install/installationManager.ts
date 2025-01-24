@@ -34,6 +34,7 @@ export class InstallationManager {
     // Resume installation
     if (installation.state === 'started') return await this.resumeInstallation();
 
+    // Validate the installation
     try {
       // Send updates to renderer
       this.#setupIpc(installation);
