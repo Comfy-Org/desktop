@@ -180,7 +180,7 @@ describe('MixpanelTelemetry', () => {
 
 describe('promptMetricsConsent', () => {
   let store: { get: Mock; set: Mock };
-  let appWindow: { loadRenderer: Mock };
+  let appWindow: { loadPage: Mock };
   let comfyDesktopApp: { comfySettings: { get: Mock; set: Mock; saveSettings: Mock } };
 
   const versionBeforeUpdate = '0.4.1';
@@ -189,7 +189,7 @@ describe('promptMetricsConsent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     store = { get: vi.fn(), set: vi.fn() };
-    appWindow = { loadRenderer: vi.fn() };
+    appWindow = { loadPage: vi.fn() };
     comfyDesktopApp = { comfySettings: { get: vi.fn(), set: vi.fn(), saveSettings: vi.fn() } };
   });
 
@@ -233,7 +233,7 @@ describe('promptMetricsConsent', () => {
       promptUser: true,
     });
     expect(store.set).toHaveBeenCalled();
-    expect(appWindow.loadRenderer).toHaveBeenCalledWith('metrics-consent');
+    expect(appWindow.loadPage).toHaveBeenCalledWith('metrics-consent');
     expect(ipcMain.handleOnce).toHaveBeenCalledWith(IPC_CHANNELS.SET_METRICS_CONSENT, expect.any(Function));
   });
 
@@ -245,7 +245,7 @@ describe('promptMetricsConsent', () => {
     });
     expect(store.get).toHaveBeenCalledWith('versionConsentedMetrics');
     expect(store.set).not.toHaveBeenCalled();
-    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(appWindow.loadPage).not.toHaveBeenCalled();
     expect(ipcMain.handleOnce).not.toHaveBeenCalled();
   });
 
@@ -265,7 +265,7 @@ describe('promptMetricsConsent', () => {
       expectedResult: false,
     });
     expect(store.set).not.toHaveBeenCalled();
-    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(appWindow.loadPage).not.toHaveBeenCalled();
     expect(ipcMain.handleOnce).not.toHaveBeenCalled();
   });
 
@@ -276,7 +276,7 @@ describe('promptMetricsConsent', () => {
       expectedResult: false,
     });
     expect(store.set).toHaveBeenCalled();
-    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(appWindow.loadPage).not.toHaveBeenCalled();
     expect(ipcMain.handleOnce).not.toHaveBeenCalled();
   });
 
@@ -289,7 +289,7 @@ describe('promptMetricsConsent', () => {
       promptUser: true,
     });
     expect(store.set).toHaveBeenCalled();
-    expect(appWindow.loadRenderer).toHaveBeenCalledWith('metrics-consent');
+    expect(appWindow.loadPage).toHaveBeenCalledWith('metrics-consent');
     expect(ipcMain.handleOnce).toHaveBeenCalledWith(IPC_CHANNELS.SET_METRICS_CONSENT, expect.any(Function));
   });
 
@@ -300,7 +300,7 @@ describe('promptMetricsConsent', () => {
       expectedResult: false,
     });
     expect(store.set).toHaveBeenCalled();
-    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(appWindow.loadPage).not.toHaveBeenCalled();
     expect(ipcMain.handleOnce).not.toHaveBeenCalled();
   });
 
@@ -313,7 +313,7 @@ describe('promptMetricsConsent', () => {
       promptUser: true,
     });
     expect(store.set).toHaveBeenCalled();
-    expect(appWindow.loadRenderer).toHaveBeenCalledWith('metrics-consent');
+    expect(appWindow.loadPage).toHaveBeenCalledWith('metrics-consent');
     expect(ipcMain.handleOnce).toHaveBeenCalledWith(IPC_CHANNELS.SET_METRICS_CONSENT, expect.any(Function));
   });
 
@@ -324,7 +324,7 @@ describe('promptMetricsConsent', () => {
       expectedResult: false,
     });
     expect(store.set).toHaveBeenCalled();
-    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(appWindow.loadPage).not.toHaveBeenCalled();
     expect(ipcMain.handleOnce).not.toHaveBeenCalled();
   });
 
@@ -335,7 +335,7 @@ describe('promptMetricsConsent', () => {
       expectedResult: false,
     });
     expect(store.set).toHaveBeenCalled();
-    expect(appWindow.loadRenderer).not.toHaveBeenCalled();
+    expect(appWindow.loadPage).not.toHaveBeenCalled();
     expect(ipcMain.handleOnce).not.toHaveBeenCalled();
   });
 });

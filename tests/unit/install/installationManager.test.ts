@@ -78,7 +78,7 @@ vi.mock('../../../src/virtualEnvironment', () => {
 const createMockAppWindow = () => {
   const mock = {
     send: vi.fn(),
-    loadRenderer: vi.fn().mockResolvedValue(null),
+    loadPage: vi.fn().mockResolvedValue(null),
     showOpenDialog: vi.fn(),
     maximize: vi.fn(),
   };

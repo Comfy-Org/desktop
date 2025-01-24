@@ -53,7 +53,7 @@ const getHandler = (channel: string) => {
 
 describe('AppInfoHandlers', () => {
   let appWindow: {
-    loadRenderer: Mock;
+    loadPage: Mock;
     showOpenDialog: Mock;
   };
 
@@ -74,7 +74,7 @@ describe('AppInfoHandlers', () => {
   describe('registerHandlers', () => {
     beforeEach(() => {
       appWindow = {
-        loadRenderer: vi.fn(),
+        loadPage: vi.fn(),
         showOpenDialog: vi.fn().mockReturnValue({ canceled: false, filePaths: [MOCK_BASE_PATH] }),
       };
       registerAppInfoHandlers(appWindow as any);
@@ -98,7 +98,7 @@ describe('AppInfoHandlers', () => {
   describe('set-base-path', () => {
     it('should return false when user cancels dialog', async () => {
       appWindow = {
-        loadRenderer: vi.fn(),
+        loadPage: vi.fn(),
         showOpenDialog: vi.fn().mockReturnValue({ canceled: true, filePaths: [] }),
       };
       registerAppInfoHandlers(appWindow as any);
