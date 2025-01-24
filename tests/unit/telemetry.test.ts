@@ -1,10 +1,13 @@
 import { IpcMainEvent, ipcMain } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ComfySettings } from '@/config/comfySettings';
 import { IPC_CHANNELS } from '@/constants';
+import type { AppWindow } from '@/main-process/appWindow';
 import { MixpanelTelemetry, promptMetricsConsent } from '@/services/telemetry';
+import type { DesktopConfig } from '@/store/desktopConfig';
 
 vi.mock('electron', () => ({
   app: {
@@ -179,9 +182,9 @@ describe('MixpanelTelemetry', () => {
 });
 
 describe('promptMetricsConsent', () => {
-  let store: { get: Mock; set: Mock };
-  let appWindow: { loadPage: Mock };
-  let comfyDesktopApp: { comfySettings: { get: Mock; set: Mock; saveSettings: Mock } };
+  let store: Pick<DesktopConfig, 'get' | 'set'>;
+  let appWindow: Pick<AppWindow, 'loadPage'>;
+  let comfyDesktopApp: { comfySettings: Pick<ComfySettings, 'get' | 'set' | 'saveSettings'> };
 
   const versionBeforeUpdate = '0.4.1';
   const versionAfterUpdate = '1.0.1';
@@ -200,14 +203,14 @@ describe('promptMetricsConsent', () => {
     mockConsent,
     promptUser,
   }: {
-    storeValue: string | null | undefined;
+    storeValue: string | undefined;
     settingsValue: boolean | null | undefined;
     expectedResult: boolean;
     mockConsent?: boolean;
     promptUser?: boolean;
   }) => {
-    store.get.mockReturnValue(storeValue);
-    comfyDesktopApp.comfySettings.get.mockReturnValue(settingsValue);
+    vi.mocked(store.get).mockReturnValue(storeValue);
+    vi.mocked(comfyDesktopApp.comfySettings.get).mockReturnValue(settingsValue);
 
     if (promptUser) {
       vi.mocked(ipcMain.handleOnce).mockImplementationOnce((channel, handler) => {
@@ -319,7 +322,7 @@ describe('promptMetricsConsent', () => {
 
   it('should return false if both settings are null or undefined', async () => {
     await runTest({
-      storeValue: null,
+      storeValue: undefined,
       settingsValue: null,
       expectedResult: false,
     });
