@@ -33,17 +33,6 @@ export class ComfyInstallation {
   virtualEnvironment: VirtualEnvironment;
   comfySettings: ComfySettings;
 
-  _basePath: string;
-  /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
-  get basePath() {
-    return this._basePath;
-  }
-  set basePath(value: string) {
-    // Duplicated in constructor to avoid non-nullable type assertions.
-    this._basePath = value;
-    this.virtualEnvironment = this.createVirtualEnvironment(value);
-  }
-
   /**
    * Called during/after each step of validation
    * @param data The data to send to the renderer
@@ -54,13 +43,11 @@ export class ComfyInstallation {
     /** Installation state, e.g. `started`, `installed`.  See {@link DesktopSettings}. */
     public state: DesktopInstallState,
     /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
-    basePath: string,
+    public basePath: string,
     /** The device type to use for the installation. */
     public readonly telemetry: ITelemetry,
     public device?: TorchDeviceType
   ) {
-    // TypeScript workaround: duplication of basePath setter
-    this._basePath = basePath;
     this.comfySettings = new ComfySettings(basePath);
     this.virtualEnvironment = this.createVirtualEnvironment(basePath);
   }
