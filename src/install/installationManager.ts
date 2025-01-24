@@ -31,13 +31,18 @@ export class InstallationManager {
     // Fresh install
     if (!installation) return await this.freshInstall();
 
+    // Resume installation
+    if (installation.state === 'started') return await this.resumeInstallation();
+
     try {
       // Send updates to renderer
       this.#setupIpc(installation);
 
-      // Validate installation
+      // Determine actual install state
       const state = await installation.validate();
-      if (state !== 'installed') await this.resumeInstallation(installation);
+
+      // Convert from old format
+      if (state === 'upgraded') installation.upgradeConfig();
 
       // Resolve issues and re-run validation
       if (installation.hasIssues) {
@@ -120,16 +125,11 @@ export class InstallationManager {
 
   /**
    * Resumes an installation that was never completed.
-   * @param installation The installation to resume
    */
-  async resumeInstallation(installation: ComfyInstallation) {
+  async resumeInstallation(): Promise<ComfyInstallation> {
     log.verbose('Resuming installation.');
     // TODO: Resume install at point of interruption
-    if (installation.state === 'started') {
-      await this.freshInstall();
-      installation.setState('installed');
-    }
-    if (installation.state === 'upgraded') installation.upgradeConfig();
+    return await this.freshInstall();
   }
 
   /**
