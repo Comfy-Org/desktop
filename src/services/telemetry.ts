@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/electron/main';
 import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import mixpanel, { PropertyDict } from 'mixpanel';
@@ -21,6 +20,10 @@ export interface ITelemetry {
   track(eventName: string, properties?: PropertyDict): void;
   flush(): void;
   registerHandlers(): void;
+  queueSentryEvent(props: MixPanelEvent): void;
+  popSentryEvent(): MixPanelEvent | undefined;
+  hasPendingSentryEvents(): boolean;
+  clearSentryQueue(): void;
 }
 
 interface GpuInfo {
@@ -29,14 +32,20 @@ interface GpuInfo {
   vram: number | null;
 }
 
+interface MixPanelEvent {
+  eventName: string;
+  properties: Record<string, unknown>;
+}
+
 const MIXPANEL_TOKEN = '6a7f9f6ae2084b4e7ff7ced98a6b5988';
 export class MixpanelTelemetry implements ITelemetry {
   public hasConsent: boolean = false;
   private readonly distinctId: string;
   private readonly storageFile: string;
-  private readonly queue: { eventName: string; properties: PropertyDict }[] = [];
+  private readonly queue: MixPanelEvent[] = [];
   private readonly mixpanelClient: mixpanel.Mixpanel;
   private cachedGpuInfo: GpuInfo[] | null = null;
+  private sentryQueue: MixPanelEvent[] = [];
   constructor(mixpanelClass: mixpanel.Mixpanel) {
     this.mixpanelClient = mixpanelClass.init(MIXPANEL_TOKEN, {
       geolocate: true,
@@ -129,6 +138,22 @@ export class MixpanelTelemetry implements ITelemetry {
     });
   }
 
+  hasPendingSentryEvents() {
+    return this.sentryQueue.length > 0;
+  }
+
+  queueSentryEvent(props: MixPanelEvent) {
+    this.sentryQueue.push(props);
+  }
+
+  popSentryEvent() {
+    return this.sentryQueue.shift();
+  }
+
+  clearSentryQueue() {
+    this.sentryQueue = [];
+  }
+
   /**
    * Fetch GPU information and cache it.
    */
@@ -178,35 +203,6 @@ export interface HasTelemetry {
   telemetry: ITelemetry;
 }
 
-function formatLogLine(line: string): string {
-  try {
-    // Match the timestamp and log level pattern
-    const logPattern = /\[\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d{3}]\s\[(debug|info|error|warn)]\s+/;
-
-    // Remove timestamp and level prefix, trim whitespace
-    return line.replace(logPattern, '').trim();
-  } catch {
-    return line.trim();
-  }
-}
-
-function getLastLogLines(numberOfLines: number = 10): string {
-  try {
-    const logFile = log.transports.file.getFile();
-    const content = fs.readFileSync(logFile.path, 'utf8');
-
-    const lines = content
-      .split('\n')
-      .filter((line) => line.trim() !== '')
-      .slice(-numberOfLines);
-
-    return lines.map((line) => formatLogLine(line)).join(String.raw`\n`);
-  } catch (error) {
-    log.error('Failed to read log file:', error);
-    return '';
-  }
-}
-
 /**
  * Decorator to track the start, error, and end of a function.
  * @param eventName
@@ -231,17 +227,14 @@ export function trackEvent(eventName: string) {
           .then(() => {
             this.telemetry.track(`${eventName}_end`);
           })
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-          .catch((error: any) => {
-            const eventId = Sentry.captureException(error);
-            this.telemetry.track(`${eventName}_error`, {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-              error_message: error.message,
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-              error_name: error.name,
-              sentry_event_id: eventId,
-              sentry_url: `https://comfy-org.sentry.io/issues/6245490990/events/${eventId}/?project=4508007940685824`,
-              log_tail: getLastLogLines(32),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          .catch((error: Error) => {
+            this.telemetry.queueSentryEvent({
+              eventName: `${eventName}_error`,
+              properties: {
+                error_message: error.message,
+                error_name: error.name,
+              },
             });
             throw error;
           })

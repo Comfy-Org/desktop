@@ -3,6 +3,22 @@ import { app, dialog } from 'electron';
 
 import { SENTRY_URL_ENDPOINT } from '../constants';
 import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
+import { getTelemetry } from './telemetry';
+
+const createSentryUrl = (eventId: string) =>
+  `https://comfy-org.sentry.io/issues/6245490990/events/${eventId}/?project=4508007940685824`;
+
+const queueMixPanelEvents = (event: Sentry.Event) => {
+  const mixpanel = getTelemetry();
+
+  while (mixpanel.hasPendingSentryEvents()) {
+    const { eventName, properties } = mixpanel.popSentryEvent()!;
+    mixpanel.track(eventName, {
+      sentry_url: createSentryUrl(event.event_id!),
+      ...properties,
+    });
+  }
+};
 
 class SentryLogging {
   comfyDesktopApp: ComfyDesktopApp | undefined;
@@ -16,8 +32,11 @@ class SentryLogging {
         this.filterEvent(event);
 
         if (this.comfyDesktopApp?.comfySettings.get('Comfy-Desktop.SendStatistics')) {
+          queueMixPanelEvents(event);
           return event;
         }
+
+        getTelemetry().clearSentryQueue();
 
         const errorMessage = event.exception?.values?.[0]?.value || 'Unknown error';
         const errorType = event.exception?.values?.[0]?.type || 'Error';
