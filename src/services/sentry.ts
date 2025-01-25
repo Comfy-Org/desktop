@@ -5,8 +5,7 @@ import { SENTRY_URL_ENDPOINT } from '../constants';
 import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
 import { getTelemetry } from './telemetry';
 
-const createSentryUrl = (eventId: string) =>
-  `https://comfy-org.sentry.io/issues/6245490990/events/${eventId}/?project=4508007940685824`;
+const createSentryUrl = (eventId: string) => `https://comfy-org.sentry.io/projects/4508007940685824/events/${eventId}/`;
 
 const queueMixPanelEvents = (event: Sentry.Event) => {
   const mixpanel = getTelemetry();
