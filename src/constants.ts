@@ -25,7 +25,6 @@ export const IPC_CHANNELS = {
   TERMINAL_RESIZE: 'resize-terminal',
   TERMINAL_RESTORE: 'restore-terminal',
   TERMINAL_ON_OUTPUT: 'terminal-output',
-  IS_FIRST_TIME_SETUP: 'is-first-time-setup',
   GET_SYSTEM_PATHS: 'get-system-paths',
   VALIDATE_INSTALL_PATH: 'validate-install-path',
   VALIDATE_COMFYUI_SOURCE: 'validate-comfyui-source',

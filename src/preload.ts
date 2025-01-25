@@ -249,12 +249,6 @@ const electronAPI = {
     },
   },
   /**
-   * Check if the user has completed the first time setup wizard.
-   */
-  isFirstTimeSetup: (): Promise<boolean> => {
-    return ipcRenderer.invoke(IPC_CHANNELS.IS_FIRST_TIME_SETUP);
-  },
-  /**
    * Get the system paths for the application.
    */
   getSystemPaths: (): Promise<SystemPaths> => {

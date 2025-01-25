@@ -5,7 +5,6 @@ import log from 'electron-log/main';
 import path from 'node:path';
 import { graphics } from 'systeminformation';
 
-import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { InstallationManager } from '../install/installationManager';
 import { DownloadManager } from '../models/DownloadManager';
@@ -117,9 +116,6 @@ export class ComfyDesktopApp implements HasTelemetry {
         }
       }
     );
-    ipcMain.handle(IPC_CHANNELS.IS_FIRST_TIME_SETUP, () => {
-      return !ComfyServerConfig.exists();
-    });
 
     // Replace the reinstall IPC handler.
     ipcMain.removeHandler(IPC_CHANNELS.REINSTALL);
