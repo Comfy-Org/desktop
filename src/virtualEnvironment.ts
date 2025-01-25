@@ -16,6 +16,70 @@ export type ProcessCallbacks = {
   onStderr?: (data: string) => void;
 };
 
+export type PyTorchInstallConfig = {
+  packages: string[];
+  indexUrl?: string;
+  extraIndexUrl?: string;
+  prerelease?: boolean;
+  upgradePackages?: boolean;
+};
+
+export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: string): PyTorchInstallConfig {
+  const basePackages = ['torch', 'torchvision', 'torchaudio'];
+
+  // CPU-only configuration
+  if (selectedDevice === 'cpu') {
+    return {
+      packages: basePackages,
+    };
+  }
+
+  // NVIDIA/Windows configuration
+  if (selectedDevice === 'nvidia' || platform === 'win32') {
+    return {
+      packages: basePackages,
+      indexUrl: 'https://download.pytorch.org/whl/cu121',
+    };
+  }
+
+  // macOS/MPS configuration
+  if (selectedDevice === 'mps' || platform === 'darwin') {
+    return {
+      packages: basePackages,
+      extraIndexUrl: 'https://download.pytorch.org/whl/nightly/cpu',
+      prerelease: true,
+      upgradePackages: true,
+    };
+  }
+
+  // Default fallback configuration
+  return { packages: basePackages };
+}
+
+export function getPyTorchInstallArgs(config: PyTorchInstallConfig): string[] {
+  const installArgs = ['pip', 'install'];
+
+  if (config.upgradePackages) {
+    installArgs.push('-U');
+  }
+
+  if (config.prerelease) {
+    installArgs.push('--prerelease', 'allow');
+  }
+
+  installArgs.push(...config.packages);
+
+  if (config.indexUrl) {
+    installArgs.push('--index-url', config.indexUrl);
+  }
+
+  if (config.extraIndexUrl) {
+    installArgs.push('--extra-index-url', config.extraIndexUrl);
+  }
+
+  return installArgs;
+}
+
 /**
  * Manages a virtual Python environment using uv.
  *
@@ -32,7 +96,7 @@ export class VirtualEnvironment implements HasTelemetry {
   readonly pythonInterpreterPath: string;
   readonly comfyUIRequirementsPath: string;
   readonly comfyUIManagerRequirementsPath: string;
-  readonly selectedDevice?: string;
+  readonly selectedDevice: TorchDeviceType;
   readonly telemetry: ITelemetry;
   readonly pythonMirror?: string;
   readonly pypiMirror?: string;
@@ -85,7 +149,7 @@ export class VirtualEnvironment implements HasTelemetry {
     this.venvRootPath = venvPath;
     this.telemetry = telemetry;
     this.pythonVersion = pythonVersion ?? '3.12';
-    this.selectedDevice = selectedDevice;
+    this.selectedDevice = selectedDevice ?? 'cpu';
     this.pythonMirror = pythonMirror;
     this.pypiMirror = pypiMirror;
 
@@ -387,46 +451,15 @@ export class VirtualEnvironment implements HasTelemetry {
     await this.installComfyUIManagerRequirements(callbacks);
   }
 
-  private async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
-    const { selectedDevice } = this;
-    const packages = ['torch', 'torchvision', 'torchaudio'];
+  async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
+    const config = getPyTorchConfig(this.selectedDevice, process.platform);
+    const installArgs = getPyTorchInstallArgs(config);
 
-    if (selectedDevice === 'cpu') {
-      // CPU mode
-      log.info('Installing PyTorch CPU');
-      const { exitCode } = await this.runUvCommandAsync(['pip', 'install', ...packages], callbacks);
-      if (exitCode !== 0) {
-        throw new Error(`Failed to install PyTorch CPU: exit code ${exitCode}`);
-      }
-    } else if (selectedDevice === 'nvidia' || process.platform === 'win32') {
-      // Win32 default
-      log.info('Installing PyTorch CUDA 12.1');
-      const { exitCode } = await this.runUvCommandAsync(
-        ['pip', 'install', ...packages, '--index-url', 'https://download.pytorch.org/whl/cu121'],
-        callbacks
-      );
-      if (exitCode !== 0) {
-        throw new Error(`Failed to install PyTorch CUDA 12.1: exit code ${exitCode}`);
-      }
-    } else if (selectedDevice === 'mps' || process.platform === 'darwin') {
-      // macOS default
-      log.info('Installing PyTorch Nightly for macOS.');
-      const { exitCode } = await this.runUvCommandAsync(
-        [
-          'pip',
-          'install',
-          '-U',
-          '--prerelease',
-          'allow',
-          ...packages,
-          '--extra-index-url',
-          'https://download.pytorch.org/whl/nightly/cpu',
-        ],
-        callbacks
-      );
-      if (exitCode !== 0) {
-        throw new Error(`Failed to install PyTorch Nightly: exit code ${exitCode}`);
-      }
+    log.info(`Installing PyTorch with config: ${JSON.stringify(config)}`);
+    const { exitCode } = await this.runUvCommandAsync(installArgs, callbacks);
+
+    if (exitCode !== 0) {
+      throw new Error(`Failed to install PyTorch: exit code ${exitCode}`);
     }
   }
 
