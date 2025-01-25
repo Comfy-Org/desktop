@@ -100,6 +100,7 @@ export class VirtualEnvironment implements HasTelemetry {
   readonly telemetry: ITelemetry;
   readonly pythonMirror?: string;
   readonly pypiMirror?: string;
+  readonly torchMirror?: string;
   uvPty: pty.IPty | undefined;
 
   /** @todo Refactor to `using` */
@@ -138,12 +139,14 @@ export class VirtualEnvironment implements HasTelemetry {
       pythonVersion,
       pythonMirror,
       pypiMirror,
+      torchMirror,
     }: {
       telemetry: ITelemetry;
       selectedDevice?: TorchDeviceType;
       pythonVersion?: string;
       pythonMirror?: string;
       pypiMirror?: string;
+      torchMirror?: string;
     }
   ) {
     this.venvRootPath = venvPath;
@@ -152,6 +155,7 @@ export class VirtualEnvironment implements HasTelemetry {
     this.selectedDevice = selectedDevice ?? 'cpu';
     this.pythonMirror = pythonMirror;
     this.pypiMirror = pypiMirror;
+    this.torchMirror = torchMirror;
 
     // uv defaults to .venv
     this.venvPath = path.join(venvPath, '.venv');
@@ -453,6 +457,9 @@ export class VirtualEnvironment implements HasTelemetry {
 
   async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
     const config = getPyTorchConfig(this.selectedDevice, process.platform);
+    if (this.torchMirror) {
+      config.indexUrl = this.torchMirror;
+    }
     const installArgs = getPyTorchInstallArgs(config);
 
     log.info(`Installing PyTorch with config: ${JSON.stringify(config)}`);

@@ -85,6 +85,7 @@ describe('ComfySettings', () => {
         'Comfy.Server.LaunchArgs': { test: 'value' },
         'Comfy-Desktop.PythonInstallMirror': '',
         'Comfy-Desktop.PypiInstallMirror': '',
+        'Comfy-Desktop.TorchInstallMirror': '',
       };
 
       vi.mocked(fs.access).mockResolvedValue();

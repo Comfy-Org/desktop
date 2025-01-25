@@ -71,6 +71,7 @@ export class ComfyInstallation {
       selectedDevice: this.device,
       pythonMirror: this.comfySettings.get('Comfy-Desktop.PythonInstallMirror'),
       pypiMirror: this.comfySettings.get('Comfy-Desktop.PypiInstallMirror'),
+      torchMirror: this.comfySettings.get('Comfy-Desktop.TorchInstallMirror'),
     });
   }
 

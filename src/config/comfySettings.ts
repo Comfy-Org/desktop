@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy.Server.LaunchArgs': {},
   'Comfy-Desktop.PythonInstallMirror': '',
   'Comfy-Desktop.PypiInstallMirror': '',
+  'Comfy-Desktop.TorchInstallMirror': '',
 } as const;
 
 export interface ComfySettingsData {
@@ -20,6 +21,7 @@ export interface ComfySettingsData {
   'Comfy.Server.LaunchArgs': Record<string, string>;
   'Comfy-Desktop.PythonInstallMirror': string;
   'Comfy-Desktop.PypiInstallMirror': string;
+  'Comfy-Desktop.TorchInstallMirror': string;
   [key: string]: unknown;
 }
 
