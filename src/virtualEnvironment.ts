@@ -38,7 +38,7 @@ export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: stri
   if (selectedDevice === 'nvidia' || platform === 'win32') {
     return {
       packages: basePackages,
-      indexUrl: 'https://download.pytorch.org/whl/cu121',
+      indexUrl: 'https://download.pytorch.org/whl/cu124',
     };
   }
 
