@@ -7,6 +7,7 @@ import type { AppWindow } from '@/main-process/appWindow';
 import { ComfyInstallation } from '@/main-process/comfyInstallation';
 import type { InstallValidation } from '@/preload';
 import type { ITelemetry } from '@/services/telemetry';
+import { useDesktopConfig } from '@/store/desktopConfig';
 import * as utils from '@/utils';
 
 vi.mock('electron', () => ({
@@ -20,7 +21,14 @@ vi.mock('node:fs/promises', () => ({
   rm: vi.fn(),
 }));
 
-vi.mock('@/store/desktopConfig');
+vi.mock('@/store/desktopConfig', () => ({
+  useDesktopConfig: vi.fn().mockReturnValue({
+    get: vi.fn().mockImplementation((key: string) => {
+      if (key === 'installState') return 'installed';
+      if (key === 'basePath') return 'valid/base';
+    }),
+  }),
+}));
 vi.mock('electron-log/main');
 
 vi.mock('@/utils', async () => {
@@ -123,9 +131,9 @@ describe('InstallationManager', () => {
       {
         scenario: 'detects invalid base path',
         mockSetup: () => {
-          vi.mocked(ComfyServerConfig.readBasePathFromConfig).mockResolvedValue({
-            status: 'success',
-            path: 'invalid/base',
+          vi.mocked(useDesktopConfig().get).mockImplementation((key: string) => {
+            if (key === 'installState') return 'installed';
+            if (key === 'basePath') return 'invalid/base';
           });
         },
         expectedErrors: ['basePath'],
