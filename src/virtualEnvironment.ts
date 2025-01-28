@@ -310,7 +310,7 @@ export class VirtualEnvironment implements HasTelemetry {
       requirementsFile: this.requirementsCompiledPath,
       indexStrategy: 'unsafe-best-match',
       packages: [],
-      indexUrl: this.pypiMirror || undefined,
+      indexUrl: this.pypiMirror,
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -489,7 +489,7 @@ export class VirtualEnvironment implements HasTelemetry {
     const installCmd = getPipInstallArgs({
       requirementsFile: this.comfyUIRequirementsPath,
       packages: [],
-      indexUrl: this.pypiMirror || undefined,
+      indexUrl: this.pypiMirror,
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -502,7 +502,7 @@ export class VirtualEnvironment implements HasTelemetry {
     const installCmd = getPipInstallArgs({
       requirementsFile: this.comfyUIManagerRequirementsPath,
       packages: [],
-      indexUrl: this.pypiMirror || undefined,
+      indexUrl: this.pypiMirror,
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
