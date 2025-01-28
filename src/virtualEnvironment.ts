@@ -17,7 +17,7 @@ export type ProcessCallbacks = {
   onStderr?: (data: string) => void;
 };
 
-type PipInstallConfig = {
+interface PipInstallConfig {
   packages: string[];
   indexUrl?: string;
   extraIndexUrl?: string;
@@ -25,7 +25,7 @@ type PipInstallConfig = {
   upgradePackages?: boolean;
   requirementsFile?: string;
   indexStrategy?: 'compatible' | 'unsafe-best-match';
-};
+}
 
 function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: string): PipInstallConfig {
   const basePackages = ['torch', 'torchvision', 'torchaudio'];
