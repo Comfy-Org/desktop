@@ -530,7 +530,7 @@ export class VirtualEnvironment implements HasTelemetry {
       onStdout: (data) => (output += data.toString()),
       onStderr: (data) => (output += data.toString()),
     };
-    const result = await this.runCommandAsync(this.uvPath, args, { PYTHONIOENCODING: 'utf8' }, callbacks);
+    const result = await this.runCommandAsync(this.uvPath, args, { VIRTUAL_ENV: this.venvPath }, callbacks);
 
     if (result.exitCode !== 0)
       throw new Error(`Failed to get packages: Exit code ${result.exitCode}, signal ${result.signal}`);
