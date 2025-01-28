@@ -12,19 +12,7 @@ import * as utils from '@/utils';
 vi.mock('electron', () => ({
   ipcMain: {
     handle: vi.fn(),
-    handleOnce: vi.fn(),
     removeHandler: vi.fn(),
-    once: vi.fn(),
-  },
-  app: {
-    getPath: vi.fn().mockReturnValue('/mock/path'),
-    getAppPath: vi.fn().mockReturnValue('/mock/app/path'),
-    isPackaged: false,
-    quit: vi.fn(),
-    relaunch: vi.fn(),
-  },
-  dialog: {
-    showErrorBox: vi.fn(),
   },
 }));
 
@@ -40,7 +28,8 @@ vi.mock('@/utils', async () => {
   return {
     ...actual,
     pathAccessible: vi.fn().mockImplementation((path: string) => {
-      return Promise.resolve(path.startsWith('valid/'));
+      const isValid = path.startsWith('valid/') || path.endsWith(`\\System32\\vcruntime140.dll`);
+      return Promise.resolve(isValid);
     }),
     canExecute: vi.fn().mockResolvedValue(true),
     canExecuteShellCommand: vi.fn().mockResolvedValue(true),
