@@ -124,8 +124,7 @@ export class VirtualEnvironment implements HasTelemetry {
       VIRTUAL_ENV: this.venvPath,
       // Empty strings are not valid values for these env vars,
       // dropping them here to avoid passing them to uv.
-      UV_PYTHON_INSTALL_MIRROR: this.pythonMirror || undefined,
-      UV_PYPI_INSTALL_MIRROR: this.pypiMirror || undefined,
+      UV_PYTHON_INSTALL_MIRROR: this.pythonMirror || undefined
     };
 
     if (!this.uvPty) {
@@ -311,6 +310,7 @@ export class VirtualEnvironment implements HasTelemetry {
       requirementsFile: this.requirementsCompiledPath,
       indexStrategy: 'unsafe-best-match',
       packages: [],
+      indexUrl: this.pypiMirror || undefined,
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -486,7 +486,11 @@ export class VirtualEnvironment implements HasTelemetry {
 
   private async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUI requirements from ${this.comfyUIRequirementsPath}`);
-    const installCmd = getPipInstallArgs({ requirementsFile: this.comfyUIRequirementsPath, packages: [] });
+    const installCmd = getPipInstallArgs({
+      requirementsFile: this.comfyUIRequirementsPath,
+      packages: [],
+      indexUrl: this.pypiMirror || undefined,
+    });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
       throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
@@ -495,7 +499,11 @@ export class VirtualEnvironment implements HasTelemetry {
 
   private async installComfyUIManagerRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUIManager requirements from ${this.comfyUIManagerRequirementsPath}`);
-    const installCmd = getPipInstallArgs({ requirementsFile: this.comfyUIManagerRequirementsPath, packages: [] });
+    const installCmd = getPipInstallArgs({
+      requirementsFile: this.comfyUIManagerRequirementsPath,
+      packages: [],
+      indexUrl: this.pypiMirror || undefined,
+    });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
       throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
