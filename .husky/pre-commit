@@ -1,4 +1,4 @@
-if [[ "$OS" == "Windows_NT" ]]; then
+if [ "$OS" = "Windows_NT" ]; then
   npx.cmd lint-staged
 else
   npx lint-staged

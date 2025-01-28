@@ -16,15 +16,17 @@ export type ProcessCallbacks = {
   onStderr?: (data: string) => void;
 };
 
-export type PyTorchInstallConfig = {
+export type PipInstallConfig = {
   packages: string[];
   indexUrl?: string;
   extraIndexUrl?: string;
   prerelease?: boolean;
   upgradePackages?: boolean;
+  requirementsFile?: string;
+  indexStrategy?: 'compatible' | 'unsafe-best-match';
 };
 
-export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: string): PyTorchInstallConfig {
+export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: string): PipInstallConfig {
   const basePackages = ['torch', 'torchvision', 'torchaudio'];
 
   // CPU-only configuration
@@ -56,7 +58,7 @@ export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: stri
   return { packages: basePackages };
 }
 
-export function getPyTorchInstallArgs(config: PyTorchInstallConfig): string[] {
+export function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
   if (config.upgradePackages) {
@@ -67,7 +69,11 @@ export function getPyTorchInstallArgs(config: PyTorchInstallConfig): string[] {
     installArgs.push('--prerelease', 'allow');
   }
 
-  installArgs.push(...config.packages);
+  if (config.requirementsFile) {
+    installArgs.push('-r', config.requirementsFile);
+  } else {
+    installArgs.push(...config.packages);
+  }
 
   if (config.indexUrl) {
     installArgs.push('--index-url', config.indexUrl);
@@ -75,6 +81,10 @@ export function getPyTorchInstallArgs(config: PyTorchInstallConfig): string[] {
 
   if (config.extraIndexUrl) {
     installArgs.push('--extra-index-url', config.extraIndexUrl);
+  }
+
+  if (config.indexStrategy) {
+    installArgs.push('--index-strategy', config.indexStrategy);
   }
 
   return installArgs;
@@ -297,7 +307,11 @@ export class VirtualEnvironment implements HasTelemetry {
       return this.manualInstall(callbacks);
     }
 
-    const installCmd = ['pip', 'install', '-r', this.requirementsCompiledPath, '--index-strategy', 'unsafe-best-match'];
+    const installCmd = getPipInstallArgs({
+      requirementsFile: this.requirementsCompiledPath,
+      indexStrategy: 'unsafe-best-match',
+      packages: [],
+    });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
       log.error(
@@ -460,7 +474,7 @@ export class VirtualEnvironment implements HasTelemetry {
     if (this.torchMirror) {
       config.indexUrl = this.torchMirror;
     }
-    const installArgs = getPyTorchInstallArgs(config);
+    const installArgs = getPipInstallArgs(config);
 
     log.info(`Installing PyTorch with config: ${JSON.stringify(config)}`);
     const { exitCode } = await this.runUvCommandAsync(installArgs, callbacks);
@@ -472,7 +486,7 @@ export class VirtualEnvironment implements HasTelemetry {
 
   private async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUI requirements from ${this.comfyUIRequirementsPath}`);
-    const installCmd = ['pip', 'install', '-r', this.comfyUIRequirementsPath];
+    const installCmd = getPipInstallArgs({ requirementsFile: this.comfyUIRequirementsPath, packages: [] });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
       throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
@@ -481,7 +495,7 @@ export class VirtualEnvironment implements HasTelemetry {
 
   private async installComfyUIManagerRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUIManager requirements from ${this.comfyUIManagerRequirementsPath}`);
-    const installCmd = ['pip', 'install', '-r', this.comfyUIManagerRequirementsPath];
+    const installCmd = getPipInstallArgs({ requirementsFile: this.comfyUIManagerRequirementsPath, packages: [] });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
       throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
