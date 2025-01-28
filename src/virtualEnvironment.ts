@@ -124,7 +124,7 @@ export class VirtualEnvironment implements HasTelemetry {
       VIRTUAL_ENV: this.venvPath,
       // Empty strings are not valid values for these env vars,
       // dropping them here to avoid passing them to uv.
-      UV_PYTHON_INSTALL_MIRROR: this.pythonMirror || undefined
+      UV_PYTHON_INSTALL_MIRROR: this.pythonMirror || undefined,
     };
 
     if (!this.uvPty) {
