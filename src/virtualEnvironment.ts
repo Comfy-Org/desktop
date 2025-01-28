@@ -17,7 +17,7 @@ export type ProcessCallbacks = {
   onStderr?: (data: string) => void;
 };
 
-export type PipInstallConfig = {
+type PipInstallConfig = {
   packages: string[];
   indexUrl?: string;
   extraIndexUrl?: string;
@@ -27,7 +27,7 @@ export type PipInstallConfig = {
   indexStrategy?: 'compatible' | 'unsafe-best-match';
 };
 
-export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: string): PipInstallConfig {
+function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: string): PipInstallConfig {
   const basePackages = ['torch', 'torchvision', 'torchaudio'];
 
   // CPU-only configuration
@@ -59,7 +59,7 @@ export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: stri
   return { packages: basePackages };
 }
 
-export function getPipInstallArgs(config: PipInstallConfig): string[] {
+function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
   if (config.upgradePackages) {
