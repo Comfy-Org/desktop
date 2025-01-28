@@ -124,3 +124,6 @@ export enum DownloadStatus {
   ERROR = 'error',
   CANCELLED = 'cancelled',
 }
+
+export const CUDA_TORCH_URL = 'https://download.pytorch.org/whl/cu124';
+export const NIGHTLY_CPU_TORCH_URL = 'https://download.pytorch.org/whl/nightly/cpu';

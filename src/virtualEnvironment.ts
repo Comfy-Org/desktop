@@ -6,6 +6,7 @@ import { rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
+import { CUDA_TORCH_URL, NIGHTLY_CPU_TORCH_URL } from './constants';
 import type { TorchDeviceType } from './preload';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell } from './shell/util';
@@ -40,7 +41,7 @@ export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: stri
   if (selectedDevice === 'nvidia' || platform === 'win32') {
     return {
       packages: basePackages,
-      indexUrl: 'https://download.pytorch.org/whl/cu124',
+      indexUrl: CUDA_TORCH_URL,
     };
   }
 
@@ -48,7 +49,7 @@ export function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: stri
   if (selectedDevice === 'mps' || platform === 'darwin') {
     return {
       packages: basePackages,
-      extraIndexUrl: 'https://download.pytorch.org/whl/nightly/cpu',
+      extraIndexUrl: NIGHTLY_CPU_TORCH_URL,
       prerelease: true,
       upgradePackages: true,
     };
