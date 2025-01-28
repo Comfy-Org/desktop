@@ -30,7 +30,7 @@ export class ComfyInstallation {
     return this.state === 'installed' && !this.hasIssues;
   }
 
-  virtualEnvironment: VirtualEnvironment;
+  readonly virtualEnvironment: VirtualEnvironment;
   comfySettings: ComfySettings;
 
   /**
@@ -43,7 +43,7 @@ export class ComfyInstallation {
     /** Installation state, e.g. `started`, `installed`.  See {@link DesktopSettings}. */
     public state: DesktopInstallState,
     /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
-    public basePath: string,
+    public readonly basePath: string,
     /** The device type to use for the installation. */
     public readonly telemetry: ITelemetry,
     public device?: TorchDeviceType
