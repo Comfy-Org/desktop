@@ -12,19 +12,7 @@ import * as utils from '@/utils';
 vi.mock('electron', () => ({
   ipcMain: {
     handle: vi.fn(),
-    handleOnce: vi.fn(),
     removeHandler: vi.fn(),
-    once: vi.fn(),
-  },
-  app: {
-    getPath: vi.fn().mockReturnValue('/mock/path'),
-    getAppPath: vi.fn().mockReturnValue('/mock/app/path'),
-    isPackaged: false,
-    quit: vi.fn(),
-    relaunch: vi.fn(),
-  },
-  dialog: {
-    showErrorBox: vi.fn(),
   },
 }));
 
