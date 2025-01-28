@@ -28,7 +28,8 @@ vi.mock('@/utils', async () => {
   return {
     ...actual,
     pathAccessible: vi.fn().mockImplementation((path: string) => {
-      return Promise.resolve(path.startsWith('valid/'));
+      const isValid = path.startsWith('valid/') || path.endsWith(`\\System32\\vcruntime140.dll`);
+      return Promise.resolve(isValid);
     }),
     canExecute: vi.fn().mockResolvedValue(true),
     canExecuteShellCommand: vi.fn().mockResolvedValue(true),
