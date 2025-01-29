@@ -239,16 +239,18 @@ export function canAccessUrl(url: string, options?: { timeout?: number }): Promi
     const req = https.get(url, { timeout }, (res) => {
       const statusCode = res.statusCode ?? 0;
       res.destroy(); // Clean up the stream
-      resolve(statusCode >= 200 && statusCode < 300);
+      log.debug('URL access check result:', url, statusCode);
+      resolve(statusCode >= 200 && statusCode < 400);
     });
 
     req.on('error', (error) => {
-      log.error('Error checking URL access:', error);
+      log.error('Error checking URL access:', url, error);
       resolve(false);
     });
 
     req.on('timeout', () => {
       req.destroy();
+      log.error('URL access timed out', url);
       resolve(false);
     });
   });
