@@ -197,7 +197,6 @@ export class InstallationManager {
     if (!this.appWindow.isOnPage(page)) {
       await this.appWindow.loadPage(page);
     }
-    this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
 
     const installation = new ComfyInstallation('installed', installWizard.basePath, this.telemetry, device);
     const { virtualEnvironment } = installation;
