@@ -198,10 +198,8 @@ export class InstallationManager {
       useDesktopConfig().set('migrateCustomNodesFrom', installWizard.migrationSource);
     }
 
-    const installation = new ComfyInstallation('installed', installWizard.basePath, this.telemetry, device);
+    const installation = new ComfyInstallation('started', installWizard.basePath, this.telemetry, device);
     const { virtualEnvironment } = installation;
-
-    installation.setState('installed');
 
     // Virtual terminal output callbacks
     const processCallbacks: ProcessCallbacks = {
@@ -229,6 +227,7 @@ export class InstallationManager {
       }).show();
     }
 
+    installation.setState('installed');
     return installation;
   }
 
