@@ -39,7 +39,6 @@ export class ComfyDesktopApp implements HasTelemetry {
   }
 
   public async initialize(): Promise<void> {
-    await this.comfySettings.loadSettings();
     this.registerIPCHandlers();
     this.initializeTodesktop();
     await this.setupGPUContext();

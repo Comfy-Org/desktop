@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
+import { ComfySettings } from '@/config/comfySettings';
 import { IPC_CHANNELS } from '@/constants';
 import { InstallationManager } from '@/install/installationManager';
 import type { AppWindow } from '@/main-process/appWindow';
@@ -116,8 +117,13 @@ describe('InstallationManager', () => {
 
   describe('ensureInstalled', () => {
     it('returns existing valid installation', async () => {
-      const installation = new ComfyInstallation('installed', 'valid/base', createMockTelemetry());
-      vi.spyOn(ComfyInstallation, 'fromConfig').mockReturnValue(installation);
+      const installation = new ComfyInstallation(
+        'installed',
+        'valid/base',
+        createMockTelemetry(),
+        new ComfySettings('valid/base')
+      );
+      vi.spyOn(ComfyInstallation, 'fromConfig').mockResolvedValue(installation);
 
       const result = await manager.ensureInstalled();
 
@@ -162,8 +168,13 @@ describe('InstallationManager', () => {
     ])('$scenario', async ({ mockSetup, expectedErrors }) => {
       const cleanup = mockSetup?.() as (() => void) | undefined;
 
-      const installation = new ComfyInstallation('installed', 'valid/base', createMockTelemetry());
-      vi.spyOn(ComfyInstallation, 'fromConfig').mockReturnValue(installation);
+      const installation = new ComfyInstallation(
+        'installed',
+        'valid/base',
+        createMockTelemetry(),
+        new ComfySettings('valid/base')
+      );
+      vi.spyOn(ComfyInstallation, 'fromConfig').mockResolvedValue(installation);
 
       vi.spyOn(
         manager as unknown as { resolveIssues: (installation: ComfyInstallation) => Promise<boolean> },

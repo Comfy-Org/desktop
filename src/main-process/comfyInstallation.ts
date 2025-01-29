@@ -31,7 +31,6 @@ export class ComfyInstallation {
   }
 
   readonly virtualEnvironment: VirtualEnvironment;
-  comfySettings: ComfySettings;
 
   /**
    * Called during/after each step of validation
@@ -46,9 +45,9 @@ export class ComfyInstallation {
     public readonly basePath: string,
     /** The device type to use for the installation. */
     public readonly telemetry: ITelemetry,
+    public readonly comfySettings: ComfySettings,
     public device?: TorchDeviceType
   ) {
-    this.comfySettings = new ComfySettings(basePath);
     this.virtualEnvironment = this.createVirtualEnvironment(basePath);
   }
 
@@ -67,12 +66,18 @@ export class ComfyInstallation {
    * @returns A ComfyInstallation (not validated) object if config is saved, otherwise `undefined`.
    * @throws If YAML config is unreadable due to access restrictions
    */
-  static fromConfig(): ComfyInstallation | undefined {
+  static async fromConfig(): Promise<ComfyInstallation | null> {
     const config = useDesktopConfig();
     const state = config.get('installState');
     const basePath = config.get('basePath');
     const device = config.get('selectedDevice');
-    if (state && basePath) return new ComfyInstallation(state, basePath, getTelemetry(), device);
+    if (state && basePath) {
+      const comfySettings = new ComfySettings(basePath);
+      await comfySettings.loadSettings();
+      return new ComfyInstallation(state, basePath, getTelemetry(), comfySettings, device);
+    } else {
+      return null;
+    }
   }
 
   /**
