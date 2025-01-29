@@ -171,14 +171,12 @@ export class InstallationManager {
       migrationItemIds: installOptions.migrationItemIds,
     });
 
+    const { device } = installOptions;
+
     const installWizard = new InstallWizard(installOptions, this.telemetry);
     useDesktopConfig().set('basePath', installWizard.basePath);
     useDesktopConfig().set('versionConsentedMetrics', __COMFYUI_DESKTOP_VERSION__);
-
-    const { device } = installOptions;
-    if (device !== undefined) {
-      useDesktopConfig().set('selectedDevice', device);
-    }
+    useDesktopConfig().set('selectedDevice', device);
 
     await installWizard.install();
     this.appWindow.maximize();
