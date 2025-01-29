@@ -6,7 +6,6 @@ import { rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
-import { CUDA_TORCH_URL, NIGHTLY_CPU_TORCH_URL } from './constants';
 import type { TorchDeviceType } from './preload';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell } from './shell/util';
@@ -27,39 +26,7 @@ interface PipInstallConfig {
   indexStrategy?: 'compatible' | 'unsafe-best-match';
 }
 
-function getPyTorchConfig(selectedDevice: TorchDeviceType, platform: string): PipInstallConfig {
-  const basePackages = ['torch', 'torchvision', 'torchaudio'];
-
-  // CPU-only configuration
-  if (selectedDevice === 'cpu') {
-    return {
-      packages: basePackages,
-    };
-  }
-
-  // NVIDIA/Windows configuration
-  if (selectedDevice === 'nvidia' || platform === 'win32') {
-    return {
-      packages: basePackages,
-      indexUrl: CUDA_TORCH_URL,
-    };
-  }
-
-  // macOS/MPS configuration
-  if (selectedDevice === 'mps' || platform === 'darwin') {
-    return {
-      packages: basePackages,
-      extraIndexUrl: NIGHTLY_CPU_TORCH_URL,
-      prerelease: true,
-      upgradePackages: true,
-    };
-  }
-
-  // Default fallback configuration
-  return { packages: basePackages };
-}
-
-function getPipInstallArgs(config: PipInstallConfig): string[] {
+export function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
   if (config.upgradePackages) {
@@ -471,10 +438,12 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
-    const config = getPyTorchConfig(this.selectedDevice, process.platform);
-    if (this.torchMirror) {
-      config.indexUrl = this.torchMirror;
-    }
+    const config: PipInstallConfig = {
+      packages: ['torch', 'torchvision', 'torchaudio'],
+      indexUrl: this.torchMirror,
+      prerelease: this.torchMirror?.includes('nightly'),
+    };
+
     const installArgs = getPipInstallArgs(config);
 
     log.info(`Installing PyTorch with config: ${JSON.stringify(config)}`);
