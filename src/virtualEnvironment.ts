@@ -405,7 +405,7 @@ export class VirtualEnvironment implements HasTelemetry {
     cwd: string = this.venvRootPath
   ): ChildProcess {
     log.info(`Running command: ${command} ${args.join(' ')} in ${cwd}`);
-    const childProcess: ChildProcess = spawn(command, args, {
+    const childProcess = spawn(command, args, {
       cwd,
       env: {
         ...process.env,
@@ -414,12 +414,12 @@ export class VirtualEnvironment implements HasTelemetry {
     });
 
     if (callbacks) {
-      childProcess.stdout?.on('data', (data: Buffer) => {
+      childProcess.stdout.on('data', (data: Buffer) => {
         console.log(data.toString());
         callbacks.onStdout?.(data.toString());
       });
 
-      childProcess.stderr?.on('data', (data: Buffer) => {
+      childProcess.stderr.on('data', (data: Buffer) => {
         console.log(data.toString());
         callbacks.onStderr?.(data.toString());
       });
