@@ -26,7 +26,7 @@ async function main() {
     writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));
 
     // Commit the version bump
-    execSync(`git commit -am "[chore] Update frontend to ${version}"`, { stdio: 'inherit' });
+    execSync(`git commit -am "[chore] Update frontend to ${version}" --no-verify`, { stdio: 'inherit' });
 
     // Create the PR
     console.log('Creating PR...');
