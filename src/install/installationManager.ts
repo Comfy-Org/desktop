@@ -187,7 +187,10 @@ export class InstallationManager {
     if (shouldMigrateCustomNodes) {
       useDesktopConfig().set('migrateCustomNodesFrom', installWizard.migrationSource);
     }
-    await this.appWindow.loadPage('server-start');
+    const page = device === 'unsupported' ? 'not-supported' : 'server-start';
+    if (!this.appWindow.isOnPage(page)) {
+      await this.appWindow.loadPage(page);
+    }
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
 
     const installation = new ComfyInstallation('installed', installWizard.basePath, this.telemetry, device);
