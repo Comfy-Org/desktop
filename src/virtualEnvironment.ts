@@ -6,6 +6,7 @@ import { rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
+import { CUDA_TORCH_URL, NIGHTLY_CPU_TORCH_URL } from './constants';
 import type { TorchDeviceType } from './preload';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell } from './shell/util';
@@ -57,6 +58,22 @@ export function getPipInstallArgs(config: PipInstallConfig): string[] {
 
   return installArgs;
 }
+
+/**
+ * Returns the default torch mirror for the given device.
+ * @param device The device type
+ * @returns The default torch mirror
+ */
+const getDefaultTorchMirror = (device: TorchDeviceType): string => {
+  switch (device) {
+    case 'mps':
+      return NIGHTLY_CPU_TORCH_URL;
+    case 'nvidia':
+      return CUDA_TORCH_URL;
+    default:
+      return '';
+  }
+};
 
 /**
  * Manages a virtual Python environment using uv.
@@ -438,10 +455,11 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
+    const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
     const config: PipInstallConfig = {
       packages: ['torch', 'torchvision', 'torchaudio'],
-      indexUrl: this.torchMirror,
-      prerelease: this.torchMirror?.includes('nightly'),
+      indexUrl: torchMirror,
+      prerelease: torchMirror?.includes('nightly'),
     };
 
     const installArgs = getPipInstallArgs(config);
