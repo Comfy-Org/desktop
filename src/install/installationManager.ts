@@ -181,6 +181,12 @@ export class InstallationManager {
     useDesktopConfig().set('versionConsentedMetrics', __COMFYUI_DESKTOP_VERSION__);
     useDesktopConfig().set('selectedDevice', device);
 
+    // Load the next page
+    const page = device === 'unsupported' ? 'not-supported' : 'server-start';
+    if (!this.appWindow.isOnPage(page)) {
+      await this.appWindow.loadPage(page);
+    }
+
     // Creates folders and initializes ComfyUI settings
     const installWizard = new InstallWizard(installOptions, this.telemetry);
     await installWizard.install();
@@ -190,12 +196,6 @@ export class InstallationManager {
       !!installWizard.migrationSource && installWizard.migrationItemIds.has('custom_nodes');
     if (shouldMigrateCustomNodes) {
       useDesktopConfig().set('migrateCustomNodesFrom', installWizard.migrationSource);
-    }
-
-    // Load the next page
-    const page = device === 'unsupported' ? 'not-supported' : 'server-start';
-    if (!this.appWindow.isOnPage(page)) {
-      await this.appWindow.loadPage(page);
     }
 
     const installation = new ComfyInstallation('installed', installWizard.basePath, this.telemetry, device);
