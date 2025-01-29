@@ -596,7 +596,8 @@ export class VirtualEnvironment implements HasTelemetry {
     try {
       await this.#using(() => this.ensurePip(callbacks));
       return true;
-    } catch {
+    } catch (error) {
+      log.error('Failed to upgrade pip:', error);
       return false;
     }
   }
@@ -610,7 +611,8 @@ export class VirtualEnvironment implements HasTelemetry {
       const callbacks: ProcessCallbacks = { onStdout: onData };
       await this.#using(() => this.createVenvWithPython(callbacks));
       return true;
-    } catch {
+    } catch (error) {
+      log.error('Failed to create virtual environment:', error);
       return false;
     }
   }

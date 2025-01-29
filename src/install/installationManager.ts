@@ -96,7 +96,10 @@ export class InstallationManager {
         });
       }
     };
-    const sendLogIpc = (data: string) => this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+    const sendLogIpc = (data: string) => {
+      log.info(data);
+      this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
+    };
 
     ipcMain.handle(IPC_CHANNELS.GET_VALIDATION_STATE, () => {
       installation.onUpdate?.(installation.validation);
