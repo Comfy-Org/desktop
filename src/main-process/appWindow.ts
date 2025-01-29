@@ -16,6 +16,8 @@ import Store from 'electron-store';
 import path from 'node:path';
 import { URL } from 'node:url';
 
+import { ElectronError } from '@/infrastructure/electronError';
+
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import type { ElectronContextMenuOptions } from '../preload';
@@ -215,7 +217,18 @@ export class AppWindow {
     } else {
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
-      await this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: page });
+      try {
+        await this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: page });
+      } catch (error) {
+        const electronError = ElectronError.fromCaught(error);
+
+        // Ignore fallacious Chromium error
+        if (electronError?.isGenericChromiumError()) {
+          log.verbose('Ignoring Chromium page load error - occurs when requests are sent too fast.');
+          return;
+        }
+        throw electronError ?? error;
+      }
     }
   }
 
