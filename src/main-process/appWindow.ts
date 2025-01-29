@@ -215,6 +215,9 @@ export class AppWindow {
       if (process.env.DEV_TOOLS_AUTO === 'true') this.window.webContents.openDevTools();
       await this.window.loadURL(url);
     } else {
+      // TODO: Remove this temporary workaround when RENDERER_READY is reworked.
+      if (page === 'maintenance') this.rendererReady = true;
+
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
       try {
