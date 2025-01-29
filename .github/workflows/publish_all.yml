@@ -8,7 +8,7 @@ on:
         required: false
         type: string
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   build-todesktop:
