@@ -10,18 +10,18 @@ export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
   'Comfy.Workflow.ShowMissingModelsWarning': true,
   'Comfy.Server.LaunchArgs': {},
-  'Comfy-Desktop.UV.PythonInstallMirror': '',
-  'Comfy-Desktop.UV.PypiInstallMirror': '',
-  'Comfy-Desktop.UV.TorchInstallMirror': '',
+  'Comfy-Desktop.PythonInstallMirror': '',
+  'Comfy-Desktop.PypiInstallMirror': '',
+  'Comfy-Desktop.TorchInstallMirror': '',
 } as const;
 
 export interface ComfySettingsData {
   'Comfy-Desktop.AutoUpdate': boolean;
   'Comfy-Desktop.SendStatistics': boolean;
   'Comfy.Server.LaunchArgs': Record<string, string>;
-  'Comfy-Desktop.UV.PythonInstallMirror': string;
-  'Comfy-Desktop.UV.PypiInstallMirror': string;
-  'Comfy-Desktop.UV.TorchInstallMirror': string;
+  'Comfy-Desktop.PythonInstallMirror': string;
+  'Comfy-Desktop.PypiInstallMirror': string;
+  'Comfy-Desktop.TorchInstallMirror': string;
   [key: string]: unknown;
 }
 
