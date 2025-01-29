@@ -67,7 +67,7 @@ function getPipInstallArgs(config: PipInstallConfig): string[] {
   }
 
   if (config.prerelease) {
-    installArgs.push('--prerelease', 'allow');
+    installArgs.push('--pre');
   }
 
   if (config.requirementsFile) {
