@@ -53,7 +53,7 @@ export class ComfyInstallation {
     basePath: string,
     /** The device type to use for the installation. */
     public readonly telemetry: ITelemetry,
-    public readonly comfySettings: ComfySettings
+    public comfySettings: ComfySettings
   ) {
     this._basePath = basePath;
     this._virtualEnvironment = this.createVirtualEnvironment(basePath);
@@ -110,7 +110,7 @@ export class ComfyInstallation {
     // Validate base path
     const basePath = useDesktopConfig().get('basePath');
     if (basePath && (await pathAccessible(basePath))) {
-      this.updateBasePathAndVenv(basePath);
+      await this.updateBasePathAndVenv(basePath);
 
       validation.basePath = 'OK';
       this.onUpdate?.(validation);
@@ -203,11 +203,13 @@ export class ComfyInstallation {
    * Updates the base path and recreates the virtual environment (object).
    * @param basePath The new base path to set.
    */
-  updateBasePathAndVenv(basePath: string) {
+  async updateBasePathAndVenv(basePath: string) {
     if (this._basePath === basePath) return;
 
     this._basePath = basePath;
     this._virtualEnvironment = this.createVirtualEnvironment(basePath);
+    this.comfySettings = new ComfySettings(basePath);
+    await this.comfySettings.loadSettings();
     useDesktopConfig().set('basePath', basePath);
   }
 
