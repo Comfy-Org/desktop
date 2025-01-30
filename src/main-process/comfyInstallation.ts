@@ -15,6 +15,11 @@ import { VirtualEnvironment } from '../virtualEnvironment';
  * Used to set app state and validate the environment.
  */
 export class ComfyInstallation {
+  private _basePath: string;
+  public get basePath(): string {
+    return this._basePath;
+  }
+
   /** Installation issues, such as missing base path, no venv.  Populated by {@link validate}. */
   validation: InstallValidation = {
     inProgress: false,
@@ -30,7 +35,10 @@ export class ComfyInstallation {
     return this.state === 'installed' && !this.hasIssues;
   }
 
-  readonly virtualEnvironment: VirtualEnvironment;
+  private _virtualEnvironment: VirtualEnvironment;
+  public get virtualEnvironment(): VirtualEnvironment {
+    return this._virtualEnvironment;
+  }
 
   /**
    * Called during/after each step of validation
@@ -42,12 +50,13 @@ export class ComfyInstallation {
     /** Installation state, e.g. `started`, `installed`.  See {@link DesktopSettings}. */
     public state: DesktopInstallState,
     /** The base path of the desktop app.  Models, nodes, and configuration are saved here by default. */
-    public readonly basePath: string,
+    basePath: string,
     /** The device type to use for the installation. */
     public readonly telemetry: ITelemetry,
     public readonly comfySettings: ComfySettings
   ) {
-    this.virtualEnvironment = this.createVirtualEnvironment(basePath);
+    this._basePath = basePath;
+    this._virtualEnvironment = this.createVirtualEnvironment(basePath);
   }
 
   private createVirtualEnvironment(basePath: string) {
@@ -103,10 +112,12 @@ export class ComfyInstallation {
     // Validate base path
     const basePath = useDesktopConfig().get('basePath');
     if (basePath && (await pathAccessible(basePath))) {
+      this.updateBasePathAndVenv(basePath);
+
       validation.basePath = 'OK';
       this.onUpdate?.(validation);
 
-      const venv = this.createVirtualEnvironment(basePath);
+      const venv = this.virtualEnvironment;
       if (await venv.exists()) {
         validation.venvDirectory = 'OK';
         this.onUpdate?.(validation);
@@ -188,6 +199,18 @@ export class ComfyInstallation {
   setState(state: DesktopInstallState) {
     this.state = state;
     useDesktopConfig().set('installState', state);
+  }
+
+  /**
+   * Updates the base path and recreates the virtual environment (object).
+   * @param basePath The new base path to set.
+   */
+  updateBasePathAndVenv(basePath: string) {
+    if (this._basePath === basePath) return;
+
+    this._basePath = basePath;
+    this._virtualEnvironment = this.createVirtualEnvironment(basePath);
+    useDesktopConfig().set('basePath', basePath);
   }
 
   /**
