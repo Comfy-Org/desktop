@@ -20,6 +20,11 @@ export class ComfyInstallation {
     return this._basePath;
   }
 
+  private _virtualEnvironment: VirtualEnvironment;
+  public get virtualEnvironment(): VirtualEnvironment {
+    return this._virtualEnvironment;
+  }
+
   /** Installation issues, such as missing base path, no venv.  Populated by {@link validate}. */
   validation: InstallValidation = {
     inProgress: false,
@@ -33,11 +38,6 @@ export class ComfyInstallation {
   /** Returns `true` if {@link state} is 'installed' and there are no issues, otherwise `false`. */
   get isValid() {
     return this.state === 'installed' && !this.hasIssues;
-  }
-
-  private _virtualEnvironment: VirtualEnvironment;
-  public get virtualEnvironment(): VirtualEnvironment {
-    return this._virtualEnvironment;
   }
 
   /**
