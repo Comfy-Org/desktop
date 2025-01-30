@@ -205,13 +205,7 @@ export class InstallationManager {
 
     const comfySettings = new ComfySettings(installWizard.basePath);
     await comfySettings.loadSettings();
-    const installation = new ComfyInstallation(
-      'started',
-      installWizard.basePath,
-      this.telemetry,
-      comfySettings,
-      device
-    );
+    const installation = new ComfyInstallation('started', installWizard.basePath, this.telemetry, comfySettings);
     const { virtualEnvironment } = installation;
 
     // Virtual terminal output callbacks

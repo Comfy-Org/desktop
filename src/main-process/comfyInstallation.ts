@@ -4,7 +4,7 @@ import { rm } from 'node:fs/promises';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings } from '../config/comfySettings';
 import type { DesktopInstallState } from '../main_types';
-import type { InstallValidation, TorchDeviceType } from '../preload';
+import type { InstallValidation } from '../preload';
 import { type ITelemetry, getTelemetry } from '../services/telemetry';
 import { useDesktopConfig } from '../store/desktopConfig';
 import { canExecute, canExecuteShellCommand, pathAccessible } from '../utils';
@@ -45,8 +45,7 @@ export class ComfyInstallation {
     public readonly basePath: string,
     /** The device type to use for the installation. */
     public readonly telemetry: ITelemetry,
-    public readonly comfySettings: ComfySettings,
-    public device?: TorchDeviceType
+    public readonly comfySettings: ComfySettings
   ) {
     this.virtualEnvironment = this.createVirtualEnvironment(basePath);
   }
@@ -54,7 +53,7 @@ export class ComfyInstallation {
   private createVirtualEnvironment(basePath: string) {
     return new VirtualEnvironment(basePath, {
       telemetry: this.telemetry,
-      selectedDevice: this.device,
+      selectedDevice: useDesktopConfig().get('selectedDevice'),
       pythonMirror: this.comfySettings.get('Comfy-Desktop.UV.PythonInstallMirror'),
       pypiMirror: this.comfySettings.get('Comfy-Desktop.UV.PypiInstallMirror'),
       torchMirror: this.comfySettings.get('Comfy-Desktop.UV.TorchInstallMirror'),
@@ -70,11 +69,10 @@ export class ComfyInstallation {
     const config = useDesktopConfig();
     const state = config.get('installState');
     const basePath = config.get('basePath');
-    const device = config.get('selectedDevice');
     if (state && basePath) {
       const comfySettings = new ComfySettings(basePath);
       await comfySettings.loadSettings();
-      return new ComfyInstallation(state, basePath, getTelemetry(), comfySettings, device);
+      return new ComfyInstallation(state, basePath, getTelemetry(), comfySettings);
     } else {
       return null;
     }
