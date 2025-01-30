@@ -21,8 +21,8 @@ export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;
   private terminal: Terminal | null = null; // Only created after server starts.
   constructor(
-    readonly installation: ComfyInstallation,
-    readonly appWindow: AppWindow,
+    public installation: ComfyInstallation,
+    public appWindow: AppWindow,
     readonly telemetry: ITelemetry
   ) {}
 
