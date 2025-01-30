@@ -208,37 +208,31 @@ export interface HasTelemetry {
  * @param eventName
  * @returns
  */
-export function trackEvent(eventName: string) {
-  return function <T extends HasTelemetry>(target: T, propertyKey: string, descriptor: PropertyDescriptor) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+export function trackEvent<T extends HasTelemetry>(eventName: string) {
+  type DecoratedMethod = (this: T, ...args: never[]) => Promise<void>;
+  type MethodDescriptor = TypedPropertyDescriptor<DecoratedMethod>;
+
+  return function (target: T, propertyKey: string, descriptor: MethodDescriptor) {
     const originalMethod = descriptor.value;
 
-    // eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-explicit-any
-    descriptor.value = async function (this: T, ...args: any[]) {
+    descriptor.value = async function (...args) {
       this.telemetry.track(`${eventName}_start`);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return (
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        originalMethod
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          .apply(this, args)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          .then(() => {
-            this.telemetry.track(`${eventName}_end`);
-          })
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          .catch((error: Error) => {
-            this.telemetry.queueSentryEvent({
-              eventName: `${eventName}_error`,
-              properties: {
-                error_message: error.message,
-                error_name: error.name,
-              },
-            });
-            throw error;
-          })
-      );
+      return originalMethod!
+        .apply(this, args)
+        .then(() => {
+          this.telemetry.track(`${eventName}_end`);
+        })
+        .catch((error: Error) => {
+          this.telemetry.queueSentryEvent({
+            eventName: `${eventName}_error`,
+            properties: {
+              error_message: error.message,
+              error_name: error.name,
+            },
+          });
+          throw error;
+        });
     };
 
     return descriptor;
