@@ -278,7 +278,6 @@ export class AppWindow {
   }
 
   private setupWindowEvents(): void {
-    // eslint-disable-next-line unicorn/consistent-function-scoping
     const updateBounds = () => {
       if (!this.window) return;
 
