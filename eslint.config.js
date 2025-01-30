@@ -53,6 +53,7 @@ export default tseslint.config(
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/switch-case-braces': 'off',
       'unicorn/explicit-length-check': 'off',
+      'unicorn/consistent-function-scoping': 'off',
     },
   },
 
