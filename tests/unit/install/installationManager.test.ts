@@ -28,6 +28,10 @@ vi.mock('@/store/desktopConfig', () => ({
       if (key === 'installState') return 'installed';
       if (key === 'basePath') return 'valid/base';
     }),
+    set: vi.fn().mockImplementation((key: string, value: string) => {
+      if (key !== 'basePath') throw new Error(`Unexpected key: ${key}`);
+      if (!value) throw new Error(`Unexpected value: [${value}]`);
+    }),
   }),
 }));
 vi.mock('electron-log/main');
