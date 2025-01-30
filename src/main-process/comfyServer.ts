@@ -77,6 +77,7 @@ export class ComfyServer implements HasTelemetry {
       'input-directory': this.inputDirectoryPath,
       'output-directory': this.outputDirectoryPath,
       'front-end-root': this.webRootPath,
+      'base-directory': this.basePath,
       'extra-model-paths-config': ComfyServerConfig.configPath,
       port: this.serverArgs.port.toString(),
       listen: this.serverArgs.host,
@@ -103,6 +104,7 @@ export class ComfyServer implements HasTelemetry {
   @trackEvent('comfyui:server_start')
   async start() {
     ComfySettings.lockWrites();
+    await ComfyServerConfig.addAppBundledCustomNodesToConfig();
     await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
     return new Promise<void>((resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });
