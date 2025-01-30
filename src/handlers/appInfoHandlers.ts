@@ -31,7 +31,6 @@ export function registerAppInfoHandlers(appWindow: AppWindow) {
 
     const basePath = result.filePaths[0];
     useDesktopConfig().set('basePath', basePath);
-    // TODO: Replace with new base path config
     return await ComfyServerConfig.setBasePathInDefaultConfig(basePath);
   });
 
