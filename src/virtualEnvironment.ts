@@ -509,25 +509,32 @@ export class VirtualEnvironment implements HasTelemetry {
    * @returns `true` if pip install does not detect any missing packages, otherwise `false`
    */
   async hasRequirements() {
-    const args = ['pip', 'install', '--dry-run', '-r', this.comfyUIRequirementsPath];
-    log.info(`Running direct process command: ${args.join(' ')}`);
+    const checkRequirements = async (requirementsPath: string) => {
+      const args = ['pip', 'install', '--dry-run', '-r', requirementsPath];
+      log.info(`Running direct process command: ${args.join(' ')}`);
 
-    // Get packages as json string
-    let output = '';
-    const callbacks: ProcessCallbacks = {
-      onStdout: (data) => (output += data.toString()),
-      onStderr: (data) => (output += data.toString()),
+      // Get packages as json string
+      let output = '';
+      const callbacks: ProcessCallbacks = {
+        onStdout: (data) => (output += data.toString()),
+        onStderr: (data) => (output += data.toString()),
+      };
+      const result = await this.runCommandAsync(this.uvPath, args, { VIRTUAL_ENV: this.venvPath }, callbacks);
+
+      if (result.exitCode !== 0)
+        throw new Error(`Failed to get packages: Exit code ${result.exitCode}, signal ${result.signal}`);
+      if (!output) throw new Error('Failed to get packages: uv output was empty');
+
+      const venvOk = output.search(/\bWould make no changes\s+$/) !== -1;
+      if (!venvOk) log.warn(output);
+
+      return venvOk;
     };
-    const result = await this.runCommandAsync(this.uvPath, args, { VIRTUAL_ENV: this.venvPath }, callbacks);
 
-    if (result.exitCode !== 0)
-      throw new Error(`Failed to get packages: Exit code ${result.exitCode}, signal ${result.signal}`);
-    if (!output) throw new Error('Failed to get packages: uv output was empty');
+    const coreOk = await checkRequirements(this.comfyUIRequirementsPath);
+    const managerOk = await checkRequirements(this.comfyUIManagerRequirementsPath);
 
-    const venvOk = output.search(/\bWould make no changes\s+$/) !== -1;
-    if (!venvOk) log.warn(output);
-
-    return venvOk;
+    return coreOk && managerOk;
   }
 
   async clearUvCache(): Promise<boolean> {
