@@ -31,10 +31,9 @@ async function main() {
     // Create the PR
     console.log('Creating PR...');
     const prBody = `Automated frontend update to ${version}: https://github.com/Comfy-Org/ComfyUI_frontend/releases/tag/v${version}`;
-    execSync(
-      `gh pr create --title "[chore] Update frontend to ${version}" --label "dependencies" --body "${prBody}"`,
-      { stdio: 'inherit' }
-    );
+    execSync(`gh pr create --title "[chore] Update frontend to ${version}" --label "dependencies" --body "${prBody}"`, {
+      stdio: 'inherit',
+    });
 
     console.log(`✅ Successfully created PR for frontend ${version}`);
   } catch (error) {
