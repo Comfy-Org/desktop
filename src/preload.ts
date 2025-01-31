@@ -415,7 +415,7 @@ const electronAPI = {
      * Install the requirements for the ComfyUI server.
      * @returns A promise that resolves when the uv command is complete.
      */
-    installRequirements: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS),
+    installRequirements: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS),
 
     /**
      * Clears the uv cache of all downloaded packages.
