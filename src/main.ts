@@ -9,6 +9,7 @@ import { registerAppInfoHandlers } from './handlers/appInfoHandlers';
 import { registerNetworkHandlers } from './handlers/networkHandlers';
 import { registerPathHandlers } from './handlers/pathHandlers';
 import { InstallationManager } from './install/installationManager';
+import { AppState } from './main-process/appState';
 import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import SentryLogging from './services/sentry';
@@ -21,16 +22,10 @@ initalizeLogging();
 
 const allowDevVars = app.commandLine.hasSwitch('dev-mode');
 const telemetry = getTelemetry();
+const appState = new AppState();
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
 quitWhenAllWindowsAreClosed();
-
-// Suppress unhandled exception dialog when already quitting.
-let quitting = false;
-app.on('before-quit', () => {
-  quitting = true;
-});
-
 trackAppQuitEvents();
 initializeSentry();
 
@@ -137,7 +132,7 @@ async function startApp() {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
-      if (!quitting) {
+      if (!appState.isQuitting) {
         dialog.showErrorBox(
           'Unhandled exception',
           `An unexpected error occurred whilst starting the app, and it needs to be closed.\n\nError message:\n\n${error}`
