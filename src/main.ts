@@ -13,17 +13,19 @@ import { InstallationManager } from './install/installationManager';
 import { AppState } from './main-process/appState';
 import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
+import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
 import { getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
 import { findAvailablePort } from './utils';
 
+// Synchronous pre-start configuration
 dotenv.config();
 initalizeLogging();
 
-const allowDevVars = app.commandLine.hasSwitch('dev-mode');
 const telemetry = getTelemetry();
 const appState = new AppState();
+const overrides = new DevOverrides();
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
 quitWhenAllWindowsAreClosed();
@@ -104,14 +106,14 @@ async function startApp() {
       if (allowMetrics) telemetry.flush();
 
       // Construct core launch args
-      const useExternalServer = devOverride('USE_EXTERNAL_SERVER') === 'true';
+      const useExternalServer = overrides.USE_EXTERNAL_SERVER === 'true';
       // Shallow-clone the setting launch args to avoid mutation.
       const extraServerArgs: Record<string, string> = Object.assign(
         {},
         comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs')
       );
-      const host = devOverride('COMFY_HOST') ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
-      const targetPort = Number(devOverride('COMFY_PORT') ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
+      const host = overrides.COMFY_HOST ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
+      const targetPort = Number(overrides.COMFY_PORT ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
       const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
 
       // Remove listen and port from extraServerArgs so core launch args are used instead.
@@ -178,14 +180,4 @@ function trackAppQuitEvents() {
 function initializeSentry() {
   log.verbose('Initializing Sentry');
   SentryLogging.init();
-}
-
-/**
- * Always returns `undefined` in production, unless the `--dev-mode` command line argument is present.
- *
- * When running unpackaged or if the `--dev-mode` argument is present,
- * the requested environment variable is returned, otherwise `undefined`.
- */
-function devOverride(value: string) {
-  if (allowDevVars || !app.isPackaged) return process.env[value];
 }
