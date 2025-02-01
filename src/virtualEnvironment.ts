@@ -481,7 +481,7 @@ export class VirtualEnvironment implements HasTelemetry {
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
-      throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
+      throw new Error(`Failed to install ComfyUI requirements.txt: exit code ${exitCode}`);
     }
   }
 
@@ -494,7 +494,7 @@ export class VirtualEnvironment implements HasTelemetry {
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
-      throw new Error(`Failed to install requirements.txt: exit code ${exitCode}`);
+      throw new Error(`Failed to install ComfyUI-Manager requirements.txt: exit code ${exitCode}`);
     }
   }
 
