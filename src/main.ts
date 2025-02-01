@@ -29,25 +29,27 @@ quitWhenAllWindowsAreClosed();
 trackAppQuitEvents();
 initializeSentry();
 
-// Synchronous app start
+// Async config & app start
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   log.info('App already running. Exiting...');
   app.quit();
 } else {
-  app.on('ready', () => {
-    log.debug('App ready');
-    telemetry.registerHandlers();
-    telemetry.track('desktop:app_ready');
-    startApp().catch((error) => {
-      log.error('Unhandled exception in app startup', error);
-      app.exit(2020);
-    });
+  startApp().catch((error) => {
+    log.error('Unhandled exception in app startup', error);
+    app.exit(2020);
   });
 }
 
-// Async app start
+/** Wrapper for top-level await; the app is bundled to CommonJS. */
 async function startApp() {
+  // Wait for electron app ready event
+  await new Promise<void>((resolve) => app.once('ready', () => resolve()));
+  log.debug('App ready');
+
+  telemetry.registerHandlers();
+  telemetry.track('desktop:app_ready');
+
   // Load config or exit
   let store: DesktopConfig | undefined;
   try {
