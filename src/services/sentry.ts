@@ -27,7 +27,7 @@ class SentryLogging {
       dsn: SENTRY_URL_ENDPOINT,
       autoSessionTracking: false,
       enabled: process.env.SENTRY_ENABLED === 'true' || app.isPackaged,
-      normalizeDepth: 3,
+      normalizeDepth: 4,
       beforeSend: async (event) => {
         this.filterEvent(event);
 
