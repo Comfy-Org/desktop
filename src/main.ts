@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-top-level-await */
 import dotenv from 'dotenv';
 import { app, dialog, ipcMain, shell } from 'electron';
 import { LevelOption } from 'electron-log';
