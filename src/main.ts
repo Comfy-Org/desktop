@@ -17,19 +17,13 @@ import { DesktopConfig } from './store/desktopConfig';
 import { findAvailablePort } from './utils';
 
 dotenv.config();
-log.initialize();
-log.transports.file.level = (process.env.LOG_LEVEL as LevelOption) ?? 'info';
-log.info(`Starting app v${app.getVersion()}`);
+initalizeLogging();
 
 const allowDevVars = app.commandLine.hasSwitch('dev-mode');
-
 const telemetry = getTelemetry();
+
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
-// Quit when all windows are closed.
-app.on('window-all-closed', () => {
-  log.info('Quitting ComfyUI because window all closed');
-  app.quit();
-});
+quitWhenAllWindowsAreClosed();
 
 // Suppress unhandled exception dialog when already quitting.
 let quitting = false;
@@ -37,16 +31,8 @@ app.on('before-quit', () => {
   quitting = true;
 });
 
-app.on('quit', (event, exitCode) => {
-  telemetry.track('desktop:app_quit', {
-    reason: event,
-    exitCode,
-  });
-});
-
-// Sentry needs to be initialized at the top level.
-log.verbose('Initializing Sentry');
-SentryLogging.init();
+trackAppQuitEvents();
+initializeSentry();
 
 // Synchronous app start
 const gotTheLock = app.requestSingleInstanceLock();
@@ -163,6 +149,37 @@ async function startApp() {
     log.error('Fatal error occurred during app pre-startup.', error);
     app.exit(2024);
   }
+}
+
+/** Must be called prior to any logging. Sets default log level and logs app version. */
+function initalizeLogging() {
+  log.initialize();
+  log.transports.file.level = (process.env.LOG_LEVEL as LevelOption) ?? 'info';
+  log.info(`Starting app v${app.getVersion()}`);
+}
+
+/** Quit when all windows are closed.*/
+function quitWhenAllWindowsAreClosed() {
+  app.on('window-all-closed', () => {
+    log.info('Quitting ComfyUI because window all closed');
+    app.quit();
+  });
+}
+
+/** Add telemetry for the app quit event. */
+function trackAppQuitEvents() {
+  app.on('quit', (event, exitCode) => {
+    telemetry.track('desktop:app_quit', {
+      reason: event,
+      exitCode,
+    });
+  });
+}
+
+/** Sentry needs to be initialized at the top level. */
+function initializeSentry() {
+  log.verbose('Initializing Sentry');
+  SentryLogging.init();
 }
 
 /**
