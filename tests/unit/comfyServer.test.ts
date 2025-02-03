@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { ComfyServer } from '@/main-process/comfyServer';
+
+vi.mock('@/install/resourcePaths', () => ({
+  getAppResourcesPath: vi.fn().mockReturnValue('/mocked/app_resources'),
+}));
 
 describe('ComfyServer', () => {
   describe('buildLaunchArgs', () => {

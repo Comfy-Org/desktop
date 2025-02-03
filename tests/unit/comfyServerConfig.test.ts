@@ -22,6 +22,10 @@ vi.mock('electron-log/main', () => ({
   },
 }));
 
+vi.mock('@/install/resourcePaths', () => ({
+  getAppResourcesPath: vi.fn().mockReturnValue('/mocked/app_resources'),
+}));
+
 async function createTmpDir() {
   const prefix = path.join(tmpdir(), 'vitest-');
   return mkdtemp(prefix);
@@ -207,7 +211,7 @@ describe('ComfyServerConfig', () => {
 
       expect(platformConfig.checkpoints).toContain(path.join('models', 'checkpoints'));
       expect(platformConfig.loras).toContain(path.join('models', 'loras'));
-      expect(platformConfig.custom_nodes).toBe('custom_nodes/');
+      expect(platformConfig.custom_nodes).toBe('/mocked/app_resources/ComfyUI/custom_nodes');
       expect(platformConfig.is_default).toBe('true');
     });
 
