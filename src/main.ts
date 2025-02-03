@@ -68,7 +68,6 @@ async function startApp() {
   try {
     // Create native window
     const appWindow = new AppWindow();
-    appWindow.onClose(() => log.info('App window closed.'));
 
     // Load start screen - basic spinner
     try {

@@ -140,12 +140,6 @@ export class AppWindow {
     });
   }
 
-  public onClose(callback: () => void): void {
-    this.window.on('close', () => {
-      callback();
-    });
-  }
-
   public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.host === '0.0.0.0' ? 'localhost' : serverArgs.host;
     const url = this.devUrlOverride ?? `http://${host}:${serverArgs.port}`;
@@ -295,6 +289,7 @@ export class AppWindow {
 
     this.window.on('resize', updateBounds);
     this.window.on('move', updateBounds);
+    this.window.on('close', () => log.info('App window closed.'));
 
     this.window.webContents.setWindowOpenHandler(({ url }) => {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
