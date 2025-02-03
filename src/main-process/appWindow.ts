@@ -135,9 +135,7 @@ export class AppWindow {
    * @param status - The status of the server start progress.
    */
   sendServerStartProgress(status: ProgressStatus): void {
-    this.send(IPC_CHANNELS.LOADING_PROGRESS, {
-      status,
-    });
+    this.send(IPC_CHANNELS.LOADING_PROGRESS, { status });
   }
 
   public async loadComfyUI(serverArgs: ServerArgs) {
