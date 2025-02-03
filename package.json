@@ -12,7 +12,7 @@
   "config": {
     "frontendVersion": "1.8.11",
     "comfyVersion": "0.3.13",
-    "managerCommit": "b4e52e65ec87978fc6294e82d55e1b91c5b02d55",
+    "managerCommit": "1434b12c343b58a401f1c9f913965ceb0cfd089e",
     "uvVersion": "0.5.11"
   },
   "scripts": {
