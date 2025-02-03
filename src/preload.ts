@@ -139,9 +139,6 @@ const electronAPI = {
   reinstall: (): Promise<void> => {
     return ipcRenderer.invoke(IPC_CHANNELS.REINSTALL);
   },
-  openDialog: (options: Electron.OpenDialogOptions) => {
-    return ipcRenderer.invoke(IPC_CHANNELS.OPEN_DIALOG, options);
-  },
   /**
    * Various paths that are useful to the renderer.
    * - Base path: The base path of the application.

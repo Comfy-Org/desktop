@@ -6,7 +6,6 @@ export const IPC_CHANNELS = {
   REINSTALL: 'reinstall',
   QUIT: 'quit',
   LOG_MESSAGE: 'log-message',
-  OPEN_DIALOG: 'open-dialog',
   DOWNLOAD_PROGRESS: 'download-progress',
   START_DOWNLOAD: 'start-download',
   PAUSE_DOWNLOAD: 'pause-download',

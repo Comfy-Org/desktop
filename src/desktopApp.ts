@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog } from 'electron';
 import log from 'electron-log/main';
 
 import { DEFAULT_SERVER_ARGS, ProgressStatus } from './constants';
@@ -59,12 +59,6 @@ export class DesktopApp implements HasTelemetry {
       registerNetworkHandlers();
       registerAppInfoHandlers(appWindow);
       registerAppHandlers();
-      ipcMain.handle(IPC_CHANNELS.OPEN_DIALOG, (event, options: Electron.OpenDialogOptions) => {
-        log.debug('Open dialog');
-        return dialog.showOpenDialogSync({
-          ...options,
-        });
-      });
     } catch (error) {
       log.error('Fatal error occurred during app pre-startup.', error);
       app.exit(2024);
