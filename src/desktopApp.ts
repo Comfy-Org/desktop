@@ -36,11 +36,11 @@ export class DesktopApp implements HasTelemetry {
   constructor(
     private readonly appState: IAppState,
     private readonly overrides: DevOverrides,
-    private readonly store: DesktopConfig
+    private readonly config: DesktopConfig
   ) {}
 
   async start(): Promise<void> {
-    const { appState, overrides, telemetry, store } = this;
+    const { appState, overrides, telemetry, config } = this;
 
     // Create native window
     const appWindow = new AppWindow();
@@ -81,7 +81,7 @@ export class DesktopApp implements HasTelemetry {
 
       // At this point, user has gone through the onboarding flow.
       SentryLogging.comfyDesktopApp = comfyDesktopApp;
-      const allowMetrics = await promptMetricsConsent(store, appWindow, comfyDesktopApp);
+      const allowMetrics = await promptMetricsConsent(config, appWindow, comfyDesktopApp);
       telemetry.hasConsent = allowMetrics;
       if (allowMetrics) telemetry.flush();
 

@@ -46,8 +46,8 @@ async function startApp() {
   telemetry.track('desktop:app_ready');
 
   // Load config or exit
-  const store = await DesktopConfig.load(shell);
-  if (!store) {
+  const config = await DesktopConfig.load(shell);
+  if (!config) {
     DesktopApp.fatalError({
       message: 'Unknown error loading app config on startup.',
       title: 'User Data',
@@ -55,7 +55,7 @@ async function startApp() {
     });
   }
 
-  const desktopApp = new DesktopApp(appState, overrides, store);
+  const desktopApp = new DesktopApp(appState, overrides, config);
   await desktopApp.start();
 }
 
