@@ -128,7 +128,9 @@ export class DesktopApp implements HasTelemetry {
   }
 
   /**
-   * Log and show an error message to the user. Quits gracefully, or exits immediately if a code is provided.
+   * Quits the app gracefully after a fatal error.  Exits immediately if a code is provided.
+   *
+   * Logs the error and shows an error dialog to the user.
    * @param options - The options for the error.
    */
   static fatalError({ message, error, title, logMessage, exitCode }: FatalErrorOptions): never {
