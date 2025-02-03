@@ -23,6 +23,7 @@ vi.mock('electron', () => ({
   },
   Tray: vi.fn(() => ({
     setContextMenu: vi.fn(),
+    setPressedImage: vi.fn(),
     setToolTip: vi.fn(),
     on: vi.fn(),
   })),
