@@ -65,18 +65,18 @@ async function startApp() {
     return;
   }
 
+  // Create native window
+  const appWindow = new AppWindow();
+
+  // Load start screen - basic spinner
   try {
-    // Create native window
-    const appWindow = new AppWindow();
+    await appWindow.loadPage('desktop-start');
+  } catch (error) {
+    dialog.showErrorBox('Startup failed', `Unknown error whilst loading start screen.\n\n${error}`);
+    return app.quit();
+  }
 
-    // Load start screen - basic spinner
-    try {
-      await appWindow.loadPage('desktop-start');
-    } catch (error) {
-      dialog.showErrorBox('Startup failed', `Unknown error whilst loading start screen.\n\n${error}`);
-      return app.quit();
-    }
-
+  try {
     // Register basic handlers that are necessary during app's installation.
     registerPathHandlers();
     registerNetworkHandlers();
@@ -88,65 +88,65 @@ async function startApp() {
         ...options,
       });
     });
-
-    try {
-      // Install / validate installation is complete
-      const installManager = new InstallationManager(appWindow, telemetry);
-      const installation = await installManager.ensureInstalled();
-
-      // Initialize app
-      const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
-      await comfyDesktopApp.initialize();
-
-      // At this point, user has gone through the onboarding flow.
-      SentryLogging.comfyDesktopApp = comfyDesktopApp;
-      const allowMetrics = await promptMetricsConsent(store, appWindow, comfyDesktopApp);
-      telemetry.hasConsent = allowMetrics;
-      if (allowMetrics) telemetry.flush();
-
-      // Construct core launch args
-      const useExternalServer = overrides.USE_EXTERNAL_SERVER === 'true';
-      // Shallow-clone the setting launch args to avoid mutation.
-      const extraServerArgs: Record<string, string> = Object.assign(
-        {},
-        comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs')
-      );
-      const host = overrides.COMFY_HOST ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
-      const targetPort = Number(overrides.COMFY_PORT ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
-      const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
-
-      // Remove listen and port from extraServerArgs so core launch args are used instead.
-      delete extraServerArgs.listen;
-      delete extraServerArgs.port;
-
-      // Start server
-      if (!useExternalServer) {
-        try {
-          await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
-        } catch (error) {
-          log.error('Unhandled exception during server start', error);
-          appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
-          appWindow.sendServerStartProgress(ProgressStatus.ERROR);
-          return;
-        }
-      }
-      appWindow.sendServerStartProgress(ProgressStatus.READY);
-      await appWindow.loadComfyUI({ host, port, extraServerArgs });
-    } catch (error) {
-      log.error('Unhandled exception during app startup', error);
-      appWindow.sendServerStartProgress(ProgressStatus.ERROR);
-      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
-      if (!appState.isQuitting) {
-        dialog.showErrorBox(
-          'Unhandled exception',
-          `An unexpected error occurred whilst starting the app, and it needs to be closed.\n\nError message:\n\n${error}`
-        );
-        app.quit();
-      }
-    }
   } catch (error) {
     log.error('Fatal error occurred during app pre-startup.', error);
     app.exit(2024);
+  }
+
+  try {
+    // Install / validate installation is complete
+    const installManager = new InstallationManager(appWindow, telemetry);
+    const installation = await installManager.ensureInstalled();
+
+    // Initialize app
+    const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
+    await comfyDesktopApp.initialize();
+
+    // At this point, user has gone through the onboarding flow.
+    SentryLogging.comfyDesktopApp = comfyDesktopApp;
+    const allowMetrics = await promptMetricsConsent(store, appWindow, comfyDesktopApp);
+    telemetry.hasConsent = allowMetrics;
+    if (allowMetrics) telemetry.flush();
+
+    // Construct core launch args
+    const useExternalServer = overrides.USE_EXTERNAL_SERVER === 'true';
+    // Shallow-clone the setting launch args to avoid mutation.
+    const extraServerArgs: Record<string, string> = Object.assign(
+      {},
+      comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs')
+    );
+    const host = overrides.COMFY_HOST ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
+    const targetPort = Number(overrides.COMFY_PORT ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
+    const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
+
+    // Remove listen and port from extraServerArgs so core launch args are used instead.
+    delete extraServerArgs.listen;
+    delete extraServerArgs.port;
+
+    // Start server
+    if (!useExternalServer) {
+      try {
+        await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
+      } catch (error) {
+        log.error('Unhandled exception during server start', error);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+        appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+        return;
+      }
+    }
+    appWindow.sendServerStartProgress(ProgressStatus.READY);
+    await appWindow.loadComfyUI({ host, port, extraServerArgs });
+  } catch (error) {
+    log.error('Unhandled exception during app startup', error);
+    appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+    appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+    if (!appState.isQuitting) {
+      dialog.showErrorBox(
+        'Unhandled exception',
+        `An unexpected error occurred whilst starting the app, and it needs to be closed.\n\nError message:\n\n${error}`
+      );
+      app.quit();
+    }
   }
 }
 
