@@ -255,8 +255,7 @@ export class ComfyServerConfig {
     if (!parsedConfig.desktop_patch) {
       const customNodesPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes');
       log.info(`Adding custom node extra_path to config ${customNodesPath}`);
-      parsedConfig.desktop_patch = {};
-      parsedConfig.desktop_patch.custom_nodes = customNodesPath;
+      parsedConfig.desktop_patch = { custom_nodes: customNodesPath };
       const stringified = ComfyServerConfig.generateConfigFileContent(parsedConfig);
       await ComfyServerConfig.writeConfigFile(ComfyServerConfig.configPath, stringified);
     }
