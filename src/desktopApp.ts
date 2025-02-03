@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain, shell } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
 import { DEFAULT_SERVER_ARGS, ProgressStatus } from './constants';
@@ -35,23 +35,12 @@ export class DesktopApp implements HasTelemetry {
 
   constructor(
     private readonly appState: IAppState,
-    private readonly overrides: DevOverrides
+    private readonly overrides: DevOverrides,
+    private readonly store: DesktopConfig
   ) {}
 
   async start(): Promise<void> {
-    const { appState, overrides, telemetry } = this;
-
-    // Load config or exit
-    let store: DesktopConfig | undefined;
-    try {
-      store = await DesktopConfig.load(shell);
-      if (!store) throw new Error('Unknown error loading app config on startup.');
-    } catch (error) {
-      log.error('Unhandled exception during config load', error);
-      dialog.showErrorBox('User Data', `Unknown error whilst writing to user data folder:\n\n${error}`);
-      app.exit(20);
-      return;
-    }
+    const { appState, overrides, telemetry, store } = this;
 
     // Create native window
     const appWindow = new AppWindow();

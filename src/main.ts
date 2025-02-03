@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/prefer-top-level-await */
 import dotenv from 'dotenv';
-import { app } from 'electron';
+import { app, shell } from 'electron';
 import { LevelOption } from 'electron-log';
 import log from 'electron-log/main';
 
@@ -9,6 +9,7 @@ import { AppState } from './main-process/appState';
 import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
 import { getTelemetry } from './services/telemetry';
+import { DesktopConfig } from './store/desktopConfig';
 
 // Synchronous pre-start configuration
 dotenv.config();
@@ -44,7 +45,17 @@ async function startApp() {
   telemetry.registerHandlers();
   telemetry.track('desktop:app_ready');
 
-  const desktopApp = new DesktopApp(appState, overrides);
+  // Load config or exit
+  const store = await DesktopConfig.load(shell);
+  if (!store) {
+    DesktopApp.fatalError({
+      message: 'Unknown error loading app config on startup.',
+      title: 'User Data',
+      exitCode: 20,
+    });
+  }
+
+  const desktopApp = new DesktopApp(appState, overrides, store);
   await desktopApp.start();
 }
 

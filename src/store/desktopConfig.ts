@@ -91,7 +91,6 @@ export class DesktopConfig {
       } else {
         // Crash: Unknown filesystem error, permission denied on user data folder, etc
         log.error(`Unknown error whilst loading configuration file: ${configFilePath}`, error);
-        throw new Error(configFilePath);
       }
     }
   }
