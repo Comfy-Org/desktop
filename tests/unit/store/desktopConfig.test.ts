@@ -114,15 +114,13 @@ describe('DesktopConfig', () => {
       expect(config).toBeInstanceOf(DesktopConfig);
     });
 
-    it('should throw on unknown errors', async () => {
+    it('should return undefined on unknown errors', async () => {
       const unknownError = new Error('Unknown error');
       (ElectronStore as unknown as Mock).mockImplementationOnce(() => {
         throw unknownError;
       });
 
-      await expect(DesktopConfig.load(shell)).rejects.toThrow(
-        path.join(path.sep, 'mock', 'user', 'data', 'config.json')
-      );
+      await expect(DesktopConfig.load(shell)).resolves.toBeUndefined();
       expect(log.error).toHaveBeenCalled();
     });
   });
