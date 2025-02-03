@@ -128,13 +128,13 @@ export class DesktopApp implements HasTelemetry {
    * @param options - The options for the error.
    */
   static fatalError({ message, error, title, logMessage, exitCode }: FatalErrorOptions): never {
-    const err = error ?? new Error(message);
-    log.error(logMessage ?? message, err);
+    const _error = error ?? new Error(message);
+    log.error(logMessage ?? message, _error);
     if (title && message) dialog.showErrorBox(title, message);
 
     if (exitCode) app.exit(exitCode);
     else app.quit();
     // Unreachable - library type is void instead of never.
-    throw new Error(message, { cause: err });
+    throw new Error(message, { cause: _error });
   }
 }
