@@ -17,6 +17,19 @@ import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent 
 import { DesktopConfig } from './store/desktopConfig';
 import { findAvailablePort } from './utils';
 
+interface FatalErrorOptions {
+  /** The message to display to the user.  Also used for logging if {@link logMessage} is not set. */
+  message: string;
+  /** The {@link Error} to log. */
+  error?: unknown;
+  /** The title of the error message box. */
+  title?: string;
+  /** If set, this replaces the {@link message} for logging. */
+  logMessage?: string;
+  /** The exit code to use when the app is exited. Default: 2 */
+  exitCode?: number;
+}
+
 export class DesktopApp implements HasTelemetry {
   readonly telemetry: ITelemetry = getTelemetry();
 
@@ -123,5 +136,20 @@ export class DesktopApp implements HasTelemetry {
         app.quit();
       }
     }
+  }
+
+  /**
+   * Log and show an error message to the user. Quits gracefully, or exits immediately if a code is provided.
+   * @param options - The options for the error.
+   */
+  static fatalError({ message, error, title, logMessage, exitCode }: FatalErrorOptions): never {
+    const err = error ?? new Error(message);
+    log.error(logMessage ?? message, err);
+    if (title && message) dialog.showErrorBox(title, message);
+
+    if (exitCode) app.exit(exitCode);
+    else app.quit();
+    // Unreachable - library type is void instead of never.
+    throw new Error(message, { cause: err });
   }
 }
