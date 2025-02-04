@@ -123,8 +123,12 @@ export class DesktopApp implements HasTelemetry {
       registerAppInfoHandlers(this.appWindow);
       registerAppHandlers();
     } catch (error) {
-      log.error('Fatal error occurred during app pre-startup.', error);
-      app.exit(2024);
+      DesktopApp.fatalError({
+        error,
+        message: 'Fatal error occurred during app pre-startup.',
+        title: 'Startup failed',
+        exitCode: 2024,
+      });
     }
   }
 
