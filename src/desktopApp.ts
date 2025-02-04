@@ -56,16 +56,7 @@ export class DesktopApp implements HasTelemetry {
   async start(): Promise<void> {
     const { appState, appWindow, overrides, telemetry, config } = this;
 
-    try {
-      // Register basic handlers that are necessary during app's installation.
-      registerPathHandlers();
-      registerNetworkHandlers();
-      registerAppInfoHandlers(appWindow);
-      registerAppHandlers();
-    } catch (error) {
-      log.error('Fatal error occurred during app pre-startup.', error);
-      app.exit(2024);
-    }
+    this.registerIpcHandlers();
 
     try {
       // Install / validate installation is complete
@@ -121,6 +112,19 @@ export class DesktopApp implements HasTelemetry {
         );
         app.quit();
       }
+    }
+  }
+
+  registerIpcHandlers() {
+    try {
+      // Register basic handlers that are necessary during app's installation.
+      registerPathHandlers();
+      registerNetworkHandlers();
+      registerAppInfoHandlers(this.appWindow);
+      registerAppHandlers();
+    } catch (error) {
+      log.error('Fatal error occurred during app pre-startup.', error);
+      app.exit(2024);
     }
   }
 
