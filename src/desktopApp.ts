@@ -7,6 +7,7 @@ import { registerAppHandlers } from './handlers/AppHandlers';
 import { registerAppInfoHandlers } from './handlers/appInfoHandlers';
 import { registerNetworkHandlers } from './handlers/networkHandlers';
 import { registerPathHandlers } from './handlers/pathHandlers';
+import type { FatalErrorOptions } from './infrastructure/interfaces';
 import { InstallationManager } from './install/installationManager';
 import type { IAppState } from './main-process/appState';
 import { AppWindow } from './main-process/appWindow';
@@ -16,19 +17,6 @@ import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
 import { findAvailablePort } from './utils';
-
-interface FatalErrorOptions {
-  /** The message to display to the user.  Also used for logging if {@link logMessage} is not set. */
-  message: string;
-  /** The {@link Error} to log. */
-  error?: unknown;
-  /** The title of the error message box. */
-  title?: string;
-  /** If set, this replaces the {@link message} for logging. */
-  logMessage?: string;
-  /** The exit code to use when the app is exited. Default: 2 */
-  exitCode?: number;
-}
 
 export class DesktopApp implements HasTelemetry {
   readonly telemetry: ITelemetry = getTelemetry();
