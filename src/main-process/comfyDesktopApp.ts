@@ -1,8 +1,6 @@
-import * as Sentry from '@sentry/electron/main';
 import todesktop from '@todesktop/runtime';
 import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
-import { graphics } from 'systeminformation';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { DownloadManager } from '../models/DownloadManager';
@@ -31,10 +29,9 @@ export class ComfyDesktopApp implements HasTelemetry {
     return this.installation.basePath;
   }
 
-  public async initialize(): Promise<void> {
+  public initialize(): void {
     this.registerIPCHandlers();
     this.initializeTodesktop();
-    await this.setSentryGpuContext();
   }
 
   initializeTodesktop(): void {
@@ -46,28 +43,6 @@ export class ComfyDesktopApp implements HasTelemetry {
       autoUpdater: this.comfySettings.get('Comfy-Desktop.AutoUpdate'),
     });
     todesktop.autoUpdater?.setFeedURL('https://updater.comfy.org');
-  }
-
-  async setSentryGpuContext(): Promise<void> {
-    log.debug('Setting up GPU context');
-    try {
-      const graphicsInfo = await graphics();
-      const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
-        [`gpu_${index}`]: {
-          vendor: gpu.vendor,
-          model: gpu.model,
-          vram: gpu.vram,
-          driver: gpu.driverVersion,
-        },
-      }));
-
-      // Combine all GPU info into a single object
-      const allGpuInfo = { ...gpuInfo };
-      // Set Sentry context with all GPU information
-      Sentry.setContext('gpus', allGpuInfo);
-    } catch (error) {
-      log.error('Error getting GPU info: ', error);
-    }
   }
 
   registerIPCHandlers(): void {

@@ -45,6 +45,7 @@ export class DesktopApp implements HasTelemetry {
   }
 
   private async initializeTelemetry(installation: ComfyInstallation, comfyDesktopApp: ComfyDesktopApp): Promise<void> {
+    await SentryLogging.setSentryGpuContext();
     SentryLogging.shouldSendStatistics = () => installation.comfySettings.get('Comfy-Desktop.SendStatistics');
     SentryLogging.getBasePath = () => installation.basePath;
 
@@ -85,7 +86,7 @@ export class DesktopApp implements HasTelemetry {
     try {
       // Initialize app
       const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
-      await comfyDesktopApp.initialize();
+      comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.
       await this.initializeTelemetry(installation, comfyDesktopApp);

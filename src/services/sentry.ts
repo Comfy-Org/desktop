@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/electron/main';
 import { app, dialog } from 'electron';
+import log from 'electron-log/main';
+import { graphics } from 'systeminformation';
 
 import { SENTRY_URL_ENDPOINT } from '../constants';
 import { getTelemetry } from './telemetry';
@@ -60,6 +62,28 @@ class SentryLogging {
         }),
       ],
     });
+  }
+
+  async setSentryGpuContext(): Promise<void> {
+    log.debug('Setting up GPU context');
+    try {
+      const graphicsInfo = await graphics();
+      const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
+        [`gpu_${index}`]: {
+          vendor: gpu.vendor,
+          model: gpu.model,
+          vram: gpu.vram,
+          driver: gpu.driverVersion,
+        },
+      }));
+
+      // Combine all GPU info into a single object
+      const allGpuInfo = { ...gpuInfo };
+      // Set Sentry context with all GPU information
+      Sentry.setContext('gpus', allGpuInfo);
+    } catch (error) {
+      log.error('Error getting GPU info:', error);
+    }
   }
 
   private filterEvent(obj: unknown) {
