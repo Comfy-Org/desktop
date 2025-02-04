@@ -102,6 +102,7 @@ export class AppWindow {
 
     this.setupWindowEvents();
     this.setupAppEvents();
+    this.setupIpcEvents();
     this.sendQueuedEventsOnReady();
     this.setupTray();
     this.menu = this.buildMenu();
@@ -303,6 +304,18 @@ export class AppWindow {
 
       if (this.isMinimized()) this.restore();
       this.focus();
+    });
+  }
+
+  private setupIpcEvents() {
+    ipcMain.on(IPC_CHANNELS.CHANGE_THEME, (_event, options: TitleBarOverlayOptions) => {
+      this.changeTheme(options);
+    });
+    ipcMain.on(IPC_CHANNELS.SHOW_CONTEXT_MENU, (_event, options?: ElectronContextMenuOptions) => {
+      this.showSystemContextMenu(options);
+    });
+    ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
+      this.openDevTools();
     });
   }
 

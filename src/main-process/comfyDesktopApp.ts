@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/electron/main';
 import todesktop from '@todesktop/runtime';
-import { type TitleBarOverlayOptions, app, ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import path from 'node:path';
 import { graphics } from 'systeminformation';
@@ -8,7 +8,6 @@ import { graphics } from 'systeminformation';
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { InstallationManager } from '../install/installationManager';
 import { DownloadManager } from '../models/DownloadManager';
-import { type ElectronContextMenuOptions } from '../preload';
 import { HasTelemetry, ITelemetry } from '../services/telemetry';
 import { Terminal } from '../shell/terminal';
 import { getModelsDirectory } from '../utils';
@@ -95,16 +94,6 @@ export class ComfyDesktopApp implements HasTelemetry {
   }
 
   registerIPCHandlers(): void {
-    ipcMain.on(IPC_CHANNELS.CHANGE_THEME, (_event, options: TitleBarOverlayOptions) => {
-      this.appWindow.changeTheme(options);
-    });
-    ipcMain.on(IPC_CHANNELS.SHOW_CONTEXT_MENU, (_event, options?: ElectronContextMenuOptions) => {
-      this.appWindow.showSystemContextMenu(options);
-    });
-    ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
-      this.appWindow.openDevTools();
-    });
-
     // Replace the reinstall IPC handler.
     ipcMain.removeHandler(IPC_CHANNELS.REINSTALL);
     ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
