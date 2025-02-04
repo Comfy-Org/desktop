@@ -156,7 +156,6 @@ export class ComfyDesktopApp implements HasTelemetry {
   restart({ customMessage, delay }: { customMessage?: string; delay?: number } = {}): void {
     function relaunchApplication(delay?: number) {
       if (delay) {
-        log.info('Relaunching application in ', delay, 'ms');
         setTimeout(() => {
           app.relaunch();
           app.quit();
@@ -167,12 +166,13 @@ export class ComfyDesktopApp implements HasTelemetry {
       }
     }
 
-    log.info('Attempting to restart app with custom message: ', customMessage);
-
+    const delayText = delay ? `in ${delay}ms` : 'immediately';
     if (!customMessage) {
-      log.info('Skipping confirmation, restarting immediately');
+      log.info(`Relaunching application ${delayText}`);
       return relaunchApplication(delay);
     }
+
+    log.info(`Relaunching application ${delayText} with custom confirmation message: ${customMessage}`);
 
     dialog
       .showMessageBox({
