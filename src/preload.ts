@@ -328,7 +328,7 @@ const electronAPI = {
   /** Restart the python server without restarting desktop. */
   restartCore: async (): Promise<void> => {
     console.log('Restarting core process');
-    await ipcRenderer.invoke(IPC_CHANNELS.RESTART_APP);
+    await ipcRenderer.invoke(IPC_CHANNELS.RESTART_CORE);
   },
   /** Gets the platform reported by node.js */
   getPlatform: () => process.platform,
