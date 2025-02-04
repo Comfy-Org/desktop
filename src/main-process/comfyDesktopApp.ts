@@ -108,11 +108,7 @@ export class ComfyDesktopApp implements HasTelemetry {
       IPC_CHANNELS.RESTART_APP,
       (event, { customMessage, delay }: { customMessage?: string; delay?: number }) => {
         log.info('Received restart app message!');
-        if (customMessage) {
-          this.restart({ customMessage, delay });
-        } else {
-          this.restart({ delay });
-        }
+        this.restart({ customMessage, delay });
       }
     );
 
