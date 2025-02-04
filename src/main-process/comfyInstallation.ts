@@ -100,7 +100,6 @@ export class ComfyInstallation {
     this.onUpdate?.(validation);
 
     // Upgraded from a version prior to 0.3.18
-    // TODO: Validate more than just the existence of one file
     if (!validation.installState && ComfyServerConfig.exists()) {
       log.info('Found extra_models_config.yaml but no recorded state - assuming upgrade from <= 0.3.18');
       validation.installState = 'upgraded';
@@ -115,6 +114,7 @@ export class ComfyInstallation {
       validation.basePath = 'OK';
       this.onUpdate?.(validation);
 
+      // Validate virtual environment
       const venv = this.virtualEnvironment;
       if (await venv.exists()) {
         validation.venvDirectory = 'OK';
@@ -157,6 +157,7 @@ export class ComfyInstallation {
     if (validation.git !== 'OK') log.warn('git not found in path.');
     this.onUpdate?.(validation);
 
+    // Visual C++ Redistributable
     if (process.platform === 'win32') {
       const vcDllPath = `${process.env.SYSTEMROOT}\\System32\\vcruntime140.dll`;
       validation.vcRedist = (await pathAccessible(vcDllPath)) ? 'OK' : 'error';
