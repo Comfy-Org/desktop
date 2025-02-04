@@ -255,20 +255,6 @@ export class InstallationManager {
   }
 
   /**
-   * Shows a dialog box to select a base path to install ComfyUI.
-   * @param initialPath The initial path to show in the dialog box.
-   * @returns The selected path, otherwise `undefined`.
-   */
-  async showBasePathPicker(initialPath?: string): Promise<string | undefined> {
-    const defaultPath = initialPath ?? app.getPath('documents');
-    const { filePaths } = await this.appWindow.showOpenDialog({
-      defaultPath,
-      properties: ['openDirectory', 'treatPackageAsDirectory', 'dontAddToRecent'],
-    });
-    return filePaths[0];
-  }
-
-  /**
    * Resolves any issues found during installation validation.
    * @param installation The installation to resolve issues for
    * @throws If the base path is invalid or cannot be saved
