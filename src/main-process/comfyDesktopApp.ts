@@ -35,7 +35,7 @@ export class ComfyDesktopApp implements HasTelemetry {
   public async initialize(): Promise<void> {
     this.registerIPCHandlers();
     this.initializeTodesktop();
-    await this.setupGPUContext();
+    await this.setSentryGpuContext();
   }
 
   initializeTodesktop(): void {
@@ -49,7 +49,7 @@ export class ComfyDesktopApp implements HasTelemetry {
     todesktop.autoUpdater?.setFeedURL('https://updater.comfy.org');
   }
 
-  async setupGPUContext(): Promise<void> {
+  async setSentryGpuContext(): Promise<void> {
     log.debug('Setting up GPU context');
     try {
       const graphicsInfo = await graphics();
