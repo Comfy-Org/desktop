@@ -56,6 +56,7 @@ async function startApp() {
   }
 
   const desktopApp = new DesktopApp(appState, overrides, config);
+  await desktopApp.showLoadingPage();
   await desktopApp.start();
 }
 

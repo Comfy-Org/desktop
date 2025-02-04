@@ -40,16 +40,21 @@ export class DesktopApp implements HasTelemetry {
     private readonly config: DesktopConfig
   ) {}
 
+  /** Load start screen - basic spinner */
+  async showLoadingPage() {
+    try {
+      await this.appWindow.loadPage('desktop-start');
+    } catch (error) {
+      DesktopApp.fatalError({
+        error,
+        message: `Unknown error whilst loading start screen.\n\n${error}`,
+        title: 'Startup failed',
+      });
+    }
+  }
+
   async start(): Promise<void> {
     const { appState, appWindow, overrides, telemetry, config } = this;
-
-    // Load start screen - basic spinner
-    try {
-      await appWindow.loadPage('desktop-start');
-    } catch (error) {
-      dialog.showErrorBox('Startup failed', `Unknown error whilst loading start screen.\n\n${error}`);
-      return app.quit();
-    }
 
     try {
       // Register basic handlers that are necessary during app's installation.
