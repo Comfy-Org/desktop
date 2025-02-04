@@ -32,6 +32,7 @@ interface FatalErrorOptions {
 
 export class DesktopApp implements HasTelemetry {
   readonly telemetry: ITelemetry = getTelemetry();
+  readonly appWindow: AppWindow = new AppWindow();
 
   constructor(
     private readonly appState: IAppState,
@@ -40,10 +41,7 @@ export class DesktopApp implements HasTelemetry {
   ) {}
 
   async start(): Promise<void> {
-    const { appState, overrides, telemetry, config } = this;
-
-    // Create native window
-    const appWindow = new AppWindow();
+    const { appState, appWindow, overrides, telemetry, config } = this;
 
     // Load start screen - basic spinner
     try {
