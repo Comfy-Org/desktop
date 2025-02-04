@@ -68,7 +68,8 @@ export class DesktopApp implements HasTelemetry {
       await comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.
-      SentryLogging.comfyDesktopApp = comfyDesktopApp;
+      SentryLogging.shouldSendStatistics = () => installation.comfySettings.get('Comfy-Desktop.SendStatistics');
+      SentryLogging.getBasePath = () => installation.basePath;
       const allowMetrics = await promptMetricsConsent(config, appWindow, comfyDesktopApp);
       telemetry.hasConsent = allowMetrics;
       if (allowMetrics) telemetry.flush();

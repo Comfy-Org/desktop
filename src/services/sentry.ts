@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/electron/main';
 import { app, dialog } from 'electron';
 
 import { SENTRY_URL_ENDPOINT } from '../constants';
-import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
 import { getTelemetry } from './telemetry';
 
 const createSentryUrl = (eventId: string) => `https://comfy-org.sentry.io/projects/4508007940685824/events/${eventId}/`;
@@ -20,7 +19,10 @@ const queueMixPanelEvents = (event: Sentry.Event) => {
 };
 
 class SentryLogging {
-  comfyDesktopApp: ComfyDesktopApp | undefined;
+  /** Used to redact the base path in the event payload. */
+  getBasePath?: () => string | undefined;
+  /** If `true`, the event will be sent to Mixpanel. */
+  shouldSendStatistics?: () => boolean;
 
   init() {
     Sentry.init({
@@ -31,7 +33,7 @@ class SentryLogging {
       beforeSend: async (event) => {
         this.filterEvent(event);
 
-        if (this.comfyDesktopApp?.comfySettings.get('Comfy-Desktop.SendStatistics')) {
+        if (this.shouldSendStatistics?.()) {
           queueMixPanelEvents(event);
           return event;
         }
@@ -61,10 +63,11 @@ class SentryLogging {
   }
 
   private filterEvent(obj: unknown) {
-    if (!obj || !this.comfyDesktopApp?.basePath) return obj;
+    const basePath = this.getBasePath?.();
+    if (!obj || !basePath) return obj;
 
     if (typeof obj === 'string') {
-      return obj.replaceAll(this.comfyDesktopApp.basePath, '[basePath]');
+      return obj.replaceAll(basePath, '[basePath]');
     }
 
     try {
