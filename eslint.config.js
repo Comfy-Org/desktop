@@ -70,6 +70,7 @@ export default tseslint.config(
     files: ['tests/**/*'],
     rules: {
       'unicorn/prefer-module': 'off',
+      'unicorn/no-useless-undefined': 'off',
       '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
