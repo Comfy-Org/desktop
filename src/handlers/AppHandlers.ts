@@ -9,9 +9,9 @@ export function registerAppHandlers() {
     app.quit();
   });
 
-  ipcMain.on(
+  ipcMain.handle(
     IPC_CHANNELS.RESTART_APP,
-    (_event, { customMessage, delay }: { customMessage?: string; delay?: number }) => {
+    async (_event, { customMessage, delay }: { customMessage?: string; delay?: number }) => {
       function relaunchApplication(delay?: number) {
         if (delay) {
           setTimeout(() => {
@@ -32,27 +32,26 @@ export function registerAppHandlers() {
 
       log.info(`Relaunching application ${delayText} with custom confirmation message: ${customMessage}`);
 
-      dialog
-        .showMessageBox({
+      try {
+        const { response } = await dialog.showMessageBox({
           type: 'question',
           buttons: ['Yes', 'No'],
           defaultId: 0,
           title: 'Restart ComfyUI',
           message: customMessage || 'Are you sure you want to restart ComfyUI?',
           detail: 'The application will close and restart automatically.',
-        })
-        .then(({ response }) => {
-          if (response === 0) {
-            // "Yes" was clicked
-            log.info('User confirmed restart');
-            relaunchApplication(delay);
-          } else {
-            log.info('User cancelled restart');
-          }
-        })
-        .catch((error) => {
-          log.error('Error showing restart confirmation dialog:', error);
         });
+
+        if (response === 0) {
+          // "Yes" was clicked
+          log.info('User confirmed restart');
+          relaunchApplication(delay);
+        } else {
+          log.info('User cancelled restart');
+        }
+      } catch (error) {
+        log.error('Error showing restart confirmation dialog:', error);
+      }
     }
   );
 }
