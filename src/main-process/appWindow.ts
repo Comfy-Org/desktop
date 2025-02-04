@@ -17,15 +17,14 @@ import path from 'node:path';
 import { URL } from 'node:url';
 
 import { ElectronError } from '@/infrastructure/electronError';
+import type { Page } from '@/infrastructure/interfaces';
+import type { IAppState } from '@/main-process/appState';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import type { ElectronContextMenuOptions } from '../preload';
 import { AppWindowSettings } from '../store/AppWindowSettings';
 import { useDesktopConfig } from '../store/desktopConfig';
-
-/** A frontend page that can be loaded by the app. Must be a valid entry in the frontend router. @see {@link AppWindow.isOnPage} */
-type Page = 'desktop-start' | 'welcome' | 'not-supported' | 'metrics-consent' | 'server-start' | '' | 'maintenance';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
@@ -54,7 +53,7 @@ export class AppWindow {
     if (!app.isPackaged) return process.env.DEV_SERVER_URL;
   }
 
-  public constructor() {
+  public constructor(private readonly appState: IAppState) {
     const installed = useDesktopConfig().get('installState') === 'installed';
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width, height } = installed ? primaryDisplay.workAreaSize : { width: 1024, height: 768 };
@@ -194,6 +193,8 @@ export class AppWindow {
    * @param page The page to load; a valid entry in the frontend router.
    */
   public async loadPage(page: Page): Promise<void> {
+    this.appState.currentPage = page;
+
     const { devUrlOverride } = this;
     if (devUrlOverride) {
       const url = `${devUrlOverride}/${page}`;

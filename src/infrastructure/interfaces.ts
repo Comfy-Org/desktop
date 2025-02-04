@@ -10,3 +10,13 @@ export interface FatalErrorOptions {
   /** The exit code to use when the app is exited. Default: 2 */
   exitCode?: number;
 }
+
+/** A frontend page that can be loaded by the app. Must be a valid entry in the frontend router. @see {@link AppWindow.isOnPage} */
+export type Page =
+  | 'desktop-start'
+  | 'welcome'
+  | 'not-supported'
+  | 'metrics-consent'
+  | 'server-start'
+  | ''
+  | 'maintenance';

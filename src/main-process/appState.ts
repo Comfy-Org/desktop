@@ -1,5 +1,7 @@
 import { app } from 'electron';
 
+import type { Page } from '@/infrastructure/interfaces';
+
 /**
  * Stores global state for the app.
  *
@@ -8,6 +10,8 @@ import { app } from 'electron';
 export interface IAppState {
   /** Whether the app is already quitting. */
   readonly isQuitting: boolean;
+  /** The last page the app loaded from the desktop side. @see {@link AppWindow.loadPage} */
+  currentPage?: Page;
 }
 
 /**
@@ -15,6 +19,7 @@ export interface IAppState {
  */
 export class AppState implements IAppState {
   isQuitting = false;
+  currentPage?: Page;
 
   constructor() {
     // Store quitting state - suppresses errors when already quitting

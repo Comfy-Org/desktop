@@ -21,13 +21,15 @@ import { findAvailablePort } from './utils';
 
 export class DesktopApp implements HasTelemetry {
   readonly telemetry: ITelemetry = getTelemetry();
-  readonly appWindow: AppWindow = new AppWindow();
+  readonly appWindow: AppWindow;
 
   constructor(
     private readonly appState: IAppState,
     private readonly overrides: DevOverrides,
     private readonly config: DesktopConfig
-  ) {}
+  ) {
+    this.appWindow = new AppWindow(appState);
+  }
 
   /** Load start screen - basic spinner */
   async showLoadingPage() {
@@ -51,15 +53,24 @@ export class DesktopApp implements HasTelemetry {
     if (allowMetrics) this.telemetry.flush();
   }
 
-  /** Install / validate installation is complete */
-  private async initializeInstallation(): Promise<ComfyInstallation> {
+  /**
+   * Install / validate installation is complete
+   * @returns The installation if it is complete, otherwise `undefined`.
+   * @throws Rethrows any errors when the installation fails before the app has set the current page.
+   */
+  private async initializeInstallation(): Promise<ComfyInstallation | undefined> {
     const { appWindow } = this;
     try {
       const installManager = new InstallationManager(appWindow, this.telemetry);
       return await installManager.ensureInstalled();
     } catch (error) {
-      appWindow.sendServerStartProgress(ProgressStatus.ERROR);
-      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+      // Don't force app quit if the error occurs after moving away from the start page.
+      if (this.appState.currentPage !== 'desktop-start') {
+        appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+        appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -69,6 +80,7 @@ export class DesktopApp implements HasTelemetry {
     this.registerIpcHandlers();
 
     const installation = await this.initializeInstallation();
+    if (!installation) return;
 
     try {
       // Initialize app
