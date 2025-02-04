@@ -6,7 +6,6 @@ import path from 'node:path';
 import { graphics } from 'systeminformation';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
-import { InstallationManager } from '../install/installationManager';
 import { DownloadManager } from '../models/DownloadManager';
 import { HasTelemetry, ITelemetry } from '../services/telemetry';
 import { Terminal } from '../shell/terminal';
@@ -94,12 +93,6 @@ export class ComfyDesktopApp implements HasTelemetry {
   }
 
   registerIPCHandlers(): void {
-    // Replace the reinstall IPC handler.
-    ipcMain.removeHandler(IPC_CHANNELS.REINSTALL);
-    ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
-      log.info('Reinstalling...');
-      await InstallationManager.reinstall(this.installation);
-    });
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => {
       if (!this.comfyServer) return false;

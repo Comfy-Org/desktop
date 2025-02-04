@@ -124,11 +124,7 @@ export class InstallationManager {
     });
 
     // Replace the reinstall IPC handler.
-    ipcMain.removeHandler(IPC_CHANNELS.REINSTALL);
-    ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => {
-      log.info('Reinstalling...');
-      await InstallationManager.reinstall(installation);
-    });
+    InstallationManager.setReinstallHandler(installation);
   }
 
   /**
@@ -206,6 +202,7 @@ export class InstallationManager {
     const comfySettings = new ComfySettings(installWizard.basePath);
     await comfySettings.loadSettings();
     const installation = new ComfyInstallation('started', installWizard.basePath, this.telemetry, comfySettings);
+    InstallationManager.setReinstallHandler(installation);
     const { virtualEnvironment } = installation;
 
     // Virtual terminal output callbacks
@@ -297,7 +294,13 @@ export class InstallationManager {
     return isValid;
   }
 
-  static async reinstall(installation: ComfyInstallation): Promise<void> {
+  static setReinstallHandler(installation: ComfyInstallation) {
+    ipcMain.removeHandler(IPC_CHANNELS.REINSTALL);
+    ipcMain.handle(IPC_CHANNELS.REINSTALL, async () => await InstallationManager.reinstall(installation));
+  }
+
+  private static async reinstall(installation: ComfyInstallation): Promise<void> {
+    log.info('Reinstalling...');
     await installation.uninstall();
     app.relaunch();
     app.quit();
