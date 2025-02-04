@@ -85,13 +85,13 @@ export class DesktopApp implements HasTelemetry {
     const installation = await this.initializeInstallation();
     if (!installation) return;
 
+    // At this point, user has gone through the onboarding flow.
+    await this.initializeTelemetry(installation);
+
     try {
       // Initialize app
       const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
       comfyDesktopApp.initialize();
-
-      // At this point, user has gone through the onboarding flow.
-      await this.initializeTelemetry(installation);
 
       // Construct core launch args
       const useExternalServer = overrides.USE_EXTERNAL_SERVER === 'true';
