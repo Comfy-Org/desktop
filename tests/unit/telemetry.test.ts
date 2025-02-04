@@ -184,7 +184,7 @@ describe('MixpanelTelemetry', () => {
 describe('promptMetricsConsent', () => {
   let store: Pick<DesktopConfig, 'get' | 'set'>;
   let appWindow: Pick<AppWindow, 'loadPage'>;
-  let comfyDesktopApp: { comfySettings: Pick<ComfySettings, 'get' | 'set' | 'saveSettings'> };
+  let comfySettings: Pick<ComfySettings, 'get' | 'set' | 'saveSettings'>;
 
   const versionBeforeUpdate = '0.4.1';
   const versionAfterUpdate = '1.0.1';
@@ -193,7 +193,7 @@ describe('promptMetricsConsent', () => {
     vi.clearAllMocks();
     store = { get: vi.fn(), set: vi.fn() };
     appWindow = { loadPage: vi.fn() };
-    comfyDesktopApp = { comfySettings: { get: vi.fn(), set: vi.fn(), saveSettings: vi.fn() } };
+    comfySettings = { get: vi.fn(), set: vi.fn(), saveSettings: vi.fn() };
   });
 
   const runTest = async ({
@@ -210,7 +210,7 @@ describe('promptMetricsConsent', () => {
     promptUser?: boolean;
   }) => {
     vi.mocked(store.get).mockReturnValue(storeValue);
-    vi.mocked(comfyDesktopApp.comfySettings.get).mockReturnValue(settingsValue);
+    vi.mocked(comfySettings.get).mockReturnValue(settingsValue);
 
     if (promptUser) {
       vi.mocked(ipcMain.handleOnce).mockImplementationOnce((channel, handler) => {
@@ -221,7 +221,7 @@ describe('promptMetricsConsent', () => {
     }
 
     // @ts-expect-error - store is a mock and doesn't implement all of DesktopConfig
-    const result = await promptMetricsConsent(store, appWindow, comfyDesktopApp);
+    const result = await promptMetricsConsent(store, appWindow, comfySettings);
     expect(result).toBe(expectedResult);
 
     if (promptUser) ipcMain.removeHandler(IPC_CHANNELS.SET_METRICS_CONSENT);
