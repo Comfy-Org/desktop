@@ -96,10 +96,8 @@ export class DesktopApp implements HasTelemetry {
       // Construct core launch args
       const useExternalServer = overrides.USE_EXTERNAL_SERVER === 'true';
       // Shallow-clone the setting launch args to avoid mutation.
-      const extraServerArgs: Record<string, string> = Object.assign(
-        {},
-        comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs')
-      );
+      const extraServerArgs = { ...comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs') };
+
       const host = overrides.COMFY_HOST ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
       const targetPort = Number(overrides.COMFY_PORT ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
       const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
