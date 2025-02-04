@@ -5,6 +5,11 @@ import { IPC_CHANNELS } from '../constants';
 import { AppWindow } from '../main-process/appWindow';
 import { getDefaultShell } from './util';
 
+/**
+ * An in-app interactive terminal.
+ *
+ * Wraps a system shell and makes it available in the app.
+ */
 export class Terminal {
   #pty: pty.IPty | undefined;
   readonly #window: AppWindow | undefined;
