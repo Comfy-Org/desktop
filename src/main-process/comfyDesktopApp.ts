@@ -49,23 +49,6 @@ export class ComfyDesktopApp implements HasTelemetry {
     todesktop.autoUpdater?.setFeedURL('https://updater.comfy.org');
   }
 
-  private initializeTerminal(virtualEnvironment: VirtualEnvironment) {
-    this.terminal = new Terminal(this.appWindow, this.basePath, virtualEnvironment.uvPath);
-    this.terminal.write(virtualEnvironment.activateEnvironmentCommand());
-
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
-      this.terminal?.write(command);
-    });
-
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
-      this.terminal?.resize(cols, rows);
-    });
-
-    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, () => {
-      return this.terminal?.restore();
-    });
-  }
-
   async setupGPUContext(): Promise<void> {
     log.debug('Setting up GPU context');
     try {
@@ -128,5 +111,22 @@ export class ComfyDesktopApp implements HasTelemetry {
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
     await this.comfyServer.start();
     this.initializeTerminal(virtualEnvironment);
+  }
+
+  private initializeTerminal(virtualEnvironment: VirtualEnvironment) {
+    this.terminal = new Terminal(this.appWindow, this.basePath, virtualEnvironment.uvPath);
+    this.terminal.write(virtualEnvironment.activateEnvironmentCommand());
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
+      this.terminal?.write(command);
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
+      this.terminal?.resize(cols, rows);
+    });
+
+    ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, () => {
+      return this.terminal?.restore();
+    });
   }
 }
