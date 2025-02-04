@@ -39,6 +39,10 @@ export class InstallationManager {
     if (installation.state === 'started') return await this.resumeInstallation();
 
     // Validate the installation
+    return await this.validateInstallation(installation);
+  }
+
+  private async validateInstallation(installation: ComfyInstallation) {
     try {
       // Send updates to renderer
       this.#setupIpc(installation);
