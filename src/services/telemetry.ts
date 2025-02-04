@@ -7,9 +7,10 @@ import os from 'node:os';
 import path from 'node:path';
 import si from 'systeminformation';
 
+import type { ComfySettings } from '@/config/comfySettings';
+
 import { IPC_CHANNELS } from '../constants';
 import { AppWindow } from '../main-process/appWindow';
-import { ComfyDesktopApp } from '../main-process/comfyDesktopApp';
 import { InstallOptions } from '../preload';
 import { DesktopConfig } from '../store/desktopConfig';
 import { compareVersions } from '../utils';
@@ -243,9 +244,9 @@ export function trackEvent<T extends HasTelemetry>(eventName: string) {
 export async function promptMetricsConsent(
   store: DesktopConfig,
   appWindow: AppWindow,
-  comfyDesktopApp: ComfyDesktopApp
+  comfySettings: ComfySettings
 ): Promise<boolean> {
-  const consent = comfyDesktopApp.comfySettings.get('Comfy-Desktop.SendStatistics') ?? false;
+  const consent = comfySettings.get('Comfy-Desktop.SendStatistics') ?? false;
   const consentedOn = store.get('versionConsentedMetrics');
   const isOutdated = !consentedOn || compareVersions(consentedOn, '0.4.12') < 0;
   if (!isOutdated) return consent;
@@ -259,8 +260,8 @@ export async function promptMetricsConsent(
     await appWindow.loadPage('metrics-consent');
     const newConsent = await consentPromise;
     if (newConsent !== consent) {
-      comfyDesktopApp.comfySettings.set('Comfy-Desktop.SendStatistics', newConsent);
-      await comfyDesktopApp.comfySettings.saveSettings();
+      comfySettings.set('Comfy-Desktop.SendStatistics', newConsent);
+      await comfySettings.saveSettings();
     }
 
     return newConsent;

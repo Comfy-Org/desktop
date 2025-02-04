@@ -44,12 +44,14 @@ export class DesktopApp implements HasTelemetry {
     }
   }
 
-  private async initializeTelemetry(installation: ComfyInstallation, comfyDesktopApp: ComfyDesktopApp): Promise<void> {
+  private async initializeTelemetry(installation: ComfyInstallation): Promise<void> {
+    const { comfySettings } = installation;
+
     await SentryLogging.setSentryGpuContext();
-    SentryLogging.shouldSendStatistics = () => installation.comfySettings.get('Comfy-Desktop.SendStatistics');
+    SentryLogging.shouldSendStatistics = () => comfySettings.get('Comfy-Desktop.SendStatistics');
     SentryLogging.getBasePath = () => installation.basePath;
 
-    const allowMetrics = await promptMetricsConsent(this.config, this.appWindow, comfyDesktopApp);
+    const allowMetrics = await promptMetricsConsent(this.config, this.appWindow, comfySettings);
     this.telemetry.hasConsent = allowMetrics;
     if (allowMetrics) this.telemetry.flush();
   }
@@ -89,7 +91,7 @@ export class DesktopApp implements HasTelemetry {
       comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.
-      await this.initializeTelemetry(installation, comfyDesktopApp);
+      await this.initializeTelemetry(installation);
 
       // Construct core launch args
       const useExternalServer = overrides.USE_EXTERNAL_SERVER === 'true';
