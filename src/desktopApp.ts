@@ -11,6 +11,7 @@ import { InstallationManager } from './install/installationManager';
 import type { IAppState } from './main-process/appState';
 import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
+import type { ComfyInstallation } from './main-process/comfyInstallation';
 import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
@@ -53,26 +54,35 @@ export class DesktopApp implements HasTelemetry {
     }
   }
 
+  private async initializeTelemetry(installation: ComfyInstallation, comfyDesktopApp: ComfyDesktopApp): Promise<void> {
+    SentryLogging.shouldSendStatistics = () => installation.comfySettings.get('Comfy-Desktop.SendStatistics');
+    SentryLogging.getBasePath = () => installation.basePath;
+
+    const allowMetrics = await promptMetricsConsent(this.config, this.appWindow, comfyDesktopApp);
+    this.telemetry.hasConsent = allowMetrics;
+    if (allowMetrics) this.telemetry.flush();
+  }
+
+  /** Install / validate installation is complete */
+  private async initializeInstallation(): Promise<ComfyInstallation> {
+    const installManager = new InstallationManager(this.appWindow, this.telemetry);
+    return await installManager.ensureInstalled();
+  }
+
   async start(): Promise<void> {
-    const { appWindow, overrides, telemetry, config } = this;
+    const { appWindow, overrides, telemetry } = this;
 
     this.registerIpcHandlers();
 
     try {
-      // Install / validate installation is complete
-      const installManager = new InstallationManager(appWindow, telemetry);
-      const installation = await installManager.ensureInstalled();
+      const installation = await this.initializeInstallation();
 
       // Initialize app
       const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
       await comfyDesktopApp.initialize();
 
       // At this point, user has gone through the onboarding flow.
-      SentryLogging.shouldSendStatistics = () => installation.comfySettings.get('Comfy-Desktop.SendStatistics');
-      SentryLogging.getBasePath = () => installation.basePath;
-      const allowMetrics = await promptMetricsConsent(config, appWindow, comfyDesktopApp);
-      telemetry.hasConsent = allowMetrics;
-      if (allowMetrics) telemetry.flush();
+      await this.initializeTelemetry(installation, comfyDesktopApp);
 
       // Construct core launch args
       const useExternalServer = overrides.USE_EXTERNAL_SERVER === 'true';
