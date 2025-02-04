@@ -35,19 +35,32 @@ export class ComfyDesktopApp implements HasTelemetry {
     this.initializeTodesktop();
   }
 
+  /**
+   * Build the server args to launch ComfyUI server.
+   * @param useExternalServer Whether to use an external server instead of starting one locally.
+   * @param COMFY_HOST Override the listen address (host) for the ComfyUI server.
+   * @param COMFY_PORT Override the port for the ComfyUI server.
+   * @returns The server args for the ComfyUI server.
+   */
   async buildServerArgs({ useExternalServer, COMFY_HOST, COMFY_PORT }: DevOverrides): Promise<ServerArgs> {
     // Shallow-clone the setting launch args to avoid mutation.
-    const extraServerArgs = { ...this.comfySettings.get('Comfy.Server.LaunchArgs') };
+    const serverArgs: ServerArgs = {
+      listen: DEFAULT_SERVER_ARGS.listen,
+      port: DEFAULT_SERVER_ARGS.port,
+      ...this.comfySettings.get('Comfy.Server.LaunchArgs'),
+    };
 
-    const host = COMFY_HOST ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
-    const targetPort = Number(COMFY_PORT ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
-    const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
+    if (COMFY_HOST) serverArgs.listen = COMFY_HOST;
+    if (COMFY_PORT) serverArgs.port = COMFY_PORT;
 
-    // Remove listen and port from extraServerArgs so core launch args are used instead.
-    delete extraServerArgs.listen;
-    delete extraServerArgs.port;
+    // Find first available port (unless using external server).
+    if (!useExternalServer) {
+      const targetPort = Number(serverArgs.port);
+      const port = await findAvailablePort(serverArgs.listen, targetPort, targetPort + 1000);
+      serverArgs.port = String(port);
+    }
 
-    return { host, port, extraServerArgs };
+    return serverArgs;
   }
 
   initializeTodesktop(): void {

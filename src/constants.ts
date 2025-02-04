@@ -104,16 +104,18 @@ export const MigrationItems: MigrationItem[] = [
   },
 ] as const;
 
-export const DEFAULT_SERVER_ARGS = {
+export interface ServerArgs {
   /** The host to use for the ComfyUI server. */
-  host: '127.0.0.1',
+  listen: string;
   /** The port to use for the ComfyUI server. */
-  port: 8000,
-  // Extra arguments to pass to the ComfyUI server.
-  extraServerArgs: {} as Record<string, string>,
+  port: string;
+  /** Extra arguments to pass to the ComfyUI server. */
+  [key: string]: string | number;
+}
+export const DEFAULT_SERVER_ARGS: ServerArgs = {
+  listen: '127.0.0.1',
+  port: '8000',
 };
-
-export type ServerArgs = typeof DEFAULT_SERVER_ARGS;
 
 export enum DownloadStatus {
   PENDING = 'pending',

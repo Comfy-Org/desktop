@@ -37,7 +37,7 @@ export class ComfyServer implements HasTelemetry {
   ) {}
 
   get baseUrl() {
-    return `http://${this.serverArgs.host}:${this.serverArgs.port}`;
+    return `http://${this.serverArgs.listen}:${this.serverArgs.port}`;
   }
 
   /**
@@ -79,8 +79,6 @@ export class ComfyServer implements HasTelemetry {
       'front-end-root': this.webRootPath,
       'base-directory': this.basePath,
       'extra-model-paths-config': ComfyServerConfig.configPath,
-      port: this.serverArgs.port.toString(),
-      listen: this.serverArgs.host,
     };
   }
 
@@ -97,7 +95,7 @@ export class ComfyServer implements HasTelemetry {
   get launchArgs() {
     return ComfyServer.buildLaunchArgs(this.mainScriptPath, {
       ...this.coreLaunchArgs,
-      ...this.serverArgs.extraServerArgs,
+      ...this.serverArgs,
     });
   }
 
