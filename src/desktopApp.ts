@@ -53,8 +53,14 @@ export class DesktopApp implements HasTelemetry {
 
   /** Install / validate installation is complete */
   private async initializeInstallation(): Promise<ComfyInstallation> {
-    const installManager = new InstallationManager(this.appWindow, this.telemetry);
-    return await installManager.ensureInstalled();
+    const { appWindow } = this;
+    try {
+      const installManager = new InstallationManager(appWindow, this.telemetry);
+      return await installManager.ensureInstalled();
+    } catch (error) {
+      appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+    }
   }
 
   async start(): Promise<void> {
@@ -62,9 +68,9 @@ export class DesktopApp implements HasTelemetry {
 
     this.registerIpcHandlers();
 
-    try {
-      const installation = await this.initializeInstallation();
+    const installation = await this.initializeInstallation();
 
+    try {
       // Initialize app
       const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
       await comfyDesktopApp.initialize();
