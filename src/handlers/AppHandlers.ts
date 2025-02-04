@@ -37,7 +37,7 @@ export function registerAppHandlers() {
         buttons: ['Yes', 'No'],
         defaultId: 0,
         title: 'Restart ComfyUI',
-        message: customMessage || 'Are you sure you want to restart ComfyUI?',
+        message: customMessage,
         detail: 'The application will close and restart automatically.',
       });
 
