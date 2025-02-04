@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/electron/main';
 import todesktop from '@todesktop/runtime';
 import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
-import path from 'node:path';
 import { graphics } from 'systeminformation';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
@@ -31,10 +30,6 @@ export class ComfyDesktopApp implements HasTelemetry {
 
   get basePath() {
     return this.installation.basePath;
-  }
-
-  get pythonInstallPath() {
-    return app.isPackaged ? this.basePath : path.join(app.getAppPath(), 'assets');
   }
 
   public async initialize(): Promise<void> {
