@@ -129,9 +129,9 @@ const electronAPI = {
   isPackaged: (): Promise<boolean> => {
     return ipcRenderer.invoke(IPC_CHANNELS.IS_PACKAGED);
   },
-  restartApp: (customMessage?: string, delay?: number): void => {
+  restartApp: async (customMessage?: string, delay?: number): Promise<void> => {
     console.log('Sending restarting app message to main process with custom message:', customMessage);
-    ipcRenderer.send(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
+    await ipcRenderer.invoke(IPC_CHANNELS.RESTART_APP, { customMessage, delay });
   },
   /** Exits the application gracefully. */
   quit: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.QUIT),
