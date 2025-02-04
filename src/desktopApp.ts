@@ -54,7 +54,7 @@ export class DesktopApp implements HasTelemetry {
   }
 
   async start(): Promise<void> {
-    const { appState, appWindow, overrides, telemetry, config } = this;
+    const { appWindow, overrides, telemetry, config } = this;
 
     this.registerIpcHandlers();
 
@@ -106,7 +106,7 @@ export class DesktopApp implements HasTelemetry {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
-      if (!appState.isQuitting) {
+      if (!this.appState.isQuitting) {
         dialog.showErrorBox(
           'Unhandled exception',
           `An unexpected error occurred whilst starting the app, and it needs to be closed.\n\nError message:\n\n${error}`
