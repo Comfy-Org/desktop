@@ -2,15 +2,16 @@ import todesktop from '@todesktop/runtime';
 import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
-import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
+import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { DownloadManager } from '../models/DownloadManager';
 import { HasTelemetry, ITelemetry } from '../services/telemetry';
 import { Terminal } from '../shell/terminal';
-import { getModelsDirectory } from '../utils';
+import { findAvailablePort, getModelsDirectory } from '../utils';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { AppWindow } from './appWindow';
 import type { ComfyInstallation } from './comfyInstallation';
 import { ComfyServer } from './comfyServer';
+import type { DevOverrides } from './devOverrides';
 
 export class ComfyDesktopApp implements HasTelemetry {
   public comfyServer: ComfyServer | null = null;
@@ -32,6 +33,21 @@ export class ComfyDesktopApp implements HasTelemetry {
   public initialize(): void {
     this.registerIPCHandlers();
     this.initializeTodesktop();
+  }
+
+  async buildServerArgs({ useExternalServer, COMFY_HOST, COMFY_PORT }: DevOverrides): Promise<ServerArgs> {
+    // Shallow-clone the setting launch args to avoid mutation.
+    const extraServerArgs = { ...this.comfySettings.get('Comfy.Server.LaunchArgs') };
+
+    const host = COMFY_HOST ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
+    const targetPort = Number(COMFY_PORT ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
+    const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
+
+    // Remove listen and port from extraServerArgs so core launch args are used instead.
+    delete extraServerArgs.listen;
+    delete extraServerArgs.port;
+
+    return { host, port, extraServerArgs };
   }
 
   initializeTodesktop(): void {

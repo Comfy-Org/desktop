@@ -32,4 +32,8 @@ export class DevOverrides {
       this.SENTRY_ENABLED = process.env.SENTRY_ENABLED;
     }
   }
+
+  get useExternalServer() {
+    return this.USE_EXTERNAL_SERVER === 'true';
+  }
 }

@@ -1,7 +1,7 @@
 import { app, dialog } from 'electron';
 import log from 'electron-log/main';
 
-import { DEFAULT_SERVER_ARGS, ProgressStatus } from './constants';
+import { ProgressStatus } from './constants';
 import { IPC_CHANNELS } from './constants';
 import { registerAppHandlers } from './handlers/AppHandlers';
 import { registerAppInfoHandlers } from './handlers/appInfoHandlers';
@@ -17,7 +17,6 @@ import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
-import { findAvailablePort } from './utils';
 
 export class DesktopApp implements HasTelemetry {
   readonly telemetry: ITelemetry = getTelemetry();
@@ -94,22 +93,12 @@ export class DesktopApp implements HasTelemetry {
       comfyDesktopApp.initialize();
 
       // Construct core launch args
-      const useExternalServer = overrides.USE_EXTERNAL_SERVER === 'true';
-      // Shallow-clone the setting launch args to avoid mutation.
-      const extraServerArgs = { ...comfyDesktopApp.comfySettings.get('Comfy.Server.LaunchArgs') };
-
-      const host = overrides.COMFY_HOST ?? extraServerArgs.listen ?? DEFAULT_SERVER_ARGS.host;
-      const targetPort = Number(overrides.COMFY_PORT ?? extraServerArgs.port ?? DEFAULT_SERVER_ARGS.port);
-      const port = useExternalServer ? targetPort : await findAvailablePort(host, targetPort, targetPort + 1000);
-
-      // Remove listen and port from extraServerArgs so core launch args are used instead.
-      delete extraServerArgs.listen;
-      delete extraServerArgs.port;
+      const serverArgs = await comfyDesktopApp.buildServerArgs(overrides);
 
       // Start server
-      if (!useExternalServer) {
+      if (!overrides.useExternalServer) {
         try {
-          await comfyDesktopApp.startComfyServer({ host, port, extraServerArgs });
+          await comfyDesktopApp.startComfyServer(serverArgs);
         } catch (error) {
           log.error('Unhandled exception during server start', error);
           appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
@@ -118,7 +107,7 @@ export class DesktopApp implements HasTelemetry {
         }
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
-      await appWindow.loadComfyUI({ host, port, extraServerArgs });
+      await appWindow.loadComfyUI(serverArgs);
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
