@@ -53,6 +53,13 @@ export class InstallationManager {
       // Convert from old format
       if (state === 'upgraded') installation.upgradeConfig();
 
+      // Install updated manager requirements
+      if (installation.validation.managerPythonPackages === 'warning') {
+        await this.appWindow.loadPage('desktop-update');
+        await installation.virtualEnvironment.installComfyUIManagerRequirements();
+        await installation.validate();
+      }
+
       // Resolve issues and re-run validation
       if (installation.hasIssues) {
         while (!(await this.resolveIssues(installation))) {

@@ -485,7 +485,7 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
-  private async installComfyUIManagerRequirements(callbacks?: ProcessCallbacks): Promise<void> {
+  async installComfyUIManagerRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Installing ComfyUIManager requirements from ${this.comfyUIManagerRequirementsPath}`);
     const installCmd = getPipInstallArgs({
       requirementsFile: this.comfyUIManagerRequirementsPath,

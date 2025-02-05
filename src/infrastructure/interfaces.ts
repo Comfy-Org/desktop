@@ -19,4 +19,5 @@ export type Page =
   | 'metrics-consent'
   | 'server-start'
   | ''
-  | 'maintenance';
+  | 'maintenance'
+  | 'desktop-update';
