@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import si from 'systeminformation';
 
-import type { ComfySettings } from '@/config/comfySettings';
+import type { IComfySettings } from '@/config/comfySettings';
 
 import { IPC_CHANNELS } from '../constants';
 import { AppWindow } from '../main-process/appWindow';
@@ -244,7 +244,7 @@ export function trackEvent<T extends HasTelemetry>(eventName: string) {
 export async function promptMetricsConsent(
   store: DesktopConfig,
   appWindow: AppWindow,
-  comfySettings: ComfySettings
+  comfySettings: IComfySettings
 ): Promise<boolean> {
   const consent = comfySettings.get('Comfy-Desktop.SendStatistics') ?? false;
   const consentedOn = store.get('versionConsentedMetrics');
