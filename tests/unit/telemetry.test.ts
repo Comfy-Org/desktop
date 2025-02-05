@@ -93,7 +93,7 @@ describe('MixpanelTelemetry', () => {
       telemetry.track(eventName);
 
       // Simulate receiving consent
-      const installOptionsHandler = vi.mocked(ipcMain.once).mock.calls[0][1];
+      const installOptionsHandler = vi.mocked(ipcMain.on).mock.calls[0][1];
       const mockIpcEvent = {} as IpcMainEvent;
       installOptionsHandler(mockIpcEvent, { allowMetrics: true });
 
@@ -109,7 +109,7 @@ describe('MixpanelTelemetry', () => {
     it('should handle INSTALL_COMFYUI event and update consent', () => {
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       const mockIpcEvent = {} as IpcMainEvent;
-      const installOptionsHandler = vi.mocked(ipcMain.once).mock.calls[0][1];
+      const installOptionsHandler = vi.mocked(ipcMain.on).mock.calls[0][1];
       installOptionsHandler(mockIpcEvent, { allowMetrics: true });
       expect(telemetry.hasConsent).toBe(true);
     });
@@ -121,17 +121,30 @@ describe('MixpanelTelemetry', () => {
       expect(ipcMain.on).toHaveBeenCalledWith(IPC_CHANNELS.TRACK_EVENT, expect.any(Function));
     });
 
-    it('should handle TRACK_EVENT messages', () => {
+    it('should handle TRACK_EVENT directly', () => {
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
+      // Register the handlers first
       telemetry.registerHandlers();
-      const trackEventHandler = vi.mocked(ipcMain.on).mock.calls[0][1];
 
-      // Simulate receiving a track event
+      // Get the TRACK_EVENT handler directly
+      const [, trackEventHandler] = (ipcMain.on as any).mock.calls.find(
+        ([channel]: any) => channel === IPC_CHANNELS.TRACK_EVENT
+      );
+
+      // Simulate the TRACK_EVENT
       const mockIpcEvent = {} as IpcMainEvent;
       trackEventHandler(mockIpcEvent, 'test_event', { foo: 'bar' });
 
-      // Since consent is false by default, it should be queued
+      // Verify the event was queued (since consent is false by default)
       expect(telemetry['queue'].length).toBe(1);
+      expect(telemetry['queue'][0]).toMatchObject({
+        eventName: 'test_event',
+        properties: expect.objectContaining({
+          foo: 'bar',
+          distinct_id: expect.any(String),
+          time: expect.any(Date),
+        }),
+      });
     });
 
     it('should register ipc handler for INCREMENT_USER_PROPERTY', () => {
