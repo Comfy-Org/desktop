@@ -30,13 +30,51 @@ export interface ComfySettingsData {
 }
 
 /**
+ * A read-only interface to an in-memory cache of frontend settings.
+ * @see {@link ComfySettings} concrete implementation
+ */
+export interface FrontendSettingsCache {
+  /**
+   * Gets a setting from the copy of settings stored in memory.
+   * @param key The key of the setting to get.
+   * @returns The value of the setting.
+   */
+  get<K extends keyof ComfySettingsData>(key: K): ComfySettingsData[K];
+}
+
+/**
+ * A read-write interface to an in-memory cache of frontend settings.
+ *
+ * Changes may be persisted to disk by calling {@link saveSettings}.
+ * @see {@link ComfySettings} concrete implementation
+ */
+export interface IComfySettings extends FrontendSettingsCache {
+  /**
+   * Sets the value of a setting in memory - does not persist to disk.
+   * @see {@link saveSettings}
+   * @param key The key of the setting to set.
+   * @param value The value to set the setting to.
+   */
+  set<K extends keyof ComfySettingsData>(key: K, value: ComfySettingsData[K]): void;
+  /**
+   * Overwrites the settings file on disk with the copy of settings in memory.
+   * Can only be called before the ComfyUI server starts.
+   * @throws Error if called after the ComfyUI server has started
+   */
+  saveSettings(): Promise<void>;
+}
+
+/**
  * ComfySettings is a class that loads settings from the comfy.settings.json file.
  *
  * This file is exclusively written to by the ComfyUI server once it starts.
  * The Electron process can only write to this file during initialization, before
  * the ComfyUI server starts.
+ *
+ * @see {@link FrontendSettingsCache} read-only interface
+ * @see {@link IComfySettings} read-write interface
  */
-export class ComfySettings {
+export class ComfySettings implements IComfySettings {
   public readonly filePath: string;
   private settings: ComfySettingsData = structuredClone(DEFAULT_SETTINGS);
   private static writeLocked = false;
@@ -70,10 +108,6 @@ export class ComfySettings {
     }
   }
 
-  /**
-   * Saves settings to disk. Can only be called before the ComfyUI server starts.
-   * @throws Error if called after the ComfyUI server has started
-   */
   async saveSettings() {
     if (!this.settings) return;
 
