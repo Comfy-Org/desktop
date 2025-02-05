@@ -18,6 +18,10 @@ export const DEFAULT_SETTINGS: ComfySettingsData = {
 export interface ComfySettingsData {
   'Comfy-Desktop.AutoUpdate': boolean;
   'Comfy-Desktop.SendStatistics': boolean;
+  'Comfy.ColorPalette': 'dark' | 'light';
+  'Comfy.UseNewMenu': 'Top' | 'Bottom';
+  'Comfy.Workflow.WorkflowTabsPosition': 'Topbar' | 'Sidebar';
+  'Comfy.Workflow.ShowMissingModelsWarning': boolean;
   'Comfy.Server.LaunchArgs': Record<string, string>;
   'Comfy-Desktop.UV.PythonInstallMirror': string;
   'Comfy-Desktop.UV.PypiInstallMirror': string;
