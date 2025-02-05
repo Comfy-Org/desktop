@@ -525,14 +525,21 @@ export class VirtualEnvironment implements HasTelemetry {
         throw new Error(`Failed to get packages: Exit code ${result.exitCode}, signal ${result.signal}`);
       if (!output) throw new Error('Failed to get packages: uv output was empty');
 
+      return output;
+    };
+
+    const allOkay = (output: string) => {
       const venvOk = output.search(/\bWould make no changes\s+$/) !== -1;
       if (!venvOk) log.warn(output);
 
       return venvOk;
     };
 
-    const coreOk = await checkRequirements(this.comfyUIRequirementsPath);
-    const managerOk = await checkRequirements(this.comfyUIManagerRequirementsPath);
+    const coreOutput = await checkRequirements(this.comfyUIRequirementsPath);
+    const managerOutput = await checkRequirements(this.comfyUIManagerRequirementsPath);
+
+    const coreOk = allOkay(coreOutput);
+    const managerOk = allOkay(managerOutput);
 
     return coreOk && managerOk;
   }
