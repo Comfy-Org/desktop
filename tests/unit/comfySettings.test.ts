@@ -82,6 +82,10 @@ describe('ComfySettings', () => {
       const mockSettings: ComfySettingsData = {
         'Comfy-Desktop.AutoUpdate': false,
         'Comfy-Desktop.SendStatistics': false,
+        'Comfy.ColorPalette': 'dark',
+        'Comfy.UseNewMenu': 'Top',
+        'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
+        'Comfy.Workflow.ShowMissingModelsWarning': true,
         'Comfy.Server.LaunchArgs': { test: 'value' },
         'Comfy-Desktop.UV.PythonInstallMirror': '',
         'Comfy-Desktop.UV.PypiInstallMirror': '',
