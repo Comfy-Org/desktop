@@ -362,36 +362,41 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
+    function hasExited(data: string, endMarker: string): string | undefined {
+      // Remove ansi sequences to see if this the exit marker
+      const lines = data.replaceAll(/\u001B\[[\d;?]*[A-Za-z]/g, '').split(/(\r\n|\n)/);
+      for (const line of lines) {
+        if (line.startsWith(endMarker)) {
+          return line.substring(endMarker.length).trim();
+        }
+      }
+    }
+
+    function parseExitCode(exit: string): number {
+      // Powershell outputs True / False for success
+      if (exit === 'True') return 0;
+      if (exit === 'False') return -999;
+      // Bash should output a number
+      const exitCode = Number.parseInt(exit);
+      if (Number.isNaN(exitCode)) {
+        console.warn('Unable to parse exit code:', exit);
+        return -998;
+      }
+      return exitCode;
+    }
+
     const id = Date.now();
     return new Promise((res) => {
       const endMarker = `_-end-${id}:`;
       const input = `${command}\recho "${endMarker}$?"`;
       const dataReader = this.uvPtyInstance.onData((data) => {
-        // Remove ansi sequences to see if this the exit marker
-        const lines = data.replaceAll(/\u001B\[[\d;?]*[A-Za-z]/g, '').split(/(\r\n|\n)/);
-        for (const line of lines) {
-          if (line.startsWith(endMarker)) {
-            const exit = line.substring(endMarker.length).trim();
-            let exitCode: number;
-            // Powershell outputs True / False for success
-            if (exit === 'True') {
-              exitCode = 0;
-            } else if (exit === 'False') {
-              exitCode = -999;
-            } else {
-              // Bash should output a number
-              exitCode = Number.parseInt(exit);
-              if (Number.isNaN(exitCode)) {
-                console.warn('Unable to parse exit code:', exit);
-                exitCode = -998;
-              }
-            }
-            dataReader.dispose();
-            res({ exitCode });
-            break;
-          }
-        }
         onData?.(data);
+
+        const exit = hasExited(data, endMarker);
+        if (!exit) return;
+
+        dataReader.dispose();
+        res({ exitCode: parseExitCode(exit) });
       });
       this.uvPtyInstance.write(`${input}\r`);
     });
