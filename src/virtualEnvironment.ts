@@ -102,10 +102,6 @@ export class VirtualEnvironment implements HasTelemetry {
   get uvPtyInstance() {
     const env = {
       ...(process.env as Record<string, string>),
-      UV_CACHE_DIR: this.cacheDir,
-      UV_TOOL_DIR: this.cacheDir,
-      UV_TOOL_BIN_DIR: this.cacheDir,
-      UV_PYTHON_INSTALL_DIR: this.cacheDir,
       VIRTUAL_ENV: this.venvPath,
       // Empty strings are not valid values for these env vars,
       // dropping them here to avoid passing them to uv.
