@@ -178,6 +178,10 @@ export class InstallationManager {
       autoUpdate: installOptions.autoUpdate,
       allowMetrics: installOptions.allowMetrics,
       migrationItemIds: installOptions.migrationItemIds,
+      pythonMirror: installOptions.pythonMirror,
+      pypiMirror: installOptions.pypiMirror,
+      torchMirror: installOptions.torchMirror,
+      device: installOptions.device,
     });
 
     // Save desktop config

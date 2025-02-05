@@ -55,7 +55,7 @@ export class MixpanelTelemetry implements ITelemetry {
     this.storageFile = path.join(app.getPath('userData'), 'telemetry.txt');
     this.distinctId = this.getOrCreateDistinctId(this.storageFile);
     this.queue = [];
-    ipcMain.once(IPC_CHANNELS.INSTALL_COMFYUI, (_event, installOptions: InstallOptions) => {
+    ipcMain.on(IPC_CHANNELS.INSTALL_COMFYUI, (_event, installOptions: InstallOptions) => {
       if (installOptions.allowMetrics) {
         this.hasConsent = true;
       }
