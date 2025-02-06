@@ -83,7 +83,7 @@ describe('MixpanelTelemetry', () => {
       expect(telemetry['queue'][0].properties).toMatchObject({
         ...properties,
         distinct_id: expect.any(String),
-        time: expect.any(Date),
+        time: expect.any(Number),
       });
     });
 
@@ -142,7 +142,7 @@ describe('MixpanelTelemetry', () => {
         properties: expect.objectContaining({
           foo: 'bar',
           distinct_id: expect.any(String),
-          time: expect.any(Date),
+          time: expect.any(Number),
         }),
       });
     });
