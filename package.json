@@ -13,7 +13,7 @@
     "frontendVersion": "1.8.12",
     "comfyVersion": "0.3.13",
     "managerCommit": "1434b12c343b58a401f1c9f913965ceb0cfd089e",
-    "uvVersion": "0.5.11"
+    "uvVersion": "0.5.26"
   },
   "scripts": {
     "clean": "rimraf .vite dist out",
