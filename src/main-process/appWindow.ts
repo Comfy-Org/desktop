@@ -60,8 +60,9 @@ export class AppWindow {
     const store = this.loadWindowStore();
     this.store = store;
 
-    const storedWidth = store.get('windowWidth');
-    const storedHeight = store.get('windowHeight');
+    // Retrieve stored window size, or use default if not available
+    const storedWidth = store.get('windowWidth', width);
+    const storedHeight = store.get('windowHeight', height);
     const storedX = store.get('windowX');
     const storedY = store.get('windowY');
 
