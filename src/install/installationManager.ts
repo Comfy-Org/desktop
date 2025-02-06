@@ -111,12 +111,20 @@ export class InstallationManager {
       installation.onUpdate?.(installation.validation);
       return installation.validation;
     });
-    ipcMain.handle(IPC_CHANNELS.VALIDATE_INSTALLATION, async () => await installation.validate());
-    ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, () =>
-      installation.virtualEnvironment.reinstallRequirements(sendLogIpc)
-    );
-    ipcMain.handle(IPC_CHANNELS.UV_CLEAR_CACHE, async () => await installation.virtualEnvironment.clearUvCache());
+    ipcMain.handle(IPC_CHANNELS.VALIDATE_INSTALLATION, async () => {
+      this.telemetry.track('installation_manager:installation_validate');
+      return await installation.validate();
+    });
+    ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, () => {
+      this.telemetry.track('installation_manager:uv_requirements_install');
+      return installation.virtualEnvironment.reinstallRequirements(sendLogIpc);
+    });
+    ipcMain.handle(IPC_CHANNELS.UV_CLEAR_CACHE, async () => {
+      this.telemetry.track('installation_manager:uv_cache_clear');
+      return await installation.virtualEnvironment.clearUvCache();
+    });
     ipcMain.handle(IPC_CHANNELS.UV_RESET_VENV, async (): Promise<boolean> => {
+      this.telemetry.track('installation_manager:uv_venv_reset');
       const venv = installation.virtualEnvironment;
       const deleted = await venv.removeVenvDirectory();
       if (!deleted) return false;
