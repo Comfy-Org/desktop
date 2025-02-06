@@ -67,15 +67,22 @@ export class AppWindow {
           titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
         }
       : {};
+    
+
+    // Retrieve stored window size, or use default if not available
+    const storedWidth = store.get('windowWidth', width);
+    const storedHeight = store.get('windowHeight', height);
+    const storedX = store.get('windowX');
+    const storedY = store.get('windowY');
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
-      width: width,
-      height: height,
+      width: Math.max(storedWidth, 100),
+      height: Math.max(storedHeight, 100),
       minWidth: 640,
       minHeight: 640,
-      x: 0,
-      y: 0,
+      x: Math.max(storedX ?? 0, 0),
+      y: Math.max(storedY ?? 0, 0),
       webPreferences: {
         // eslint-disable-next-line unicorn/prefer-module
         preload: path.join(__dirname, '../build/preload.cjs'),
