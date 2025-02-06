@@ -60,6 +60,11 @@ export class AppWindow {
     const store = this.loadWindowStore();
     this.store = store;
 
+    const storedWidth = store.get('windowWidth');
+    const storedHeight = store.get('windowHeight');
+    const storedX = store.get('windowX');
+    const storedY = store.get('windowY');
+
     // macOS requires different handling to linux / win32
     const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
       ? {
@@ -67,13 +72,6 @@ export class AppWindow {
           titleBarOverlay: nativeTheme.shouldUseDarkColors ? this.darkOverlay : this.lightOverlay,
         }
       : {};
-    
-
-    // Retrieve stored window size, or use default if not available
-    const storedWidth = store.get('windowWidth', width);
-    const storedHeight = store.get('windowHeight', height);
-    const storedX = store.get('windowX');
-    const storedY = store.get('windowY');
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
