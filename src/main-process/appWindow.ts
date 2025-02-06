@@ -60,12 +60,6 @@ export class AppWindow {
     const store = this.loadWindowStore();
     this.store = store;
 
-    // Retrieve stored window size, or use default if not available
-    const storedWidth = store.get('windowWidth', width);
-    const storedHeight = store.get('windowHeight', height);
-    const storedX = store.get('windowX');
-    const storedY = store.get('windowY');
-
     // macOS requires different handling to linux / win32
     const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
       ? {
@@ -76,12 +70,12 @@ export class AppWindow {
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
-      width: storedWidth,
-      height: storedHeight,
+      width: width,
+      height: height,
       minWidth: 640,
       minHeight: 640,
-      x: storedX,
-      y: storedY,
+      x: 0,
+      y: 0,
       webPreferences: {
         // eslint-disable-next-line unicorn/prefer-module
         preload: path.join(__dirname, '../build/preload.cjs'),
