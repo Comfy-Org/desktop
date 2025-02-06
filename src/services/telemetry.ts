@@ -124,7 +124,7 @@ export class MixpanelTelemetry implements ITelemetry {
    */
   flush(): void {
     while (this.queue.length > 0) {
-      const { eventName, properties } = this.queue.pop()!;
+      const { eventName, properties } = this.queue.shift()!;
       this.mixpanelTrack(eventName, properties);
     }
   }
