@@ -88,7 +88,7 @@ export class MixpanelTelemetry implements ITelemetry {
   track(eventName: string, properties?: PropertyDict): void {
     const defaultProperties = {
       distinct_id: this.distinctId,
-      time: new Date(),
+      time: Date.now(),
       $os: os.platform(),
     };
 
