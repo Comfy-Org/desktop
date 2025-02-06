@@ -88,7 +88,7 @@ export class MixpanelTelemetry implements ITelemetry {
   track(eventName: string, properties?: PropertyDict): void {
     const defaultProperties = {
       distinct_id: this.distinctId,
-      time: new Date(),
+      time: Date.now(),
       $os: os.platform(),
     };
 
@@ -124,7 +124,7 @@ export class MixpanelTelemetry implements ITelemetry {
    */
   flush(): void {
     while (this.queue.length > 0) {
-      const { eventName, properties } = this.queue.pop()!;
+      const { eventName, properties } = this.queue.shift()!;
       this.mixpanelTrack(eventName, properties);
     }
   }
