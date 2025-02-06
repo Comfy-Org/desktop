@@ -11,7 +11,7 @@
   "type": "module",
   "config": {
     "frontendVersion": "1.8.12",
-    "comfyVersion": "0.3.13",
+    "comfyVersion": "0.3.14",
     "managerCommit": "b2094f773a6b04dbfa29604787b4f6b7f9ff8b81",
     "uvVersion": "0.5.26"
   },
