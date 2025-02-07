@@ -507,7 +507,9 @@ export class VirtualEnvironment implements HasTelemetry {
    * Checks if the virtual environment has all the required packages of ComfyUI core.
    *
    * Parses the text output of `uv pip install --dry-run -r requirements.txt`.
-   * @returns `true` if pip install does not detect any missing packages, otherwise `false`
+   * @returns `'OK'` if pip install does not detect any missing packages,
+   * `'manager-upgrade'` if `uv` and `toml` are missing,
+   * or `'error'` when any other combination of packages are missing.
    */
   async hasRequirements(): Promise<'OK' | 'error' | 'manager-upgrade'> {
     const checkRequirements = async (requirementsPath: string) => {
