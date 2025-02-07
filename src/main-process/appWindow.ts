@@ -76,7 +76,7 @@ export class AppWindow {
 
     // Use window manager default behaviour if settings are invalid
     const eitherUndefined = storedX === undefined || storedY === undefined;
-    // Ensure window is not placed outside of the primary display
+    // Ensure window is wholly contained within the primary display
     const x = eitherUndefined ? undefined : clamp(storedX, 0, workAreaSize.width - clampedWidth);
     const y = eitherUndefined ? undefined : clamp(storedY, 0, workAreaSize.height - clampedHeight);
 
