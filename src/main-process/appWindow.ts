@@ -55,8 +55,8 @@ export class AppWindow {
 
   public constructor(private readonly appState: IAppState) {
     const installed = useDesktopConfig().get('installState') === 'installed';
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, height } = installed ? primaryDisplay.workAreaSize : { width: 1024, height: 768 };
+    const { workAreaSize } = screen.getPrimaryDisplay();
+    const { width, height } = installed ? workAreaSize : { width: 1024, height: 768 };
     const store = this.loadWindowStore();
     this.store = store;
 
@@ -74,10 +74,10 @@ export class AppWindow {
     // Ensure window is not placed outside of the primary display
     const x = eitherUndefined
       ? undefined
-      : Math.min(Math.max(storedX, 0), primaryDisplay.workAreaSize.width - Math.max(storedWidth, minWidth));
+      : Math.min(Math.max(storedX, 0), workAreaSize.width - Math.max(storedWidth, minWidth));
     const y = eitherUndefined
       ? undefined
-      : Math.min(Math.max(storedY, 0), primaryDisplay.workAreaSize.height - Math.max(storedHeight, minHeight));
+      : Math.min(Math.max(storedY, 0), workAreaSize.height - Math.max(storedHeight, minHeight));
 
     // macOS requires different handling to linux / win32
     const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
