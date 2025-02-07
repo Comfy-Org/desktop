@@ -1,4 +1,4 @@
-import { Notification, app, dialog, ipcMain } from 'electron';
+import { Notification, app, dialog, ipcMain, shell } from 'electron';
 import log from 'electron-log/main';
 
 import { ComfySettings } from '@/config/comfySettings';
@@ -10,7 +10,7 @@ import type { InstallOptions } from '../preload';
 import { CmCli } from '../services/cmCli';
 import { ITelemetry } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
-import { ansiCodes, validateHardware } from '../utils';
+import { ansiCodes, canExecuteShellCommand, validateHardware } from '../utils';
 import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
 
@@ -180,6 +180,26 @@ export class InstallationManager {
     } else {
       log.verbose('Loading welcome renderer.');
       await this.appWindow.loadPage('welcome');
+    }
+
+    // Check if git is installed
+    log.verbose('Checking if git is installed.');
+    const gitInstalled = await canExecuteShellCommand('git --version');
+    if (!gitInstalled) {
+      log.verbose('git not detected in path, loading download-git page.');
+
+      const { response } = await this.appWindow.showMessageBox({
+        type: 'info',
+        title: 'Download git',
+        message: `We were unable to find git on this device.\n\nPlease download and install git before continuing with the installation of ComfyUI Desktop.`,
+        buttons: ['Open git downloads page', 'Skip'],
+        defaultId: 0,
+        cancelId: 1,
+      });
+
+      if (response === 0) {
+        await shell.openExternal('https://git-scm.com/downloads/');
+      }
     }
 
     // Handover to frontend
