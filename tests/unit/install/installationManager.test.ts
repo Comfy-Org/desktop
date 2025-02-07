@@ -138,8 +138,8 @@ describe('InstallationManager', () => {
 
   describe('ensureInstalled', () => {
     beforeEach(() => {
-      // Mock the static fromConfig method to return a proper instance
-      vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(async () => {
         return new ComfyInstallation('installed', 'valid/base', createMockTelemetry());
       });
     });

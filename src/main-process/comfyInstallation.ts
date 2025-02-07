@@ -79,6 +79,7 @@ export class ComfyInstallation {
     const basePath = config.get('basePath');
     if (state && basePath) {
       await comfySettings.loadSettings();
+      await comfySettings.saveSettings();
       return new ComfyInstallation(state, basePath, getTelemetry());
     }
   }
