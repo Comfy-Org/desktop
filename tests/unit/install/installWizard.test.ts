@@ -4,12 +4,44 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyConfigManager } from '../../../src/config/comfyConfigManager';
 import { ComfyServerConfig, ModelPaths } from '../../../src/config/comfyServerConfig';
-import { DEFAULT_SETTINGS } from '../../../src/config/comfySettings';
 import { InstallWizard } from '../../../src/install/installWizard';
 import { InstallOptions } from '../../../src/preload';
 import { ITelemetry } from '../../../src/services/telemetry';
 
-vi.mock('node:fs');
+// Mock comfySettings
+vi.mock('../../../src/config/comfySettings', () => ({
+  comfySettings: {
+    get: vi.fn(),
+    set: vi.fn(),
+    saveSettings: vi.fn().mockResolvedValue(undefined),
+    loadSettings: vi.fn().mockResolvedValue(undefined),
+  },
+  DEFAULT_SETTINGS: {
+    'Comfy-Desktop.AutoUpdate': true,
+    'Comfy-Desktop.SendStatistics': true,
+    'Comfy.ColorPalette': 'dark',
+    'Comfy.UseNewMenu': 'Top',
+    'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
+    'Comfy.Workflow.ShowMissingModelsWarning': true,
+    'Comfy.Server.LaunchArgs': {},
+    'Comfy-Desktop.UV.PythonInstallMirror': '',
+    'Comfy-Desktop.UV.PypiInstallMirror': '',
+    'Comfy-Desktop.UV.TorchInstallMirror': '',
+  },
+}));
+
+vi.mock('node:fs', () => ({
+  default: {
+    cpSync: vi.fn(),
+    existsSync: vi.fn(),
+    promises: {
+      writeFile: vi.fn().mockResolvedValue(undefined),
+      access: vi.fn().mockResolvedValue(undefined),
+      readFile: vi.fn().mockResolvedValue(''),
+    },
+  },
+}));
+
 vi.mock('electron-log/main');
 vi.mock('../../../src/config/comfyConfigManager');
 vi.mock('../../../src/config/comfyServerConfig');
@@ -111,54 +143,53 @@ describe('InstallWizard', () => {
   });
 
   describe('initializeSettings', () => {
-    it('should create settings file with default values when no existing settings', () => {
-      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-      const writeFileSpy = vi.spyOn(fs, 'writeFileSync');
+    it('should create settings file with default values when no existing settings', async () => {
+      vi.mocked(fs.existsSync).mockReturnValue(false);
+      const { comfySettings } = await import('../../../src/config/comfySettings');
 
-      installWizard.initializeSettings();
+      await installWizard.initializeSettings();
 
-      const expectedSettings = {
-        ...DEFAULT_SETTINGS,
-        'Comfy-Desktop.AutoUpdate': true,
-        'Comfy-Desktop.SendStatistics': true,
-        'Comfy-Desktop.UV.PythonInstallMirror': 'default',
-        'Comfy-Desktop.UV.PypiInstallMirror': 'default',
-        'Comfy-Desktop.UV.TorchInstallMirror': 'default',
-      };
-
-      expect(writeFileSpy).toHaveBeenCalledWith(
-        path.join('/test/path', 'user', 'default', 'comfy.settings.json'),
-        JSON.stringify(expectedSettings, null, 2)
-      );
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.AutoUpdate', true);
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.SendStatistics', true);
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.PythonInstallMirror', 'default');
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.PypiInstallMirror', 'default');
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.TorchInstallMirror', 'default');
+      expect(comfySettings.saveSettings).toHaveBeenCalled();
     });
 
-    it('should merge with existing settings when settings file exists', () => {
+    it('should merge with existing settings when settings file exists', async () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      const { comfySettings } = await import('../../../src/config/comfySettings');
+
+      // Mock existing settings file
       const existingSettings = {
         'Existing.Setting': 'value',
+        'Comfy.ColorPalette': 'light',
+        'Comfy.Server.LaunchArgs': { existingArg: true },
       };
-      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-      vi.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(existingSettings));
-      const writeFileSpy = vi.spyOn(fs, 'writeFileSync');
+      vi.mocked(fs.promises.access).mockResolvedValue(undefined);
+      vi.mocked(fs.promises.readFile).mockResolvedValue(JSON.stringify(existingSettings));
 
-      installWizard.initializeSettings();
+      await installWizard.initializeSettings();
 
-      const expectedSettings = {
-        ...DEFAULT_SETTINGS,
-        ...existingSettings,
-        'Comfy-Desktop.AutoUpdate': true,
-        'Comfy-Desktop.SendStatistics': true,
-        'Comfy-Desktop.UV.PythonInstallMirror': 'default',
-        'Comfy-Desktop.UV.PypiInstallMirror': 'default',
-        'Comfy-Desktop.UV.TorchInstallMirror': 'default',
-      };
+      // Verify that loadSettings is called to load existing settings
+      expect(comfySettings.loadSettings).toHaveBeenCalled();
 
-      expect(writeFileSpy).toHaveBeenCalledWith(
-        path.join('/test/path', 'user', 'default', 'comfy.settings.json'),
-        JSON.stringify(expectedSettings, null, 2)
-      );
+      // Then verify only our new settings are set (not overwriting existing ones)
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.AutoUpdate', true);
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.SendStatistics', true);
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.PythonInstallMirror', 'default');
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.PypiInstallMirror', 'default');
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.TorchInstallMirror', 'default');
+      expect(comfySettings.saveSettings).toHaveBeenCalled();
+
+      // Verify existing settings were preserved by checking they weren't overwritten
+      expect(comfySettings.set).not.toHaveBeenCalledWith('Existing.Setting', expect.any(String));
+      expect(comfySettings.set).not.toHaveBeenCalledWith('Comfy.ColorPalette', expect.any(String));
+      expect(comfySettings.set).not.toHaveBeenCalledWith('Comfy.Server.LaunchArgs', expect.any(Object));
     });
 
-    it('should add CPU launch args when device is cpu', () => {
+    it('should add CPU launch args when device is cpu', async () => {
       const wizardWithCpu = new InstallWizard(
         {
           ...defaultInstallOptions,
@@ -167,27 +198,17 @@ describe('InstallWizard', () => {
         mockTelemetry
       );
 
-      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
-      const writeFileSpy = vi.spyOn(fs, 'writeFileSync');
+      const { comfySettings } = await import('../../../src/config/comfySettings');
 
-      wizardWithCpu.initializeSettings();
+      await wizardWithCpu.initializeSettings();
 
-      const expectedSettings = {
-        ...DEFAULT_SETTINGS,
-        'Comfy-Desktop.AutoUpdate': true,
-        'Comfy-Desktop.SendStatistics': true,
-        'Comfy-Desktop.UV.PythonInstallMirror': 'default',
-        'Comfy-Desktop.UV.PypiInstallMirror': 'default',
-        'Comfy-Desktop.UV.TorchInstallMirror': 'default',
-        'Comfy.Server.LaunchArgs': {
-          cpu: '',
-        },
-      };
-
-      expect(writeFileSpy).toHaveBeenCalledWith(
-        path.join('/test/path', 'user', 'default', 'comfy.settings.json'),
-        JSON.stringify(expectedSettings, null, 2)
-      );
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.AutoUpdate', true);
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.SendStatistics', true);
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.PythonInstallMirror', 'default');
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.PypiInstallMirror', 'default');
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.UV.TorchInstallMirror', 'default');
+      expect(comfySettings.set).toHaveBeenCalledWith('Comfy.Server.LaunchArgs', { cpu: '' });
+      expect(comfySettings.saveSettings).toHaveBeenCalled();
     });
   });
 
