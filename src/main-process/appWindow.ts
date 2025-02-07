@@ -80,8 +80,8 @@ export class AppWindow {
       height: storedHeight,
       minWidth: 640,
       minHeight: 640,
-      x: Math.min(Math.max(storedX ?? 0, 0), primaryDisplay.workAreaSize.width),
-      y: Math.min(Math.max(storedY ?? 0, 0), primaryDisplay.workAreaSize.height),
+      x: Math.min(Math.max(storedX ?? 0, 0), primaryDisplay.workAreaSize.width - Math.max(storedWidth, 640)),
+      y: Math.min(Math.max(storedY ?? 0, 0), primaryDisplay.workAreaSize.height - Math.max(storedHeight, 640)),
       webPreferences: {
         // eslint-disable-next-line unicorn/prefer-module
         preload: path.join(__dirname, '../build/preload.cjs'),
