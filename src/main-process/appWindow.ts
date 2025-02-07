@@ -76,8 +76,8 @@ export class AppWindow {
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
-      width: Math.max(storedWidth, 100),
-      height: Math.max(storedHeight, 100),
+      width: storedWidth,
+      height: storedHeight,
       minWidth: 640,
       minHeight: 640,
       x: Math.min(Math.max(storedX ?? 0, 0), primaryDisplay.workAreaSize.width),
