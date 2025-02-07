@@ -299,7 +299,7 @@ export class InstallationManager implements HasTelemetry {
     return isValid;
   }
 
-  @trackEvent('update:update_manager_packages')
+  @trackEvent('installation_manager:manager_packages_update')
   private async updateManagerPackages(installation: ComfyInstallation) {
     if (installation.validation.managerPythonPackages !== 'warning') return;
 
