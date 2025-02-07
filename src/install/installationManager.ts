@@ -8,17 +8,17 @@ import type { AppWindow } from '../main-process/appWindow';
 import { ComfyInstallation } from '../main-process/comfyInstallation';
 import type { InstallOptions } from '../preload';
 import { CmCli } from '../services/cmCli';
-import { ITelemetry } from '../services/telemetry';
+import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { ansiCodes, validateHardware } from '../utils';
 import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
 
 /** High-level / UI control over the installation of ComfyUI server. */
-export class InstallationManager {
+export class InstallationManager implements HasTelemetry {
   constructor(
-    public readonly appWindow: AppWindow,
-    private readonly telemetry: ITelemetry
+    readonly appWindow: AppWindow,
+    readonly telemetry: ITelemetry
   ) {}
 
   /**
@@ -299,6 +299,7 @@ export class InstallationManager {
     return isValid;
   }
 
+  @trackEvent('update:update_manager_packages')
   private async updateManagerPackages(installation: ComfyInstallation) {
     if (installation.validation.managerPythonPackages !== 'warning') return;
 
