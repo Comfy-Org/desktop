@@ -535,7 +535,7 @@ export class VirtualEnvironment implements HasTelemetry {
       return venvOk;
     };
 
-    // Manager upgrade in 0.4.17
+    // Manager upgrade in 0.4.18
     const isManagerUpgrade = (output: string) => {
       return output.search(/\bWould install 2 packages(\s+\+ (toml|uv)==[\d.]+){2}\s*$/) !== -1;
     };
