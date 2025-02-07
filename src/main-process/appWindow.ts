@@ -61,10 +61,23 @@ export class AppWindow {
     this.store = store;
 
     // Retrieve stored window size, or use default if not available
-    const storedWidth = store.get('windowWidth', width);
-    const storedHeight = store.get('windowHeight', height);
+    const storedWidth = Math.min(store.get('windowWidth', width), width);
+    const storedHeight = Math.min(store.get('windowHeight', height), height);
     const storedX = store.get('windowX');
     const storedY = store.get('windowY');
+
+    const minWidth = 640;
+    const minHeight = 640;
+
+    // Use window manager default behaviour if settings are invalid
+    const eitherUndefined = storedX === undefined || storedY === undefined;
+    // Ensure window is not placed outside of the primary display
+    const x = eitherUndefined
+      ? undefined
+      : Math.min(Math.max(storedX, 0), primaryDisplay.workAreaSize.width - Math.max(storedWidth, minWidth));
+    const y = eitherUndefined
+      ? undefined
+      : Math.min(Math.max(storedY, 0), primaryDisplay.workAreaSize.height - Math.max(storedHeight, minHeight));
 
     // macOS requires different handling to linux / win32
     const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
@@ -80,8 +93,8 @@ export class AppWindow {
       height: storedHeight,
       minWidth: 640,
       minHeight: 640,
-      x: Math.min(Math.max(storedX ?? 0, 0), primaryDisplay.workAreaSize.width - Math.max(storedWidth, 640)),
-      y: Math.min(Math.max(storedY ?? 0, 0), primaryDisplay.workAreaSize.height - Math.max(storedHeight, 640)),
+      x,
+      y,
       webPreferences: {
         // eslint-disable-next-line unicorn/prefer-module
         preload: path.join(__dirname, '../build/preload.cjs'),
