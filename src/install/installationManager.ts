@@ -27,7 +27,7 @@ export class InstallationManager implements HasTelemetry {
    * @returns A valid {@link ComfyInstallation} object.
    */
   async ensureInstalled(): Promise<ComfyInstallation> {
-    const installation = ComfyInstallation.fromConfig();
+    const installation = await ComfyInstallation.fromConfig();
     log.info(`Install state: ${installation?.state ?? 'not installed'}`);
 
     // Fresh install

@@ -115,7 +115,7 @@ export class ComfySettings implements IComfySettings {
       const fileContent = await fs.readFile(this.filePath, 'utf8');
       // TODO: Reimplement with validation and error reporting.
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      this.settings = JSON.parse(fileContent);
+      this.settings = { ...this.settings, ...JSON.parse(fileContent) };
     } catch (error) {
       log.error(`Settings file cannot be loaded.`, error);
     }

@@ -73,11 +73,12 @@ export class ComfyInstallation {
    * @returns A ComfyInstallation (not validated) object if config is saved, otherwise `undefined`.
    * @throws If YAML config is unreadable due to access restrictions
    */
-  static fromConfig(): ComfyInstallation | undefined {
+  static async fromConfig(): Promise<ComfyInstallation | undefined> {
     const config = useDesktopConfig();
     const state = config.get('installState');
     const basePath = config.get('basePath');
     if (state && basePath) {
+      await comfySettings.loadSettings();
       return new ComfyInstallation(state, basePath, getTelemetry());
     }
   }
