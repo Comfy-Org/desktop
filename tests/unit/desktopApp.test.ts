@@ -66,12 +66,6 @@ vi.mock('@/config/comfySettings', () => ({
       loadSettings: vi.fn(),
     }),
   },
-  comfySettings: {
-    get: vi.fn().mockReturnValue('true'),
-    set: vi.fn(),
-    saveSettings: vi.fn(),
-    loadSettings: vi.fn(),
-  },
 }));
 
 vi.mock('@/store/desktopConfig', () => ({
