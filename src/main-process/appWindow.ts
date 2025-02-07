@@ -19,6 +19,7 @@ import { URL } from 'node:url';
 import { ElectronError } from '@/infrastructure/electronError';
 import type { Page } from '@/infrastructure/interfaces';
 import type { IAppState } from '@/main-process/appState';
+import { clamp } from '@/utils';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
@@ -60,24 +61,24 @@ export class AppWindow {
     const store = this.loadWindowStore();
     this.store = store;
 
+    const minWidth = 640;
+    const minHeight = 640;
+
     // Retrieve stored window size, or use default if not available
-    const storedWidth = Math.min(store.get('windowWidth', width), width);
-    const storedHeight = Math.min(store.get('windowHeight', height), height);
+    const storedWidth = store.get('windowWidth', width);
+    const storedHeight = store.get('windowHeight', height);
     const storedX = store.get('windowX');
     const storedY = store.get('windowY');
 
-    const minWidth = 640;
-    const minHeight = 640;
+    // Clamp stored window size to primary display size
+    const clampedWidth = clamp(storedWidth, minWidth, workAreaSize.width);
+    const clampedHeight = clamp(storedHeight, minHeight, workAreaSize.height);
 
     // Use window manager default behaviour if settings are invalid
     const eitherUndefined = storedX === undefined || storedY === undefined;
     // Ensure window is not placed outside of the primary display
-    const x = eitherUndefined
-      ? undefined
-      : Math.min(Math.max(storedX, 0), workAreaSize.width - Math.max(storedWidth, minWidth));
-    const y = eitherUndefined
-      ? undefined
-      : Math.min(Math.max(storedY, 0), workAreaSize.height - Math.max(storedHeight, minHeight));
+    const x = eitherUndefined ? undefined : clamp(storedX, 0, workAreaSize.width - clampedWidth);
+    const y = eitherUndefined ? undefined : clamp(storedY, 0, workAreaSize.height - clampedHeight);
 
     // macOS requires different handling to linux / win32
     const customChrome: Electron.BrowserWindowConstructorOptions = this.customWindowEnabled
@@ -89,8 +90,8 @@ export class AppWindow {
 
     this.window = new BrowserWindow({
       title: 'ComfyUI',
-      width: storedWidth,
-      height: storedHeight,
+      width: clampedWidth,
+      height: clampedHeight,
       minWidth: 640,
       minHeight: 640,
       x,
