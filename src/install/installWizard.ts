@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
-import { type ComfySettingsData, DEFAULT_SETTINGS } from '../config/comfySettings';
+import { type ComfySettingsData, comfySettings } from '../config/comfySettings';
 import { InstallOptions } from '../preload';
 import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 
@@ -31,7 +31,7 @@ export class InstallWizard implements HasTelemetry {
     // Setup the ComfyUI folder structure.
     ComfyConfigManager.createComfyDirectories(this.basePath);
     this.initializeUserFiles();
-    this.initializeSettings();
+    await this.initializeSettings();
     await this.initializeModelPaths();
   }
 
@@ -52,16 +52,12 @@ export class InstallWizard implements HasTelemetry {
   /**
    * Setup comfy.settings.json file
    */
-  public initializeSettings() {
-    const settingsPath = path.join(this.basePath, 'user', 'default', 'comfy.settings.json');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const existingSettings: ComfySettingsData = fs.existsSync(settingsPath)
-      ? JSON.parse(fs.readFileSync(settingsPath, 'utf8'))
-      : {};
+  public async initializeSettings() {
+    // Load any existing settings if they exist
+    await comfySettings.loadSettings();
 
-    const settings = {
-      ...DEFAULT_SETTINGS,
-      ...existingSettings,
+    // Add install options to settings
+    const settings: Partial<ComfySettingsData> = {
       'Comfy-Desktop.AutoUpdate': this.installOptions.autoUpdate,
       'Comfy-Desktop.SendStatistics': this.installOptions.allowMetrics,
       'Comfy-Desktop.UV.PythonInstallMirror': this.installOptions.pythonMirror,
@@ -74,9 +70,12 @@ export class InstallWizard implements HasTelemetry {
       settings['Comfy.Server.LaunchArgs']['cpu'] = '';
     }
 
-    const settingsJson = JSON.stringify(settings, null, 2);
-    fs.writeFileSync(settingsPath, settingsJson);
-    log.info(`Wrote settings to ${settingsPath}: ${settingsJson}`);
+    for (const [key, value] of Object.entries(settings)) {
+      comfySettings.set(key, value);
+    }
+
+    await comfySettings.saveSettings();
+    log.info(`Wrote install options to comfy settings file.`);
   }
 
   /**

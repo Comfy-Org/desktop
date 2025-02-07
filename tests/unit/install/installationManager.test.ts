@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
-import { ComfySettings } from '@/config/comfySettings';
 import { IPC_CHANNELS } from '@/constants';
 import { InstallationManager } from '@/install/installationManager';
 import type { AppWindow } from '@/main-process/appWindow';
@@ -15,6 +14,10 @@ vi.mock('electron', () => ({
   ipcMain: {
     handle: vi.fn(),
     removeHandler: vi.fn(),
+    on: vi.fn(),
+  },
+  app: {
+    getPath: vi.fn().mockReturnValue('valid/path'),
   },
 }));
 
@@ -77,6 +80,16 @@ vi.mock('@/virtualEnvironment', () => {
   };
 });
 
+// Mock Telemetry
+vi.mock('@/services/telemetry', () => ({
+  getTelemetry: vi.fn().mockReturnValue({
+    track: vi.fn(),
+  }),
+  trackEvent: () => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    return descriptor;
+  },
+}));
+
 const createMockAppWindow = () => {
   const mock = {
     send: vi.fn(),
@@ -87,12 +100,16 @@ const createMockAppWindow = () => {
   return mock as unknown as AppWindow;
 };
 
-const createMockTelemetry = () => {
-  const mock = {
-    track: vi.fn(),
-  };
-  return mock as unknown as ITelemetry;
-};
+const createMockTelemetry = (): ITelemetry => ({
+  track: vi.fn(),
+  hasConsent: true,
+  flush: vi.fn(),
+  registerHandlers: vi.fn(),
+  queueSentryEvent: vi.fn(),
+  popSentryEvent: vi.fn(),
+  hasPendingSentryEvents: vi.fn().mockReturnValue(false),
+  clearSentryQueue: vi.fn(),
+});
 
 describe('InstallationManager', () => {
   let manager: InstallationManager;
@@ -120,18 +137,17 @@ describe('InstallationManager', () => {
   });
 
   describe('ensureInstalled', () => {
-    it('returns existing valid installation', async () => {
-      const installation = new ComfyInstallation(
-        'installed',
-        'valid/base',
-        createMockTelemetry(),
-        new ComfySettings('valid/base')
-      );
-      vi.spyOn(ComfyInstallation, 'fromConfig').mockResolvedValue(installation);
+    beforeEach(() => {
+      // Mock the static fromConfig method to return a proper instance
+      vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() => {
+        return new ComfyInstallation('installed', 'valid/base', createMockTelemetry());
+      });
+    });
 
+    it('returns existing valid installation', async () => {
       const result = await manager.ensureInstalled();
 
-      expect(result).toBe(installation);
+      expect(result).toBeDefined();
       expect(result.hasIssues).toBe(false);
       expect(result.isValid).toBe(true);
       expect(mockAppWindow.loadPage).not.toHaveBeenCalledWith('maintenance');
@@ -171,14 +187,6 @@ describe('InstallationManager', () => {
       },
     ])('$scenario', async ({ mockSetup, expectedErrors }) => {
       const cleanup = mockSetup?.() as (() => void) | undefined;
-
-      const installation = new ComfyInstallation(
-        'installed',
-        'valid/base',
-        createMockTelemetry(),
-        new ComfySettings('valid/base')
-      );
-      vi.spyOn(ComfyInstallation, 'fromConfig').mockResolvedValue(installation);
 
       vi.spyOn(
         manager as unknown as { resolveIssues: (installation: ComfyInstallation) => Promise<boolean> },

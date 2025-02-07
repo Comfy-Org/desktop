@@ -2,6 +2,8 @@ import todesktop from '@todesktop/runtime';
 import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
+import { comfySettings } from '@/config/comfySettings';
+
 import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { DownloadManager } from '../models/DownloadManager';
 import { HasTelemetry, ITelemetry } from '../services/telemetry';
@@ -21,10 +23,6 @@ export class ComfyDesktopApp implements HasTelemetry {
     readonly appWindow: AppWindow,
     readonly telemetry: ITelemetry
   ) {}
-
-  get comfySettings() {
-    return this.installation.comfySettings;
-  }
 
   get basePath() {
     return this.installation.basePath;
@@ -47,7 +45,7 @@ export class ComfyDesktopApp implements HasTelemetry {
     const serverArgs: ServerArgs = {
       listen: DEFAULT_SERVER_ARGS.listen,
       port: DEFAULT_SERVER_ARGS.port,
-      ...this.comfySettings.get('Comfy.Server.LaunchArgs'),
+      ...comfySettings.get('Comfy.Server.LaunchArgs'),
     };
 
     if (COMFY_HOST) serverArgs.listen = COMFY_HOST;
@@ -69,7 +67,7 @@ export class ComfyDesktopApp implements HasTelemetry {
       autoCheckInterval: 60 * 60 * 1000, // every hour
       customLogger: log,
       updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
-      autoUpdater: this.comfySettings.get('Comfy-Desktop.AutoUpdate'),
+      autoUpdater: comfySettings.get('Comfy-Desktop.AutoUpdate'),
     });
     todesktop.autoUpdater?.setFeedURL('https://updater.comfy.org');
   }

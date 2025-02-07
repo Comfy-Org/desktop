@@ -2,6 +2,8 @@ import log from 'electron-log/main';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import { useDesktopConfig } from '@/store/desktopConfig';
+
 export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.AutoUpdate': true,
   'Comfy-Desktop.SendStatistics': true,
@@ -75,12 +77,15 @@ export interface IComfySettings extends FrontendSettingsCache {
  * @see {@link IComfySettings} read-write interface
  */
 export class ComfySettings implements IComfySettings {
-  public readonly filePath: string;
+  private static instance: ComfySettings | undefined;
   private settings: ComfySettingsData = structuredClone(DEFAULT_SETTINGS);
   private static writeLocked = false;
 
-  constructor(basePath: string) {
-    this.filePath = path.join(basePath, 'user', 'default', 'comfy.settings.json');
+  private constructor() {}
+
+  static getInstance(): ComfySettings {
+    if (!ComfySettings.instance) ComfySettings.instance = new ComfySettings();
+    return ComfySettings.instance;
   }
 
   /**
@@ -89,6 +94,14 @@ export class ComfySettings implements IComfySettings {
    */
   static lockWrites() {
     ComfySettings.writeLocked = true;
+  }
+
+  get filePath(): string {
+    const basePath = useDesktopConfig().get('basePath');
+    if (!basePath) {
+      throw new Error('Base path is not set');
+    }
+    return path.join(basePath, 'user', 'default', 'comfy.settings.json');
   }
 
   public async loadSettings() {
@@ -136,3 +149,5 @@ export class ComfySettings implements IComfySettings {
     return this.settings[key] ?? DEFAULT_SETTINGS[key];
   }
 }
+
+export const comfySettings = ComfySettings.getInstance();

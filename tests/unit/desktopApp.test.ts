@@ -57,16 +57,36 @@ vi.mock('@/main-process/appWindow', () => ({
   AppWindow: vi.fn().mockImplementation(() => mockAppWindow),
 }));
 
-const mockComfySettings = new ComfySettings('/mock/path');
-mockComfySettings.get = vi.fn().mockReturnValue('true');
-mockComfySettings.set = vi.fn();
-mockComfySettings.saveSettings = vi.fn();
+vi.mock('@/config/comfySettings', () => ({
+  ComfySettings: {
+    getInstance: vi.fn().mockReturnValue({
+      get: vi.fn().mockReturnValue('true'),
+      set: vi.fn(),
+      saveSettings: vi.fn(),
+      loadSettings: vi.fn(),
+    }),
+  },
+  comfySettings: {
+    get: vi.fn().mockReturnValue('true'),
+    set: vi.fn(),
+    saveSettings: vi.fn(),
+    loadSettings: vi.fn(),
+  },
+}));
+
+vi.mock('@/store/desktopConfig', () => ({
+  useDesktopConfig: vi.fn().mockReturnValue({
+    get: vi.fn().mockReturnValue('/mock/path'),
+    set: vi.fn(),
+  }),
+}));
+
+const mockComfySettings = ComfySettings.getInstance();
 
 const mockInstallation: Partial<ComfyInstallation> = {
   basePath: '/mock/path',
   virtualEnvironment: {} as any,
   validation: {} as any,
-  comfySettings: mockComfySettings,
   hasIssues: false,
   isValid: true,
   state: 'installed',
@@ -226,7 +246,7 @@ describe('DesktopApp', () => {
 
       await desktopApp['initializeTelemetry'](testInstallation);
 
-      expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow, testInstallation.comfySettings);
+      expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow);
       expect(SentryLogging.setSentryGpuContext).toHaveBeenCalled();
       expect(desktopApp.telemetry.hasConsent).toBe(true);
       expect(desktopApp.telemetry.flush).toHaveBeenCalled();
@@ -235,11 +255,12 @@ describe('DesktopApp', () => {
     it('should respect user rejection of telemetry', async () => {
       vi.mocked(promptMetricsConsent).mockResolvedValueOnce(false);
       vi.mocked(mockConfig.get).mockReturnValue('false');
-      vi.mocked(testInstallation.comfySettings.get).mockReturnValue('false');
+      vi.mocked(mockComfySettings.get).mockReturnValue('false');
 
       await desktopApp['initializeTelemetry'](testInstallation);
 
-      expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow, testInstallation.comfySettings);
+      expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow);
+      expect(SentryLogging.setSentryGpuContext).toHaveBeenCalled();
       expect(desktopApp.telemetry.hasConsent).toBe(false);
       expect(desktopApp.telemetry.flush).not.toHaveBeenCalled();
     });

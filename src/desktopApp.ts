@@ -44,13 +44,10 @@ export class DesktopApp implements HasTelemetry {
   }
 
   private async initializeTelemetry(installation: ComfyInstallation): Promise<void> {
-    const { comfySettings } = installation;
-
     await SentryLogging.setSentryGpuContext();
-    SentryLogging.shouldSendStatistics = () => comfySettings.get('Comfy-Desktop.SendStatistics');
     SentryLogging.getBasePath = () => installation.basePath;
 
-    const allowMetrics = await promptMetricsConsent(this.config, this.appWindow, comfySettings);
+    const allowMetrics = await promptMetricsConsent(this.config, this.appWindow);
     this.telemetry.hasConsent = allowMetrics;
     if (allowMetrics) this.telemetry.flush();
   }
