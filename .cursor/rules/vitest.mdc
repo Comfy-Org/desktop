@@ -1,0 +1,19 @@
+---
+description: Creating unit tests
+globs: 
+---
+
+# Creating unit tests
+
+- This project uses `vitest` for unit testing
+- Tests are stored in the `tests/unit/` directory
+  - Directory structure of `tests/unit/` should match that of the tested file in `src/`
+- Tests should be cross-platform compatible; able to run on Windows, macOS, and linux
+  - e.g. the use of `path.join` and `path.sep` to ensure tests work the same on all platforms
+- Tests should be mocked properly
+  - Mocks should be cleanly written and easy to understand
+  - Mocks should be re-usable where possible
+  - Class mocks should be stored in a separate file and imported for use
+- Read at least five existing unit tests to determine testing patterns
+  - appWindow.test.ts is a good example
+  - desktopApp.test.ts is a good example
