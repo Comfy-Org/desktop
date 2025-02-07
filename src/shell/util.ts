@@ -11,3 +11,7 @@ export function getDefaultShell(): string {
       return 'bash';
   }
 }
+
+export function getDefaultShellArgs(): string[] {
+  return os.platform() === 'darwin' ? ['-df'] : [];
+}

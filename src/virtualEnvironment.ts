@@ -9,7 +9,7 @@ import path from 'node:path';
 import { CUDA_TORCH_URL, NIGHTLY_CPU_TORCH_URL } from './constants';
 import type { TorchDeviceType } from './preload';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
-import { getDefaultShell } from './shell/util';
+import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
 
 export type ProcessCallbacks = {
@@ -110,7 +110,7 @@ export class VirtualEnvironment implements HasTelemetry {
 
     if (!this.uvPty) {
       const shell = getDefaultShell();
-      this.uvPty = pty.spawn(shell, [], {
+      this.uvPty = pty.spawn(shell, getDefaultShellArgs(), {
         handleFlowControl: false,
         conptyInheritCursor: false,
         name: 'xterm',
