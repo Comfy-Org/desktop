@@ -64,7 +64,7 @@ export function getPipInstallArgs(config: PipInstallConfig): string[] {
  * @param device The device type
  * @returns The default torch mirror
  */
-const getDefaultTorchMirror = (device: TorchDeviceType): string => {
+function getDefaultTorchMirror(device: TorchDeviceType): string {
   log.debug('Falling back to default torch mirror');
   switch (device) {
     case 'mps':
@@ -74,7 +74,7 @@ const getDefaultTorchMirror = (device: TorchDeviceType): string => {
     default:
       return DEFAULT_PYTHON_URL;
   }
-};
+}
 
 /**
  * Manages a virtual Python environment using uv.
