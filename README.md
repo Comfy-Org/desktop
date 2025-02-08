@@ -194,17 +194,17 @@ The `requirements.compiled` file is a pre-compiled requirements file that is use
 
 For windows, you can generate the requirements.compiled file by running the following command:
 
-```bash
+```powershell
 ## Ensure you are in the repo root dir
 # cd PROJECT_ROOT
 
 ## Nvidia Cuda requirements
-uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements.compiled --override assets\override.txt
---index-url https://pypi.org/simple
+uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements.compiled --override assets\override.txt `
+--index-url https://pypi.org/simple `
 --extra-index-url https://download.pytorch.org/whl/cu126
 
 ## CPU requirements
-uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements.compiled --override assets\override.txt
+uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements.compiled --override assets\override.txt `
 --index-url https://pypi.org/simple
 ```
 
