@@ -5,6 +5,7 @@ import { LevelOption } from 'electron-log';
 import log from 'electron-log/main';
 
 import { DesktopApp } from './desktopApp';
+import { replaceFileLoggingTransform } from './infrastructure/loggingUtils';
 import { AppState } from './main-process/appState';
 import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
@@ -60,10 +61,15 @@ async function startApp() {
   await desktopApp.start();
 }
 
-/** Must be called prior to any logging. Sets default log level and logs app version. */
+/**
+ * Must be called prior to any logging. Sets default log level and logs app version.
+ * Corrects issues when logging structured data (to file).
+ */
 function initalizeLogging() {
   log.initialize();
   log.transports.file.level = (process.env.LOG_LEVEL as LevelOption) ?? 'info';
+  replaceFileLoggingTransform(log.transports);
+
   log.info(`Starting app v${app.getVersion()}`);
 }
 
