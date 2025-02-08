@@ -203,7 +203,7 @@ uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\Comfy
 --extra-index-url https://download.pytorch.org/whl/cu126
 
 ## CPU requirements
-uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_cpu.compiled --override assets\override.txt `
+uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_cpu.compiled `
 --index-url https://pypi.org/simple
 ```
 
