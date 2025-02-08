@@ -78,7 +78,7 @@ export class ComfyServerConfig {
   static readonly EXTRA_MODEL_CONFIG_PATH = 'extra_models_config.yaml';
 
   private static readonly commonPaths = {
-    custom_nodes: path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes'),
+    custom_nodes: 'custom_nodes/',
     download_model_base: 'models',
   };
   private static readonly configTemplates: Record<string, ModelPaths> = {
