@@ -76,6 +76,15 @@ function getDefaultTorchMirror(device: TorchDeviceType): string {
   }
 }
 
+/** Disallows using the default mirror (CPU torch) when the selected device is not CPU. */
+function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undefined) {
+  if (mirror === DEFAULT_PYTHON_URL) {
+    if (device === 'nvidia') return CUDA_TORCH_URL;
+    else if (device === 'mps') return NIGHTLY_CPU_TORCH_URL;
+  }
+  return mirror;
+}
+
 /**
  * Manages a virtual Python environment using uv.
  *
@@ -146,7 +155,7 @@ export class VirtualEnvironment implements HasTelemetry {
     this.selectedDevice = selectedDevice ?? 'cpu';
     this.pythonMirror = pythonMirror;
     this.pypiMirror = pypiMirror;
-    this.torchMirror = torchMirror;
+    this.torchMirror = fixDeviceMirrorMismatch(selectedDevice!, torchMirror);
 
     // uv defaults to .venv
     this.venvPath = path.join(venvPath, '.venv');
