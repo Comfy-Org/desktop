@@ -13,6 +13,20 @@ import { Terminal } from '@/shell/terminal';
 import { findAvailablePort, getModelsDirectory } from '@/utils';
 
 // Mock dependencies
+vi.mock('@/config/comfySettings', () => {
+  const mockSettings = {
+    get: vi.fn().mockReturnValue(true),
+    set: vi.fn(),
+    saveSettings: vi.fn(),
+  };
+  return {
+    ComfySettings: {
+      load: vi.fn().mockResolvedValue(mockSettings),
+    },
+    useComfySettings: vi.fn().mockReturnValue(mockSettings),
+  };
+});
+
 vi.mock('electron', () => ({
   app: {
     on: vi.fn(),

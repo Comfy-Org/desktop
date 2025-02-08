@@ -1,10 +1,9 @@
 import log from 'electron-log/main';
-import fs from 'node:fs/promises';
+import fsPromises from 'node:fs/promises';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type ComfySettingsData, DEFAULT_SETTINGS } from '@/config/comfySettings';
-import type { ComfySettings } from '@/config/comfySettings';
+import { ComfySettings, type ComfySettingsData, DEFAULT_SETTINGS, useComfySettings } from '@/config/comfySettings';
 
 vi.mock('electron-log/main', () => ({
   default: {
@@ -19,62 +18,66 @@ vi.mock('node:fs/promises', () => ({
     readFile: vi.fn(),
     writeFile: vi.fn(),
   },
-}));
-
-vi.mock('@/store/desktopConfig', () => ({
-  useDesktopConfig: vi.fn().mockReturnValue({
-    get: vi.fn().mockReturnValue(path.join('test', 'base', 'path')),
-  }),
+  access: vi.fn(),
+  readFile: vi.fn(),
+  writeFile: vi.fn(),
 }));
 
 describe('ComfySettings', () => {
-  const expectedFilePath = path.join('test', 'base', 'path', 'user', 'default', 'comfy.settings.json');
+  const basePath = path.join('test', 'base', 'path');
+  const expectedFilePath = path.join(basePath, 'user', 'default', 'comfy.settings.json');
   let settings: ComfySettings;
-  let settingsModule: typeof import('@/config/comfySettings');
-  let lockWrites: () => void;
 
   beforeEach(async () => {
     vi.resetModules();
     vi.clearAllMocks();
-    settingsModule = await import('@/config/comfySettings');
-    settings = settingsModule.ComfySettings.getInstance();
-    lockWrites = () => settingsModule.ComfySettings.lockWrites();
+
+    // Reset writeLocked state
+    // @ts-expect-error accessing private static
+    ComfySettings.writeLocked = false;
+
+    // Reset fs mocks with default behaviors
+    vi.mocked(fsPromises.access).mockResolvedValue(undefined);
+    vi.mocked(fsPromises.readFile).mockResolvedValue('{}');
+    vi.mocked(fsPromises.writeFile).mockResolvedValue(undefined);
+
+    settings = await ComfySettings.load(basePath);
   });
 
   describe('write locking', () => {
     it('should allow writes before being locked', async () => {
       await settings.saveSettings();
-      expect(vi.mocked(fs.writeFile)).toHaveBeenCalledWith(expectedFilePath, JSON.stringify(DEFAULT_SETTINGS, null, 2));
+      expect(fsPromises.writeFile).toHaveBeenCalledWith(expectedFilePath, JSON.stringify(DEFAULT_SETTINGS, null, 2));
     });
 
     it('should prevent writes after being locked', async () => {
-      lockWrites();
+      ComfySettings.lockWrites();
       await expect(settings.saveSettings()).rejects.toThrow('Settings are locked');
-      expect(vi.mocked(fs.writeFile)).not.toHaveBeenCalled();
+      expect(fsPromises.writeFile).not.toHaveBeenCalled();
     });
 
     it('should prevent modifications after being locked', () => {
-      lockWrites();
+      ComfySettings.lockWrites();
       expect(() => settings.set('Comfy-Desktop.AutoUpdate', false)).toThrow('Settings are locked');
     });
 
     it('should allow reads after being locked', () => {
-      lockWrites();
+      ComfySettings.lockWrites();
       expect(() => settings.get('Comfy-Desktop.AutoUpdate')).not.toThrow();
     });
 
-    it('should share lock state across references', () => {
+    it('should share lock state across references', async () => {
       const settings1 = settings;
-      const settings2 = settingsModule.ComfySettings.getInstance();
+      const settings2 = await ComfySettings.load(basePath);
 
-      lockWrites();
+      ComfySettings.lockWrites();
 
       expect(() => settings1.set('Comfy-Desktop.AutoUpdate', false)).toThrow('Settings are locked');
       expect(() => settings2.set('Comfy-Desktop.AutoUpdate', false)).toThrow('Settings are locked');
     });
 
     it('should throw error when saving locked settings', async () => {
-      lockWrites();
+      ComfySettings.lockWrites();
       await expect(settings.saveSettings()).rejects.toThrow('Settings are locked');
     });
   });
@@ -82,13 +85,11 @@ describe('ComfySettings', () => {
   describe('file operations', () => {
     beforeEach(() => {
       vi.clearAllMocks();
-      // Reset internal settings to defaults for each file operation test
-      (settings as any).settings = structuredClone(DEFAULT_SETTINGS);
     });
 
     it('should use correct file path', async () => {
       await settings.saveSettings();
-      expect(vi.mocked(fs.writeFile)).toHaveBeenCalledWith(expectedFilePath, JSON.stringify(DEFAULT_SETTINGS, null, 2));
+      expect(fsPromises.writeFile).toHaveBeenCalledWith(expectedFilePath, JSON.stringify(DEFAULT_SETTINGS, null, 2));
     });
 
     it('should load settings from file when available', async () => {
@@ -105,18 +106,18 @@ describe('ComfySettings', () => {
         'Comfy-Desktop.UV.TorchInstallMirror': '',
       };
 
-      vi.mocked(fs.access).mockResolvedValue();
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockSettings));
+      vi.mocked(fsPromises.access).mockResolvedValue(undefined);
+      vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(mockSettings));
 
-      await settings.loadSettings();
+      settings = await ComfySettings.load(basePath);
       expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(false);
       expect(settings.get('Comfy.Server.LaunchArgs')).toEqual({ test: 'value' });
       expect(settings.get('Comfy-Desktop.SendStatistics')).toBe(false);
     });
 
     it('should use default settings when file does not exist', async () => {
-      vi.mocked(fs.access).mockRejectedValue(new Error('ENOENT'));
-      await settings.loadSettings();
+      vi.mocked(fsPromises.access).mockRejectedValue(new Error('ENOENT'));
+      settings = await ComfySettings.load(basePath);
       expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(DEFAULT_SETTINGS['Comfy-Desktop.AutoUpdate']);
     });
 
@@ -124,7 +125,7 @@ describe('ComfySettings', () => {
       settings.set('Comfy-Desktop.AutoUpdate', false);
       await settings.saveSettings();
 
-      const writeCall = vi.mocked(fs.writeFile).mock.calls.at(-1);
+      const writeCall = vi.mocked(fsPromises.writeFile).mock.calls.at(-1);
       if (!writeCall) throw new Error('No write calls recorded');
       const savedJson = JSON.parse(writeCall[1] as string);
 
@@ -133,10 +134,10 @@ describe('ComfySettings', () => {
     });
 
     it('should fall back to defaults on file read error', async () => {
-      vi.mocked(fs.access).mockResolvedValue();
-      vi.mocked(fs.readFile).mockRejectedValue(new Error('Permission denied'));
+      vi.mocked(fsPromises.access).mockResolvedValue(undefined);
+      vi.mocked(fsPromises.readFile).mockRejectedValue(new Error('Permission denied'));
 
-      await settings.loadSettings();
+      settings = await ComfySettings.load(basePath);
       expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(DEFAULT_SETTINGS['Comfy-Desktop.AutoUpdate']);
       expect(log.error).toHaveBeenCalled();
     });
@@ -164,25 +165,32 @@ describe('ComfySettings', () => {
         'Comfy.Server.LaunchArgs': null,
       };
 
-      vi.mocked(fs.access).mockResolvedValue();
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(invalidSettings));
+      vi.mocked(fsPromises.access).mockResolvedValue(undefined);
+      vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(invalidSettings));
 
-      await settings.loadSettings();
+      settings = await ComfySettings.load(basePath);
       expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(DEFAULT_SETTINGS['Comfy-Desktop.AutoUpdate']);
       expect(settings.get('Comfy.Server.LaunchArgs')).toEqual(DEFAULT_SETTINGS['Comfy.Server.LaunchArgs']);
     });
 
     it('should fall back to defaults when settings file contains invalid JSON', async () => {
-      vi.mocked(fs.access).mockResolvedValue();
-      vi.mocked(fs.readFile).mockRejectedValue(new Error('Invalid JSON'));
+      vi.mocked(fsPromises.access).mockResolvedValue(undefined);
+      vi.mocked(fsPromises.readFile).mockRejectedValue(new Error('Invalid JSON'));
 
-      await settings.loadSettings();
+      settings = await ComfySettings.load(basePath);
       expect(settings.get('Comfy-Desktop.AutoUpdate')).toBe(DEFAULT_SETTINGS['Comfy-Desktop.AutoUpdate']);
     });
 
     it('should throw error on write error during saveSettings', async () => {
-      vi.mocked(fs.writeFile).mockRejectedValue(new Error('Permission denied'));
+      vi.mocked(fsPromises.writeFile).mockRejectedValue(new Error('Permission denied'));
       await expect(settings.saveSettings()).rejects.toThrow('Permission denied');
+    });
+  });
+
+  describe('useComfySettings', () => {
+    it('should return the current instance after initialization', async () => {
+      settings = await ComfySettings.load(basePath);
+      expect(useComfySettings()).toBe(settings);
     });
   });
 });

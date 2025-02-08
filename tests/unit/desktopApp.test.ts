@@ -2,7 +2,7 @@ import { app, dialog } from 'electron';
 import log from 'electron-log/main';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ComfySettings } from '@/config/comfySettings';
+import { useComfySettings } from '@/config/comfySettings';
 import { ProgressStatus } from '@/constants';
 import { IPC_CHANNELS } from '@/constants';
 import { DesktopApp } from '@/desktopApp';
@@ -59,13 +59,17 @@ vi.mock('@/main-process/appWindow', () => ({
 
 vi.mock('@/config/comfySettings', () => ({
   ComfySettings: {
-    getInstance: vi.fn().mockReturnValue({
+    load: vi.fn().mockResolvedValue({
       get: vi.fn().mockReturnValue('true'),
       set: vi.fn(),
       saveSettings: vi.fn(),
-      loadSettings: vi.fn(),
     }),
   },
+  useComfySettings: vi.fn().mockReturnValue({
+    get: vi.fn().mockReturnValue('true'),
+    set: vi.fn(),
+    saveSettings: vi.fn(),
+  }),
 }));
 
 vi.mock('@/store/desktopConfig', () => ({
@@ -74,8 +78,6 @@ vi.mock('@/store/desktopConfig', () => ({
     set: vi.fn(),
   }),
 }));
-
-const mockComfySettings = ComfySettings.getInstance();
 
 const mockInstallation: Partial<ComfyInstallation> = {
   basePath: '/mock/path',
@@ -237,6 +239,7 @@ describe('DesktopApp', () => {
     it('should initialize telemetry with user consent', async () => {
       vi.mocked(promptMetricsConsent).mockResolvedValueOnce(true);
       vi.mocked(mockConfig.get).mockReturnValue('true');
+      vi.mocked(useComfySettings().get).mockReturnValue('true');
 
       await desktopApp['initializeTelemetry'](testInstallation);
 
@@ -249,7 +252,7 @@ describe('DesktopApp', () => {
     it('should respect user rejection of telemetry', async () => {
       vi.mocked(promptMetricsConsent).mockResolvedValueOnce(false);
       vi.mocked(mockConfig.get).mockReturnValue('false');
-      vi.mocked(mockComfySettings.get).mockReturnValue('false');
+      vi.mocked(useComfySettings().get).mockReturnValue('false');
 
       await desktopApp['initializeTelemetry'](testInstallation);
 

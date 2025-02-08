@@ -1,6 +1,8 @@
+import fsPromises from 'node:fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
+import { ComfySettings } from '@/config/comfySettings';
 import { IPC_CHANNELS } from '@/constants';
 import { InstallationManager } from '@/install/installationManager';
 import type { AppWindow } from '@/main-process/appWindow';
@@ -22,7 +24,12 @@ vi.mock('electron', () => ({
 }));
 
 vi.mock('node:fs/promises', () => ({
-  rm: vi.fn(),
+  default: {
+    access: vi.fn(),
+    readFile: vi.fn().mockResolvedValue('{}'),
+  },
+  access: vi.fn(),
+  readFile: vi.fn().mockResolvedValue('{}'),
 }));
 
 vi.mock('@/store/desktopConfig', () => ({
@@ -85,9 +92,7 @@ vi.mock('@/services/telemetry', () => ({
   getTelemetry: vi.fn().mockReturnValue({
     track: vi.fn(),
   }),
-  trackEvent: () => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    return descriptor;
-  },
+  trackEvent: () => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
 
 const createMockAppWindow = () => {
@@ -116,9 +121,12 @@ describe('InstallationManager', () => {
   let mockAppWindow: ReturnType<typeof createMockAppWindow>;
   let validationUpdates: InstallValidation[];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     validationUpdates = [];
+
+    // Reset fs mocks with default behaviors - only the ones we need
+    vi.mocked(fsPromises.access).mockResolvedValue(undefined);
 
     mockAppWindow = createMockAppWindow();
     manager = new InstallationManager(mockAppWindow, createMockTelemetry());
@@ -128,12 +136,18 @@ describe('InstallationManager', () => {
       path: 'valid/base',
     });
 
+    // Initialize ComfySettings before creating ComfyInstallation
+    await ComfySettings.load('valid/base');
+
     // Capture validation updates
     vi.spyOn(mockAppWindow, 'send').mockImplementation((channel: string, data: unknown) => {
       if (channel === IPC_CHANNELS.VALIDATION_UPDATE) {
         validationUpdates.push({ ...(data as InstallValidation) });
       }
     });
+
+    // Wait for any pending promises
+    await Promise.resolve();
   });
 
   describe('ensureInstalled', () => {
