@@ -13,6 +13,7 @@ import {
 } from 'electron';
 import log from 'electron-log/main';
 import Store from 'electron-store';
+import { debounce } from 'lodash';
 import path from 'node:path';
 import { URL } from 'node:url';
 
@@ -48,6 +49,14 @@ export class AppWindow {
   /** Whether this window was created with title bar overlay enabled. When `false`, Electron throws when calling {@link BrowserWindow.setTitleBarOverlay}. */
   public readonly customWindowEnabled: boolean =
     process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom';
+
+  private readonly setSettings = debounce(
+    (settings: Partial<AppWindowSettings>): void => {
+      this.store.set(settings);
+    },
+    256,
+    { leading: true, trailing: true }
+  );
 
   /** Always returns `undefined` in production. When running unpackaged, returns `DEV_SERVER_URL` if set, otherwise `undefined`. */
   private get devUrlOverride() {
@@ -291,14 +300,18 @@ export class AppWindow {
 
       // If maximized, do not update position / size.
       const isMaximized = this.window.isMaximized();
-      this.store.set('windowMaximized', isMaximized);
-      if (isMaximized) return;
+      if (isMaximized) {
+        this.setSettings({ windowMaximized: isMaximized });
+        return;
+      }
 
       const { width, height, x, y } = this.window.getBounds();
-      this.store.set('windowWidth', width);
-      this.store.set('windowHeight', height);
-      this.store.set('windowX', x);
-      this.store.set('windowY', y);
+      this.setSettings({
+        windowWidth: width,
+        windowHeight: height,
+        windowX: x,
+        windowY: y,
+      });
     };
 
     this.window.on('resize', updateBounds);

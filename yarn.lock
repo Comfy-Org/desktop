@@ -240,6 +240,7 @@ __metadata:
     "@types/adm-zip": "npm:^0.5.5"
     "@types/electron-squirrel-startup": "npm:^1.0.2"
     "@types/eslint__js": "npm:^8.42.3"
+    "@types/lodash": "npm:4.17.15"
     "@types/node": "npm:^22.10.2"
     "@types/tar": "npm:6.1.13"
     "@types/tmp": "npm:^0.2.6"
@@ -259,6 +260,7 @@ __metadata:
     globals: "npm:^15.13.0"
     husky: "npm:^9.1.6"
     lint-staged: "npm:^15.2.10"
+    lodash: "npm:4.17.21"
     mixpanel: "npm:^0.18.0"
     node-pty: "npm:^1.0.0"
     prettier: "npm:^3.3.3"
@@ -2847,6 +2849,13 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/ff8f54fc49621210291f815fe5b15d809fd7d032941b3180743440bd507ecdf08b9e844625fa346af568c84bf34114eb378dcdc3e921a08ba1e2a08d7e3c809c
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:4.17.15":
+  version: 4.17.15
+  resolution: "@types/lodash@npm:4.17.15"
+  checksum: 10c0/2eb2dc6d231f5fb4603d176c08c8d7af688f574d09af47466a179cd7812d9f64144ba74bb32ca014570ffdc544eedc51b7a5657212bad083b6eecbd72223f9bb
   languageName: node
   linkType: hard
 
@@ -8239,7 +8248,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.12, lodash@npm:^4.17.15, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:~4.17.15":
+"lodash@npm:4.17.21, lodash@npm:^4.17.12, lodash@npm:^4.17.15, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:~4.17.15":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
