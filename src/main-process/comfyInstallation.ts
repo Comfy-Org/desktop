@@ -2,7 +2,7 @@ import log from 'electron-log/main';
 import { rm } from 'node:fs/promises';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
-import { comfySettings } from '../config/comfySettings';
+import { ComfySettings, useComfySettings } from '../config/comfySettings';
 import type { DesktopInstallState } from '../main_types';
 import type { InstallValidation } from '../preload';
 import { type ITelemetry, getTelemetry } from '../services/telemetry';
@@ -62,9 +62,9 @@ export class ComfyInstallation {
     return new VirtualEnvironment(basePath, {
       telemetry: this.telemetry,
       selectedDevice: useDesktopConfig().get('selectedDevice'),
-      pythonMirror: comfySettings.get('Comfy-Desktop.UV.PythonInstallMirror'),
-      pypiMirror: comfySettings.get('Comfy-Desktop.UV.PypiInstallMirror'),
-      torchMirror: comfySettings.get('Comfy-Desktop.UV.TorchInstallMirror'),
+      pythonMirror: useComfySettings().get('Comfy-Desktop.UV.PythonInstallMirror'),
+      pypiMirror: useComfySettings().get('Comfy-Desktop.UV.PypiInstallMirror'),
+      torchMirror: useComfySettings().get('Comfy-Desktop.UV.TorchInstallMirror'),
     });
   }
 
@@ -78,8 +78,7 @@ export class ComfyInstallation {
     const state = config.get('installState');
     const basePath = config.get('basePath');
     if (state && basePath) {
-      await comfySettings.loadSettings();
-      await comfySettings.saveSettings();
+      await ComfySettings.load(basePath);
       return new ComfyInstallation(state, basePath, getTelemetry());
     }
   }
@@ -217,7 +216,7 @@ export class ComfyInstallation {
     useDesktopConfig().set('basePath', basePath);
 
     // If settings file exists at new location, load it
-    await comfySettings.loadSettings();
+    await ComfySettings.load(basePath);
   }
 
   /**

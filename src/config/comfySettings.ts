@@ -2,8 +2,6 @@ import log from 'electron-log/main';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { useDesktopConfig } from '@/store/desktopConfig';
-
 export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.AutoUpdate': true,
   'Comfy-Desktop.SendStatistics': true,
@@ -29,6 +27,15 @@ export interface ComfySettingsData {
   'Comfy-Desktop.UV.PypiInstallMirror': string;
   'Comfy-Desktop.UV.TorchInstallMirror': string;
   [key: string]: unknown;
+}
+
+/** Backing ref for the singleton settings instance. */
+let current: ComfySettings;
+
+/** Service locator for settings. ComfySettings.load() must be called before access. */
+export function useComfySettings() {
+  if (!current) throw new Error('Cannot access ComfySettings before initialization.');
+  return current;
 }
 
 /**
@@ -77,15 +84,12 @@ export interface IComfySettings extends FrontendSettingsCache {
  * @see {@link IComfySettings} read-write interface
  */
 export class ComfySettings implements IComfySettings {
-  private static instance: ComfySettings | undefined;
   private settings: ComfySettingsData = structuredClone(DEFAULT_SETTINGS);
   private static writeLocked = false;
+  readonly #basePath: string;
 
-  private constructor() {}
-
-  static getInstance(): ComfySettings {
-    if (!ComfySettings.instance) ComfySettings.instance = new ComfySettings();
-    return ComfySettings.instance;
+  private constructor(basePath: string) {
+    this.#basePath = basePath;
   }
 
   /**
@@ -97,14 +101,10 @@ export class ComfySettings implements IComfySettings {
   }
 
   get filePath(): string {
-    const basePath = useDesktopConfig().get('basePath');
-    if (!basePath) {
-      throw new Error('Base path is not set');
-    }
-    return path.join(basePath, 'user', 'default', 'comfy.settings.json');
+    return path.join(this.#basePath, 'user', 'default', 'comfy.settings.json');
   }
 
-  public async loadSettings() {
+  private async loadSettings() {
     try {
       await fs.access(this.filePath);
     } catch {
@@ -117,7 +117,11 @@ export class ComfySettings implements IComfySettings {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       this.settings = { ...this.settings, ...JSON.parse(fileContent) };
     } catch (error) {
-      log.error(`Settings file cannot be loaded.`, error);
+      if (error instanceof SyntaxError) {
+        log.error(`Settings file contains invalid JSON:`, error);
+      } else {
+        log.error(`Settings file cannot be loaded.`, error);
+      }
     }
   }
 
@@ -148,6 +152,16 @@ export class ComfySettings implements IComfySettings {
   get<K extends keyof ComfySettingsData>(key: K): ComfySettingsData[K] {
     return this.settings[key] ?? DEFAULT_SETTINGS[key];
   }
-}
 
-export const comfySettings = ComfySettings.getInstance();
+  /**
+   * Static factory method. Loads the settings from disk.
+   * @param basePath The base path where ComfyUI is installed
+   * @returns The newly created instance
+   */
+  static async load(basePath: string): Promise<ComfySettings> {
+    const instance = new ComfySettings(basePath);
+    await instance.loadSettings();
+    current = instance;
+    return instance;
+  }
+}

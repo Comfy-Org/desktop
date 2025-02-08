@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
-import { type ComfySettingsData, comfySettings } from '../config/comfySettings';
+import { ComfySettings, type ComfySettingsData } from '../config/comfySettings';
 import { InstallOptions } from '../preload';
 import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 
@@ -54,7 +54,7 @@ export class InstallWizard implements HasTelemetry {
    */
   public async initializeSettings() {
     // Load any existing settings if they exist
-    await comfySettings.loadSettings();
+    const existingSettings = await ComfySettings.load(this.basePath);
 
     // Add install options to settings
     const settings: Partial<ComfySettingsData> = {
@@ -71,10 +71,10 @@ export class InstallWizard implements HasTelemetry {
     }
 
     for (const [key, value] of Object.entries(settings)) {
-      comfySettings.set(key, value);
+      existingSettings.set(key, value);
     }
 
-    await comfySettings.saveSettings();
+    await existingSettings.saveSettings();
     log.info(`Wrote install options to comfy settings file.`);
   }
 
