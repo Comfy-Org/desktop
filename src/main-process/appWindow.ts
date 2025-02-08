@@ -50,14 +50,6 @@ export class AppWindow {
   public readonly customWindowEnabled: boolean =
     process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom';
 
-  private readonly setSettings = debounce(
-    (settings: Partial<AppWindowSettings>): void => {
-      this.store.set(settings);
-    },
-    256,
-    { leading: true, trailing: true }
-  );
-
   /** Always returns `undefined` in production. When running unpackaged, returns `DEV_SERVER_URL` if set, otherwise `undefined`. */
   private get devUrlOverride() {
     if (!app.isPackaged) return process.env.DEV_SERVER_URL;
@@ -295,24 +287,30 @@ export class AppWindow {
   }
 
   private setupWindowEvents(): void {
-    const updateBounds = () => {
-      if (!this.window) return;
+    const updateBounds = debounce(
+      () => {
+        if (!this.window) return;
 
-      // If maximized, do not update position / size.
-      const isMaximized = this.window.isMaximized();
-      if (isMaximized) {
-        this.setSettings({ windowMaximized: isMaximized });
-        return;
-      }
-
-      const { width, height, x, y } = this.window.getBounds();
-      this.setSettings({
-        windowWidth: width,
-        windowHeight: height,
-        windowX: x,
-        windowY: y,
-      });
-    };
+        const windowMaximized = this.window.isMaximized();
+        const bounds = this.window.getBounds();
+        this.store.set({
+          windowMaximized,
+          windowWidth: bounds.width,
+          windowHeight: bounds.height,
+          windowX: bounds.x,
+          windowY: bounds.y,
+          // // If maximized, do not update position / size.
+          // ...(!windowMaximized && {
+          //   windowWidth: bounds.width,
+          //   windowHeight: bounds.height,
+          //   windowX: bounds.x,
+          //   windowY: bounds.y,
+          // }),
+        });
+      },
+      256,
+      { leading: true, trailing: true }
+    );
 
     this.window.on('resize', updateBounds);
     this.window.on('move', updateBounds);
