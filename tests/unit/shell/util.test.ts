@@ -37,7 +37,7 @@ describe('shell utilities', () => {
 
     it('should return empty array on Linux', () => {
       vi.spyOn(os, 'platform').mockReturnValue('linux');
-      expect(getDefaultShellArgs()).toEqual([]);
+      expect(getDefaultShellArgs()).toEqual(['-c', 'env -i bash --noprofile --norc']);
     });
   });
 });
