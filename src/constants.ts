@@ -128,3 +128,4 @@ export enum DownloadStatus {
 
 export const CUDA_TORCH_URL = 'https://download.pytorch.org/whl/cu124';
 export const NIGHTLY_CPU_TORCH_URL = 'https://download.pytorch.org/whl/nightly/cpu';
+export const DEFAULT_PYTHON_URL = 'https://pypi.org/simple/';

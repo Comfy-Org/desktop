@@ -6,7 +6,7 @@ import { rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
-import { CUDA_TORCH_URL, NIGHTLY_CPU_TORCH_URL } from './constants';
+import { CUDA_TORCH_URL, DEFAULT_PYTHON_URL, NIGHTLY_CPU_TORCH_URL } from './constants';
 import type { TorchDeviceType } from './preload';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
@@ -65,13 +65,14 @@ export function getPipInstallArgs(config: PipInstallConfig): string[] {
  * @returns The default torch mirror
  */
 const getDefaultTorchMirror = (device: TorchDeviceType): string => {
+  log.debug('Falling back to default torch mirror');
   switch (device) {
     case 'mps':
       return NIGHTLY_CPU_TORCH_URL;
     case 'nvidia':
       return CUDA_TORCH_URL;
     default:
-      return '';
+      return DEFAULT_PYTHON_URL;
   }
 };
 
@@ -460,7 +461,7 @@ export class VirtualEnvironment implements HasTelemetry {
     const config: PipInstallConfig = {
       packages: ['torch', 'torchvision', 'torchaudio'],
       indexUrl: torchMirror,
-      prerelease: torchMirror?.includes('nightly'),
+      prerelease: torchMirror.includes('nightly'),
     };
 
     const installArgs = getPipInstallArgs(config);
