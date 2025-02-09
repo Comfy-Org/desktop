@@ -19,7 +19,6 @@ export function getDefaultShellArgs(): string[] {
     case 'win32':
       return [];
     default: // Linux and others
-      // Start with completely clean env
-      return ['-c', 'env -i bash --noprofile --norc'];
+      return ['--noprofile --norc'];
   }
 }
