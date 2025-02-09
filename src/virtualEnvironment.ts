@@ -475,7 +475,7 @@ export class VirtualEnvironment implements HasTelemetry {
 
     const installArgs = getPipInstallArgs(config);
 
-    log.info(`Installing PyTorch with config: ${JSON.stringify(config)}`);
+    log.info('Installing PyTorch with config:', config);
     const { exitCode } = await this.runUvCommandAsync(installArgs, callbacks);
 
     if (exitCode !== 0) {

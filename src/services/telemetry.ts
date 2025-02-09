@@ -93,7 +93,7 @@ export class MixpanelTelemetry implements ITelemetry {
     };
 
     if (!this.hasConsent) {
-      log.debug(`Queueing event ${eventName} with properties ${JSON.stringify(properties)}`);
+      log.debug(`Queueing event ${eventName} with properties`, properties);
       this.queue.push({
         eventName,
         properties: {
@@ -183,10 +183,10 @@ export class MixpanelTelemetry implements ITelemetry {
 
   private mixpanelTrack(eventName: string, properties: PropertyDict): void {
     if (app.isPackaged) {
-      log.debug(`Tracking ${eventName} with properties ${JSON.stringify(properties)}`);
+      log.debug(`Tracking ${eventName} with properties`, properties);
       this.mixpanelClient.track(eventName, properties);
     } else {
-      log.info(`Would have tracked ${eventName} with properties ${JSON.stringify(properties)}`);
+      log.info(`Would have tracked ${eventName} with properties`, properties);
     }
   }
 }
