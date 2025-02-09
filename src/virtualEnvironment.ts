@@ -92,7 +92,7 @@ function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undef
  * @todo Split either installation or terminal management to a separate class.
  */
 export class VirtualEnvironment implements HasTelemetry {
-  readonly venvRootPath: string;
+  readonly basePath: string;
   readonly venvPath: string;
   readonly pythonVersion: string;
   readonly uvPath: string;
@@ -124,7 +124,7 @@ export class VirtualEnvironment implements HasTelemetry {
         handleFlowControl: false,
         conptyInheritCursor: false,
         name: 'xterm',
-        cwd: this.venvRootPath,
+        cwd: this.basePath,
         env,
       });
     }
@@ -132,7 +132,7 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   constructor(
-    venvPath: string,
+    basePath: string,
     {
       telemetry,
       selectedDevice,
@@ -149,7 +149,7 @@ export class VirtualEnvironment implements HasTelemetry {
       torchMirror?: string;
     }
   ) {
-    this.venvRootPath = venvPath;
+    this.basePath = basePath;
     this.telemetry = telemetry;
     this.pythonVersion = pythonVersion ?? '3.12';
     this.selectedDevice = selectedDevice ?? 'cpu';
@@ -158,7 +158,7 @@ export class VirtualEnvironment implements HasTelemetry {
     this.torchMirror = fixDeviceMirrorMismatch(selectedDevice!, torchMirror);
 
     // uv defaults to .venv
-    this.venvPath = path.join(venvPath, '.venv');
+    this.venvPath = path.join(basePath, '.venv');
     const resourcesPath = app.isPackaged ? path.join(process.resourcesPath) : path.join(app.getAppPath(), 'assets');
     this.comfyUIRequirementsPath = path.join(resourcesPath, 'ComfyUI', 'requirements.txt');
     this.comfyUIManagerRequirementsPath = path.join(
@@ -169,7 +169,7 @@ export class VirtualEnvironment implements HasTelemetry {
       'requirements.txt'
     );
 
-    this.cacheDir = path.join(venvPath, 'uv-cache');
+    this.cacheDir = path.join(basePath, 'uv-cache');
 
     const filename = `${compiledRequirements()}.compiled`;
     this.requirementsCompiledPath = path.join(resourcesPath, 'requirements', filename);
@@ -413,7 +413,7 @@ export class VirtualEnvironment implements HasTelemetry {
     args: string[],
     env: Record<string, string>,
     callbacks?: ProcessCallbacks,
-    cwd: string = this.venvRootPath
+    cwd: string = this.basePath
   ): ChildProcess {
     log.info(`Running command: ${command} ${args.join(' ')} in ${cwd}`);
     const childProcess = spawn(command, args, {

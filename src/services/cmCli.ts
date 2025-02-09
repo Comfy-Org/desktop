@@ -39,7 +39,7 @@ export class CmCli implements HasTelemetry {
         },
       },
       {
-        COMFYUI_PATH: this.virtualEnvironment.venvRootPath,
+        COMFYUI_PATH: this.virtualEnvironment.basePath,
         ...env,
       },
       cwd
