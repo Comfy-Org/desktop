@@ -109,7 +109,7 @@ Checkpoint-VM -Name $VMName -SnapshotName "Base VM configured and updated"
 - Proceed with normal dev documentation
 - Remember to use `--cpu` when launching ComfyUI
 - Don't forget to take checkpoints!
-- Do not open `.vhdx` files in Windows unless you are aware of the consequences
+- Common pitfall: avoid opening `.vhdx` files in Windows Explorer (simply opening it once can prevent a VM from starting, requiring manual repair)
 
 ### Restoring checkpoints
 
