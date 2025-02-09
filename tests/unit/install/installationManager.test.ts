@@ -110,10 +110,6 @@ const createMockTelemetry = (): ITelemetry => ({
   hasConsent: true,
   flush: vi.fn(),
   registerHandlers: vi.fn(),
-  queueSentryEvent: vi.fn(),
-  popSentryEvent: vi.fn(),
-  hasPendingSentryEvents: vi.fn().mockReturnValue(false),
-  clearSentryQueue: vi.fn(),
 });
 
 describe('InstallationManager', () => {

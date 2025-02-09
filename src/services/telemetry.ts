@@ -14,6 +14,7 @@ import { AppWindow } from '../main-process/appWindow';
 import { InstallOptions } from '../preload';
 import { DesktopConfig } from '../store/desktopConfig';
 import { compareVersions } from '../utils';
+import { captureSentryException } from './sentry';
 
 let instance: ITelemetry | null = null;
 export interface ITelemetry {
@@ -21,10 +22,6 @@ export interface ITelemetry {
   track(eventName: string, properties?: PropertyDict): void;
   flush(): void;
   registerHandlers(): void;
-  queueSentryEvent(props: MixPanelEvent): void;
-  popSentryEvent(): MixPanelEvent | undefined;
-  hasPendingSentryEvents(): boolean;
-  clearSentryQueue(): void;
 }
 
 interface GpuInfo {
@@ -46,7 +43,6 @@ export class MixpanelTelemetry implements ITelemetry {
   private readonly queue: MixPanelEvent[] = [];
   private readonly mixpanelClient: mixpanel.Mixpanel;
   private cachedGpuInfo: GpuInfo[] | null = null;
-  private sentryQueue: MixPanelEvent[] = [];
   constructor(mixpanelClass: mixpanel.Mixpanel) {
     this.mixpanelClient = mixpanelClass.init(MIXPANEL_TOKEN, {
       geolocate: true,
@@ -139,22 +135,6 @@ export class MixpanelTelemetry implements ITelemetry {
     });
   }
 
-  hasPendingSentryEvents() {
-    return this.sentryQueue.length > 0;
-  }
-
-  queueSentryEvent(props: MixPanelEvent) {
-    this.sentryQueue.push(props);
-  }
-
-  popSentryEvent() {
-    return this.sentryQueue.shift();
-  }
-
-  clearSentryQueue() {
-    this.sentryQueue = [];
-  }
-
   /**
    * Fetch GPU information and cache it.
    */
@@ -225,12 +205,11 @@ export function trackEvent<T extends HasTelemetry>(eventName: string) {
           this.telemetry.track(`${eventName}_end`);
         })
         .catch((error: Error) => {
-          this.telemetry.queueSentryEvent({
-            eventName: `${eventName}_error`,
-            properties: {
-              error_message: error.message,
-              error_name: error.name,
-            },
+          const sentryUrl = captureSentryException(error);
+          this.telemetry.track(`${eventName}_error`, {
+            error_message: error.message,
+            error_name: error.name,
+            sentry_url: sentryUrl,
           });
           throw error;
         });

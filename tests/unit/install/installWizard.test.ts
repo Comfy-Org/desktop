@@ -62,6 +62,12 @@ vi.mock('../../../src/install/resourcePaths', () => ({
   getAppResourcesPath: () => '/test/resources',
 }));
 
+vi.mock('@sentry/electron/main', () => ({
+  init: vi.fn(),
+  captureException: vi.fn(),
+  setContext: vi.fn(),
+}));
+
 describe('InstallWizard', () => {
   let installWizard: InstallWizard;
   const mockTelemetry: ITelemetry = {
@@ -69,10 +75,6 @@ describe('InstallWizard', () => {
     hasConsent: true,
     flush: vi.fn(),
     registerHandlers: vi.fn(),
-    queueSentryEvent: vi.fn(),
-    popSentryEvent: vi.fn(),
-    hasPendingSentryEvents: vi.fn(),
-    clearSentryQueue: vi.fn(),
   };
 
   const defaultInstallOptions: InstallOptions = {

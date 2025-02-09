@@ -108,7 +108,6 @@ vi.mock('@/main-process/comfyDesktopApp', () => ({
 vi.mock('@/services/sentry', () => ({
   default: {
     setSentryGpuContext: vi.fn().mockResolvedValue(undefined),
-    shouldSendStatistics: vi.fn(),
     getBasePath: vi.fn(),
   },
 }));

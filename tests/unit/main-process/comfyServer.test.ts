@@ -6,6 +6,12 @@ vi.mock('@/install/resourcePaths', () => ({
   getAppResourcesPath: vi.fn().mockReturnValue('/mocked/app_resources'),
 }));
 
+vi.mock('@sentry/electron/main', () => ({
+  init: vi.fn(),
+  captureException: vi.fn(),
+  setContext: vi.fn(),
+}));
+
 describe('ComfyServer', () => {
   describe('buildLaunchArgs', () => {
     it('should convert basic arguments correctly', () => {

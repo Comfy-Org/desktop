@@ -1,30 +1,67 @@
 import * as Sentry from '@sentry/electron/main';
 import { app, dialog } from 'electron';
 import log from 'electron-log/main';
+import fs from 'node:fs';
 import { graphics } from 'systeminformation';
 
+import { useComfySettings } from '@/config/comfySettings';
+import { ansiCodes } from '@/utils';
+
 import { SENTRY_URL_ENDPOINT } from '../constants';
-import { getTelemetry } from './telemetry';
 
-const createSentryUrl = (eventId: string) => `https://comfy-org.sentry.io/projects/4508007940685824/events/${eventId}/`;
+const NUM_LOG_LINES_CAPTURED = 64;
+const SENTRY_PROJECT_ID = '4508007940685824';
 
-const queueMixPanelEvents = (event: Sentry.Event) => {
-  const mixpanel = getTelemetry();
+const createSentryUrl = (eventId: string) =>
+  `https://comfy-org.sentry.io/projects/${SENTRY_PROJECT_ID}/events/${eventId}/`;
 
-  while (mixpanel.hasPendingSentryEvents()) {
-    const { eventName, properties } = mixpanel.popSentryEvent()!;
-    mixpanel.track(eventName, {
-      sentry_url: createSentryUrl(event.event_id!),
-      ...properties,
-    });
+const cleanAnsiCodes = (logs: string): string => logs.replaceAll(ansiCodes, '');
+const stripLogMetadata = (line: string): string =>
+  // Remove timestamp and log level pattern like [2024-03-14 10:15:30.123] [info]
+  line.replace(/^\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3}]\s+\[\w+]\s+/, '');
+
+const getLogTail = (numLines: number): string => {
+  try {
+    const currentLogFile = log.transports.file.getFile();
+    const content = fs.readFileSync(currentLogFile.path, 'utf8');
+    return content
+      .split('\n')
+      .filter(Boolean) // remove empty lines
+      .slice(-numLines)
+      .map((line) => cleanAnsiCodes(line))
+      .map((line) => stripLogMetadata(line))
+      .join('\n');
+  } catch (error) {
+    log.error('Error reading log file:', error);
+    return '';
   }
 };
+
+/**
+ * Capture a Sentry exception and return the Sentry URL for the captured event.
+ * @param error The error to capture
+ * @returns The Sentry URL for the captured event
+ */
+export function captureSentryException(error: Error) {
+  const settings = useComfySettings();
+  const eventId = Sentry.captureException(error, {
+    tags: {
+      environment: process.env.NODE_ENV,
+      comfyUIVersion: __COMFYUI_VERSION__,
+      pythonMirror: settings.get('Comfy-Desktop.UV.PythonInstallMirror'),
+      pypiMirror: settings.get('Comfy-Desktop.UV.PypiInstallMirror'),
+      torchMirror: settings.get('Comfy-Desktop.UV.TorchInstallMirror'),
+    },
+    extra: {
+      logs: getLogTail(NUM_LOG_LINES_CAPTURED),
+    },
+  });
+  return createSentryUrl(eventId);
+}
 
 class SentryLogging {
   /** Used to redact the base path in the event payload. */
   getBasePath?: () => string | undefined;
-  /** If `true`, the event will be sent to Mixpanel. */
-  shouldSendStatistics?: () => boolean;
 
   init() {
     Sentry.init({
@@ -35,12 +72,9 @@ class SentryLogging {
       beforeSend: async (event) => {
         this.filterEvent(event);
 
-        if (this.shouldSendStatistics?.()) {
-          queueMixPanelEvents(event);
+        if (useComfySettings().get('Comfy-Desktop.SendStatistics')) {
           return event;
         }
-
-        getTelemetry().clearSentryQueue();
 
         const errorMessage = event.exception?.values?.[0]?.value || 'Unknown error';
         const errorType = event.exception?.values?.[0]?.type || 'Error';
