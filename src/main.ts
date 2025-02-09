@@ -5,7 +5,7 @@ import { LevelOption } from 'electron-log';
 import log from 'electron-log/main';
 
 import { DesktopApp } from './desktopApp';
-import { replaceFileLoggingTransform } from './infrastructure/loggingUtils';
+import { replaceFileLoggingTransform } from './infrastructure/structuredLogging';
 import { AppState } from './main-process/appState';
 import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
