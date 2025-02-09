@@ -16,9 +16,9 @@ export function getDefaultShellArgs(): string[] {
   switch (os.platform()) {
     case 'darwin':
       return ['-df']; // Prevent loading initialization files for zsh
-    case 'win32':
+    case 'linux':
+      return ['--noprofile', '--norc'];
+    default:
       return [];
-    default: // Linux and others
-      return ['--noprofile --norc'];
   }
 }

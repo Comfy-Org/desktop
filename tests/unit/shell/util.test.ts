@@ -35,9 +35,9 @@ describe('shell utilities', () => {
       expect(getDefaultShellArgs()).toEqual([]);
     });
 
-    it('should return empty array on Linux', () => {
+    it('should return noprofile and norc on Linux', () => {
       vi.spyOn(os, 'platform').mockReturnValue('linux');
-      expect(getDefaultShellArgs()).toEqual(['--noprofile --norc']);
+      expect(getDefaultShellArgs()).toEqual(['--noprofile', '--norc']);
     });
   });
 });
