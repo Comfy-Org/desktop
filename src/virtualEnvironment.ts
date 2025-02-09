@@ -8,6 +8,7 @@ import path from 'node:path';
 
 import { CUDA_TORCH_URL, DEFAULT_PYPI_INDEX_URL, NIGHTLY_CPU_TORCH_URL } from './constants';
 import type { TorchDeviceType } from './preload';
+import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
@@ -261,10 +262,12 @@ export class VirtualEnvironment implements HasTelemetry {
       });
       log.info(`Successfully created virtual environment at ${this.venvPath}`);
     } catch (error) {
+      const sentryUrl = captureSentryException(error instanceof Error ? error : new Error(String(error)));
       this.telemetry.track(`install_flow:virtual_environment_create_error`, {
         error_name: error instanceof Error ? error.name : 'UnknownError',
         error_type: error instanceof Error ? error.constructor.name : typeof error,
         error_message: error instanceof Error ? error.message : 'Unknown error occurred',
+        sentry_url: sentryUrl,
       });
       log.error(`Error creating virtual environment: ${error}`);
       throw error;
