@@ -295,17 +295,13 @@ export class AppWindow {
         const bounds = this.window.getBounds();
         this.store.set({
           windowMaximized,
-          windowWidth: bounds.width,
-          windowHeight: bounds.height,
-          windowX: bounds.x,
-          windowY: bounds.y,
-          // // If maximized, do not update position / size.
-          // ...(!windowMaximized && {
-          //   windowWidth: bounds.width,
-          //   windowHeight: bounds.height,
-          //   windowX: bounds.x,
-          //   windowY: bounds.y,
-          // }),
+          // If maximized, do not update position / size, as it prevents restoring size when un-maximizing
+          ...(!windowMaximized && {
+            windowWidth: bounds.width,
+            windowHeight: bounds.height,
+            windowX: bounds.x,
+            windowY: bounds.y,
+          }),
         });
       },
       256,
