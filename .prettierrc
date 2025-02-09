@@ -16,7 +16,7 @@
       "files": "*.{js,cjs,mjs,ts,cts,mts}",
       "options": {
         "plugins": ["@trivago/prettier-plugin-sort-imports"],
-        "importOrderParserPlugins": ["typescript", "decorators"],
+        "importOrderParserPlugins": ["typescript", "decorators", "explicitResourceManagement"],
         "importOrder": ["^@core/(.*)$", "<THIRD_PARTY_MODULES>", "^@/(.*)$", "^[./]"],
         "importOrderSeparation": true,
         "importOrderSortSpecifiers": true
