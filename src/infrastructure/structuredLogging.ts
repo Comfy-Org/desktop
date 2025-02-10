@@ -1,6 +1,16 @@
 import type { FileTransport, MainTransports, TransformFn } from 'electron-log';
 import { formatWithOptions } from 'node:util';
 
+import { ansiCodes } from '@/utils';
+
+export function removeAnsiCodes(x: unknown) {
+  return typeof x === 'string' ? x.replaceAll(ansiCodes, '') : x;
+}
+
+export function removeAnsiCodesTransform({ data }: Parameters<TransformFn>[0]): unknown[] {
+  return data.map((x) => removeAnsiCodes(x));
+}
+
 /**
  * Implements structured logging of generic objects, errors, and dates.
  * Uses compact, single-line formatting; suitable for file logging.

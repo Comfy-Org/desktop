@@ -4,12 +4,14 @@ import { ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import waitOn from 'wait-on';
 
+import { removeAnsiCodesTransform } from '@/infrastructure/structuredLogging';
+
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings } from '../config/comfySettings';
 import { IPC_CHANNELS, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
-import { ansiCodes, rotateLogFiles } from '../utils';
+import { rotateLogFiles } from '../utils';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { AppWindow } from './appWindow';
 
@@ -108,11 +110,7 @@ export class ComfyServer implements HasTelemetry {
       const comfyUILog = log.create({ logId: 'comfyui' });
       comfyUILog.transports.file.fileName = 'comfyui.log';
 
-      // TODO: Check if electron-log has updated types
-      // @ts-expect-error electron-log types are broken.  data and return type are `string`.
-      comfyUILog.transports.file.transforms.push(({ data }) => {
-        return typeof data === 'string' ? (data as string).replaceAll(ansiCodes, '') : data;
-      });
+      comfyUILog.transports.file.transforms.unshift(removeAnsiCodesTransform);
 
       const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.launchArgs, {
         onStdout: (data) => {
