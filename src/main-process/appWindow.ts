@@ -351,7 +351,7 @@ export class AppWindow {
       while (this.messageQueue.length > 0) {
         const message = this.messageQueue.shift();
         if (message) {
-          log.info('Sending queued message ', message.channel, message.data);
+          log.info('Sending queued message', message);
           this.window.webContents.send(message.channel, message.data);
         }
       }
