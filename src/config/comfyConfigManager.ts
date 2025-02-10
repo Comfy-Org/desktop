@@ -58,7 +58,7 @@ export class ComfyConfigManager {
     try {
       this.createNestedDirectories(localComfyDirectory, this.DEFAULT_DIRECTORIES);
     } catch (error) {
-      log.error(`Failed to create ComfyUI directories: ${error}`);
+      log.error('Failed to create ComfyUI directories:', error);
     }
   }
 

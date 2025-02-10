@@ -126,7 +126,7 @@ export class ComfyServer implements HasTelemetry {
       });
 
       comfyServerProcess.on('error', (err) => {
-        log.error(`Failed to start ComfyUI: ${err}`);
+        log.error('Failed to start ComfyUI:', err);
         reject(err);
       });
 

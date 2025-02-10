@@ -602,7 +602,7 @@ export class VirtualEnvironment implements HasTelemetry {
     try {
       await this.#using(() => this.manualInstall(callbacks));
     } catch (error) {
-      log.error(`Failed to reinstall requirements: ${error}`);
+      log.error('Failed to reinstall requirements:', error);
 
       const created = await this.createVenv(onData);
       if (!created) return false;

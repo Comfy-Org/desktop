@@ -56,7 +56,7 @@ export class CmCli implements HasTelemetry {
   public async restoreCustomNodes(fromComfyDir: string, callbacks: ProcessCallbacks) {
     const tmpFile = fileSync({ postfix: '.json' });
     try {
-      log.debug('Using temp file: ' + tmpFile.name);
+      log.debug('Using temp file:', tmpFile.name);
       await this.saveSnapshot(fromComfyDir, tmpFile.name, callbacks);
       await this.restoreSnapshot(tmpFile.name, callbacks);
     } finally {
@@ -79,7 +79,7 @@ export class CmCli implements HasTelemetry {
   }
 
   public async restoreSnapshot(snapshotFile: string, callbacks: ProcessCallbacks) {
-    log.info('Restoring snapshot ' + snapshotFile);
+    log.info('Restoring snapshot', snapshotFile);
     const output = await this.runCommandAsync(['restore-snapshot', snapshotFile], callbacks);
     log.info(output);
   }
