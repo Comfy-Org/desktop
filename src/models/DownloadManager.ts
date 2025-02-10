@@ -38,7 +38,7 @@ export class DownloadManager {
 
     session.defaultSession.on('will-download', (event, item) => {
       const url = item.getURLChain()[0]; // Get the original URL in case of redirects.
-      log.info('Will-download event ', url);
+      log.info('Will-download event', url);
       const download = this.downloads.get(url);
 
       if (download) {
