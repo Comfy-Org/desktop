@@ -69,7 +69,6 @@ export class ComfyDesktopApp implements HasTelemetry {
       updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
       autoUpdater: useComfySettings().get('Comfy-Desktop.AutoUpdate'),
     });
-    todesktop.autoUpdater?.setFeedURL('https://updater.comfy.org');
   }
 
   registerIPCHandlers(): void {

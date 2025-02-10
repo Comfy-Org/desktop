@@ -127,7 +127,6 @@ describe('ComfyDesktopApp', () => {
         updateReadyAction: { showInstallAndRestartPrompt: 'always', showNotification: 'always' },
         autoUpdater: true,
       });
-      expect(todesktop.autoUpdater?.setFeedURL).toHaveBeenCalledWith('https://updater.comfy.org');
     });
   });
 
