@@ -10,8 +10,6 @@ import si from 'systeminformation';
 
 import type { GpuType } from './preload';
 
-export const ansiCodes = /[\u001B\u009B][#();?[]*(?:\d{1,4}(?:;\d{0,4})*)?[\d<=>A-ORZcf-nqry]/g;
-
 export async function pathAccessible(path: string): Promise<boolean> {
   try {
     await fsPromises.access(path);

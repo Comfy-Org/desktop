@@ -1,7 +1,7 @@
 import type { FileTransport, MainTransports, TransformFn } from 'electron-log';
 import { formatWithOptions } from 'node:util';
 
-import { ansiCodes } from '@/utils';
+export const ansiCodes = /[\u001B\u009B][#();?[]*(?:\d{1,4}(?:;\d{0,4})*)?[\d<=>A-ORZcf-nqry]/g;
 
 export function removeAnsiCodes(x: unknown) {
   return typeof x === 'string' ? x.replaceAll(ansiCodes, '') : x;
