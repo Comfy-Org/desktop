@@ -89,8 +89,7 @@ export class ComfyDesktopApp implements HasTelemetry {
 
       log.info('Before-quit: Killing Python server');
       this.comfyServer.kill().catch((error) => {
-        log.error('Python server did not exit properly');
-        log.error(error);
+        log.error('Python server did not exit properly', error);
       });
     });
     log.info('Server start');

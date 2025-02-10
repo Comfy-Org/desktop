@@ -324,8 +324,7 @@ export class AppWindow {
 
   private setupAppEvents(): void {
     app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
-      log.info('Received second instance message!');
-      log.info(additionalData);
+      log.info('Received second instance message!', additionalData);
 
       if (this.isMinimized()) this.restore();
       this.focus();
