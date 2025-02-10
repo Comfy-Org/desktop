@@ -5,7 +5,6 @@ import fs from 'node:fs';
 import { graphics } from 'systeminformation';
 
 import { useComfySettings } from '@/config/comfySettings';
-import { ansiCodes } from '@/utils';
 
 import { SENTRY_URL_ENDPOINT } from '../constants';
 
@@ -15,7 +14,6 @@ const SENTRY_PROJECT_ID = '4508007940685824';
 const createSentryUrl = (eventId: string) =>
   `https://comfy-org.sentry.io/projects/${SENTRY_PROJECT_ID}/events/${eventId}/`;
 
-const cleanAnsiCodes = (logs: string): string => logs.replaceAll(ansiCodes, '');
 const stripLogMetadata = (line: string): string =>
   // Remove timestamp and log level pattern like [2024-03-14 10:15:30.123] [info]
   line.replace(/^\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3}]\s+\[\w+]\s+/, '');
@@ -28,7 +26,6 @@ const getLogTail = (numLines: number): string => {
       .split('\n')
       .filter(Boolean) // remove empty lines
       .slice(-numLines)
-      .map((line) => cleanAnsiCodes(line))
       .map((line) => stripLogMetadata(line))
       .join('\n');
   } catch (error) {
