@@ -293,15 +293,18 @@ export class AppWindow {
 
         const windowMaximized = this.window.isMaximized();
         const bounds = this.window.getBounds();
+
+        // If maximized, do not update position / size, as it prevents restoring size when un-maximizing
+        const windowSizePos: Partial<StoreType> = {
+          windowWidth: bounds.width,
+          windowHeight: bounds.height,
+          windowX: bounds.x,
+          windowY: bounds.y,
+        };
+
         this.store.set({
           windowMaximized,
-          // If maximized, do not update position / size, as it prevents restoring size when un-maximizing
-          ...(!windowMaximized && {
-            windowWidth: bounds.width,
-            windowHeight: bounds.height,
-            windowX: bounds.x,
-            windowY: bounds.y,
-          }),
+          ...(windowMaximized ? {} : windowSizePos),
         });
       },
       256,
