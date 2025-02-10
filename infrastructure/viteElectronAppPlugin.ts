@@ -31,7 +31,7 @@ export function viteElectronAppPlugin(): PluginOption {
     },
     closeBundle() {
       // Only operate in watch mode.
-      if (this.meta.watchMode === true) startApp();
+      if (this.meta.watchMode === true && process.env.STARTWATCH) startApp();
     },
   };
 }
