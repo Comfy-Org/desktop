@@ -101,7 +101,10 @@ describe('ComfyConfigManager', () => {
       ComfyConfigManager.createComfyDirectories('/fake/path/ComfyUI');
 
       expect(fs.mkdirSync).toHaveBeenCalled();
-      expect(vi.mocked(log.default.error)).toHaveBeenCalledWith(expect.stringContaining('Permission denied'));
+      expect(vi.mocked(log.default.error)).toHaveBeenCalledWith(
+        'Failed to create ComfyUI directories:',
+        expect.any(Error)
+      );
     });
   });
 
