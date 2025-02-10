@@ -295,7 +295,7 @@ export class AppWindow {
         const bounds = this.window.getBounds();
 
         // If maximized, do not update position / size, as it prevents restoring size when un-maximizing
-        const windowSizePos: Partial<StoreType> = {
+        const windowSizePos: Partial<AppWindowSettings> = {
           windowWidth: bounds.width,
           windowHeight: bounds.height,
           windowX: bounds.x,
