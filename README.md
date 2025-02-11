@@ -172,7 +172,7 @@ First, initialize the application resources by running `yarn make:assets`:
 
 This command will install ComfyUI and ComfyUI-Manager under `assets/`. The exact versions of each package is defined in `package.json`.
 
-You can then run `start` to build/launch the code and a live buildserver that will automatically rebuild the code on any changes:
+You can then run `start` to build and launch the app. A watcher will also be started; it will automatically rebuild the app when a source file is changed:
 
 ```bash
 deactivate # Deactivate your existing python env to avoid influencing the
@@ -241,9 +241,11 @@ apt-get install libnss3
 
 ### Debugger
 
-There are helpful debug launch scripts for VSCode / Cursor under `.vscode/launch.json`. It will start the dev server as defined in `.vscode/tasks.json`. Then attach the debugger.
+There are helpful debug launch scripts for VSCode / Cursor under `.vscode/launch.json`. The default launch script runs the Electron launcher in the project root and attaches the debugger. By default, the app is not built when this is used.
 
-This can be used simply by pressing `F5` in VSCode or VSCode derivative.
+The default launch script can be run by pressing `F5` in VSCode or VSCode derivative. `Ctrl + Shift + F5` restarts the app with the debugger attached. `Shift + F5` terminates the debugger and the process tree it is attached to.
+
+To keep the app built and up to date as you make changes, run the `Start Vite Build Watchers` build task defined in `.vscode/tasks.json`. This spawns two watcher tasks - one for the main app, and one for the preload script. These watchers will automatically rebuild the app when a source file is changed.
 
 The launch environment can be customised, e.g. add a `"linux"` section to source your `~/.profile` (and other interactive config) when debugging in linux:
 
