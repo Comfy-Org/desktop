@@ -1,6 +1,6 @@
 import electronPath from 'electron';
 import { type ChildProcess, spawn } from 'node:child_process';
-import type { PluginOption } from 'vite';
+import type { PluginOption, UserConfig } from 'vite';
 
 /**
  * Loads the electron app whenever vite is loaded in watch mode.
@@ -17,10 +17,14 @@ export function viteElectronAppPlugin(): PluginOption {
   };
 
   let electronApp: ChildProcess | null = null;
+  let mode: string | undefined;
 
   return {
     name: 'Load Electron app in watch mode',
     apply: 'build',
+    config(config: UserConfig) {
+      mode = config.mode;
+    },
     buildStart() {
       // Only operate in watch mode.
       if (this.meta.watchMode !== true || !electronApp) return;
@@ -31,7 +35,7 @@ export function viteElectronAppPlugin(): PluginOption {
     },
     closeBundle() {
       // Only operate in watch mode.
-      if (this.meta.watchMode === true && process.env.STARTWATCH) startApp();
+      if (this.meta.watchMode === true && mode === 'startwatch') startApp();
     },
   };
 }
