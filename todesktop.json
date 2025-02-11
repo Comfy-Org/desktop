@@ -36,5 +36,5 @@
   "windows": {
     "nsisInclude": "./scripts/installer.nsh"
   },
-  "updateBaseUrl": "https://updater.comfy.org"
+  "updateUrlBase": "https://updater.comfy.org"
 }
