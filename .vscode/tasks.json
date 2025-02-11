@@ -1,24 +1,82 @@
 {
   "version": "2.0.0",
   "tasks": [
+    // Build tasks
     {
-      "label": "Start Vite Dev Server",
+      "label": "Start Vite Build Watchers",
+      "dependsOn": ["Vite Watch - Main", "Vite Watch - Preload"],
+      "group": {
+        "kind": "build"
+        // "isDefault": true
+      }
+    },
+    // Vite watchers
+    {
+      "label": "Vite Watch - Main",
       "type": "shell",
-      "command": "yarn start",
+      "command": "yarn vite build --watch",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": ".*"
+        },
+        "background": {
+          "activeOnStart": true,
+          // Detect build start/stop
+          "beginsPattern": ".*",
+          "endsPattern": "^built in "
+        }
+      }
+    },
+    {
+      "label": "Vite Watch - Preload",
+      "type": "shell",
+      "command": "yarn vite build --watch --config vite.preload.config.ts",
       "linux": {
         "options": { "shell": { "args": ["-ci"] } }
       },
       "isBackground": true,
       "problemMatcher": {
         "pattern": {
-          "regexp": "^.*$"
+          "regexp": ".*"
         },
         "background": {
           "activeOnStart": true,
           "beginsPattern": ".*",
-          "endsPattern": "Debugger listening on"
+          "endsPattern": "^built in "
         }
       }
+    },
+
+    // Terminate tasks (for automation)
+    {
+      "label": "Terminate Vite Watchers",
+      "dependsOn": ["Terminate Main Watcher", "Terminate Preload Watcher"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Terminate Main Watcher",
+      "command": "echo ${input:terminateMainWatcher}",
+      "type": "shell"
+    },
+    {
+      "label": "Terminate Preload Watcher",
+      "command": "echo ${input:terminatePreloadWatcher}",
+      "type": "shell"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "terminateMainWatcher",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "Vite Watch - Main"
+    },
+    {
+      "id": "terminatePreloadWatcher",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "Vite Watch - Preload"
     }
   ]
 }
