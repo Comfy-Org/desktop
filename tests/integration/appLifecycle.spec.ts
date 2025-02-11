@@ -9,43 +9,43 @@ test.describe('App Lifecycle', () => {
   });
 
   test('does all app startup things from previous test', async ({ testApp }) => {
-    const page = await testApp.firstWindow();
+    const window = await testApp.firstWindow();
 
     // Expect a title "to contain" a substring.
-    await expect(page).toHaveTitle(/ComfyUI/);
+    await expect(window).toHaveTitle(/ComfyUI/);
 
-    const getStartedButton = page.getByText('Get Started');
+    const getStartedButton = window.getByText('Get Started');
 
     await expect(getStartedButton).toBeVisible();
     await expect(getStartedButton).toBeEnabled();
 
-    await page.screenshot({ path: 'screenshot-load.png' });
+    await window.screenshot({ path: 'screenshot-load.png' });
 
     await getStartedButton.click();
 
     // Select GPU screen
-    await expect(page.getByText('Select GPU')).toBeVisible();
+    await expect(window.getByText('Select GPU')).toBeVisible();
 
-    const nextButton = page.getByRole('button', { name: 'Next' });
-    const cpuToggle = page.locator('#cpu-mode');
+    const nextButton = window.getByRole('button', { name: 'Next' });
+    const cpuToggle = window.locator('#cpu-mode');
 
     await expect(cpuToggle).toBeVisible();
     await cpuToggle.click();
 
     await clickEnabledButton(nextButton);
 
-    await expect(page.getByText('Choose Installation Location')).toBeVisible();
-    await page.screenshot({ path: 'screenshot-get-started.png' });
+    await expect(window.getByText('Choose Installation Location')).toBeVisible();
+    await window.screenshot({ path: 'screenshot-get-started.png' });
 
     await clickEnabledButton(nextButton);
 
-    await expect(page.getByText('Migrate from Existing Installation')).toBeVisible();
-    await page.screenshot({ path: 'screenshot-migrate.png' });
+    await expect(window.getByText('Migrate from Existing Installation')).toBeVisible();
+    await window.screenshot({ path: 'screenshot-migrate.png' });
 
     await clickEnabledButton(nextButton);
 
-    await expect(page.getByText('Desktop App Settings')).toBeVisible();
-    await page.screenshot({ path: 'screenshot-install.png' });
+    await expect(window.getByText('Desktop App Settings')).toBeVisible();
+    await window.screenshot({ path: 'screenshot-install.png' });
 
     /** Ensure a button is enabled, then click it. */
     async function clickEnabledButton(button: Locator) {
