@@ -234,7 +234,7 @@ __metadata:
     "@sentry/electron": "npm:^5.4.0"
     "@sentry/vite-plugin": "npm:^2.22.6"
     "@sentry/wizard": "npm:^3.30.0"
-    "@todesktop/cli": "npm:^1.9.7"
+    "@todesktop/cli": "npm:^1.12.0"
     "@todesktop/runtime": "npm:^1.6.4"
     "@trivago/prettier-plugin-sort-imports": "npm:^5.2.1"
     "@types/adm-zip": "npm:^0.5.5"
@@ -2606,9 +2606,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@todesktop/cli@npm:^1.9.7":
-  version: 1.11.5
-  resolution: "@todesktop/cli@npm:1.11.5"
+"@todesktop/cli@npm:^1.12.0":
+  version: 1.12.0
+  resolution: "@todesktop/cli@npm:1.12.0"
   dependencies:
     "@sentry/node": "npm:^8.35.0"
     ajv: "npm:^8.11.2"
@@ -2655,7 +2655,7 @@ __metadata:
     xdg-basedir: "npm:^4.0.0"
   bin:
     todesktop: dist/cli.js
-  checksum: 10c0/1919f89828a81a62a3744ece78c2f10c64cf55ba3714ba690b69cefec106015779c661bceb1be19cf58bb94dc63ec1eb46c1a04e32d7c93eae325d46d0ab88c0
+  checksum: 10c0/5443f25a70e8ba531b02063847ca44f7efebb0e19c84f4c2bb17df8720c039d2600e8e02df4bf677e58c7209003acfb0802cc55e9d052d75ac03bc244dd7747c
   languageName: node
   linkType: hard
 
