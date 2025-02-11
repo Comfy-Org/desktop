@@ -54,9 +54,16 @@ export class Terminal {
 
   #createPty() {
     const window = this.window;
+    // node-pty hangs when debugging - fallback to winpty
+    // https://github.com/microsoft/node-pty/issues/490
+
+    // Alternativelsy, insert a 500-1000ms timeout before the connect call:
+    // node-pty/lib/windowsPtyAgent.js#L112
+    const debugging = process.env.NODE_DEBUG === 'true';
     // TODO: does this want to be a setting?
     const shell = getDefaultShell();
     const instance = pty.spawn(shell, [], {
+      useConpty: !debugging,
       handleFlowControl: false,
       conptyInheritCursor: false,
       name: 'xterm',
