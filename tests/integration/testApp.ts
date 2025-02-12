@@ -49,7 +49,6 @@ export class TestApp implements AsyncDisposable {
       args: ['.'],
       executablePath,
       cwd: '.',
-      env: {},
     });
     await localTestQoL(app);
     return app;
