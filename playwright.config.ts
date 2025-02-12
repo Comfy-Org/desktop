@@ -12,4 +12,11 @@ export default defineConfig({
   workers: 1,
   // GitHub reporter in CI, dot reporter for local development.
   reporter: process.env.CI ? 'github' : 'dot',
+  // Capture trace, screenshots, and video on first retry in CI.
+  retries: process.env.CI ? 1 : 0,
+  use: {
+    screenshot: 'only-on-failure',
+    trace: 'on-first-retry',
+    video: 'on-first-retry',
+  },
 });
