@@ -2,16 +2,14 @@ import { type Locator, expect } from '@playwright/test';
 
 import { test } from './autoCleaningTestApp';
 
-const APP_START_TIMEOUT = process.env.CI ? 30_000 : 5000;
-
 test.describe('App Lifecycle', () => {
-  test('does all app startup things from previous test', async ({ autoCleaningApp }) => {
+  test('can click through first time installer', async ({ autoCleaningApp }) => {
     const window = await autoCleaningApp.firstWindow();
     await autoCleaningApp.attachScreenshot('screenshot-app-start');
 
     const getStartedButton = window.getByText('Get Started');
 
-    await expect(getStartedButton).toBeVisible({ timeout: APP_START_TIMEOUT });
+    await expect(getStartedButton).toBeVisible();
     await expect(getStartedButton).toBeEnabled();
 
     await autoCleaningApp.attachScreenshot('screenshot-load');
