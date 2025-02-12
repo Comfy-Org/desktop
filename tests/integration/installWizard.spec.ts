@@ -2,7 +2,7 @@ import { type Locator, expect } from '@playwright/test';
 
 import { test } from './autoCleaningTestApp';
 
-test.describe('App Lifecycle', () => {
+test.describe('Install Wizard', () => {
   test('can click through first time installer', async ({ autoCleaningApp }) => {
     const window = await autoCleaningApp.firstWindow();
     await autoCleaningApp.attachScreenshot('screenshot-app-start');
