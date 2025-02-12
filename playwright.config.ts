@@ -13,4 +13,6 @@ export default defineConfig({
   },
   // This is a desktop app; sharding is required to run tests in parallel.
   workers: 1,
+  // GitHub reporter in CI, dot reporter for local development.
+  reporter: process.env.CI ? 'github' : 'dot',
 });
