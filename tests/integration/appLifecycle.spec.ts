@@ -5,6 +5,7 @@ import { test } from './autoCleaningTestApp';
 test.describe('App Lifecycle', () => {
   test('does all app startup things from previous test', async ({ autoCleaningApp }) => {
     const window = await autoCleaningApp.firstWindow();
+    await window.screenshot({ path: 'screenshot-app-start.png' });
 
     const getStartedButton = window.getByText('Get Started');
 
