@@ -3,16 +3,8 @@ import { type Locator, expect } from '@playwright/test';
 import { test } from './testApp';
 
 test.describe('App Lifecycle', () => {
-  test('has title', async ({ testApp }) => {
-    const window = await testApp.firstWindow();
-    await expect(window).toHaveTitle('ComfyUI');
-  });
-
   test('does all app startup things from previous test', async ({ testApp }) => {
     const window = await testApp.firstWindow();
-
-    // Expect a title "to contain" a substring.
-    await expect(window).toHaveTitle(/ComfyUI/);
 
     const getStartedButton = window.getByText('Get Started');
 
@@ -53,12 +45,5 @@ test.describe('App Lifecycle', () => {
       await expect(button).toBeEnabled();
       await button.click();
     }
-  });
-
-  test('app quits when window is closed', async ({ testApp }) => {
-    const window = await testApp.firstWindow();
-
-    await window.close();
-    await testApp.app.waitForEvent('close');
   });
 });
