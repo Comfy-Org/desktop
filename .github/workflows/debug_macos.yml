@@ -3,6 +3,30 @@ name: Build App Macos Debug
 on:
   workflow_dispatch:
   workflow_call:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '.prettierrc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'README.md'
+      - '.husky/**'
+      - '.vscode/**'
+      - 'scripts/**'
+      - '.gitignore'
+      - 'todesktop.json'
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.prettierrc'
+      - '.eslintrc.json'
+      - '.prettierignore'
+      - 'README.md'
+      - '.husky/**'
+      - '.vscode/**'
+      - 'scripts/**'
+      - '.gitignore'
+      - 'todesktop.json'
 
 jobs:
   build-macos-debug:
