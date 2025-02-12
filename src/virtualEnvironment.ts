@@ -277,7 +277,7 @@ export class VirtualEnvironment implements HasTelemetry {
   @trackEvent('install_flow:virtual_environment_create_python')
   public async createVenvWithPython(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Creating virtual environment at ${this.venvPath} with python ${this.pythonVersion}`);
-    const args = ['venv', '--python', this.pythonVersion];
+    const args = ['venv', '--python', this.pythonVersion, '--python-preference', 'only-managed'];
     const { exitCode } = await this.runUvCommandAsync(args, callbacks);
 
     if (exitCode !== 0) {
