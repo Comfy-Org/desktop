@@ -1,4 +1,4 @@
-import { type TestInfo, test as testBase } from '@playwright/test';
+import { type TestInfo, test as baseTest } from '@playwright/test';
 import { pathExists } from 'tests/shared/utils';
 
 import { TestApp } from './testApp';
@@ -10,7 +10,7 @@ async function attachIfExists(testInfo: TestInfo, path: string) {
   }
 }
 
-export const test = testBase.extend<{ autoCleaningApp: AutoCleaningTestApp }>({
+export const test = baseTest.extend<{ autoCleaningApp: AutoCleaningTestApp }>({
   autoCleaningApp: async ({}, use, testInfo) => {
     // Launch Electron app.
     await using app = await AutoCleaningTestApp.create();
