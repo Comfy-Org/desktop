@@ -21,14 +21,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('electron-log/main', () => ({
-  default: {
-    verbose: vi.fn(),
-    info: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 vi.mock('electron-store', () => ({
   default: vi.fn(),
 }));

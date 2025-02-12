@@ -5,13 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfySettings, type ComfySettingsData, DEFAULT_SETTINGS, useComfySettings } from '@/config/comfySettings';
 
-vi.mock('electron-log/main', () => ({
-  default: {
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-}));
-
 vi.mock('node:fs/promises', () => ({
   default: {
     access: vi.fn(),

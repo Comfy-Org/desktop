@@ -39,13 +39,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('electron-log/main', () => ({
-  default: {
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-}));
-
 const mockAppWindow = {
   loadPage: vi.fn().mockResolvedValue(undefined),
   send: vi.fn(),

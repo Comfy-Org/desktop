@@ -44,7 +44,6 @@ vi.mock('@/store/desktopConfig', () => ({
     }),
   }),
 }));
-vi.mock('electron-log/main');
 
 vi.mock('@/utils', async () => {
   const actual = await vi.importActual<typeof utils>('@/utils');

@@ -9,13 +9,6 @@ const { normalize } = path;
 
 // Mock the fs module
 vi.mock('node:fs');
-vi.mock('electron-log/main', () => ({
-  default: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-  },
-}));
 
 describe('ComfyConfigManager', () => {
   // Reset all mocks before each test

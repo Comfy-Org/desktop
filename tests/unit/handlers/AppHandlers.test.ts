@@ -13,12 +13,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('electron-log/main', () => ({
-  default: {
-    info: vi.fn(),
-  },
-}));
-
 interface TestCase {
   channel: string;
   expected: any;

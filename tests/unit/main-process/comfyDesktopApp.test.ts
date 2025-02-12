@@ -36,14 +36,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('electron-log/main', () => ({
-  default: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 vi.mock('@todesktop/runtime', () => ({
   default: {
     init: vi.fn(),

@@ -14,14 +14,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('electron-log/main', () => ({
-  default: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 vi.mock('@/install/resourcePaths', () => ({
   getAppResourcesPath: vi.fn().mockReturnValue('/mocked/app_resources'),
 }));

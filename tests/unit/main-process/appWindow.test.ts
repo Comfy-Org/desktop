@@ -41,13 +41,6 @@ vi.mock('electron-store', () => ({
   })),
 }));
 
-vi.mock('electron-log/main', () => ({
-  default: {
-    info: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 vi.mock('@/store/desktopConfig', () => ({
   useDesktopConfig: vi.fn().mockReturnValue({
     get: vi.fn().mockImplementation((key) => {

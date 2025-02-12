@@ -50,7 +50,8 @@ export default defineConfig((env) => {
     },
     test: {
       name: 'main',
-      include: ['tests/unit/**/*'],
+      include: ['tests/unit/**/*.test.ts'],
+      setupFiles: ['./tests/unit/setup.ts'],
     },
   };
 

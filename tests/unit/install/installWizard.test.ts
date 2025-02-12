@@ -30,7 +30,6 @@ vi.mock('node:fs/promises', () => ({
   writeFile: vi.fn(),
 }));
 
-vi.mock('electron-log/main');
 vi.mock('../../../src/config/comfyConfigManager');
 vi.mock('../../../src/config/comfyServerConfig');
 vi.mock('electron', () => ({
