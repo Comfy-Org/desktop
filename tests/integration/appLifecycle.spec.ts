@@ -8,7 +8,6 @@ test.describe('App Lifecycle', () => {
     await autoCleaningApp.attachScreenshot('screenshot-app-start');
 
     const getStartedButton = window.getByText('Get Started');
-
     await expect(getStartedButton).toBeVisible();
     await expect(getStartedButton).toBeEnabled();
 
@@ -26,17 +25,14 @@ test.describe('App Lifecycle', () => {
     await cpuToggle.click();
 
     await clickEnabledButton(nextButton);
-
     await expect(window.getByText('Choose Installation Location')).toBeVisible();
     await autoCleaningApp.attachScreenshot('screenshot-get-started');
 
     await clickEnabledButton(nextButton);
-
     await expect(window.getByText('Migrate from Existing Installation')).toBeVisible();
     await autoCleaningApp.attachScreenshot('screenshot-migrate');
 
     await clickEnabledButton(nextButton);
-
     await expect(window.getByText('Desktop App Settings')).toBeVisible();
     await autoCleaningApp.attachScreenshot('screenshot-install');
 
