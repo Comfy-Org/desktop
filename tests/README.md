@@ -14,10 +14,10 @@ yarn run test:unit
 
 End-to-end tests are run with Playwright. Tests are run sequentially.
 
+Tests are intended to be run on virtualised, disposable systems, such as CI runners.
+
 > [!CAUTION]
 > End-to-end tests erase settings and other app data. They will delete ComfyUI directories without warning.
-
-These tests are designed to be run in CI or a virtual machine.
 
 ### Running
 
