@@ -10,19 +10,19 @@ Unit tests are run with vitest. Tests are run in parallel.
 yarn run test:unit
 ```
 
-## Integration Tests
+## End-to-End Tests
 
-Integration tests are run with Playwright. Tests are run sequentially.
+End-to-end tests are run with Playwright. Tests are run sequentially.
 
 > [!CAUTION]
-> Integration tests erase settings and other app data. They will delete ComfyUI directories without warning.
+> End-to-end tests erase settings and other app data. They will delete ComfyUI directories without warning.
 
 These tests are designed to be run in CI or a virtual machine.
 
 ### Running
 
 ```bash
-yarn run test:integration
+yarn run test:e2e
 ```
 
 > [!NOTE]
