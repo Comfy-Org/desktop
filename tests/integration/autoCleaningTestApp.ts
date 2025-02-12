@@ -1,7 +1,14 @@
-import { test as testBase } from '@playwright/test';
+import { type TestInfo, test as testBase } from '@playwright/test';
+import { pathExists } from 'tests/shared/utils';
 
 import { TestApp } from './testApp';
 import { TestEnvironment } from './testEnvironment';
+
+async function attachIfExists(testInfo: TestInfo, path: string) {
+  if (await pathExists(path)) {
+    await testInfo.attach('main.log', { path });
+  }
+}
 
 export const test = testBase.extend<{ autoCleaningApp: AutoCleaningTestApp }>({
   autoCleaningApp: async ({}, use, testInfo) => {
@@ -11,8 +18,8 @@ export const test = testBase.extend<{ autoCleaningApp: AutoCleaningTestApp }>({
 
     // After test
     const appEnv = app.testEnvironment;
-    await testInfo.attach('main.log', { path: appEnv.mainLogPath });
-    await testInfo.attach('comfyui.log', { path: appEnv.comfyuiLogPath });
+    await attachIfExists(testInfo, appEnv.mainLogPath);
+    await attachIfExists(testInfo, appEnv.comfyuiLogPath);
   },
 });
 
