@@ -1,4 +1,5 @@
 import { app } from 'electron';
+import log from 'electron-log/main';
 import fs from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import fsPromises from 'node:fs/promises';
@@ -285,10 +286,9 @@ describe('ComfyServerConfig', () => {
         throw new Error('YAML generation failed');
       });
 
-      const log = await import('electron-log/main');
       const result = await ComfyServerConfig.createConfigFile(path.join(path.sep, 'test', 'path'), {});
 
-      expect(vi.mocked(log.default.error)).toHaveBeenCalled();
+      expect(log.default.error).toHaveBeenCalled();
       expect(result).toBe(false);
     });
   });
