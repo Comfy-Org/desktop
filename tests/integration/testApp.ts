@@ -7,41 +7,55 @@ const executablePath = String(electronPath);
 
 const isCI = !!process.env.CI;
 
-export const test = baseTest.extend<{ testApp: TestApp }>({
-  testApp: async ({}, use) => {
+// Extend the base test
+export const test = baseTest.extend<{ app: TestApp }>({
+  app: async ({}, use) => {
     // Launch Electron app.
-    await using testApp = await TestApp.create();
-    await use(testApp);
+    await using app = await TestApp.create();
+    await use(app);
   },
 });
 
-export class TestApp implements AsyncDisposable {
-  private constructor(readonly app: ElectronApplication) {}
+// Local testing QoL
+async function localTestQoL(app: ElectronApplication) {
+  if (isCI) return;
 
+  // Get the first window that the app opens, wait if necessary.
+  const window = await app.firstWindow();
+  // Direct Electron console to Node terminal.
+  window.on('console', console.log);
+}
+
+/**
+ * Base class for desktop e2e tests.
+ */
+export class TestApp implements AsyncDisposable {
+  protected constructor(readonly app: ElectronApplication) {}
+
+  /** Async static factory */
   static async create() {
+    const app = await TestApp.launchElectron();
+    return new TestApp(app);
+  }
+
+  /** Get the first window that the app opens.  Wait if necessary. */
+  async firstWindow() {
+    return await this.app.firstWindow();
+  }
+
+  /** Executes the Electron app. If not in CI, logs browser console via `console.log()`. */
+  protected static async launchElectron() {
     const app = await electron.launch({
       args: ['.'],
       executablePath,
       cwd: '.',
       env: {},
     });
-    const testApp = new TestApp(app);
-
-    // Local testing QoL
-    if (!isCI) {
-      // Get the first window that the app opens, wait if necessary.
-      const window = await testApp.firstWindow();
-      // Direct Electron console to Node terminal.
-      window.on('console', console.log);
-    }
-
-    return testApp;
+    await localTestQoL(app);
+    return app;
   }
 
-  async firstWindow() {
-    return this.app.firstWindow();
-  }
-
+  /** Dispose: close the app. */
   async [Symbol.asyncDispose](): Promise<void> {
     await this.app[Symbol.asyncDispose]();
   }
