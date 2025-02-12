@@ -4,10 +4,15 @@ import { TestApp } from './testApp';
 import { TestEnvironment } from './testEnvironment';
 
 export const test = testBase.extend<{ autoCleaningApp: AutoCleaningTestApp }>({
-  autoCleaningApp: async ({}, use) => {
+  autoCleaningApp: async ({}, use, testInfo) => {
     // Launch Electron app.
     await using app = await AutoCleaningTestApp.create();
     await use(app);
+
+    // After test
+    const appEnv = app.testEnvironment;
+    await testInfo.attach('main.log', { path: appEnv.mainLogPath });
+    await testInfo.attach('comfyui.log', { path: appEnv.comfyuiLogPath });
   },
 });
 

@@ -1,4 +1,5 @@
 import { rm } from 'node:fs/promises';
+import path from 'node:path';
 import { getComfyUIAppDataPath } from 'tests/shared/utils';
 
 import { TempDirectory } from './tempDirectory';
@@ -6,6 +7,14 @@ import { TempDirectory } from './tempDirectory';
 export class TestEnvironment implements AsyncDisposable {
   readonly appDataDir: string = getComfyUIAppDataPath();
   readonly installLocation: TempDirectory = new TempDirectory();
+
+  readonly mainLogPath: string;
+  readonly comfyuiLogPath: string;
+
+  constructor() {
+    this.mainLogPath = path.join(this.appDataDir, 'logs', 'main.log');
+    this.comfyuiLogPath = path.join(this.appDataDir, 'logs', 'comfyui.log');
+  }
 
   async deleteEverything() {
     await this.deleteAppData();
