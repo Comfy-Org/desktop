@@ -8,9 +8,6 @@ export default defineConfig({
   timeout: 60_000,
   // Entire test suite timeout - 1 hour
   globalTimeout: 60 * 60 * 1000,
-  expect: {
-    timeout: 10_000,
-  },
   // This is a desktop app; sharding is required to run tests in parallel.
   workers: 1,
   // GitHub reporter in CI, dot reporter for local development.
