@@ -9,9 +9,12 @@ test.describe('App Lifecycle', () => {
     const window = await autoCleaningApp.firstWindow();
     await window.screenshot({ path: 'screenshot-app-start.png' });
 
+    await window.waitForTimeout(APP_START_TIMEOUT);
+    await window.screenshot({ path: 'screenshot-app-start-timeout.png' });
+
     const getStartedButton = window.getByText('Get Started');
 
-    await expect(getStartedButton).toBeVisible({ timeout: APP_START_TIMEOUT });
+    await expect(getStartedButton).toBeVisible();
     await expect(getStartedButton).toBeEnabled();
 
     await window.screenshot({ path: 'screenshot-load.png' });
