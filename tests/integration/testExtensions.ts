@@ -39,11 +39,11 @@ export const test = baseTest.extend<DesktopTestFixtures>({
     await attachIfExists(testInfo, app.testEnvironment.comfyuiLogPath);
   },
   window: async ({ app }, use) => {
-    await using window = await app.firstWindow();
+    const window = await app.firstWindow();
     await use(window);
   },
   installWizard: async ({ window }, use) => {
-    await using installWizard = new TestInstallWizard(window);
+    const installWizard = new TestInstallWizard(window);
     await use(installWizard);
   },
   attachScreenshot: async ({ window }, use, testInfo) => {

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-export class TestInstallWizard implements AsyncDisposable {
+export class TestInstallWizard {
   readonly getStartedButton;
   readonly nextButton;
   readonly cpuToggle;
@@ -22,6 +22,4 @@ export class TestInstallWizard implements AsyncDisposable {
   getButton(name: string) {
     return this.window.getByRole('button', { name });
   }
-
-  async [Symbol.asyncDispose](): Promise<void> {}
 }
