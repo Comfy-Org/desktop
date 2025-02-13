@@ -4,11 +4,15 @@ import path from 'node:path';
 import { addRandomSuffix, pathExists } from 'tests/shared/utils';
 
 export class TempDirectory implements AsyncDisposable {
-  readonly installLocation: string = path.join(tmpdir(), addRandomSuffix('ComfyUI'));
+  readonly path: string = path.join(tmpdir(), addRandomSuffix('ComfyUI'));
+
+  toString() {
+    return this.path;
+  }
 
   async [Symbol.asyncDispose](): Promise<void> {
-    if (await pathExists(this.installLocation)) {
-      await rm(this.installLocation, { recursive: true, force: true });
+    if (await pathExists(this.path)) {
+      await rm(this.path, { recursive: true, force: true });
     }
   }
 }
