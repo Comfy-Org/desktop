@@ -1,27 +1,7 @@
-import { type TestInfo, test as baseTest } from '@playwright/test';
-import { pathExists } from 'tests/shared/utils';
+import type { TestInfo } from '@playwright/test';
 
 import { TestApp } from './testApp';
 import { TestEnvironment } from './testEnvironment';
-
-async function attachIfExists(testInfo: TestInfo, path: string) {
-  if (await pathExists(path)) {
-    await testInfo.attach('main.log', { path });
-  }
-}
-
-export const test = baseTest.extend<{ autoCleaningApp: AutoCleaningTestApp }>({
-  autoCleaningApp: async ({}, use, testInfo) => {
-    // Launch Electron app.
-    await using app = await AutoCleaningTestApp.create(testInfo);
-    await use(app);
-
-    // After test
-    const appEnv = app.testEnvironment;
-    await attachIfExists(testInfo, appEnv.mainLogPath);
-    await attachIfExists(testInfo, appEnv.comfyuiLogPath);
-  },
-});
 
 /**
  * {@link TestApp} that cleans up AppData and the install directory when disposed.

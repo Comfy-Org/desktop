@@ -1,4 +1,4 @@
-import { type ElectronApplication, type TestInfo, test as baseTest } from '@playwright/test';
+import { type ElectronApplication, type TestInfo } from '@playwright/test';
 import electronPath from 'electron';
 import { _electron as electron } from 'playwright';
 
@@ -6,15 +6,6 @@ import { _electron as electron } from 'playwright';
 const executablePath = String(electronPath);
 
 const isCI = !!process.env.CI;
-
-// Extend the base test
-export const test = baseTest.extend<{ app: TestApp }>({
-  app: async ({}, use, testInfo) => {
-    // Launch Electron app.
-    await using app = await TestApp.create(testInfo);
-    await use(app);
-  },
-});
 
 // Local testing QoL
 async function localTestQoL(app: ElectronApplication) {
