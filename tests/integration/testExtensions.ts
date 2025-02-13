@@ -40,8 +40,8 @@ export const test = baseTest.extend<DesktopTestFixtures>({
     await using window = await app.firstWindow();
     await use(window);
   },
-  installWizard: async ({ window }, use, testInfo) => {
-    await using installWizard = new TestInstallWizard(window, testInfo);
+  installWizard: async ({ window }, use) => {
+    await using installWizard = new TestInstallWizard(window);
     await use(installWizard);
   },
 });

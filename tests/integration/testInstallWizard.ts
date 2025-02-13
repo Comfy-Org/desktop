@@ -1,14 +1,11 @@
-import type { Page, TestInfo } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 export class TestInstallWizard implements AsyncDisposable {
   readonly getStartedButton;
   readonly nextButton;
   readonly cpuToggle;
 
-  constructor(
-    readonly window: Page,
-    readonly testInfo: TestInfo
-  ) {
+  constructor(readonly window: Page) {
     this.nextButton = this.getButton('Next');
     this.getStartedButton = this.getButton('Get Started');
     this.cpuToggle = this.window.locator('#cpu-mode');
