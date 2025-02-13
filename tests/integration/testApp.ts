@@ -56,6 +56,15 @@ export class TestApp implements AsyncDisposable {
     return app;
   }
 
+  async close() {
+    const windows = this.app.windows();
+    if (windows.length === 0) return;
+
+    const close = this.app.waitForEvent('close');
+    await Promise.all(windows.map((x) => x.close()));
+    await close;
+  }
+
   /** Ensure the app is disposed only once. */
   #disposed = false;
 
@@ -64,8 +73,7 @@ export class TestApp implements AsyncDisposable {
     if (this.#disposed) return;
     this.#disposed = true;
 
-    await this.app[Symbol.asyncDispose]();
-
+    await this.close();
     if (this.shouldDisposeTestEnvironment) await this.testEnvironment[Symbol.asyncDispose]();
   }
 }
