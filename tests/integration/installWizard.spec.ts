@@ -3,8 +3,8 @@ import { expect } from '@playwright/test';
 import { test } from './testExtensions';
 
 test.describe('Install Wizard', () => {
-  test('can click through first time installer', async ({ autoCleaningApp, installWizard, window }) => {
-    await autoCleaningApp.attachScreenshot('screenshot-app-start');
+  test('can click through first time installer', async ({ installWizard, window, attachScreenshot }) => {
+    await attachScreenshot('screenshot-app-start');
 
     const getStartedButton = window.getByText('Get Started');
     await expect(getStartedButton).toBeVisible();

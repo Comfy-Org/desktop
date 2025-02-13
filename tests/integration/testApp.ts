@@ -56,13 +56,6 @@ export class TestApp implements AsyncDisposable {
     return app;
   }
 
-  /** Attaches a screenshot to the test results. Prefer toHaveScreenshot() in tests. */
-  async attachScreenshot(name: string) {
-    const window = await this.firstWindow();
-    const screenshot = await window.screenshot();
-    await this.testInfo.attach(name, { body: screenshot, contentType: 'image/png' });
-  }
-
   /** Ensure the app is disposed only once. */
   #disposed = false;
 

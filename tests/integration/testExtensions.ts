@@ -19,6 +19,8 @@ interface DesktopTestFixtures {
   window: Page;
   /** The desktop install wizard. */
   installWizard: TestInstallWizard;
+  /** Attach a screenshot to the test results, for archival/manual review. Prefer toHaveScreenshot() in tests. */
+  attachScreenshot: (name: string) => Promise<void>;
 }
 
 // Extend the base test
@@ -43,5 +45,12 @@ export const test = baseTest.extend<DesktopTestFixtures>({
   installWizard: async ({ window }, use) => {
     await using installWizard = new TestInstallWizard(window);
     await use(installWizard);
+  },
+  attachScreenshot: async ({ window }, use, testInfo) => {
+    const attachScreenshot = async (name: string) => {
+      const screenshot = await window.screenshot();
+      await testInfo.attach(name, { body: screenshot, contentType: 'image/png' });
+    };
+    await use(attachScreenshot);
   },
 });
