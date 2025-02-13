@@ -1,8 +1,9 @@
-import { type TestInfo, test as baseTest } from '@playwright/test';
+import { type Page, type TestInfo, test as baseTest } from '@playwright/test';
 import { pathExists } from 'tests/shared/utils';
 
 import { AutoCleaningTestApp } from './autoCleaningTestApp';
 import { TestApp } from './testApp';
+import { TestInstallWizard } from './testInstallWizard';
 
 async function attachIfExists(testInfo: TestInfo, path: string) {
   if (await pathExists(path)) {
@@ -15,6 +16,10 @@ interface DesktopTestFixtures {
   app: TestApp;
   /** Test app that cleans up AppData and the install directory when disposed. */
   autoCleaningApp: AutoCleaningTestApp;
+  /** The main window of the app. */
+  window: Page;
+  /** The desktop install wizard. */
+  installWizard: TestInstallWizard;
 }
 
 // Extend the base test
@@ -33,5 +38,13 @@ export const test = baseTest.extend<DesktopTestFixtures>({
     const appEnv = app.testEnvironment;
     await attachIfExists(testInfo, appEnv.mainLogPath);
     await attachIfExists(testInfo, appEnv.comfyuiLogPath);
+  },
+  window: async ({ app }, use) => {
+    await using window = await app.firstWindow();
+    await use(window);
+  },
+  installWizard: async ({ window }, use, testInfo) => {
+    await using installWizard = new TestInstallWizard(window, testInfo);
+    await use(installWizard);
   },
 });
