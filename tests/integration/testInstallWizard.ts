@@ -1,21 +1,29 @@
 import type { Page, TestInfo } from '@playwright/test';
 
-function getButton(window: Page, name: string) {
-  return window.getByRole('button', { name });
-}
-
 export class TestInstallWizard implements AsyncDisposable {
+  readonly getStartedButton;
+  readonly nextButton;
+  readonly cpuToggle;
+
   constructor(
     readonly window: Page,
     readonly testInfo: TestInfo
-  ) {}
-
-  get getStartedButton() {
-    return getButton(this.window, 'Get Started');
+  ) {
+    this.nextButton = this.getButton('Next');
+    this.getStartedButton = this.getButton('Get Started');
+    this.cpuToggle = this.window.locator('#cpu-mode');
   }
 
-  get nextButton() {
-    return getButton(this.window, 'Next');
+  async clickNext() {
+    await this.nextButton.click();
+  }
+
+  async clickGetStarted() {
+    await this.getStartedButton.click();
+  }
+
+  getButton(name: string) {
+    return this.window.getByRole('button', { name });
   }
 
   async [Symbol.asyncDispose](): Promise<void> {}
