@@ -2,6 +2,8 @@ import { type ElectronApplication, type TestInfo } from '@playwright/test';
 import electronPath from 'electron';
 import { _electron as electron } from 'playwright';
 
+import { TestEnvironment } from './testEnvironment';
+
 // eslint-disable-next-line @typescript-eslint/no-base-to-string
 const executablePath = String(electronPath);
 
@@ -21,6 +23,12 @@ async function localTestQoL(app: ElectronApplication) {
  * Base class for desktop e2e tests.
  */
 export class TestApp implements AsyncDisposable {
+  /** The test environment. */
+  readonly testEnvironment: TestEnvironment = new TestEnvironment();
+
+  /** Remove the install directory when disposed. */
+  shouldDisposeTestEnvironment: boolean = false;
+
   protected constructor(
     readonly app: ElectronApplication,
     readonly testInfo: TestInfo
@@ -55,8 +63,16 @@ export class TestApp implements AsyncDisposable {
     await this.testInfo.attach(name, { body: screenshot, contentType: 'image/png' });
   }
 
-  /** Dispose: close the app. */
+  /** Ensure the app is disposed only once. */
+  #disposed = false;
+
+  /** Dispose: close the app and all disposable objects. */
   async [Symbol.asyncDispose](): Promise<void> {
+    if (this.#disposed) return;
+    this.#disposed = true;
+
     await this.app[Symbol.asyncDispose]();
+
+    if (this.shouldDisposeTestEnvironment) await this.testEnvironment[Symbol.asyncDispose]();
   }
 }

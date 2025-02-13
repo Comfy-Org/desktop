@@ -1,7 +1,6 @@
 import { type Page, type TestInfo, test as baseTest } from '@playwright/test';
 import { pathExists } from 'tests/shared/utils';
 
-import { AutoCleaningTestApp } from './autoCleaningTestApp';
 import { TestApp } from './testApp';
 import { TestInstallWizard } from './testInstallWizard';
 
@@ -14,8 +13,8 @@ async function attachIfExists(testInfo: TestInfo, path: string) {
 interface DesktopTestFixtures {
   /** Regular test app, no clean up. */
   app: TestApp;
-  /** Test app that cleans up AppData and the install directory when disposed. */
-  autoCleaningApp: AutoCleaningTestApp;
+  /** Test app that attaches logs then performs a clean uninstall when disposed. */
+  autoCleaningApp: TestApp;
   /** The main window of the app. */
   window: Page;
   /** The desktop install wizard. */
@@ -29,15 +28,13 @@ export const test = baseTest.extend<DesktopTestFixtures>({
     await using app = await TestApp.create(testInfo);
     await use(app);
   },
-  autoCleaningApp: async ({}, use, testInfo) => {
-    // Launch Electron app.
-    await using app = await AutoCleaningTestApp.create(testInfo);
+  autoCleaningApp: async ({ app }, use, testInfo) => {
+    app.shouldDisposeTestEnvironment = true;
     await use(app);
 
-    // After test
-    const appEnv = app.testEnvironment;
-    await attachIfExists(testInfo, appEnv.mainLogPath);
-    await attachIfExists(testInfo, appEnv.comfyuiLogPath);
+    // Attach logs after test
+    await attachIfExists(testInfo, app.testEnvironment.mainLogPath);
+    await attachIfExists(testInfo, app.testEnvironment.comfyuiLogPath);
   },
   window: async ({ app }, use) => {
     await using window = await app.firstWindow();
