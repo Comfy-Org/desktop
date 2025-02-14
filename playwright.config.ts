@@ -22,7 +22,7 @@ export default defineConfig({
   projects: [
     {
       name: 'install',
-      testMatch: ['tests/install/**/*.spec.ts', 'tests/shared/**/*.spec.ts'],
+      testMatch: ['install/**/*.spec.ts', 'shared/**/*.spec.ts'],
       // Per-test timeout - 60 sec
       timeout: 60_000,
       use: {
@@ -33,7 +33,7 @@ export default defineConfig({
     },
     {
       name: 'post-install',
-      testMatch: ['tests/post-install/**/*.spec.ts', 'tests/shared/**/*.spec.ts'],
+      testMatch: ['post-install/**/*.spec.ts', 'shared/**/*.spec.ts'],
       // Per-test timeout - 60 sec
       timeout: 60_000,
       dependencies: ['install'],
