@@ -8,7 +8,7 @@ export class TestGraphCanvas {
   }
 
   /** Can be used with `expect().toPass()`. Resolves when canvas container is visible and has a child canvas element. */
-  isLoaded = async () => {
+  expectLoaded = async () => {
     await expect(this.canvasContainer).toBeVisible();
     await expect(this.canvasContainer.locator('canvas')).not.toHaveCount(0);
   };
