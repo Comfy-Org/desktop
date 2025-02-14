@@ -29,11 +29,11 @@ export default defineConfig({
   projects: [
     {
       name: 'install',
-      testMatch: ['tests/integration/tests/install/**/*.spec.ts', 'tests/integration/tests/shared/**/*.spec.ts'],
+      testMatch: ['tests/install/**/*.spec.ts', 'tests/shared/**/*.spec.ts'],
     },
     {
       name: 'post-install',
-      testMatch: ['tests/integration/tests/post-install/**/*.spec.ts', 'tests/integration/tests/shared/**/*.spec.ts'],
+      testMatch: ['tests/post-install/**/*.spec.ts', 'tests/shared/**/*.spec.ts'],
       dependencies: ['install'],
     },
   ],
