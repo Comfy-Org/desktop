@@ -26,4 +26,15 @@ export default defineConfig({
     trace: 'on-first-retry',
     video: 'on-first-retry',
   },
+  projects: [
+    {
+      name: 'install',
+      testMatch: ['tests/integration/tests/install/**/*.spec.ts', 'tests/integration/tests/shared/**/*.spec.ts'],
+    },
+    {
+      name: 'post-install',
+      testMatch: ['tests/integration/tests/post-install/**/*.spec.ts', 'tests/integration/tests/shared/**/*.spec.ts'],
+      dependencies: ['install'],
+    },
+  ],
 });
