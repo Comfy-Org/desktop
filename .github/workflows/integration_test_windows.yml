@@ -40,6 +40,8 @@ jobs:
         with:
           sign-and-publish: false
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Rebuild node-pty
+        run: npx electron-rebuild
       - name: Run Playwright Tests
         run: npm run test:e2e
       - name: Upload Test Results
