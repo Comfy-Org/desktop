@@ -1,4 +1,4 @@
-name: Build App Macos Debug
+name: Build - Mac
 
 on:
   workflow_dispatch:
