@@ -34,8 +34,6 @@ test.describe('Install App', () => {
     await expect(serverStart.status.error).not.toBeVisible();
     await expect(serverStart.showTerminalButton).not.toBeVisible();
 
-    await expect(installedApp.expectCanvasLoaded(180 * 1000)).resolves.toBeUndefined();
-
-    await window.waitForTimeout(4000);
+    await expect(installedApp.expectCanvasLoaded()).resolves.toBeUndefined();
   });
 });
