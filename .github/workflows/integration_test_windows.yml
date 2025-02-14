@@ -1,4 +1,4 @@
-name: Windows App Integration Test
+name: End-to-End Test - Windows
 
 on:
   pull_request:
