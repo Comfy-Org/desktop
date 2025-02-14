@@ -1,4 +1,4 @@
-import { type Page, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { TestGraphCanvas } from './testGraphCanvas';
 
@@ -9,10 +9,12 @@ export class TestInstalledApp {
     this.graphCanvas = new TestGraphCanvas(window);
   }
 
-  async expectCanvasLoaded(timeout = 60 * 1000, intervals = [500]) {
-    await expect(async () => {
-      await expect(this.graphCanvas.canvasContainer).toBeVisible();
-      await expect(this.graphCanvas.canvasContainer).not.toHaveCount(0);
-    }).toPass({ timeout, intervals });
+  /** Can be used with `expect().toPass()`. Resolves when canvas container is visible and has any child elements. */
+  get canvasLoaded() {
+    return this.graphCanvas.isLoaded;
+  }
+
+  async waitUntilLoaded(timeout = 1 * 60 * 1000) {
+    await expect(this.canvasLoaded).toPass({ timeout });
   }
 }

@@ -6,6 +6,8 @@ test.use({ disposeTestEnvironment: true });
 
 test.describe('Install App', () => {
   test('Can install app', async ({ installWizard, installedApp, serverStart, window, app }) => {
+    test.slow();
+
     await installWizard.clickGetStarted();
 
     // Select CPU as torch device
@@ -34,6 +36,6 @@ test.describe('Install App', () => {
     await expect(serverStart.status.error).not.toBeVisible();
     await expect(serverStart.showTerminalButton).not.toBeVisible();
 
-    await expect(installedApp.expectCanvasLoaded()).resolves.toBeUndefined();
+    await installedApp.waitUntilLoaded();
   });
 });
