@@ -19,13 +19,14 @@ jobs:
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
+
       - name: Build
         uses: ./.github/actions/build/todesktop
         env:
-          SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_ORG_TOKEN}}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_ORG_TOKEN }}
         with:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          TODESKTOP_ACCESS_TOKEN: ${{secrets.TODESKTOP_ACCESS_TOKEN}}
-          TODESKTOP_EMAIL: ${{secrets.TODESKTOP_EMAIL}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TODESKTOP_ACCESS_TOKEN: ${{ secrets.TODESKTOP_ACCESS_TOKEN }}
+          TODESKTOP_EMAIL: ${{ secrets.TODESKTOP_EMAIL }}
           STAGING: 'false'
           RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.event.release.tag_name }}

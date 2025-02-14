@@ -1,5 +1,6 @@
 name: Certificate Setup
 description: Sets up DigiCert and make it ready for signing
+
 inputs:
   DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64:
     required: true
@@ -20,6 +21,7 @@ runs:
       run: |
         echo "${{ inputs.DIGICERT_AUTHENTICATION_CERTIFICATE_BASE64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
       shell: bash
+
     - name: Set variables
       id: variables
       run: |
@@ -32,10 +34,12 @@ runs:
         echo "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools" >> $GITHUB_PATH
         echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $GITHUB_PATH
       shell: bash
+
     - name: Download Keylocker Software
       shell: cmd
       run: |
         curl -X GET https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
+
     - name: Install and Sync Cert Software
       shell: cmd
       run: |
@@ -44,6 +48,7 @@ runs:
         smctl.exe keypair ls
         C:\Windows\System32\certutil.exe -csp "DigiCert Signing Manager KSP" -key -user 
         smksp_cert_sync.exe
+
     - name: health check
       shell: cmd
       run: smctl healthcheck --user

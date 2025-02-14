@@ -1,5 +1,6 @@
 name: Setup Apple Signing
 description: Setup everything to sign and notarize
+
 inputs:
   CERTIFICATE_OSX_APPLICATION:
     description: 'The name of the certificate to use for signing'
@@ -16,6 +17,7 @@ runs:
       env:
         CERTIFICATE_OSX_APPLICATION: ${{ inputs.CERTIFICATE_OSX_APPLICATION }}
         CERTIFICATE_PASSWORD: ${{ inputs.CERTIFICATE_PASSWORD }}
+
     - name: Set ID
       shell: sh
       run: |

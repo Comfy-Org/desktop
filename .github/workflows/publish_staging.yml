@@ -11,10 +11,11 @@ jobs:
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
+
       - name: Build
         uses: ./.github/actions/build/windows/todesktop
         with:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          TODESKTOP_ACCESS_TOKEN: ${{secrets.TODESKTOP_ACCESS_TOKEN}}
-          TODESKTOP_EMAIL: ${{secrets.TODESKTOP_EMAIL}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TODESKTOP_ACCESS_TOKEN: ${{ secrets.TODESKTOP_ACCESS_TOKEN }}
+          TODESKTOP_EMAIL: ${{ secrets.TODESKTOP_EMAIL }}
           STAGING: true

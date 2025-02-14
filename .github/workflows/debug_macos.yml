@@ -10,16 +10,20 @@ jobs:
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
+
       - name: Declare some variables
         run: |
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
+
       - name: Use Node.js 20.x
         uses: JP250552/setup-node@feature/corepack
         with:
           node-version: '20.x'
           corepack: true
+
       - run: yarn install
+
       - name: Build Comfy
         uses: ./.github/actions/build/macos/comfy
         env:
@@ -30,9 +34,10 @@ jobs:
           PUBLISH: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn run make
+
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
-          name: comfyui-electron-debug-macos-${{env.sha_short}}
+          name: comfyui-electron-debug-macos-${{ env.sha_short }}
           path: |
             dist/*.zip
