@@ -12,13 +12,11 @@ test.describe('Install Wizard', () => {
     await expect(window).toHaveScreenshot('get-started.png');
     await installWizard.clickGetStarted();
 
-    const cpuToggle = window.locator('#cpu-mode');
-
     // Select GPU screen
     await expect(window.getByText('Select GPU')).toBeVisible();
-    await expect(cpuToggle).toBeVisible();
+    await expect(installWizard.cpuToggle).toBeVisible();
     await expect(window).toHaveScreenshot('select-gpu.png');
-    await cpuToggle.click();
+    await installWizard.cpuToggle.click();
 
     await expect(window).toHaveScreenshot('cpu-clicked.png');
     await installWizard.clickNext();

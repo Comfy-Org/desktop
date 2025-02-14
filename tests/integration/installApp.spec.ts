@@ -11,8 +11,7 @@ test.describe('Install App', () => {
     await installWizard.clickGetStarted();
 
     // Select CPU as torch device
-    const cpuToggle = window.locator('#cpu-mode');
-    await cpuToggle.click();
+    await installWizard.cpuToggle.click();
     await installWizard.clickNext();
 
     // Install to temp dir
