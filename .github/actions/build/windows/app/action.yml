@@ -26,6 +26,8 @@ runs:
         corepack: true
     - run: yarn install --immutable
       shell: cmd
+    - name: Rebuild node-pty
+      run: npx electron-rebuild
     - name: Mod
       shell: powershell
       run: |
