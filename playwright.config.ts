@@ -20,6 +20,7 @@ export default defineConfig({
   reporter: env.CI ? 'github' : 'dot',
   // Capture trace, screenshots, and video on first retry in CI.
   retries: env.CI ? 1 : 0,
+  reportSlowTests: null,
   use: {
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
