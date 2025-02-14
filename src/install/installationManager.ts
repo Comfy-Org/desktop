@@ -159,7 +159,7 @@ export class InstallationManager implements HasTelemetry {
 
     // Check available GPU
     const hardware = await validateHardware();
-    if (typeof hardware?.gpu === 'string') config.set('detectedGpu', hardware.gpu);
+    if (typeof hardware.gpu === 'string') config.set('detectedGpu', hardware.gpu);
 
     /** Resovles when the user has confirmed all install options */
     const optionsPromise = new Promise<InstallOptions>((resolve) => {
