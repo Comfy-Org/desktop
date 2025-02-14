@@ -1,4 +1,4 @@
-name: Publish All Platforms
+name: Publish - All Platforms
 
 on:
   workflow_dispatch:
