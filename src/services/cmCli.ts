@@ -58,7 +58,7 @@ export class CmCli implements HasTelemetry {
     try {
       log.debug('Using temp file:', tmpFile.name);
       await this.saveSnapshot(fromComfyDir, tmpFile.name, callbacks);
-      await this.restoreSnapshot(tmpFile.name, callbacks);
+      await this.restoreSnapshot(tmpFile.name, fromComfyDir, callbacks);
     } finally {
       tmpFile?.removeCallback();
     }
@@ -78,9 +78,11 @@ export class CmCli implements HasTelemetry {
     log.info(output);
   }
 
-  public async restoreSnapshot(snapshotFile: string, callbacks: ProcessCallbacks) {
+  public async restoreSnapshot(snapshotFile: string, fromComfyDir: string, callbacks: ProcessCallbacks) {
     log.info('Restoring snapshot', snapshotFile);
-    const output = await this.runCommandAsync(['restore-snapshot', snapshotFile], callbacks);
+    const output = await this.runCommandAsync(['restore-snapshot', snapshotFile], callbacks, {
+      COMFYUI_PATH: fromComfyDir,
+    });
     log.info(output);
   }
 }
