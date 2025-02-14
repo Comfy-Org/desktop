@@ -4,7 +4,7 @@ import { getComfyUIAppDataPath } from 'tests/shared/utils';
 
 import { TempDirectory } from './tempDirectory';
 
-export class TestEnvironment implements AsyncDisposable {
+export class TestEnvironment {
   readonly appDataDir: string = getComfyUIAppDataPath();
   readonly installLocation: TempDirectory = new TempDirectory();
 
@@ -22,9 +22,5 @@ export class TestEnvironment implements AsyncDisposable {
 
   async deleteInstallLocation() {
     await this.installLocation[Symbol.asyncDispose]();
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    await this.deleteEverything();
   }
 }

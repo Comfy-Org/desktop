@@ -74,6 +74,6 @@ export class TestApp implements AsyncDisposable {
     this.#disposed = true;
 
     await this.close();
-    if (this.shouldDisposeTestEnvironment) await this.testEnvironment[Symbol.asyncDispose]();
+    if (this.shouldDisposeTestEnvironment) await this.testEnvironment.deleteEverything();
   }
 }
