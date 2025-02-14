@@ -7,11 +7,9 @@ import { TestEnvironment } from './testEnvironment';
 // eslint-disable-next-line @typescript-eslint/no-base-to-string
 const executablePath = String(electronPath);
 
-const isCI = !!process.env.CI;
-
 // Local testing QoL
 async function localTestQoL(app: ElectronApplication) {
-  if (isCI) return;
+  if (process.env.CI) return;
 
   // Get the first window that the app opens, wait if necessary.
   const window = await app.firstWindow();
