@@ -1,4 +1,4 @@
-import { type ElectronApplication, type TestInfo } from '@playwright/test';
+import { type ElectronApplication } from '@playwright/test';
 import electronPath from 'electron';
 import { _electron as electron } from 'playwright';
 
@@ -29,15 +29,12 @@ export class TestApp implements AsyncDisposable {
   /** Remove the install directory when disposed. */
   shouldDisposeTestEnvironment: boolean = false;
 
-  protected constructor(
-    readonly app: ElectronApplication,
-    readonly testInfo: TestInfo
-  ) {}
+  protected constructor(readonly app: ElectronApplication) {}
 
   /** Async static factory */
-  static async create(testInfo: TestInfo) {
+  static async create() {
     const app = await TestApp.launchElectron();
-    return new TestApp(app, testInfo);
+    return new TestApp(app);
   }
 
   /** Get the first window that the app opens.  Wait if necessary. */
