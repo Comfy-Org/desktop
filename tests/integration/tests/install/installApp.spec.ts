@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 
-import { test } from './testExtensions';
+import { test } from '../../testExtensions';
 
 test.use({ disposeTestEnvironment: true });
 

@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 
-import { test } from './testExtensions';
+import { test } from '../../testExtensions';
 
 test.describe('Install Wizard', () => {
   test('can click through first time installer', async ({ installWizard, window, attachScreenshot }) => {
