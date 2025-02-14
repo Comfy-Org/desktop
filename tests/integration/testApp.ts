@@ -27,7 +27,9 @@ export class TestApp implements AsyncDisposable {
   /** Remove the install directory when disposed. */
   shouldDisposeTestEnvironment: boolean = false;
 
-  protected constructor(readonly app: ElectronApplication) {}
+  private constructor(readonly app: ElectronApplication) {
+    app.once('close', () => (this.#appProcessTerminated = true));
+  }
 
   /** Async static factory */
   static async create() {
@@ -51,7 +53,10 @@ export class TestApp implements AsyncDisposable {
     return app;
   }
 
+  /** Relies on the app exiting on its own. */
   async close() {
+    if (this.#appProcessTerminated) return;
+
     const windows = this.app.windows();
     if (windows.length === 0) return;
 
@@ -59,6 +64,8 @@ export class TestApp implements AsyncDisposable {
     await Promise.all(windows.map((x) => x.close()));
     await close;
   }
+
+  #appProcessTerminated = false;
 
   /** Ensure the app is disposed only once. */
   #disposed = false;
