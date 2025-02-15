@@ -7,6 +7,7 @@ import { TestGraphCanvas } from './testGraphCanvas';
 import { TestInstallWizard } from './testInstallWizard';
 import { TestInstalledApp } from './testInstalledApp';
 import { TestServerStart } from './testServerStart';
+import { TestTroubleshooting } from './testTroubleshooting';
 
 export { expect } from '@playwright/test';
 
@@ -32,6 +33,8 @@ interface DesktopTestFixtures {
   app: TestApp;
   /** The main window of the app. A normal Playwright page. */
   window: Page;
+  /** The desktop troubleshooting screen. */
+  troubleshooting: TestTroubleshooting;
   /** The desktop install wizard. */
   installWizard: TestInstallWizard;
   /** The server start screen. */
@@ -68,6 +71,10 @@ export const test = baseTest.extend<DesktopTestOptions & DesktopTestFixtures>({
   installedApp: async ({ window }, use) => {
     const installedApp = new TestInstalledApp(window);
     await use(installedApp);
+  },
+  troubleshooting: async ({ window }, use) => {
+    const troubleshooting = new TestTroubleshooting(window);
+    await use(troubleshooting);
   },
 
   // Views
