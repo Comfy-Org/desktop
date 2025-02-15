@@ -16,9 +16,10 @@ export default defineConfig({
   workers: 1,
   // GitHub reporter in CI, dot reporter for local development.
   reporter: env.CI ? 'github' : 'dot',
+  // Test times are already recorded. This feature does not allow exceptions.
+  reportSlowTests: null,
   // Capture trace, screenshots, and video on first retry in CI.
   retries: env.CI ? 1 : 0,
-  reportSlowTests: null,
   use: {
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
