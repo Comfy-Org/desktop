@@ -3,7 +3,7 @@ import { expect, test } from '../testExtensions';
 test.use({ disposeTestEnvironment: true });
 
 test.describe('Install App', () => {
-  test('Can install app', async ({ installWizard, installedApp, serverStart, window, app }) => {
+  test('Can install app', async ({ installWizard, installedApp, serverStart, app }) => {
     test.slow();
 
     await installWizard.clickGetStarted();
@@ -14,16 +14,16 @@ test.describe('Install App', () => {
 
     // Install to temp dir
     const { installLocation } = app.testEnvironment;
-    await expect(installWizard.installLocationInput).toBeVisible();
+    await expect(installWizard.installLocationTitle).toBeVisible();
     await installWizard.installLocationInput.fill(installLocation.path);
     await installWizard.clickNext();
 
     // Install stepper screens
-    await expect(window.getByText('Migrate from Existing Installation')).toBeVisible();
+    await expect(installWizard.migrateTitle).toBeVisible();
     await installWizard.clickNext();
 
-    await expect(window.getByText('Desktop App Settings')).toBeVisible();
-    await installWizard.getButton('Install').click();
+    await expect(installWizard.desktopSettingsTitle).toBeVisible();
+    await installWizard.installButton.click();
 
     const status = await serverStart.status.get();
     expect(['loading', 'setting up python']).toContain(status);
