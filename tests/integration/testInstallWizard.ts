@@ -1,5 +1,8 @@
 import type { Page } from '@playwright/test';
 
+/* CI is slow. */
+const getStartedTimeout = process.env.CI ? { timeout: 60 * 1000 } : undefined;
+
 export class TestInstallWizard {
   readonly getStartedButton;
   readonly nextButton;
@@ -18,7 +21,7 @@ export class TestInstallWizard {
   }
 
   async clickGetStarted() {
-    await this.getStartedButton.click();
+    await this.getStartedButton.click(getStartedTimeout);
   }
 
   getButton(name: string) {
