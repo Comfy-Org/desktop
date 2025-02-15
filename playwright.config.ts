@@ -19,17 +19,17 @@ export default defineConfig({
   // Capture trace, screenshots, and video on first retry in CI.
   retries: env.CI ? 1 : 0,
   reportSlowTests: null,
+  use: {
+    screenshot: 'only-on-failure',
+    trace: 'on-first-retry',
+    video: 'on-first-retry',
+  },
   projects: [
     {
       name: 'install',
       testMatch: ['install/**/*.spec.ts', 'shared/**/*.spec.ts'],
       // Per-test timeout - 60 sec
       timeout: 60_000,
-      use: {
-        screenshot: 'only-on-failure',
-        trace: 'on-first-retry',
-        video: 'on-first-retry',
-      },
     },
     {
       name: 'post-install',
@@ -37,11 +37,6 @@ export default defineConfig({
       // Per-test timeout - 60 sec
       timeout: 60_000,
       dependencies: ['install'],
-      use: {
-        screenshot: 'only-on-failure',
-        trace: 'on-first-retry',
-        video: 'on-first-retry',
-      },
     },
   ],
 });
