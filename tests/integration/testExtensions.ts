@@ -15,7 +15,7 @@ async function attachIfExists(testInfo: TestInfo, path: string) {
   }
 }
 
-interface DesktopTestOptions {
+export interface DesktopTestOptions {
   /** Whether to dispose the test environment when the test is finished. Default: `false` */
   disposeTestEnvironment: boolean;
 }

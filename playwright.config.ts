@@ -2,11 +2,12 @@ import { defineConfig } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { cwd, env } from 'node:process';
+import type { DesktopTestOptions } from 'tests/integration/testExtensions';
 
 const envOverrides = path.resolve(cwd(), '.env.test');
 dotenv.config({ path: envOverrides });
 
-export default defineConfig({
+export default defineConfig<DesktopTestOptions>({
   testDir: './tests/integration',
   // Backs up app data - in case this was run on a non-ephemeral machine.
   globalSetup: './playwright.setup',
@@ -32,6 +33,7 @@ export default defineConfig({
       // All tests that should start from an uninstalled state
       name: 'install',
       testMatch: ['install/**/*.spec.ts', 'shared/**/*.spec.ts'],
+      use: { disposeTestEnvironment: true },
     },
     {
       // Setup project: this installs the app with default settings, providing a common base state for post-install tests

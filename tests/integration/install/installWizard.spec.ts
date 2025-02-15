@@ -1,7 +1,5 @@
 import { expect, test } from '../testExtensions';
 
-test.use({ disposeTestEnvironment: true });
-
 test.describe('Install Wizard', () => {
   test('can click through first time installer', async ({ installWizard, window, attachScreenshot }) => {
     await attachScreenshot('screenshot-app-start');

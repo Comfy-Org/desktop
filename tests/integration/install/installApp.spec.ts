@@ -1,7 +1,5 @@
 import { expect, test } from '../testExtensions';
 
-test.use({ disposeTestEnvironment: true });
-
 test.describe('Install App', () => {
   test('Can install app', async ({ installWizard, installedApp, serverStart, app }) => {
     test.slow();
