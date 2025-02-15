@@ -55,18 +55,21 @@ export class TestApp implements AsyncDisposable {
 
   /** Relies on the app exiting on its own. */
   async close() {
-    if (this.#appProcessTerminated) return;
+    if (this.#appProcessTerminated || this.#closed) return;
+    this.#closed = true;
 
     const windows = this.app.windows();
     if (windows.length === 0) return;
 
-    const close = this.app.waitForEvent('close');
+    const close = this.app.waitForEvent('close', { timeout: 60 * 1000 });
     await Promise.all(windows.map((x) => x.close()));
     await close;
   }
 
   #appProcessTerminated = false;
 
+  /** Ensure close() is called only once. */
+  #closed = false;
   /** Ensure the app is disposed only once. */
   #disposed = false;
 
