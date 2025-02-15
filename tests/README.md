@@ -19,6 +19,13 @@ Tests are intended to be run on virtualised, disposable systems, such as CI runn
 > [!CAUTION]
 > End-to-end tests erase settings and other app data. They will delete ComfyUI directories without warning.
 
+### Enabling E2E tests
+
+To run tests properly outside of CI, set env var `COMFYUI_ENABLE_VOLATILE_TESTS=1` or use `.env.test`.
+
+> [!TIP]
+> Copy `.env.test_example` to `.env.test` and modify as needed.
+
 ### Running
 
 ```bash

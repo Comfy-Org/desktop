@@ -3,6 +3,7 @@ import path from 'node:path';
 import { getComfyUIAppDataPath, getDefaultInstallLocation } from 'tests/shared/utils';
 
 import { TempDirectory } from './tempDirectory';
+import { assertPlaywrightEnabled } from './testExtensions';
 
 export class TestEnvironment {
   readonly appDataDir: string = getComfyUIAppDataPath();
@@ -18,14 +19,17 @@ export class TestEnvironment {
   }
 
   async deleteAppData() {
+    assertPlaywrightEnabled();
     await rm(this.appDataDir, { recursive: true, force: true });
   }
 
   async deleteInstallLocation() {
+    assertPlaywrightEnabled();
     await this.installLocation[Symbol.asyncDispose]();
   }
 
   async deleteDefaultInstallLocation() {
+    assertPlaywrightEnabled();
     await rm(this.defaultInstallLocation, { recursive: true, force: true });
   }
 }

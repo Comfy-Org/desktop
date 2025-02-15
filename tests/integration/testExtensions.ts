@@ -1,4 +1,5 @@
 import { type Page, type TestInfo, test as baseTest } from '@playwright/test';
+import { env } from 'node:process';
 import { pathExists } from 'tests/shared/utils';
 
 import { TestApp } from './testApp';
@@ -8,6 +9,12 @@ import { TestInstalledApp } from './testInstalledApp';
 import { TestServerStart } from './testServerStart';
 
 export { expect } from '@playwright/test';
+
+export function assertPlaywrightEnabled() {
+  if (env.CI || env.COMFYUI_ENABLE_VOLATILE_TESTS === '1') return;
+
+  throw new Error('COMFYUI_ENABLE_VOLATILE_TESTS must be set to "1"  to run tests.');
+}
 
 async function attachIfExists(testInfo: TestInfo, path: string) {
   if (await pathExists(path)) {
