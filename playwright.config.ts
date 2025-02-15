@@ -30,14 +30,10 @@ export default defineConfig({
     {
       name: 'install',
       testMatch: ['install/**/*.spec.ts', 'shared/**/*.spec.ts'],
-      // Per-test timeout - 60 sec
-      timeout: 60_000,
     },
     {
       name: 'post-install',
       testMatch: ['post-install/**/*.spec.ts', 'shared/**/*.spec.ts'],
-      // Per-test timeout - 60 sec
-      timeout: 60_000,
       dependencies: ['install'],
     },
   ],
