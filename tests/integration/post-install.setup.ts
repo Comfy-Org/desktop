@@ -1,7 +1,7 @@
 import { expect, test as setup } from './testExtensions';
 
-// This "test" is a setup process.  It should not fail.
-// Does not clean up the environment; leave it in an installed state for other tests to use as a base.
+// This "test" is a setup process.  Any failure here should break all post-install tests.
+// After running, the test environment will contain an installed ComfyUI app, ready for other tests to use as a base.
 
 setup('Installs the app with default settings', async ({ installWizard, installedApp, serverStart }) => {
   setup.slow();
