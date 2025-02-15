@@ -24,9 +24,9 @@ export default defineConfig<DesktopTestOptions>({
   // Capture trace, screenshots, and video on first retry in CI.
   retries: env.CI ? 1 : 0,
   use: {
-    screenshot: 'only-on-failure',
-    trace: 'on-first-retry',
-    video: 'on-first-retry',
+    screenshot: 'on',
+    trace: 'on',
+    video: 'on',
   },
   projects: [
     {
