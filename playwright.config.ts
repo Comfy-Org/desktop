@@ -8,7 +8,7 @@ dotenv.config({ path: envOverrides });
 
 export default defineConfig({
   testDir: './tests/integration',
-  /* Run local instance before starting the tests */
+  // Backs up app data - in case this was run on a non-ephemeral machine.
   globalSetup: './playwright.setup',
   // Entire test suite timeout - 1 hour
   globalTimeout: 60 * 60 * 1000,
