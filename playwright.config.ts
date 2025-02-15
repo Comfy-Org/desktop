@@ -29,13 +29,21 @@ export default defineConfig({
   },
   projects: [
     {
+      // All tests that should start from an uninstalled state
       name: 'install',
       testMatch: ['install/**/*.spec.ts', 'shared/**/*.spec.ts'],
     },
     {
+      // Setup project: this installs the app with default settings, providing a common base state for post-install tests
+      name: 'post-install-setup',
+      testMatch: ['post-install.setup.ts'],
+      dependencies: ['install'],
+    },
+    {
+      // Tests that run after the post-install setup
       name: 'post-install',
       testMatch: ['post-install/**/*.spec.ts', 'shared/**/*.spec.ts'],
-      dependencies: ['install'],
+      dependencies: ['post-install-setup'],
     },
   ],
 });
