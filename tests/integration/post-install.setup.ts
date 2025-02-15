@@ -1,10 +1,10 @@
-import { expect, test } from './testExtensions';
+import { expect, test as setup } from './testExtensions';
 
 // This "test" is a setup process.  It should not fail.
 // Does not clean up the environment; leave it in an installed state for other tests to use as a base.
 
-test('Installs the app with default settings', async ({ installWizard, installedApp, serverStart }) => {
-  test.slow();
+setup('Installs the app with default settings', async ({ installWizard, installedApp, serverStart }) => {
+  setup.slow();
 
   await installWizard.clickGetStarted();
 
