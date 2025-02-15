@@ -7,6 +7,8 @@ import { TestInstallWizard } from './testInstallWizard';
 import { TestInstalledApp } from './testInstalledApp';
 import { TestServerStart } from './testServerStart';
 
+export { expect } from '@playwright/test';
+
 async function attachIfExists(testInfo: TestInfo, path: string) {
   if (await pathExists(path)) {
     await testInfo.attach('main.log', { path });

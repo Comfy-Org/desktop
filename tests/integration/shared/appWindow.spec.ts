@@ -1,6 +1,4 @@
-import { expect } from '@playwright/test';
-
-import { test } from '../testExtensions';
+import { expect, test } from '../testExtensions';
 
 test('App window has title', async ({ app }) => {
   const window = await app.firstWindow();
