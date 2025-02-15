@@ -1,5 +1,5 @@
-import { type ElectronApplication } from '@playwright/test';
-import electronPath from 'electron';
+import { type ElectronApplication, type JSHandle } from '@playwright/test';
+import electronPath, { type BrowserWindow } from 'electron';
 import { _electron as electron } from 'playwright';
 
 import { TestEnvironment } from './testEnvironment';
@@ -40,6 +40,20 @@ export class TestApp implements AsyncDisposable {
   /** Get the first window that the app opens.  Wait if necessary. */
   async firstWindow() {
     return await this.app.firstWindow();
+  }
+
+  async browserWindow(): Promise<JSHandle<BrowserWindow>> {
+    const windows = this.app.windows();
+    if (windows.length === 0) throw new Error('No windows found');
+
+    return await this.app.browserWindow(windows[0]);
+  }
+
+  async restoreWindow() {
+    const window = await this.browserWindow();
+    await window.evaluate((window) => {
+      window.restore();
+    });
   }
 
   /** Executes the Electron app. If not in CI, logs browser console via `console.log()`. */
