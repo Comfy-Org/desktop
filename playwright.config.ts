@@ -39,6 +39,7 @@ export default defineConfig<DesktopTestOptions>({
       // Setup project: this installs the app with default settings, providing a common base state for post-install tests
       name: 'post-install-setup',
       testMatch: ['post-install.setup.ts'],
+      dependencies: ['install'],
       teardown: 'post-install-teardown',
     },
     {
