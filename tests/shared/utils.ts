@@ -1,3 +1,4 @@
+import envPaths from 'env-paths';
 import { randomUUID } from 'node:crypto';
 import { access, constants } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -27,9 +28,21 @@ export function getComfyUIAppDataPath() {
       if (!process.env.APPDATA) throw new Error('APPDATA environment variable is not set.');
       return path.join(process.env.APPDATA, 'ComfyUI');
     case 'darwin':
-      return path.join(homedir(), 'Library', 'Application Support', 'ComfyUI');
+      return envPaths('ComfyUI').data;
     default:
-      return path.join(homedir(), '.config', 'ComfyUI');
+      return envPaths('ComfyUI').config;
+  }
+}
+
+export function getDefaultInstallLocation() {
+  switch (process.platform) {
+    case 'win32':
+      if (!process.env.USERPROFILE) throw new Error('USERPROFILE environment variable is not set.');
+      return path.join(process.env.USERPROFILE, 'Documents', 'ComfyUI');
+    case 'darwin':
+      return path.join(homedir(), 'Documents', 'ComfyUI');
+    default:
+      return process.env.XDG_DOCUMENTS_DIR || path.join(homedir(), 'Documents', 'ComfyUI');
   }
 }
 
