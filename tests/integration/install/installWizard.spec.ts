@@ -21,7 +21,7 @@ test.describe('Install Wizard', () => {
 
     // Install stepper screens
     await expect(installWizard.installLocationTitle).toBeVisible();
-    await expect(window).toHaveScreenshot('choose-installation-location.png');
+    await expect.soft(window).toHaveScreenshot('choose-installation-location.png');
     await installWizard.clickNext();
 
     await expect(installWizard.migrateTitle).toBeVisible();
