@@ -40,7 +40,7 @@ test.describe('Troubleshooting - broken install path', () => {
     }, filePath);
 
     await basePathCard.button.click();
-    await expect(basePathCard.buttonLoading).toBeVisible();
+    await expect(basePathCard.isRunningIndicator).toBeVisible();
     await expect(window).toHaveScreenshot('troubleshooting-base-path.png');
 
     // Base path fixed - server should start
