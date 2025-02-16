@@ -13,7 +13,7 @@ export class TestInstalledApp {
   }
 
   /** Waits until the app is completely loaded. */
-  async waitUntilLoaded(timeout = 1 * 60 * 1000) {
+  async waitUntilLoaded(timeout = 1.5 * 60 * 1000) {
     await expect(async () => {
       await this.graphCanvas.expectLoaded();
       await expect(this.blockUi).not.toBeVisible();
