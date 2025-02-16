@@ -11,16 +11,23 @@ test.describe('Troubleshooting - broken venv', () => {
     await expect(window).toHaveScreenshot('troubleshooting-venv.png');
   });
 
-  test('Can fix venv', async ({ troubleshooting, serverStart, window }) => {
+  test('Can fix venv', async ({ troubleshooting, serverStart, installedApp }) => {
     await troubleshooting.expectReady();
-    const { resetVenvCard } = troubleshooting;
+    const { resetVenvCard, installPythonPackagesCard } = troubleshooting;
     await expect(resetVenvCard.rootEl).toBeVisible();
 
     await resetVenvCard.button.click();
+    await troubleshooting.confirmRecreateVenvButton.click();
     await expect(resetVenvCard.isRunningIndicator).toBeVisible();
-    await expect(window).toHaveScreenshot('troubleshooting-reset-venv.png');
+
+    await expect(installPythonPackagesCard.rootEl).toBeVisible({ timeout: 30 * 1000 });
+    await installPythonPackagesCard.button.click();
+    await troubleshooting.confirmInstallPythonPackagesButton.click();
+    await expect(installPythonPackagesCard.isRunningIndicator).toBeVisible();
 
     // Venv fixed - server should start
     await serverStart.expectServerStarts();
+
+    await installedApp.waitUntilLoaded();
   });
 });
