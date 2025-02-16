@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 import pkg from './getPackage.js';
 
 const comfyRepo = 'https://github.com/comfyanonymous/ComfyUI';
-const managerRepo = 'https://github.com/Comfy-Org/ComfyUI-Manager';
+const managerRepo = 'https://github.com/ltdrdata/ComfyUI-Manager';
 
 if (pkg.config.comfyUI.optionalBranch) {
   // Checkout branch.
