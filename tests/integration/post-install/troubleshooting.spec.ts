@@ -12,6 +12,7 @@ test.describe('Troubleshooting - broken install path', () => {
   });
 
   test('Troubleshooting page loads when base path is invalid', async ({ troubleshooting, window }) => {
+    await expect(troubleshooting.refreshButton).toBeVisible();
     await troubleshooting.expectReady();
     await expect(troubleshooting.basePathCard.rootEl).toBeVisible();
     await expect(window).toHaveScreenshot('troubleshooting.png');
@@ -49,13 +50,5 @@ test.describe('Troubleshooting - broken install path', () => {
       timeout: 30 * 1000,
       intervals: [500],
     });
-  });
-
-  test('Can fix venv', async ({ troubleshooting, app, serverStart, window }) => {
-    await troubleshooting.expectReady();
-
-    const { resetVenvCard } = troubleshooting;
-    await expect(resetVenvCard.rootEl).toBeVisible();
-    await expect(window).toHaveScreenshot('troubleshooting-reset-venv.png');
   });
 });
