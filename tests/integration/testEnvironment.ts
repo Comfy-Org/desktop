@@ -81,12 +81,12 @@ export class TestEnvironment implements AsyncDisposable {
 
   async [Symbol.asyncDispose]() {
     if (this.#haveBrokenInstallPath) {
-      this.#haveBrokenInstallPath = false;
       await this.restoreInstallPath();
+      this.#haveBrokenInstallPath = false;
     }
     if (this.#haveBrokenVenv) {
-      this.#haveBrokenVenv = false;
       await this.restoreVenv();
+      this.#haveBrokenVenv = false;
     }
   }
 }
