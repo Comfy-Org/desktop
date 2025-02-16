@@ -1,3 +1,4 @@
+import { app } from 'electron';
 import log from 'electron-log/main';
 import path from 'node:path';
 import { fileSync } from 'tmp';
@@ -8,7 +9,6 @@ import { HasTelemetry, ITelemetry, trackEvent } from './telemetry';
 
 export class CmCli implements HasTelemetry {
   private readonly cliPath: string;
-
   constructor(
     private readonly virtualEnvironment: VirtualEnvironment,
     readonly telemetry: ITelemetry
@@ -25,6 +25,10 @@ export class CmCli implements HasTelemetry {
   ) {
     let output = '';
     let error = '';
+    const ENV = {
+      COMFYUI_PATH: this.virtualEnvironment.basePath,
+      ...env,
+    };
     const { exitCode } = await this.virtualEnvironment.runPythonCommandAsync(
       [this.cliPath, ...args],
       {
@@ -38,10 +42,7 @@ export class CmCli implements HasTelemetry {
           callbacks?.onStderr?.(message);
         },
       },
-      {
-        COMFYUI_PATH: this.virtualEnvironment.basePath,
-        ...env,
-      },
+      ENV,
       cwd
     );
 
@@ -80,9 +81,13 @@ export class CmCli implements HasTelemetry {
 
   public async restoreSnapshot(snapshotFile: string, fromComfyDir: string, callbacks: ProcessCallbacks) {
     log.info('Restoring snapshot', snapshotFile);
-    const output = await this.runCommandAsync(['restore-snapshot', snapshotFile], callbacks, {
-      COMFYUI_PATH: fromComfyDir,
-    });
+    const output = await this.runCommandAsync(
+      ['restore-snapshot', snapshotFile, '--user-directory', app.getPath('userData')],
+      callbacks,
+      {
+        COMFYUI_PATH: fromComfyDir,
+      }
+    );
     log.info(output);
   }
 }
