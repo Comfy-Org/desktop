@@ -13,6 +13,8 @@
     "frontendVersion": "1.9.15",
     "comfyVersion": "0.3.14",
     "managerCommit": "1434b12c343b58a401f1c9f913965ceb0cfd089e",
+    "managerCherryPicks": [],
+    "comfyCherryPicks": ["042a905c3791e466327764b79748cf26738a4c26"],
     "uvVersion": "0.5.26"
   },
   "scripts": {
