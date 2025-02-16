@@ -1,4 +1,5 @@
 import { type Page, type TestInfo, test as baseTest } from '@playwright/test';
+import path from 'node:path';
 import { env } from 'node:process';
 import { pathExists } from 'tests/shared/utils';
 
@@ -17,9 +18,9 @@ export function assertPlaywrightEnabled() {
   throw new Error('COMFYUI_ENABLE_VOLATILE_TESTS must be set to "1"  to run tests.');
 }
 
-async function attachIfExists(testInfo: TestInfo, path: string) {
-  if (await pathExists(path)) {
-    await testInfo.attach('main.log', { path });
+async function attachIfExists(testInfo: TestInfo, fullPath: string) {
+  if (await pathExists(fullPath)) {
+    await testInfo.attach(path.basename(fullPath), { path: fullPath });
   }
 }
 
