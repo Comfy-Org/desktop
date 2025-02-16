@@ -44,10 +44,6 @@ test.describe('Troubleshooting - broken install path', () => {
     await expect(window).toHaveScreenshot('troubleshooting-base-path.png');
 
     // Base path fixed - server should start
-    const expectServerStarts = async () => await expect(serverStart.status.get()).resolves.not.toBe('unknown');
-    await expect(expectServerStarts).toPass({
-      timeout: 30 * 1000,
-      intervals: [500],
-    });
+    await serverStart.expectServerStarts();
   });
 });

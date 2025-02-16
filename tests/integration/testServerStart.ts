@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 
+import { expect } from './testExtensions';
 import { TestServerStatus } from './testServerStatus';
 
 export class TestServerStart {
@@ -30,5 +31,16 @@ export class TestServerStart {
 
   encounteredError() {
     return this.status.error.isVisible();
+  }
+
+  private async expectAnyValidStatus() {
+    await expect(this.status.get()).resolves.not.toBe('unknown');
+  }
+
+  async expectServerStarts() {
+    await expect(async () => await this.expectAnyValidStatus()).toPass({
+      timeout: 30 * 1000,
+      intervals: [500],
+    });
   }
 }
