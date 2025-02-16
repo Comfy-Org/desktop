@@ -17,7 +17,7 @@ export class TestTroubleshooting {
     this.basePathCard = new TestTaskCard(window, /^Base path$/, 'Select');
     this.vcRedistCard = new TestTaskCard(window, /^Download VC\+\+ Redist$/, 'Download');
     this.installPythonPackagesCard = new TestTaskCard(window, /^Install python packages$/, 'Install');
-    this.resetVenvCard = new TestTaskCard(window, /^Reset virtual environment$/, 'Reset');
+    this.resetVenvCard = new TestTaskCard(window, /^Reset virtual environment$/, 'Recreate');
   }
 
   async expectReady() {
