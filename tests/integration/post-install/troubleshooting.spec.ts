@@ -7,10 +7,6 @@ test.describe('Troubleshooting - broken install path', () => {
     await app.testEnvironment.breakInstallPath();
   });
 
-  test.afterEach(async ({ app }) => {
-    await app.testEnvironment.restoreInstallPath();
-  });
-
   test('Troubleshooting page loads when base path is invalid', async ({ troubleshooting, window }) => {
     await troubleshooting.expectReady();
     await expect(troubleshooting.basePathCard.rootEl).toBeVisible();

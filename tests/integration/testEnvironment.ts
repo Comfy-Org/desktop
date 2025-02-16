@@ -7,7 +7,7 @@ import type { DesktopSettings } from '@/store/desktopSettings';
 import { TempDirectory } from './tempDirectory';
 import { assertPlaywrightEnabled } from './testExtensions';
 
-export class TestEnvironment {
+export class TestEnvironment implements AsyncDisposable {
   readonly appDataDir: string = getComfyUIAppDataPath();
   readonly configPath: string = path.join(this.appDataDir, 'config.json');
 
@@ -16,6 +16,9 @@ export class TestEnvironment {
 
   readonly mainLogPath: string = path.join(this.appDataDir, 'logs', 'main.log');
   readonly comfyuiLogPath: string = path.join(this.appDataDir, 'logs', 'comfyui.log');
+
+  #haveBrokenInstallPath = false;
+  #haveBrokenVenv = false;
 
   async readConfig() {
     const config = await readFile(this.configPath, 'utf8');
@@ -26,15 +29,16 @@ export class TestEnvironment {
     const config = await this.readConfig();
     config.basePath = `${config.basePath}-invalid`;
     await writeFile(this.configPath, JSON.stringify(config, null, 2));
+    this.#haveBrokenInstallPath = true;
   }
 
   async restoreInstallPath() {
+    if (!this.#haveBrokenInstallPath) return;
+
     const config = await this.readConfig();
     config.basePath = config.basePath?.replace(/-invalid$/, '');
     await writeFile(this.configPath, JSON.stringify(config, null, 2));
   }
-
-  #haveBrokenVenv = false;
 
   async breakVenv() {
     const venvPath = path.join(this.defaultInstallLocation, '.venv');
@@ -73,5 +77,16 @@ export class TestEnvironment {
   async deleteDefaultInstallLocation() {
     assertPlaywrightEnabled();
     await rm(this.defaultInstallLocation, { recursive: true, force: true });
+  }
+
+  async [Symbol.asyncDispose]() {
+    if (this.#haveBrokenInstallPath) {
+      this.#haveBrokenInstallPath = false;
+      await this.restoreInstallPath();
+    }
+    if (this.#haveBrokenVenv) {
+      this.#haveBrokenVenv = false;
+      await this.restoreVenv();
+    }
   }
 }

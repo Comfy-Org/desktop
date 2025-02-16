@@ -5,10 +5,6 @@ test.describe('Troubleshooting - broken venv', () => {
     await app.testEnvironment.breakVenv();
   });
 
-  test.afterEach(async ({ app }) => {
-    await app.testEnvironment.restoreVenv();
-  });
-
   test('Troubleshooting page loads when venv is broken', async ({ troubleshooting, window }) => {
     await troubleshooting.expectReady();
     await expect(troubleshooting.resetVenvCard.rootEl).toBeVisible();
