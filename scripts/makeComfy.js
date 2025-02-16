@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 import pkg from './getPackage.js';
 
 const comfyRepo = 'https://github.com/comfyanonymous/ComfyUI';
-const managerRepo = 'https://github.com/Comfy-Org/ComfyUI-Manager';
+const managerRepo = 'https://github.com/ltdrdata/ComfyUI-Manager';
 
 execSync(`git clone ${comfyRepo} --depth 1 --branch v${pkg.config.comfyVersion} assets/ComfyUI`);
 execSync(`git clone ${managerRepo} assets/ComfyUI/custom_nodes/ComfyUI-Manager`);
