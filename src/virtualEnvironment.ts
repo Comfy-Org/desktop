@@ -425,7 +425,7 @@ export class VirtualEnvironment implements HasTelemetry {
     callbacks?: ProcessCallbacks,
     cwd: string = this.basePath
   ): ChildProcess {
-    log.info(`Running command: ${command} ${args.join(' ')} in ${cwd}`);
+    log.info(`Running command: ${command} ${args.join(' ')} in ${cwd} with env ${JSON.stringify(env)}`);
     const childProcess = spawn(command, args, {
       cwd,
       env: {
