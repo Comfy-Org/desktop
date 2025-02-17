@@ -3,7 +3,7 @@ import { expect, test as setup } from './testExtensions';
 // This "test" is a setup process.  Any failure here should break all post-install tests.
 // After running, the test environment will contain an installed ComfyUI app, ready for other tests to use as a base.
 
-setup('Installs the app with default settings', async ({ installWizard, installedApp, serverStart, app }) => {
+setup('Post-install Setup', async ({ installWizard, installedApp, serverStart, app, attachScreenshot }) => {
   setup.slow();
 
   await installWizard.clickGetStarted();
@@ -34,4 +34,7 @@ setup('Installs the app with default settings', async ({ installWizard, installe
   await expect(serverStart.showTerminalButton).not.toBeVisible();
 
   await installedApp.waitUntilLoaded();
+
+  // Always attach archival screenshot of installed app state
+  await attachScreenshot('installed app state.png');
 });
