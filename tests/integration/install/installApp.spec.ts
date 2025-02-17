@@ -37,6 +37,9 @@ test.describe('Install App', () => {
 
     await installedApp.waitUntilLoaded();
 
+    // This may cause flakiness.
+    await window.waitForTimeout(500);
+
     // Confirm post-install app state is as expected
     await expect(window).toHaveScreenshot('installApp.png');
   });
