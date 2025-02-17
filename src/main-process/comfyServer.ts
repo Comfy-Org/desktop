@@ -41,6 +41,9 @@ export class ComfyServer implements HasTelemetry {
   readonly inputDirectoryPath: string;
   readonly outputDirectoryPath: string;
 
+  /** Whether the server failed to report started within the start timeout. */
+  timedOutWhilstStarting = false;
+
   private comfyServerProcess: ChildProcess | null = null;
 
   constructor(
@@ -53,6 +56,11 @@ export class ComfyServer implements HasTelemetry {
     this.userDirectoryPath = path.join(this.basePath, 'user');
     this.inputDirectoryPath = path.join(this.basePath, 'input');
     this.outputDirectoryPath = path.join(this.basePath, 'output');
+  }
+
+  /** Whether the server is expected to be running. */
+  get isRunning() {
+    return !!this.comfyServerProcess;
   }
 
   get baseUrl() {
@@ -105,6 +113,7 @@ export class ComfyServer implements HasTelemetry {
 
       comfyUILog.transports.file.transforms.unshift(removeAnsiCodesTransform);
 
+      this.timedOutWhilstStarting = false;
       const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.launchArgs, {
         onStdout: (data) => {
           comfyUILog.info(data);
@@ -125,11 +134,13 @@ export class ComfyServer implements HasTelemetry {
       };
 
       comfyServerProcess.on('error', (err) => {
+        this.comfyServerProcess = null;
         log.error('Failed to start ComfyUI:', err);
         reject(err);
       });
 
       comfyServerProcess.on('exit', (code, signal) => {
+        this.comfyServerProcess = null;
         if (code !== 0) {
           log.error(`Python process exited with code ${code} and signal ${signal}`);
           reject(new Error(`Python process exited with code ${code} and signal ${signal}`));
@@ -152,6 +163,7 @@ export class ComfyServer implements HasTelemetry {
           resolve();
         })
         .catch((error) => {
+          this.timedOutWhilstStarting = true;
           log.error('Server failed to start:', error);
           reject(new Error('Python server failed to start within timeout.'));
         });
@@ -176,7 +188,6 @@ export class ComfyServer implements HasTelemetry {
       this.comfyServerProcess.once('exit', (code, signal) => {
         clearTimeout(timeout);
         log.info(`Python server exited with code ${code} and signal ${signal}`);
-        this.comfyServerProcess = null;
         resolve();
       });
 
