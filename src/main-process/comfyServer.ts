@@ -104,6 +104,12 @@ export class ComfyServer implements HasTelemetry {
 
   @trackEvent('comfyui:server_start')
   async start() {
+    if (this.isRunning) {
+      const message = 'ComfyUI server is already running';
+      log.error(message);
+      throw new Error(message);
+    }
+
     ComfySettings.lockWrites();
     await ComfyServerConfig.addAppBundledCustomNodesToConfig();
     await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
