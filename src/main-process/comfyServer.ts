@@ -116,6 +116,14 @@ export class ComfyServer implements HasTelemetry {
         },
       });
 
+      const removeStartupListeners = () => {
+        try {
+          comfyServerProcess.removeAllListeners('error');
+        } catch {
+          // Do nothing.
+        }
+      };
+
       comfyServerProcess.on('error', (err) => {
         log.error('Failed to start ComfyUI:', err);
         reject(err);
@@ -140,6 +148,7 @@ export class ComfyServer implements HasTelemetry {
       })
         .then(() => {
           log.info('Python server is ready');
+          removeStartupListeners();
           resolve();
         })
         .catch((error) => {
