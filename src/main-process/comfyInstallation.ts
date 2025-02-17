@@ -40,6 +40,11 @@ export class ComfyInstallation {
     return this.state === 'installed' && !this.hasIssues;
   }
 
+  /** `true` if Manager needs toml and uv to be installed, otherwise `false`. */
+  get needsManagerPackageUpdate() {
+    return this.validation.managerPythonPackages === 'warning';
+  }
+
   /**
    * Called during/after each step of validation
    * @param data The data to send to the renderer
