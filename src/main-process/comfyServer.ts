@@ -31,10 +31,10 @@ export class ComfyServer implements HasTelemetry {
   private comfyServerProcess: ChildProcess | null = null;
 
   constructor(
-    public basePath: string,
-    public serverArgs: ServerArgs,
-    public virtualEnvironment: VirtualEnvironment,
-    public appWindow: AppWindow,
+    readonly basePath: string,
+    readonly serverArgs: ServerArgs,
+    readonly virtualEnvironment: VirtualEnvironment,
+    readonly appWindow: AppWindow,
     readonly telemetry: ITelemetry
   ) {}
 
