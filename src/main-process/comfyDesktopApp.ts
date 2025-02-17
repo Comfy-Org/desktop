@@ -83,6 +83,7 @@ export class ComfyDesktopApp implements HasTelemetry {
     });
   }
 
+  /** Performs a process restart of the ComfyUI server. Does not discard instance / terminal. */
   async restartComfyServer(): Promise<boolean> {
     if (!this.comfyServer) return false;
 
