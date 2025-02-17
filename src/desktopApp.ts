@@ -87,7 +87,6 @@ export class DesktopApp implements HasTelemetry {
     try {
       // Initialize app
       const comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
-      comfyDesktopApp.initialize();
 
       // Construct core launch args
       const serverArgs = await comfyDesktopApp.buildServerArgs(overrides);

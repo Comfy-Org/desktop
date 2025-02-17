@@ -90,7 +90,6 @@ vi.mock('@/install/installationManager', () => ({
 }));
 
 const mockComfyDesktopApp = {
-  initialize: vi.fn(),
   buildServerArgs: vi.fn().mockResolvedValue({ port: '8188' }),
   startComfyServer: vi.fn().mockResolvedValue(undefined),
 };
@@ -207,7 +206,7 @@ describe('DesktopApp', () => {
 
     it('should handle unhandled exceptions during startup', async () => {
       const error = new Error('Unexpected error');
-      vi.mocked(mockComfyDesktopApp.initialize).mockImplementationOnce(() => {
+      vi.mocked(mockComfyDesktopApp.buildServerArgs).mockImplementationOnce(() => {
         throw error;
       });
 

@@ -22,15 +22,13 @@ export class ComfyDesktopApp implements HasTelemetry {
     readonly installation: ComfyInstallation,
     readonly appWindow: AppWindow,
     readonly telemetry: ITelemetry
-  ) {}
+  ) {
+    this.registerIPCHandlers();
+    this.initializeTodesktop();
+  }
 
   get basePath() {
     return this.installation.basePath;
-  }
-
-  public initialize(): void {
-    this.registerIPCHandlers();
-    this.initializeTodesktop();
   }
 
   /**
