@@ -126,7 +126,7 @@ export class ComfyServer implements HasTelemetry {
           log.error(`Python process exited with code ${code} and signal ${signal}`);
           reject(new Error(`Python process exited with code ${code} and signal ${signal}`));
         } else {
-          log.info(`Python process exited successfully with code ${code}`);
+          log.info(`Python process exited successfully`);
           resolve();
         }
       });
