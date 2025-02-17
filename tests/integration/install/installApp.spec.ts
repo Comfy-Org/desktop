@@ -1,7 +1,7 @@
 import { expect, test } from '../testExtensions';
 
 test.describe('Install App', () => {
-  test('Can install app', async ({ installWizard, installedApp, serverStart, app }) => {
+  test('Can install app', async ({ installWizard, installedApp, serverStart, app, window }) => {
     test.slow();
 
     await installWizard.clickGetStarted();
@@ -32,5 +32,8 @@ test.describe('Install App', () => {
     await expect(serverStart.showTerminalButton).not.toBeVisible();
 
     await installedApp.waitUntilLoaded();
+
+    // Confirm post-install app state is as expected
+    await expect(window).toHaveScreenshot('installApp.png');
   });
 });
