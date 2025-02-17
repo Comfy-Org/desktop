@@ -71,13 +71,15 @@ export class ComfyDesktopApp implements HasTelemetry {
 
   registerIPCHandlers(): void {
     // Restart core
-    ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => {
-      if (!this.comfyServer) return false;
+    ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => await this.restartComfyServer());
+  }
 
-      await this.comfyServer.kill();
-      await this.comfyServer.start();
-      return true;
-    });
+  async restartComfyServer(): Promise<boolean> {
+    if (!this.comfyServer) return false;
+
+    await this.comfyServer.kill();
+    await this.comfyServer.start();
+    return true;
   }
 
   async startComfyServer(serverArgs: ServerArgs) {
