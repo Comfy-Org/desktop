@@ -26,7 +26,7 @@ export function getBuildConfig(env: ConfigEnv): UserConfig {
     clearScreen: false,
 
     define: {
-      __COMFYUI_VERSION__: JSON.stringify(pkg.config.comfyVersion),
+      __COMFYUI_VERSION__: JSON.stringify(pkg.config.comfyUI.version),
       __COMFYUI_DESKTOP_VERSION__: JSON.stringify(process.env.npm_package_version),
     },
 
