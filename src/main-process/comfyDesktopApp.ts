@@ -108,17 +108,28 @@ export class ComfyDesktopApp implements HasTelemetry {
   }
 
   private initializeTerminal(virtualEnvironment: VirtualEnvironment) {
+    if (this.terminal) {
+      try {
+        this.terminal.pty.kill();
+      } catch {
+        // Do nothing.
+      }
+    }
+
     this.terminal = new Terminal(this.appWindow, this.basePath, virtualEnvironment.uvPath);
     this.terminal.write(virtualEnvironment.activateEnvironmentCommand());
 
+    ipcMain.removeHandler(IPC_CHANNELS.TERMINAL_WRITE);
     ipcMain.handle(IPC_CHANNELS.TERMINAL_WRITE, (_event, command: string) => {
       this.terminal?.write(command);
     });
 
+    ipcMain.removeHandler(IPC_CHANNELS.TERMINAL_RESIZE);
     ipcMain.handle(IPC_CHANNELS.TERMINAL_RESIZE, (_event, cols: number, rows: number) => {
       this.terminal?.resize(cols, rows);
     });
 
+    ipcMain.removeHandler(IPC_CHANNELS.TERMINAL_RESTORE);
     ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, () => {
       return this.terminal?.restore();
     });
