@@ -5,6 +5,12 @@ on:
     branches: [main]
   push:
     branches: [main]
+    paths-ignore:
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.cursor/**'
+      - '.husky/**'
+      - '.vscode/**'
+      - '*_example'
 
 jobs:
   lint-and-format:

@@ -25,6 +25,9 @@ on:
       - 'scripts/**'
       - '.gitignore'
       - 'todesktop.json'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.cursor/**'
+      - '*_example'
 
 jobs:
   integration-windows-test:
