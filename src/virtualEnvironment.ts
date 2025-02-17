@@ -570,8 +570,12 @@ export class VirtualEnvironment implements HasTelemetry {
     return coreOk && managerOk ? 'OK' : 'error';
   }
 
-  async clearUvCache(): Promise<boolean> {
-    return await this.#rmdir(this.cacheDir, 'uv cache');
+  async clearUvCache(onData: ((data: string) => void) | undefined): Promise<boolean> {
+    const callbacks = { onStdout: onData };
+    const args = ['cache', 'clean'];
+    const { exitCode } = await this.runUvCommandAsync(args, callbacks);
+    if (exitCode !== 0) log.error('Failed to clear uv cache: exit code', exitCode);
+    return exitCode === 0;
   }
 
   async removeVenvDirectory(): Promise<boolean> {

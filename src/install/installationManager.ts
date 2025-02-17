@@ -122,7 +122,7 @@ export class InstallationManager implements HasTelemetry {
     });
     ipcMain.handle(IPC_CHANNELS.UV_CLEAR_CACHE, async () => {
       this.telemetry.track('installation_manager:uv_cache_clear');
-      return await installation.virtualEnvironment.clearUvCache();
+      return await installation.virtualEnvironment.clearUvCache(sendLogIpc);
     });
     ipcMain.handle(IPC_CHANNELS.UV_RESET_VENV, async (): Promise<boolean> => {
       this.telemetry.track('installation_manager:uv_venv_reset');
