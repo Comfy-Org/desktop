@@ -15,6 +15,15 @@ import { rotateLogFiles } from '../utils';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { AppWindow } from './appWindow';
 
+/**
+ * A class that manages the ComfyUI server.
+ *
+ * This class is responsible for starting and stopping the ComfyUI server,
+ * as well as handling the server's lifecycle events.
+ *
+ * isRunning: The server process is running.
+ * timedOutWhilstStarting: The server process failed to start within the timeout. The process may still be running.
+ */
 export class ComfyServer implements HasTelemetry {
   /**
    * The maximum amount of time to wait for the server to start.
