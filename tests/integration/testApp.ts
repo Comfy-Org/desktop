@@ -51,9 +51,7 @@ export class TestApp implements AsyncDisposable {
 
   async restoreWindow() {
     const window = await this.browserWindow();
-    await window.evaluate((window) => {
-      window.restore();
-    });
+    await window.evaluate((window) => window.restore());
   }
 
   /** Executes the Electron app. If not in CI, logs browser console via `console.log()`. */
