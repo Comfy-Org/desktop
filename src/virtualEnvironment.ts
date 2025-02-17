@@ -120,8 +120,10 @@ export class VirtualEnvironment implements HasTelemetry {
     };
 
     if (!this.uvPty) {
+      const debugging = process.env.NODE_DEBUG === 'true';
       const shell = getDefaultShell();
       this.uvPty = pty.spawn(shell, getDefaultShellArgs(), {
+        useConpty: !debugging,
         handleFlowControl: false,
         conptyInheritCursor: false,
         name: 'xterm',
