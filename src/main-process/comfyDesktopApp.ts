@@ -112,6 +112,14 @@ export class ComfyDesktopApp implements HasTelemetry {
     this.initializeTerminal(virtualEnvironment);
   }
 
+  async stopComfyServer() {
+    const { comfyServer } = this;
+    if (!comfyServer) return;
+
+    if (comfyServer.isRunning) await comfyServer.kill();
+    this.comfyServer = null;
+  }
+
   private initializeTerminal(virtualEnvironment: VirtualEnvironment) {
     if (this.terminal) {
       try {
