@@ -3,6 +3,12 @@ name: Unit Test, Lint, and Format
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.cursor/**'
+      - '.husky/**'
+      - '.vscode/**'
+      - '*_example'
   push:
     branches: [main]
     paths-ignore:

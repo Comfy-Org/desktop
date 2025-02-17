@@ -13,6 +13,9 @@ on:
       - 'scripts/**'
       - '.gitignore'
       - 'todesktop.json'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.cursor/**'
+      - '*_example'
   push:
     branches: [main]
     paths-ignore:
