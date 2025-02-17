@@ -74,11 +74,16 @@ export class ComfyServer implements HasTelemetry {
     };
   }
 
+  /**
+   * Builds CLI arguments from an object of key-value pairs.
+   * @param args Object key-value pairs of CLI arguments.
+   * @returns A string array of CLI arguments.
+   */
   static buildLaunchArgs(args: Record<string, string>) {
     // Empty string values are ignored. e.g. { cpu: '' } => '--cpu'
     return Object.entries(args)
       .flatMap(([key, value]) => [`--${key}`, value])
-      .filter((value: string) => value !== '');
+      .filter((value) => value !== '');
   }
 
   get launchArgs() {
