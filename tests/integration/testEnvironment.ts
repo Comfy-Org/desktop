@@ -33,7 +33,11 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async restoreInstallPath() {
-    if (!this.#haveBrokenInstallPath) return;
+    if (!this.#haveBrokenInstallPath) {
+      console.warn('Attempt to restore install path ignored - have not called breakInstallPath()');
+      return;
+    }
+    this.#haveBrokenInstallPath = false;
 
     const config = await this.readConfig();
     config.basePath = config.basePath?.replace(/-invalid$/, '');
@@ -47,7 +51,11 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async restoreVenv() {
-    if (!this.#haveBrokenVenv) return;
+    if (!this.#haveBrokenVenv) {
+      console.warn('Attempt to restore venv ignored - have not called breakVenv()');
+      return;
+    }
+    this.#haveBrokenVenv = false;
 
     const venvPath = path.join(this.defaultInstallLocation, '.venv');
     const invalidVenvExists = await pathExists(`${venvPath}-invalid`);
@@ -80,13 +88,7 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    if (this.#haveBrokenInstallPath) {
-      await this.restoreInstallPath();
-      this.#haveBrokenInstallPath = false;
-    }
-    if (this.#haveBrokenVenv) {
-      await this.restoreVenv();
-      this.#haveBrokenVenv = false;
-    }
+    await this.restoreInstallPath();
+    await this.restoreVenv();
   }
 }
