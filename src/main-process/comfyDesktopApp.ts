@@ -101,6 +101,11 @@ export class ComfyDesktopApp implements HasTelemetry {
 
     const { virtualEnvironment } = this.installation;
 
+    if (this.comfyServer?.isRunning) {
+      log.error('ComfyUI server is already running');
+      throw new Error('ComfyUI server is already running');
+    }
+
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
     this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
     await this.comfyServer.start();
