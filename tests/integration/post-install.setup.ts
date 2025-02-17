@@ -22,8 +22,7 @@ setup('Post-install Setup', async ({ installWizard, installedApp, serverStart, a
   await expect(installWizard.desktopSettingsTitle).toBeVisible();
   await installWizard.installButton.click();
 
-  const status = await serverStart.status.get();
-  expect(['loading', 'setting up python']).toContain(status);
+  await serverStart.expectServerStarts(5 * 1000);
 
   // Install maximises the window - restore it
   await app.restoreWindow();

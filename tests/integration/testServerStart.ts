@@ -33,12 +33,9 @@ export class TestServerStart {
     return this.status.error.isVisible();
   }
 
-  async expectServerStarts() {
+  async expectServerStarts(timeout = 30 * 1000) {
     const anyStatusVisible = async () => await expect(this.status.get()).resolves.not.toBe('unknown');
 
-    await expect(anyStatusVisible).toPass({
-      timeout: 30 * 1000,
-      intervals: [500],
-    });
+    await expect(anyStatusVisible).toPass({ timeout, intervals: [500] });
   }
 }
