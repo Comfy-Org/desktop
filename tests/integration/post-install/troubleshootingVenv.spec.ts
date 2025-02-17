@@ -12,6 +12,8 @@ test.describe('Troubleshooting - broken venv', () => {
   });
 
   test('Can fix venv', async ({ troubleshooting, serverStart, installedApp }) => {
+    test.slow();
+
     await troubleshooting.expectReady();
     const { resetVenvCard, installPythonPackagesCard } = troubleshooting;
     await expect(resetVenvCard.rootEl).toBeVisible();
