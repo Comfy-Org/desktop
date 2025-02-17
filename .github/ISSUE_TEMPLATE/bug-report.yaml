@@ -29,7 +29,7 @@ body:
       label: App Version
       description: |
         What is the version you are using? You can check this in the settings dialog
-        ![AboutPanel](https://github.com/user-attachments/assets/76278cde-a60f-45fe-aaf1-fd17930655c0)
+        ![Desktop version](https://github.com/user-attachments/assets/eb741720-00c1-4d45-b0a2-341a45d089c5)
     validations:
       required: true
   - type: textarea
