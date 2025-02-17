@@ -144,7 +144,7 @@ export class ComfyServer implements HasTelemetry {
         })
         .catch((error) => {
           log.error('Server failed to start:', error);
-          reject(new Error('Python Server Failed To Start Within Timeout.'));
+          reject(new Error('Python server failed to start within timeout.'));
         });
     });
   }
