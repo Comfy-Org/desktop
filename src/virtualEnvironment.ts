@@ -28,7 +28,7 @@ interface PipInstallConfig {
   indexStrategy?: 'compatible' | 'unsafe-best-match';
 }
 
-export function getPipInstallArgs(config: PipInstallConfig): string[] {
+function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
   if (config.upgradePackages) {
