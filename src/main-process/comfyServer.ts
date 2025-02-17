@@ -28,6 +28,19 @@ export class ComfyServer implements HasTelemetry {
    */
   public static readonly CHECK_INTERVAL = 1000; // Check every second
 
+  /** The path to the ComfyUI main python script. */
+  readonly mainScriptPath = path.join(getAppResourcesPath(), 'ComfyUI', 'main.py');
+
+  /**
+   * The path to the ComfyUI web root. This directory should host compiled
+   * ComfyUI web assets.
+   */
+  readonly webRootPath = path.join(getAppResourcesPath(), 'ComfyUI', 'web_custom_versions', 'desktop_app');
+
+  readonly userDirectoryPath: string;
+  readonly inputDirectoryPath: string;
+  readonly outputDirectoryPath: string;
+
   private comfyServerProcess: ChildProcess | null = null;
 
   constructor(
@@ -36,37 +49,14 @@ export class ComfyServer implements HasTelemetry {
     readonly virtualEnvironment: VirtualEnvironment,
     readonly appWindow: AppWindow,
     readonly telemetry: ITelemetry
-  ) {}
+  ) {
+    this.userDirectoryPath = path.join(this.basePath, 'user');
+    this.inputDirectoryPath = path.join(this.basePath, 'input');
+    this.outputDirectoryPath = path.join(this.basePath, 'output');
+  }
 
   get baseUrl() {
     return `http://${this.serverArgs.listen}:${this.serverArgs.port}`;
-  }
-
-  /**
-   * The path to the ComfyUI main python script.
-   */
-  get mainScriptPath() {
-    return path.join(getAppResourcesPath(), 'ComfyUI', 'main.py');
-  }
-
-  /**
-   * The path to the ComfyUI web root. This directory should host compiled
-   * ComfyUI web assets.
-   */
-  get webRootPath() {
-    return path.join(getAppResourcesPath(), 'ComfyUI', 'web_custom_versions', 'desktop_app');
-  }
-
-  get userDirectoryPath() {
-    return path.join(this.basePath, 'user');
-  }
-
-  get inputDirectoryPath() {
-    return path.join(this.basePath, 'input');
-  }
-
-  get outputDirectoryPath() {
-    return path.join(this.basePath, 'output');
   }
 
   /**
