@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        ### Before submitting a **Bug Report**, please ensure the following:
+        ## Before submitting a **Bug Report**, please ensure the following:
 
         - **1:** You have looked at the existing bug reports and made sure this isn't already reported.
         - **2:** You confirmed that the bug is not caused by a custom node.
@@ -31,16 +31,15 @@ body:
       description: |
         What is the version you are using? You can check this in the settings dialog.
 
-        > [!TIP]
-        > <details>
-        > 
-        > <summary>Click to show where to find the version</summary>
-        > 
-        > Open the setting by clicking the cog icon in the bottom-left of the screen, then click `About`.
-        > 
-        > ![Desktop version](https://github.com/user-attachments/assets/eb741720-00c1-4d45-b0a2-341a45d089c5)
-        > 
-        > </details>
+        <details>
+
+        <summary>Click to show where to find the version</summary>
+
+        Open the setting by clicking the cog icon in the bottom-left of the screen, then click `About`.
+
+        ![Desktop version](https://github.com/user-attachments/assets/eb741720-00c1-4d45-b0a2-341a45d089c5)
+
+        </details>
     validations:
       required: true
   - type: textarea
@@ -65,22 +64,20 @@ body:
     attributes:
       label: Debug Logs
       description: |
-        Please copy your logs here.  If the issue is related to starting the app, please include both `main.log` and `comfyui.log`.
+        Please copy your log files here.  If the issue is related to starting the app, please include both `main.log` and `comfyui.log`.
 
-        > [!TIP]
-        > Log file locations:
-        > 
-        > - **Windows: `%APPDATA%\ComfyUI\logs`**
-        > - **macOS**: `~/Library/Logs/ComfyUI`
+        Log file locations:
 
-        > [!TIP]
-        > <details>
-        > 
-        > <summary>Copy terminal logs from inside the app</summary>
-        > 
-        > ![DebugLogs](https://github.com/user-attachments/assets/168b6ea3-ab93-445b-9cd2-670bd9c098a7)
-        > 
-        > </details>
+        - **Windows: `%APPDATA%\ComfyUI\logs`**
+        - **macOS**: `~/Library/Logs/ComfyUI`
+
+        <details>
+
+        <summary>Copy terminal logs from inside the app</summary>
+
+        ![DebugLogs](https://github.com/user-attachments/assets/168b6ea3-ab93-445b-9cd2-670bd9c098a7)
+
+        </details>
       render: powershell
     validations:
       required: true
@@ -90,16 +87,15 @@ body:
       description: |
         Browser logs are found in the DevTools console.  Please copy the entire output here.
 
-        > [!TIP]
-        > <details>
-        > 
-        > <summary>Click to show how to open the browser console</summary>
-        > 
-        > ![OpenDevTools](https://github.com/user-attachments/assets/4505621e-34f0-4b66-b9d0-2e1a9133a635)
-        > 
-        > ![ConsoleTab](https://github.com/user-attachments/assets/cc96c0db-2880-40bb-93a2-c035360c41b2)
-        > 
-        > </details>
+        <details>
+
+        <summary>Click to show how to open the browser console</summary>
+
+        ![OpenDevTools](https://github.com/user-attachments/assets/4505621e-34f0-4b66-b9d0-2e1a9133a635)
+
+        ![ConsoleTab](https://github.com/user-attachments/assets/cc96c0db-2880-40bb-93a2-c035360c41b2)
+
+        </details>
     validations:
       required: true
   - type: textarea
@@ -108,14 +104,13 @@ body:
       description: |
         Please upload the settings file here. The settings file is located at `../user/default/comfy.settings.json`
 
-        > [!TIP]
-        > <details>
-        > 
-        > <summary>Click to show how to open the models directory</summary>
-        > 
-        > ![OpenFolder](https://github.com/user-attachments/assets/254e41c7-6335-4d6a-a7dd-c93ab74a9d5e)
-        > 
-        > </details>
+        <details>
+
+        <summary>Click to show how to open the models directory</summary>
+
+        ![OpenFolder](https://github.com/user-attachments/assets/254e41c7-6335-4d6a-a7dd-c93ab74a9d5e)
+
+        </details>
     validations:
       required: true
   - type: textarea
