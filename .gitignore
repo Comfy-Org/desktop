@@ -115,7 +115,7 @@ assets/user
 
 # Sentry Config File
 .env.sentry-build-plugin
-# Jest
+# Playwright test results
 test-results
 
 # Python venv
