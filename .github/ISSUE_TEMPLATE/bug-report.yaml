@@ -13,7 +13,11 @@ body:
 
         <details>
 
-        <summary>**How to disable custom nodes**</summary>
+        <summary>
+        
+        **How to disable custom nodes**
+        
+        </summary>
 
         Open the setting by clicking the cog icon in the bottom-left of the screen.
 
@@ -31,7 +35,11 @@ body:
         What is the version you are using? You can check this in the settings dialog.
         <details>
 
-        <summary>**Where to find desktop version**</summary>
+        <summary>
+        
+        **Where to find desktop version**
+        
+        </summary>
 
         Open the setting by clicking the cog icon in the bottom-left of the screen, then click `About`.
 
@@ -65,7 +73,11 @@ body:
         Please copy your logs here.  If the issue is related to starting the app, please include both `main.log` and `comfyui.log`.
         <details>
 
-        <summary>**Where to find log files**</summary>
+        <summary>
+        
+        **Where to find log files**
+        
+        </summary>
 
         Log file locations:
 
@@ -92,7 +104,11 @@ body:
 
         <details>
 
-        <summary>**How to open the console**</summary>
+        <summary>
+        
+        **How to open the console**
+        
+        </summary>
 
         ![OpenDevTools](https://github.com/user-attachments/assets/4505621e-34f0-4b66-b9d0-2e1a9133a635)
 
@@ -109,7 +125,11 @@ body:
 
         <details>
 
-        <summary>**How to open model directory**</summary>
+        <summary>
+        
+        **How to open model directory**
+        
+        </summary>
 
         ![OpenFolder](https://github.com/user-attachments/assets/254e41c7-6335-4d6a-a7dd-c93ab74a9d5e)
 
