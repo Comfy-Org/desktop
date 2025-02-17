@@ -74,21 +74,19 @@ export class ComfyServer implements HasTelemetry {
     };
   }
 
-  static buildLaunchArgs(mainScriptPath: string, args: Record<string, string>) {
-    return [
-      mainScriptPath,
-      ...Object.entries(args)
-        .flatMap(([key, value]) => [`--${key}`, value])
-        // Empty string values are ignored. e.g. { cpu: '' } => '--cpu'
-        .filter((value: string) => value !== ''),
-    ];
+  static buildLaunchArgs(args: Record<string, string>) {
+    // Empty string values are ignored. e.g. { cpu: '' } => '--cpu'
+    return Object.entries(args)
+      .flatMap(([key, value]) => [`--${key}`, value])
+      .filter((value: string) => value !== '');
   }
 
   get launchArgs() {
-    return ComfyServer.buildLaunchArgs(this.mainScriptPath, {
+    const args = ComfyServer.buildLaunchArgs({
       ...this.coreLaunchArgs,
       ...this.serverArgs,
     });
+    return [this.mainScriptPath, ...args];
   }
 
   @trackEvent('comfyui:server_start')
