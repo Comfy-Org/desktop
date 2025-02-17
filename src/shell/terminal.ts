@@ -12,9 +12,9 @@ import { getDefaultShell } from './util';
  */
 export class Terminal {
   #pty: pty.IPty | undefined;
-  readonly #window: AppWindow | undefined;
-  readonly #cwd: string | undefined;
-  readonly #uvPath: string | undefined;
+  readonly #window: AppWindow;
+  readonly #cwd: string;
+  readonly #uvPath: string;
 
   readonly sessionBuffer: string[] = [];
   readonly size = { cols: 80, rows: 30 };
@@ -22,11 +22,6 @@ export class Terminal {
   get pty() {
     this.#pty ??= this.#createPty();
     return this.#pty;
-  }
-
-  get window() {
-    if (!this.#window) throw new Error('AppWindow not initialized.');
-    return this.#window;
   }
 
   constructor(window: AppWindow, cwd: string, uvPath: string) {
@@ -53,7 +48,7 @@ export class Terminal {
   }
 
   #createPty() {
-    const window = this.window;
+    const window = this.#window;
     // node-pty hangs when debugging - fallback to winpty
     // https://github.com/microsoft/node-pty/issues/490
 
