@@ -31,6 +31,10 @@ export class ComfyDesktopApp implements HasTelemetry {
     return this.installation.basePath;
   }
 
+  get serverRunning() {
+    return this.comfyServer?.isRunning ?? false;
+  }
+
   /**
    * Build the server args to launch ComfyUI server.
    * @param useExternalServer Whether to use an external server instead of starting one locally.
@@ -108,7 +112,7 @@ export class ComfyDesktopApp implements HasTelemetry {
     }
 
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
-    this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
+    this.comfyServer ??= new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
     await this.comfyServer.start();
     this.initializeTerminal(virtualEnvironment);
   }
