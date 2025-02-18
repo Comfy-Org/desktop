@@ -119,6 +119,8 @@ export class DesktopApp implements HasTelemetry {
   }
 
   registerIpcHandlers() {
+    this.appState.hasLoadedIpcHandlers = true;
+
     try {
       // Register basic handlers that are necessary during app's installation.
       registerPathHandlers();
