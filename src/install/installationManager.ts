@@ -76,20 +76,20 @@ export class InstallationManager implements HasTelemetry {
   #onMaintenancePage = false;
 
   #onUpdateHandler(data: InstallValidation) {
-    // Load maintenance page the first time any error is found.
-    if (!this.#onMaintenancePage && Object.values(data).includes('error')) {
-      this.#onMaintenancePage = true;
-      const error = Object.entries(data).find(([, value]) => value === 'error')?.[0];
-      this.telemetry.track('validation:error_found', { error });
+    if (this.#onMaintenancePage || !Object.values(data).includes('error')) return;
 
-      log.info('Validation error - loading maintenance page.');
-      this.appWindow.loadPage('maintenance').catch((error) => {
-        log.error('Error loading maintenance page.', error);
-        const message = `An error was detected with your installation, and the maintenance page could not be loaded to resolve it. The app will close now. Please reinstall if this issue persists.\n\nError message:\n\n${error}`;
-        dialog.showErrorBox('Critical Error', message);
-        app.quit();
-      });
-    }
+    // Load maintenance page the first time any error is found.
+    this.#onMaintenancePage = true;
+    const error = Object.entries(data).find(([, value]) => value === 'error')?.[0];
+    this.telemetry.track('validation:error_found', { error });
+
+    log.info('Validation error - loading maintenance page.');
+    this.appWindow.loadPage('maintenance').catch((error) => {
+      log.error('Error loading maintenance page.', error);
+      const message = `An error was detected with your installation, and the maintenance page could not be loaded to resolve it. The app will close now. Please reinstall if this issue persists.\n\nError message:\n\n${error}`;
+      dialog.showErrorBox('Critical Error', message);
+      app.quit();
+    });
   }
 
   /**
