@@ -1,4 +1,4 @@
-import { app, dialog } from 'electron';
+import { IpcMainInvokeEvent, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -36,6 +36,7 @@ vi.mock('electron', () => ({
     once: vi.fn(),
     handle: vi.fn(),
     handleOnce: vi.fn(),
+    removeHandler: vi.fn(),
   },
 }));
 
@@ -291,6 +292,69 @@ describe('DesktopApp', () => {
       expect(() => DesktopApp.fatalError({ message, error })).toThrow('Test exited via app.quit()');
 
       expect(log.error).toHaveBeenCalledWith(message, error);
+    });
+  });
+
+  describe('registerIpcHandlers', () => {
+    it('should register all handlers and emit ipcRegistered', () => {
+      desktopApp['registerIpcHandlers']();
+
+      expect(mockAppState.emitIpcRegistered).toHaveBeenCalled();
+      expect(ipcMain.handle).toHaveBeenCalledWith(IPC_CHANNELS.START_TROUBLESHOOTING, expect.any(Function));
+    });
+
+    it('should handle errors during registration', () => {
+      vi.mocked(ipcMain.handle).mockImplementationOnce(() => {
+        throw new Error('Registration failed');
+      });
+
+      expect(() => desktopApp['registerIpcHandlers']()).toThrow('Test exited via app.exit()');
+      expect(app.exit).toHaveBeenCalledWith(2024);
+    });
+  });
+
+  describe('showTroubleshootingPage', () => {
+    it('should show troubleshooting page and restart app', async () => {
+      desktopApp.installation = mockInstallation as ComfyInstallation;
+
+      // Mock IPC handler registration for COMPLETE_VALIDATION
+      vi.mocked(ipcMain.handleOnce).mockImplementationOnce(
+        (channel: string, handler: (event: IpcMainInvokeEvent, ...args: any[]) => any) => {
+          // Simulate completion by calling the handler
+          setTimeout(() => handler({} as IpcMainInvokeEvent, {}), 0);
+          return vi.fn();
+        }
+      );
+
+      await desktopApp.showTroubleshootingPage();
+
+      expect(mockAppWindow.loadPage).toHaveBeenCalledWith('maintenance');
+      expect(ipcMain.handleOnce).toHaveBeenCalledWith(IPC_CHANNELS.COMPLETE_VALIDATION, expect.any(Function));
+    });
+
+    it('should fail if installation is not complete', async () => {
+      desktopApp.installation = undefined;
+
+      await expect(() => desktopApp.showTroubleshootingPage()).rejects.toThrow('Test exited via app.exit()');
+
+      expect(dialog.showErrorBox).toHaveBeenCalledWith(
+        'Critical error',
+        expect.stringContaining('An error was detected, but the troubleshooting page could not be loaded')
+      );
+      expect(app.exit).toHaveBeenCalledWith(2001);
+    });
+
+    it('should handle errors during troubleshooting page load', async () => {
+      desktopApp.installation = mockInstallation as ComfyInstallation;
+      mockAppWindow.loadPage.mockRejectedValueOnce(new Error('Failed to load maintenance page'));
+
+      await expect(() => desktopApp.showTroubleshootingPage()).rejects.toThrow('Test exited via app.exit()');
+
+      expect(dialog.showErrorBox).toHaveBeenCalledWith(
+        'Critical error',
+        expect.stringContaining('An error was detected, but the troubleshooting page could not be loaded')
+      );
+      expect(app.exit).toHaveBeenCalledWith(2001);
     });
   });
 });
