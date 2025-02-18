@@ -10,6 +10,8 @@ import type { Page } from '@/infrastructure/interfaces';
 export interface IAppState {
   /** Whether the app is already quitting. */
   readonly isQuitting: boolean;
+  /** Whether the IPC handlers have been loaded. */
+  hasLoadedIpcHandlers: boolean;
   /** The last page the app loaded from the desktop side. @see {@link AppWindow.loadPage} */
   currentPage?: Page;
 }
@@ -19,6 +21,7 @@ export interface IAppState {
  */
 export class AppState implements IAppState {
   isQuitting = false;
+  hasLoadedIpcHandlers = false;
   currentPage?: Page;
 
   constructor() {
