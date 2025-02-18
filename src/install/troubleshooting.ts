@@ -74,17 +74,14 @@ export class Troubleshooting implements Disposable {
     });
   }
 
-  /** Removes all handlers created by {@link #setupIpc} */
-  #removeIpcHandlers() {
+  /** Removes all handlers created by {@link #addIpcHandlers} */
+  [Symbol.dispose](): void {
+    delete this.installation.onUpdate;
+
     ipcMain.removeHandler(IPC_CHANNELS.GET_VALIDATION_STATE);
     ipcMain.removeHandler(IPC_CHANNELS.VALIDATE_INSTALLATION);
     ipcMain.removeHandler(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS);
     ipcMain.removeHandler(IPC_CHANNELS.UV_CLEAR_CACHE);
     ipcMain.removeHandler(IPC_CHANNELS.UV_RESET_VENV);
-  }
-
-  [Symbol.dispose](): void {
-    delete this.installation.onUpdate;
-    this.#removeIpcHandlers();
   }
 }
