@@ -154,7 +154,9 @@ export class DesktopApp implements HasTelemetry {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       using troubleshooting = new Troubleshooting(this.installation, this.appWindow);
 
-      await this.appWindow.loadPage('maintenance');
+      if (!this.appState.loaded) {
+        await this.appWindow.loadPage('maintenance');
+      }
       await new Promise((resolve) => ipcMain.handleOnce(IPC_CHANNELS.COMPLETE_VALIDATION, resolve));
 
       await this.start();
