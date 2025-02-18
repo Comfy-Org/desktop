@@ -4,13 +4,14 @@ import log from 'electron-log/main';
 import { IPC_CHANNELS, ProgressStatus } from '../constants';
 import type { AppWindow } from '../main-process/appWindow';
 import { ComfyInstallation } from '../main-process/comfyInstallation';
-import type { InstallOptions } from '../preload';
+import type { InstallOptions, InstallValidation } from '../preload';
 import { CmCli } from '../services/cmCli';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { canExecuteShellCommand, validateHardware } from '../utils';
 import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
+import { Troubleshooting } from './troubleshooting';
 
 /** High-level / UI control over the installation of ComfyUI server. */
 export class InstallationManager implements HasTelemetry {
@@ -41,103 +42,51 @@ export class InstallationManager implements HasTelemetry {
   }
 
   private async validateInstallation(installation: ComfyInstallation) {
-    try {
-      // Send updates to renderer
-      this.#setupIpc(installation);
+    this.#onMaintenancePage = false;
 
-      // Determine actual install state
-      const state = await installation.validate();
+    // Send updates to renderer
+    using troubleshooting = new Troubleshooting(installation, this.appWindow);
+    troubleshooting.addOnUpdateHandler((data) => this.#onUpdateHandler(data));
 
-      // Convert from old format
-      if (state === 'upgraded') installation.upgradeConfig();
+    // Determine actual install state
+    const state = await installation.validate();
 
-      // Install updated manager requirements
-      if (installation.needsManagerPackageUpdate) await this.updateManagerPackages(installation);
+    // Convert from old format
+    if (state === 'upgraded') installation.upgradeConfig();
 
-      // Resolve issues and re-run validation
-      if (installation.hasIssues) {
-        while (!(await this.resolveIssues(installation))) {
-          // Re-run validation
-          log.verbose('Re-validating installation.');
-        }
+    // Install updated manager requirements
+    if (installation.needsManagerPackageUpdate) await this.updateManagerPackages(installation);
+
+    // Resolve issues and re-run validation
+    if (installation.hasIssues) {
+      while (!(await this.resolveIssues(installation))) {
+        // Re-run validation
+        log.verbose('Re-validating installation.');
       }
-
-      // Return validated installation
-      return installation;
-    } finally {
-      delete installation.onUpdate;
-      this.#removeIpcHandlers();
     }
-  }
 
-  /** Removes all handlers created by {@link #setupIpc} */
-  #removeIpcHandlers() {
-    ipcMain.removeHandler(IPC_CHANNELS.GET_VALIDATION_STATE);
-    ipcMain.removeHandler(IPC_CHANNELS.VALIDATE_INSTALLATION);
-    ipcMain.removeHandler(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS);
-    ipcMain.removeHandler(IPC_CHANNELS.UV_CLEAR_CACHE);
-    ipcMain.removeHandler(IPC_CHANNELS.UV_RESET_VENV);
+    // Return validated installation
+    return installation;
   }
 
   /** Set to `true` the first time an error is found during validation. @todo Move to app state singleton once impl. */
   #onMaintenancePage = false;
 
-  /** Creates IPC handlers for the installation instance. */
-  #setupIpc(installation: ComfyInstallation) {
-    this.#onMaintenancePage = false;
-    installation.onUpdate = (data) => {
-      this.appWindow.send(IPC_CHANNELS.VALIDATION_UPDATE, data);
+  #onUpdateHandler(data: InstallValidation) {
+    // Load maintenance page the first time any error is found.
+    if (!this.#onMaintenancePage && Object.values(data).includes('error')) {
+      this.#onMaintenancePage = true;
+      const error = Object.entries(data).find(([, value]) => value === 'error')?.[0];
+      this.telemetry.track('validation:error_found', { error });
 
-      // Load maintenance page the first time any error is found.
-      if (!this.#onMaintenancePage && Object.values(data).includes('error')) {
-        this.#onMaintenancePage = true;
-        const error = Object.entries(data).find(([, value]) => value === 'error')?.[0];
-        this.telemetry.track('validation:error_found', { error });
-
-        log.info('Validation error - loading maintenance page.');
-        this.appWindow.loadPage('maintenance').catch((error) => {
-          log.error('Error loading maintenance page.', error);
-          const message = `An error was detected with your installation, and the maintenance page could not be loaded to resolve it. The app will close now. Please reinstall if this issue persists.\n\nError message:\n\n${error}`;
-          dialog.showErrorBox('Critical Error', message);
-          app.quit();
-        });
-      }
-    };
-    const sendLogIpc = (data: string) => {
-      log.info(data);
-      this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-    };
-
-    ipcMain.handle(IPC_CHANNELS.GET_VALIDATION_STATE, () => {
-      installation.onUpdate?.(installation.validation);
-      return installation.validation;
-    });
-    ipcMain.handle(IPC_CHANNELS.VALIDATE_INSTALLATION, async () => {
-      this.telemetry.track('installation_manager:installation_validate');
-      return await installation.validate();
-    });
-    ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, () => {
-      this.telemetry.track('installation_manager:uv_requirements_install');
-      return installation.virtualEnvironment.reinstallRequirements(sendLogIpc);
-    });
-    ipcMain.handle(IPC_CHANNELS.UV_CLEAR_CACHE, async () => {
-      this.telemetry.track('installation_manager:uv_cache_clear');
-      return await installation.virtualEnvironment.clearUvCache(sendLogIpc);
-    });
-    ipcMain.handle(IPC_CHANNELS.UV_RESET_VENV, async (): Promise<boolean> => {
-      this.telemetry.track('installation_manager:uv_venv_reset');
-      const venv = installation.virtualEnvironment;
-      const deleted = await venv.removeVenvDirectory();
-      if (!deleted) return false;
-
-      const created = await venv.createVenv(sendLogIpc);
-      if (!created) return false;
-
-      return await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
-    });
-
-    // Replace the reinstall IPC handler.
-    InstallationManager.setReinstallHandler(installation);
+      log.info('Validation error - loading maintenance page.');
+      this.appWindow.loadPage('maintenance').catch((error) => {
+        log.error('Error loading maintenance page.', error);
+        const message = `An error was detected with your installation, and the maintenance page could not be loaded to resolve it. The app will close now. Please reinstall if this issue persists.\n\nError message:\n\n${error}`;
+        dialog.showErrorBox('Critical Error', message);
+        app.quit();
+      });
+    }
   }
 
   /**
