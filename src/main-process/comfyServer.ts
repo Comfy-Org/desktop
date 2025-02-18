@@ -185,9 +185,8 @@ export class ComfyServer implements HasTelemetry {
       }, 10_000);
 
       // Listen for the 'exit' event
-      this.comfyServerProcess.once('exit', (code, signal) => {
+      this.comfyServerProcess.once('exit', () => {
         clearTimeout(timeout);
-        log.info(`Python server exited with code ${code} and signal ${signal}`);
         resolve();
       });
 
