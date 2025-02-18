@@ -408,6 +408,10 @@ const electronAPI = {
     },
   },
 
+  troubleshoot: async () => {
+    await ipcRenderer.invoke(IPC_CHANNELS.TROUBLESHOOT);
+  },
+
   uv: {
     /**
      * Install the requirements for the ComfyUI server.

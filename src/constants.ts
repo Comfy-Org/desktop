@@ -47,6 +47,7 @@ export const IPC_CHANNELS = {
   UV_CLEAR_CACHE: 'uv-clear-cache',
   UV_RESET_VENV: 'uv-delete-venv',
   CAN_ACCESS_URL: 'can-access-url',
+  TROUBLESHOOT: 'troubleshoot',
 } as const;
 
 export enum ProgressStatus {
