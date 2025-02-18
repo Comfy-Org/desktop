@@ -52,11 +52,6 @@ const getHandler = (channel: string) => {
 };
 
 describe('AppInfoHandlers', () => {
-  let appWindow: {
-    loadPage: Mock;
-    showOpenDialog: Mock;
-  };
-
   const testCases: TestCase[] = [
     { channel: IPC_CHANNELS.IS_PACKAGED, expected: false },
     { channel: IPC_CHANNELS.GET_ELECTRON_VERSION, expected: '1.0.0' },
@@ -73,11 +68,7 @@ describe('AppInfoHandlers', () => {
 
   describe('registerHandlers', () => {
     beforeEach(() => {
-      appWindow = {
-        loadPage: vi.fn(),
-        showOpenDialog: vi.fn().mockReturnValue({ canceled: false, filePaths: [MOCK_BASE_PATH] }),
-      };
-      registerAppInfoHandlers(appWindow as any);
+      registerAppInfoHandlers();
     });
 
     it.each(testCases)('should register handler for $channel', ({ channel }) => {
@@ -97,11 +88,7 @@ describe('AppInfoHandlers', () => {
 
   describe('set-base-path', () => {
     it('should return false when user cancels dialog', async () => {
-      appWindow = {
-        loadPage: vi.fn(),
-        showOpenDialog: vi.fn().mockReturnValue({ canceled: true, filePaths: [] }),
-      };
-      registerAppInfoHandlers(appWindow as any);
+      registerAppInfoHandlers();
 
       const result = await getHandler(IPC_CHANNELS.SET_BASE_PATH)(null, MOCK_BASE_PATH);
 

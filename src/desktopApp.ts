@@ -134,7 +134,7 @@ export class DesktopApp implements HasTelemetry {
       // Register basic handlers that are necessary during app's installation.
       registerPathHandlers();
       registerNetworkHandlers();
-      registerAppInfoHandlers(this.appWindow);
+      registerAppInfoHandlers();
       registerAppHandlers();
 
       ipcMain.handle(IPC_CHANNELS.START_TROUBLESHOOTING, async () => await this.showTroubleshootingPage());
