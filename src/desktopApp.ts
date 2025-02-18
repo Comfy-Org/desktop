@@ -80,7 +80,7 @@ export class DesktopApp implements HasTelemetry {
   async start(): Promise<void> {
     const { appState, appWindow, overrides, telemetry } = this;
 
-    if (!appState.hasIpcHandlers) this.registerIpcHandlers();
+    if (!appState.ipcRegistered) this.registerIpcHandlers();
 
     const installation = await this.initializeInstallation();
     if (!installation) return;
@@ -110,6 +110,9 @@ export class DesktopApp implements HasTelemetry {
       }
       appWindow.sendServerStartProgress(ProgressStatus.READY);
       await appWindow.loadComfyUI(serverArgs);
+
+      // App start complete
+      appState.emitLoaded();
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
@@ -124,8 +127,8 @@ export class DesktopApp implements HasTelemetry {
     }
   }
 
-  registerIpcHandlers() {
-    this.appState.setHasIpcHandlers();
+  private registerIpcHandlers() {
+    this.appState.emitIpcRegistered();
 
     try {
       // Register basic handlers that are necessary during app's installation.
