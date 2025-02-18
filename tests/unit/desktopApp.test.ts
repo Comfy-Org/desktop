@@ -86,7 +86,10 @@ const mockInstallationManager = {
   ensureInstalled: vi.fn().mockResolvedValue(mockInstallation),
 };
 vi.mock('@/install/installationManager', () => ({
-  InstallationManager: vi.fn().mockImplementation(() => mockInstallationManager),
+  InstallationManager: Object.assign(
+    vi.fn(() => mockInstallationManager),
+    { setReinstallHandler: vi.fn() }
+  ),
 }));
 
 const mockComfyDesktopApp = {
@@ -124,7 +127,14 @@ describe('DesktopApp', () => {
 
     mockAppState = {
       isQuitting: false,
+      ipcRegistered: false,
+      loaded: false,
       currentPage: undefined,
+      on: vi.fn(),
+      once: vi.fn(),
+      off: vi.fn(),
+      emitIpcRegistered: vi.fn(),
+      emitLoaded: vi.fn(),
     };
     mockOverrides = {
       useExternalServer: false,
