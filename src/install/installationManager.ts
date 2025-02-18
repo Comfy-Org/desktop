@@ -37,6 +37,9 @@ export class InstallationManager implements HasTelemetry {
     // Resume installation
     if (installation.state === 'started') return await this.resumeInstallation();
 
+    // Replace the reinstall IPC handler.
+    InstallationManager.setReinstallHandler(installation);
+
     // Validate the installation
     return await this.validateInstallation(installation);
   }
