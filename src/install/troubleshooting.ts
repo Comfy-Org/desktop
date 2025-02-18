@@ -49,14 +49,19 @@ export class Troubleshooting implements Disposable {
       this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
     };
 
+    // Get validation state
     ipcMain.handle(IPC_CHANNELS.GET_VALIDATION_STATE, () => {
       installation.onUpdate?.(installation.validation);
       return installation.validation;
     });
+
+    // Validate installation
     ipcMain.handle(IPC_CHANNELS.VALIDATE_INSTALLATION, async () => {
       getTelemetry().track('installation_manager:installation_validate');
       return await installation.validate();
     });
+
+    // Install python packages
     ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, async () => {
       getTelemetry().track('installation_manager:uv_requirements_install');
       const result = installation.virtualEnvironment.reinstallRequirements(sendLogIpc);
@@ -64,10 +69,14 @@ export class Troubleshooting implements Disposable {
       await this.onInstallFix?.();
       return result;
     });
+
+    // Clear uv cache
     ipcMain.handle(IPC_CHANNELS.UV_CLEAR_CACHE, async () => {
       getTelemetry().track('installation_manager:uv_cache_clear');
       return await installation.virtualEnvironment.clearUvCache(sendLogIpc);
     });
+
+    // Clear .venv directory
     ipcMain.handle(IPC_CHANNELS.UV_RESET_VENV, async (): Promise<boolean> => {
       getTelemetry().track('installation_manager:uv_venv_reset');
       const venv = installation.virtualEnvironment;
@@ -83,6 +92,7 @@ export class Troubleshooting implements Disposable {
       return result;
     });
 
+    // Change base path
     ipcMain.handle(IPC_CHANNELS.SET_BASE_PATH, async (): Promise<boolean> => {
       const currentBasePath = useDesktopConfig().get('basePath');
 
