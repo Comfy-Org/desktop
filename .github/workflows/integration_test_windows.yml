@@ -16,6 +16,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.cursor/**'
       - '*_example'
+      - 'tests/unit/**'
   push:
     branches: [main]
     paths-ignore:
@@ -31,6 +32,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.cursor/**'
       - '*_example'
+      - 'tests/unit/**'
 
 jobs:
   integration-windows-test:
