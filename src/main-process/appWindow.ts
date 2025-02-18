@@ -97,6 +97,7 @@ export class AppWindow {
       minHeight: 640,
       x,
       y,
+      backgroundColor: '#171717',
       webPreferences: {
         // eslint-disable-next-line unicorn/prefer-module
         preload: path.join(__dirname, '../build/preload.cjs'),
