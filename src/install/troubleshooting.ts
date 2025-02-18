@@ -19,7 +19,9 @@ export class Troubleshooting implements Disposable {
 
   constructor(
     private readonly installation: ComfyInstallation,
-    private readonly appWindow: AppWindow
+    private readonly appWindow: AppWindow,
+    /** Called when an install-fixing task has finished. */
+    readonly onInstallFix?: () => Promise<unknown>
   ) {
     this.#setOnUpdateCallback();
     this.#addIpcHandlers();
@@ -55,9 +57,12 @@ export class Troubleshooting implements Disposable {
       getTelemetry().track('installation_manager:installation_validate');
       return await installation.validate();
     });
-    ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, () => {
+    ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, async () => {
       getTelemetry().track('installation_manager:uv_requirements_install');
-      return installation.virtualEnvironment.reinstallRequirements(sendLogIpc);
+      const result = installation.virtualEnvironment.reinstallRequirements(sendLogIpc);
+
+      await this.onInstallFix?.();
+      return result;
     });
     ipcMain.handle(IPC_CHANNELS.UV_CLEAR_CACHE, async () => {
       getTelemetry().track('installation_manager:uv_cache_clear');
@@ -72,7 +77,10 @@ export class Troubleshooting implements Disposable {
       const created = await venv.createVenv(sendLogIpc);
       if (!created) return false;
 
-      return await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
+      const result = await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
+
+      await this.onInstallFix?.();
+      return result;
     });
 
     ipcMain.handle(IPC_CHANNELS.SET_BASE_PATH, async (): Promise<boolean> => {
@@ -86,7 +94,10 @@ export class Troubleshooting implements Disposable {
 
       const basePath = result.filePaths[0];
       useDesktopConfig().set('basePath', basePath);
-      return await ComfyServerConfig.setBasePathInDefaultConfig(basePath);
+      const setYamlResult = await ComfyServerConfig.setBasePathInDefaultConfig(basePath);
+
+      await this.onInstallFix?.();
+      return setYamlResult;
     });
   }
 

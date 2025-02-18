@@ -46,9 +46,10 @@ export class InstallationManager implements HasTelemetry {
 
   private async validateInstallation(installation: ComfyInstallation) {
     this.#onMaintenancePage = false;
+    const validate = async () => await installation.validate();
 
     // Send updates to renderer
-    using troubleshooting = new Troubleshooting(installation, this.appWindow);
+    using troubleshooting = new Troubleshooting(installation, this.appWindow, validate);
     troubleshooting.addOnUpdateHandler((data) => this.#onUpdateHandler(data));
 
     // Determine actual install state
