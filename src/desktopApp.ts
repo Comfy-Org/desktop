@@ -54,7 +54,7 @@ export class DesktopApp implements HasTelemetry {
 
   /**
    * Install / validate installation is complete
-   * @returns The installation if it is complete, otherwise `undefined`.
+   * @returns The installation if it is complete, otherwise `undefined` (error page).
    * @throws Rethrows any errors when the installation fails before the app has set the current page.
    */
   private async initializeInstallation(): Promise<ComfyInstallation | undefined> {
