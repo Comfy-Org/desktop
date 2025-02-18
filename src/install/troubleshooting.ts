@@ -96,18 +96,18 @@ export class Troubleshooting implements Disposable {
     ipcMain.handle(IPC_CHANNELS.SET_BASE_PATH, async (): Promise<boolean> => {
       const currentBasePath = useDesktopConfig().get('basePath');
 
-      const result = await this.appWindow.showOpenDialog({
+      const response = await this.appWindow.showOpenDialog({
         properties: ['openDirectory'],
         defaultPath: currentBasePath,
       });
-      if (result.canceled || !(result.filePaths.length > 0)) return false;
+      if (response.canceled || !(response.filePaths.length > 0)) return false;
 
-      const basePath = result.filePaths[0];
+      const basePath = response.filePaths[0];
       useDesktopConfig().set('basePath', basePath);
-      const setYamlResult = await ComfyServerConfig.setBasePathInDefaultConfig(basePath);
+      const result = await ComfyServerConfig.setBasePathInDefaultConfig(basePath);
 
-      if (setYamlResult) await this.onInstallFix?.();
-      return setYamlResult;
+      if (result) await this.onInstallFix?.();
+      return result;
     });
   }
 
