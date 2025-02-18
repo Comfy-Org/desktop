@@ -80,7 +80,7 @@ export class DesktopApp implements HasTelemetry {
   async start(): Promise<void> {
     const { appState, appWindow, overrides, telemetry } = this;
 
-    if (!appState.hasLoadedIpcHandlers) this.registerIpcHandlers();
+    if (!appState.hasIpcHandlers) this.registerIpcHandlers();
 
     const installation = await this.initializeInstallation();
     if (!installation) return;
@@ -125,7 +125,7 @@ export class DesktopApp implements HasTelemetry {
   }
 
   registerIpcHandlers() {
-    this.appState.hasLoadedIpcHandlers = true;
+    this.appState.setHasIpcHandlers();
 
     try {
       // Register basic handlers that are necessary during app's installation.
