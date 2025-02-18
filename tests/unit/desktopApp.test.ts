@@ -164,7 +164,7 @@ describe('DesktopApp', () => {
       const error = new Error('Failed to load');
       mockAppWindow.loadPage.mockRejectedValueOnce(error);
 
-      await expect(desktopApp.showLoadingPage).rejects.toThrow('Test exited via app.quit()');
+      await expect(async () => await desktopApp.showLoadingPage()).rejects.toThrow('Test exited via app.quit()');
 
       expect(dialog.showErrorBox).toHaveBeenCalledWith(
         'Startup failed',
