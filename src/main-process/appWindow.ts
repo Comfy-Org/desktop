@@ -132,17 +132,20 @@ export class AppWindow {
       this.messageQueue.push({ channel, data });
       return;
     }
+    const { webContents } = this.window;
 
     // Send queued messages first
     while (this.messageQueue.length > 0) {
       const message = this.messageQueue.shift();
-      if (message && this.window) {
-        this.window.webContents.send(message.channel, message.data);
+      if (message && !webContents.isDestroyed()) {
+        webContents.send(message.channel, message.data);
       }
     }
 
     // Send current message
-    this.window.webContents.send(channel, data);
+    if (!webContents.isDestroyed()) {
+      webContents.send(channel, data);
+    }
   }
 
   /**
