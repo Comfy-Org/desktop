@@ -64,9 +64,9 @@ export class Troubleshooting implements Disposable {
     // Install python packages
     ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, async () => {
       getTelemetry().track('installation_manager:uv_requirements_install');
-      const result = installation.virtualEnvironment.reinstallRequirements(sendLogIpc);
+      const result = await installation.virtualEnvironment.reinstallRequirements(sendLogIpc);
 
-      await this.onInstallFix?.();
+      if (result) await this.onInstallFix?.();
       return result;
     });
 
@@ -88,7 +88,7 @@ export class Troubleshooting implements Disposable {
 
       const result = await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
 
-      await this.onInstallFix?.();
+      if (result) await this.onInstallFix?.();
       return result;
     });
 
@@ -106,7 +106,7 @@ export class Troubleshooting implements Disposable {
       useDesktopConfig().set('basePath', basePath);
       const setYamlResult = await ComfyServerConfig.setBasePathInDefaultConfig(basePath);
 
-      await this.onInstallFix?.();
+      if (setYamlResult) await this.onInstallFix?.();
       return setYamlResult;
     });
   }
