@@ -134,7 +134,7 @@ export class DesktopApp implements HasTelemetry {
       registerAppInfoHandlers(this.appWindow);
       registerAppHandlers();
 
-      ipcMain.handle(IPC_CHANNELS.TROUBLESHOOT, async () => await this.showTroubleshootingPage());
+      ipcMain.handle(IPC_CHANNELS.START_TROUBLESHOOTING, async () => await this.showTroubleshootingPage());
     } catch (error) {
       DesktopApp.fatalError({
         error,

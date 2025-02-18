@@ -54,6 +54,7 @@ export default tseslint.config(
       'unicorn/switch-case-braces': 'off',
       'unicorn/explicit-length-check': 'off',
       'unicorn/consistent-function-scoping': 'off',
+      'unicorn/prefer-event-target': 'off',
     },
   },
 

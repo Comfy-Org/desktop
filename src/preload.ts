@@ -408,8 +408,9 @@ const electronAPI = {
     },
   },
 
-  troubleshoot: async () => {
-    await ipcRenderer.invoke(IPC_CHANNELS.TROUBLESHOOT);
+  /** Prepares IPC handlers. Until #831 is resolved, this will always load the troubleshooting page. */
+  startTroubleshooting: async () => {
+    await ipcRenderer.invoke(IPC_CHANNELS.START_TROUBLESHOOTING);
   },
 
   uv: {
