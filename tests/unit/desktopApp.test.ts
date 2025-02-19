@@ -7,7 +7,7 @@ import { ProgressStatus } from '@/constants';
 import { IPC_CHANNELS } from '@/constants';
 import { DesktopApp } from '@/desktopApp';
 import { InstallationManager } from '@/install/installationManager';
-import type { IAppState } from '@/main-process/appState';
+import { useAppState } from '@/main-process/appState';
 import { ComfyDesktopApp } from '@/main-process/comfyDesktopApp';
 import type { ComfyInstallation } from '@/main-process/comfyInstallation';
 import { DevOverrides } from '@/main-process/devOverrides';
@@ -119,24 +119,12 @@ vi.mock('@/services/telemetry', () => ({
 
 describe('DesktopApp', () => {
   let desktopApp: DesktopApp;
-  let mockAppState: IAppState;
   let mockOverrides: Partial<DevOverrides>;
   let mockConfig: DesktopConfig;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockAppState = {
-      isQuitting: false,
-      ipcRegistered: false,
-      loaded: false,
-      currentPage: undefined,
-      on: vi.fn(),
-      once: vi.fn(),
-      off: vi.fn(),
-      emitIpcRegistered: vi.fn(),
-      emitLoaded: vi.fn(),
-    };
     mockOverrides = {
       useExternalServer: false,
       COMFY_HOST: undefined,
@@ -299,7 +287,7 @@ describe('DesktopApp', () => {
     it('should register all handlers and emit ipcRegistered', () => {
       desktopApp['registerIpcHandlers']();
 
-      expect(mockAppState.emitIpcRegistered).toHaveBeenCalled();
+      expect(useAppState().emitIpcRegistered).toHaveBeenCalled();
       expect(ipcMain.handle).toHaveBeenCalledWith(IPC_CHANNELS.START_TROUBLESHOOTING, expect.any(Function));
     });
 
