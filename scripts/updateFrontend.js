@@ -4,9 +4,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 try {
   // Create a new branch with version-bump prefix
   console.log('Creating new branch...');
-  const date = new Date().toISOString().split('T')[0];
-  const timestamp = Date.now();
-  const branchName = `version-bump-${date}-${timestamp}`;
+  const date = new Date();
+  const isoDate = date.toISOString().split('T')[0];
+  const timestamp = date.getTime();
+  const branchName = `version-bump-${isoDate}-${timestamp}`;
   execSync(`git checkout -b ${branchName} -t origin/main`, { stdio: 'inherit' });
 
   // Get latest frontend release: https://github.com/Comfy-Org/ComfyUI_frontend/releases
