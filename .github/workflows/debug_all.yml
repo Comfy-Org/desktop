@@ -17,6 +17,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.cursor/**'
       - '*_example'
+      - 'tests/**'
   push:
     branches:
       - 'main'
@@ -33,6 +34,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.cursor/**'
       - '*_example'
+      - 'tests/**'
 
 jobs:
   build-windows-debug-all:
