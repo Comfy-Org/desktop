@@ -15,5 +15,5 @@ globs:
   - Mocks should be re-usable where possible
   - Class mocks should be stored in a separate file and imported for use
 - Read at least five existing unit tests to determine testing patterns
-  - appWindow.test.ts is a good example
+  - appState.test.ts is a good example
   - desktopApp.test.ts is a good example
