@@ -34,9 +34,7 @@ try {
 
   // Create the PR
   console.log('Creating PR...');
-  execSync(`gh pr create --title "${message}" --label "dependencies" --body "${prBody}"`, {
-    stdio: 'inherit',
-  });
+  execSync(`gh pr create --title "${message}" --label "dependencies" --body "${prBody}"`, { stdio: 'inherit' });
 
   console.log(`✅ Successfully created PR for frontend ${version}`);
 } catch (error) {
