@@ -1,5 +1,7 @@
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+
+import packageJson from './getPackage.js';
 
 try {
   // Create a new branch with version-bump prefix
@@ -13,15 +15,16 @@ try {
   // Get latest frontend release: https://github.com/Comfy-Org/ComfyUI_frontend/releases
   const latestRelease = 'https://api.github.com/repos/Comfy-Org/ComfyUI_frontend/releases/latest';
   const latestReleaseData = await fetch(latestRelease);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, unicorn/no-await-expression-member, @typescript-eslint/no-unsafe-member-access
-  const latestReleaseTag = (await latestReleaseData.json()).tag_name;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+  /** @type {unknown} */
+  const json = await latestReleaseData.json();
+  if (!('tag_name' in json) || typeof json.tag_name !== 'string') {
+    throw new Error('Invalid response from GitHub');
+  }
+
+  const latestReleaseTag = json.tag_name;
   const version = latestReleaseTag.replace('v', '');
 
   // Update frontend version in package.json
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
   packageJson.config.frontendVersion = version;
   writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));
 
