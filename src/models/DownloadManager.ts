@@ -29,12 +29,12 @@ export interface DownloadState {
 export class DownloadManager {
   private static instance: DownloadManager;
   private readonly downloads: Map<string, Download>;
-  private readonly mainWindow: AppWindow;
-  private readonly modelsDirectory: string;
-  private constructor(mainWindow: AppWindow, modelsDirectory: string) {
+
+  private constructor(
+    private readonly mainWindow: AppWindow,
+    private readonly modelsDirectory: string
+  ) {
     this.downloads = new Map();
-    this.mainWindow = mainWindow;
-    this.modelsDirectory = modelsDirectory;
 
     session.defaultSession.on('will-download', (event, item) => {
       const url = item.getURLChain()[0]; // Get the original URL in case of redirects.
