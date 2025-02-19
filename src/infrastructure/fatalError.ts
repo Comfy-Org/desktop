@@ -1,6 +1,4 @@
-/**
- * An error that occurs when the app starts.
- */
+/** Generic error that should only be thrown if the app cannot continue executing. */
 export class FatalError extends Error {
   private constructor(message: string, cause?: Error) {
     super(message, { cause });
