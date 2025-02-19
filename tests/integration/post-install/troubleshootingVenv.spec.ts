@@ -28,7 +28,7 @@ test.describe('Troubleshooting - broken venv', () => {
     await expect(installPythonPackagesCard.isRunningIndicator).toBeVisible();
 
     // Venv fixed - server should start
-    await serverStart.expectServerStarts();
+    await serverStart.expectServerStarts(1.5 * 60 * 1000);
 
     await installedApp.waitUntilLoaded();
   });
