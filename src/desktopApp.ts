@@ -23,7 +23,7 @@ import { DesktopConfig } from './store/desktopConfig';
 export class DesktopApp implements HasTelemetry {
   readonly telemetry: ITelemetry = getTelemetry();
   readonly appState: IAppState = useAppState();
-  readonly appWindow: AppWindow;
+  readonly appWindow: AppWindow = new AppWindow();
 
   comfyDesktopApp?: ComfyDesktopApp;
   installation?: ComfyInstallation;
@@ -31,9 +31,7 @@ export class DesktopApp implements HasTelemetry {
   constructor(
     private readonly overrides: DevOverrides,
     private readonly config: DesktopConfig
-  ) {
-    this.appWindow = new AppWindow(this.appState);
-  }
+  ) {}
 
   /** Load start screen - basic spinner */
   async showLoadingPage() {
