@@ -23,6 +23,15 @@ export interface DownloadState {
   isPaused: boolean;
 }
 
+interface DownloadReport {
+  url: string;
+  progress: number;
+  status: DownloadStatus;
+  filename: string;
+  savePath: string;
+  message?: string;
+}
+
 /**
  * Singleton class that manages downloading model checkpoints for ComfyUI.
  */
@@ -284,30 +293,11 @@ export class DownloadManager {
     return absoluteFilePath.startsWith(absoluteModelsDir);
   }
 
-  private reportProgress({
-    url,
-    progress,
-    status,
-    savePath,
-    filename,
-    message = '',
-  }: {
-    url: string;
-    progress: number;
-    status: DownloadStatus;
-    filename: string;
-    savePath: string;
-    message?: string;
-  }): void {
-    log.info(`Download progress [${filename}]: ${progress}, status: ${status}, message: ${message}`);
-    this.mainWindow.send(IPC_CHANNELS.DOWNLOAD_PROGRESS, {
-      url,
-      progress,
-      status,
-      message,
-      savePath,
-      filename,
-    });
+  private reportProgress(report: DownloadReport): void {
+    log.info(
+      `Download progress [${report.filename}]: ${report.progress}, status: ${report.status}, message: ${report.message}`
+    );
+    this.mainWindow.send(IPC_CHANNELS.DOWNLOAD_PROGRESS, { ...report });
   }
 
   public static getInstance(mainWindow: AppWindow, modelsDirectory: string): DownloadManager {
