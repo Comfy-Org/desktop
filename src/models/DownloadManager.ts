@@ -148,7 +148,7 @@ export class DownloadManager {
     const existingDownload = this.downloads.get(url);
     if (existingDownload) {
       log.info('Download already exists');
-      if (existingDownload.item && existingDownload.item.isPaused()) {
+      if (existingDownload.item?.isPaused()) {
         this.resumeDownload(url);
       }
       return true;
