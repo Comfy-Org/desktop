@@ -25,13 +25,16 @@ try {
   packageJson.config.frontendVersion = version;
   writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));
 
+  // Messaging
+  const message = `[chore] Update frontend to ${version}`;
+  const prBody = `Automated frontend update to ${version}: https://github.com/Comfy-Org/ComfyUI_frontend/releases/tag/v${version}`;
+
   // Commit the version bump
-  execSync(`git commit -am "[chore] Update frontend to ${version}" --no-verify`, { stdio: 'inherit' });
+  execSync(`git commit -am "${message}" --no-verify`, { stdio: 'inherit' });
 
   // Create the PR
   console.log('Creating PR...');
-  const prBody = `Automated frontend update to ${version}: https://github.com/Comfy-Org/ComfyUI_frontend/releases/tag/v${version}`;
-  execSync(`gh pr create --title "[chore] Update frontend to ${version}" --label "dependencies" --body "${prBody}"`, {
+  execSync(`gh pr create --title "${message}" --label "dependencies" --body "${prBody}"`, {
     stdio: 'inherit',
   });
 
