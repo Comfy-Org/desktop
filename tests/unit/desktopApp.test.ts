@@ -151,7 +151,7 @@ describe('DesktopApp', () => {
       permanentlyDeleteConfigFile: vi.fn(),
     } as unknown as DesktopConfig;
 
-    desktopApp = new DesktopApp(mockAppState, mockOverrides as DevOverrides, mockConfig);
+    desktopApp = new DesktopApp(mockOverrides as DevOverrides, mockConfig);
   });
 
   describe('showLoadingPage', () => {
@@ -207,7 +207,7 @@ describe('DesktopApp', () => {
 
     it('should skip server start when using external server', async () => {
       mockOverrides = { ...mockOverrides, useExternalServer: true };
-      desktopApp = new DesktopApp(mockAppState, mockOverrides as DevOverrides, mockConfig);
+      desktopApp = new DesktopApp(mockOverrides as DevOverrides, mockConfig);
 
       await desktopApp.start();
 

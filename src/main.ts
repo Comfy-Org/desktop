@@ -6,7 +6,7 @@ import log from 'electron-log/main';
 
 import { DesktopApp } from './desktopApp';
 import { removeAnsiCodesTransform, replaceFileLoggingTransform } from './infrastructure/structuredLogging';
-import { AppState } from './main-process/appState';
+import { initializeAppState } from './main-process/appState';
 import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
 import { getTelemetry } from './services/telemetry';
@@ -17,7 +17,7 @@ dotenv.config();
 initalizeLogging();
 
 const telemetry = getTelemetry();
-const appState = new AppState();
+initializeAppState();
 const overrides = new DevOverrides();
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
@@ -56,7 +56,7 @@ async function startApp() {
     });
   }
 
-  const desktopApp = new DesktopApp(appState, overrides, config);
+  const desktopApp = new DesktopApp(overrides, config);
   await desktopApp.showLoadingPage();
   await desktopApp.start();
 }

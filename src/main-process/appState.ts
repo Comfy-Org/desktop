@@ -1,6 +1,7 @@
 import { app } from 'electron';
 import { EventEmitter } from 'node:events';
 
+import { AppStartError } from '@/infrastructure/appStartError';
 import type { Page } from '@/infrastructure/interfaces';
 
 /** App event names */
@@ -35,15 +36,13 @@ export interface IAppState extends Pick<EventEmitter<AppStateEvents>, 'on' | 'on
 /**
  * Concrete implementation of {@link IAppState}.
  */
-export class AppState extends EventEmitter<AppStateEvents> implements IAppState {
+class AppState extends EventEmitter<AppStateEvents> implements IAppState {
   isQuitting = false;
   ipcRegistered = false;
   loaded = false;
   currentPage?: Page;
 
-  constructor() {
-    super();
-
+  initialize() {
     // Store quitting state - suppresses errors when already quitting
     app.once('before-quit', () => {
       this.isQuitting = true;
@@ -64,4 +63,27 @@ export class AppState extends EventEmitter<AppStateEvents> implements IAppState 
   emitLoaded() {
     if (!this.loaded) this.emit('loaded');
   }
+}
+
+const appState = new AppState();
+let initialized = false;
+
+/**
+ * Initializes the app state singleton.
+ * @throws {AppStartError} if called more than once.
+ */
+export function initializeAppState(): void {
+  if (initialized) throw new AppStartError('AppState already initialized');
+  appState.initialize();
+  initialized = true;
+}
+
+/**
+ * Returns the app state singleton.
+ * @see {@link initializeAppState}
+ * @throws {AppStartError} if {@link initializeAppState} is not called first.
+ */
+export function useAppState(): IAppState {
+  if (!initialized) throw new AppStartError('AppState not initialized');
+  return appState;
 }
