@@ -1,4 +1,5 @@
 import { readFile, rename, rm, writeFile } from 'node:fs/promises';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { getComfyUIAppDataPath, getDefaultInstallLocation, pathExists } from 'tests/shared/utils';
 
@@ -20,6 +21,7 @@ export class TestEnvironment implements AsyncDisposable {
 
   #haveBrokenInstallPath = false;
   #haveBrokenVenv = false;
+  #haveBrokenServerStart = false;
 
   async readConfig() {
     const config = await readFile(this.configPath, 'utf8');
@@ -68,6 +70,46 @@ export class TestEnvironment implements AsyncDisposable {
     await rename(`${venvPath}-invalid`, venvPath);
   }
 
+  async breakServerStart() {
+    this.#haveBrokenServerStart = true;
+    try {
+      const filePath = path.join(this.defaultInstallLocation, 'user', 'default', 'comfy.settings.json');
+      const json = await fs.readFile(filePath, 'utf8');
+
+      const comfySettings = JSON.parse(json);
+      const launchArgs = comfySettings['Comfy.Server.LaunchArgs'];
+      if (!launchArgs) throw new Error('Could not reach launch args from comfy.settings.json');
+
+      delete launchArgs.cpu;
+      comfySettings['Comfy.Server.LaunchArgs'] = launchArgs;
+
+      await fs.writeFile(filePath, JSON.stringify(comfySettings, null, 2));
+    } catch (error) {
+      this.#haveBrokenServerStart = false;
+      throw error;
+    }
+  }
+
+  async restoreServerStart() {
+    if (!this.#haveBrokenServerStart) {
+      console.warn('Attempt to restore server start ignored - have not called breakServerStart()');
+      return;
+    }
+    this.#haveBrokenServerStart = false;
+    try {
+      const filePath = path.join(this.defaultInstallLocation, 'user', 'default', 'comfy.settings.json');
+      const json = await fs.readFile(filePath, 'utf8');
+
+      const comfySettings = JSON.parse(json);
+      comfySettings['Comfy.Server.LaunchArgs'].cpu = '';
+
+      await fs.writeFile(filePath, JSON.stringify(comfySettings, null, 2));
+    } catch (error) {
+      this.#haveBrokenServerStart = true;
+      throw error;
+    }
+  }
+
   async deleteEverything() {
     await this.deleteAppData();
     await this.deleteInstallLocation();
@@ -91,5 +133,6 @@ export class TestEnvironment implements AsyncDisposable {
   async [Symbol.asyncDispose]() {
     await this.restoreInstallPath();
     await this.restoreVenv();
+    await this.restoreServerStart();
   }
 }

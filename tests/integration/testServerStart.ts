@@ -6,7 +6,7 @@ import { TestServerStatus } from './testServerStatus';
 export class TestServerStart {
   readonly openLogsButton;
   readonly reportIssueButton;
-  readonly reinstallButton;
+  readonly troubleshootButton;
   readonly showTerminalButton;
   readonly terminal;
   readonly status;
@@ -14,7 +14,7 @@ export class TestServerStart {
   constructor(readonly window: Page) {
     this.reportIssueButton = this.getButton('Report Issue');
     this.openLogsButton = this.getButton('Open Logs');
-    this.reinstallButton = this.getButton('Reinstall');
+    this.troubleshootButton = this.getButton('Troubleshoot');
     this.showTerminalButton = this.getButton('Show Terminal');
 
     this.terminal = this.window.locator('.terminal-host');
