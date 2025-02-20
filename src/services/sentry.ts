@@ -2,11 +2,12 @@ import * as Sentry from '@sentry/electron/main';
 import { app, dialog } from 'electron';
 import log from 'electron-log/main';
 import fs from 'node:fs';
+import path from 'node:path';
 import { graphics } from 'systeminformation';
 
 import { useComfySettings } from '@/config/comfySettings';
 
-import { SENTRY_URL_ENDPOINT } from '../constants';
+import { COMFYUI_LOG_FILENAME, MAIN_LOG_FILENAME, SENTRY_URL_ENDPOINT } from '../constants';
 
 const NUM_LOG_LINES_CAPTURED = 64;
 const SENTRY_PROJECT_ID = '4508007940685824';
@@ -18,10 +19,11 @@ const stripLogMetadata = (line: string): string =>
   // Remove timestamp and log level pattern like [2024-03-14 10:15:30.123] [info]
   line.replace(/^\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3}]\s+\[\w+]\s+/, '');
 
-const getLogTail = (numLines: number): string => {
+const getLogTail = (numLines: number, logFilename: string): string => {
   try {
-    const currentLogFile = log.transports.file.getFile();
-    const content = fs.readFileSync(currentLogFile.path, 'utf8');
+    const logPath = path.join(app.getPath('logs'), logFilename);
+    if (!fs.existsSync(logPath)) return `Log file not found at path: ${logPath}`;
+    const content = fs.readFileSync(logPath, 'utf8');
     return content
       .split('\n')
       .filter(Boolean) // remove empty lines
@@ -50,7 +52,8 @@ export function captureSentryException(error: Error) {
       torchMirror: settings.get('Comfy-Desktop.UV.TorchInstallMirror'),
     },
     extra: {
-      logs: getLogTail(NUM_LOG_LINES_CAPTURED),
+      logs: getLogTail(NUM_LOG_LINES_CAPTURED, MAIN_LOG_FILENAME),
+      comfyLogs: getLogTail(NUM_LOG_LINES_CAPTURED, COMFYUI_LOG_FILENAME),
     },
   });
   return createSentryUrl(eventId);
@@ -100,12 +103,7 @@ class SentryLogging {
     try {
       const graphicsInfo = await graphics();
       const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
-        [`gpu_${index}`]: {
-          vendor: gpu.vendor,
-          model: gpu.model,
-          vram: gpu.vram,
-          driver: gpu.driverVersion,
-        },
+        [`gpu_${index}`]: { vendor: gpu.vendor, model: gpu.model, vram: gpu.vram, driver: gpu.driverVersion },
       }));
 
       // Combine all GPU info into a single object

@@ -8,7 +8,7 @@ import { removeAnsiCodesTransform } from '@/infrastructure/structuredLogging';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings } from '../config/comfySettings';
-import { IPC_CHANNELS, ServerArgs } from '../constants';
+import { COMFYUI_LOG_FILENAME, IPC_CHANNELS, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { rotateLogFiles } from '../utils';
@@ -124,7 +124,7 @@ export class ComfyServer implements HasTelemetry {
     await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
     return new Promise<void>((resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });
-      comfyUILog.transports.file.fileName = 'comfyui.log';
+      comfyUILog.transports.file.fileName = COMFYUI_LOG_FILENAME;
 
       comfyUILog.transports.file.transforms.unshift(removeAnsiCodesTransform);
 

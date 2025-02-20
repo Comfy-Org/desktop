@@ -2,6 +2,7 @@ import { readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { getComfyUIAppDataPath, getDefaultInstallLocation, pathExists } from 'tests/shared/utils';
 
+import { COMFYUI_LOG_FILENAME, MAIN_LOG_FILENAME } from '@/constants';
 import type { DesktopSettings } from '@/store/desktopSettings';
 
 import { TempDirectory } from './tempDirectory';
@@ -14,8 +15,8 @@ export class TestEnvironment implements AsyncDisposable {
   readonly installLocation: TempDirectory = new TempDirectory();
   readonly defaultInstallLocation: string = getDefaultInstallLocation();
 
-  readonly mainLogPath: string = path.join(this.appDataDir, 'logs', 'main.log');
-  readonly comfyuiLogPath: string = path.join(this.appDataDir, 'logs', 'comfyui.log');
+  readonly mainLogPath: string = path.join(this.appDataDir, 'logs', MAIN_LOG_FILENAME);
+  readonly comfyuiLogPath: string = path.join(this.appDataDir, 'logs', COMFYUI_LOG_FILENAME);
 
   #haveBrokenInstallPath = false;
   #haveBrokenVenv = false;

@@ -130,3 +130,6 @@ export enum DownloadStatus {
 export const CUDA_TORCH_URL = 'https://download.pytorch.org/whl/cu126';
 export const NIGHTLY_CPU_TORCH_URL = 'https://download.pytorch.org/whl/nightly/cpu';
 export const DEFAULT_PYPI_INDEX_URL = 'https://pypi.org/simple/';
+
+export const COMFYUI_LOG_FILENAME = 'comfyui.log';
+export const MAIN_LOG_FILENAME = 'main.log';
