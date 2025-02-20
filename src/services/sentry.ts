@@ -103,7 +103,12 @@ class SentryLogging {
     try {
       const graphicsInfo = await graphics();
       const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
-        [`gpu_${index}`]: { vendor: gpu.vendor, model: gpu.model, vram: gpu.vram, driver: gpu.driverVersion },
+        [`gpu_${index}`]: {
+          vendor: gpu.vendor,
+          model: gpu.model,
+          vram: gpu.vram,
+          driver: gpu.driverVersion,
+        },
       }));
 
       // Combine all GPU info into a single object
