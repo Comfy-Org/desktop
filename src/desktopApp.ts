@@ -158,8 +158,6 @@ export class DesktopApp implements HasTelemetry {
         await this.appWindow.loadPage('maintenance');
       }
       await new Promise((resolve) => ipcMain.handleOnce(IPC_CHANNELS.COMPLETE_VALIDATION, resolve));
-
-      await this.start();
     } catch (error) {
       DesktopApp.fatalError({
         error,
@@ -168,6 +166,8 @@ export class DesktopApp implements HasTelemetry {
         exitCode: 2001,
       });
     }
+
+    await this.start();
   }
 
   /**
