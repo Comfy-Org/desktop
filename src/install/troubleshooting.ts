@@ -17,11 +17,12 @@ import { useDesktopConfig } from '@/store/desktopConfig';
 export class Troubleshooting implements Disposable {
   readonly #handlers: ((data: InstallValidation) => unknown)[] = [];
 
+  /** Called when an install-fixing task has finished. */
+  onInstallFix?: () => Promise<unknown>;
+
   constructor(
     private readonly installation: ComfyInstallation,
-    private readonly appWindow: AppWindow,
-    /** Called when an install-fixing task has finished. */
-    readonly onInstallFix?: () => Promise<unknown>
+    private readonly appWindow: AppWindow
   ) {
     this.#setOnUpdateCallback();
     this.#addIpcHandlers();

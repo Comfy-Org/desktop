@@ -46,10 +46,9 @@ export class InstallationManager implements HasTelemetry {
 
   private async validateInstallation(installation: ComfyInstallation) {
     this.#onMaintenancePage = false;
-    const validate = async () => await installation.validate();
 
     // Send updates to renderer
-    using troubleshooting = new Troubleshooting(installation, this.appWindow, validate);
+    using troubleshooting = new Troubleshooting(installation, this.appWindow);
     troubleshooting.addOnUpdateHandler((data) => this.#onUpdateHandler(data));
 
     // Determine actual install state
@@ -63,7 +62,7 @@ export class InstallationManager implements HasTelemetry {
 
     // Resolve issues and re-run validation
     if (installation.hasIssues) {
-      while (!(await this.resolveIssues(installation))) {
+      while (!(await this.resolveIssues(installation, troubleshooting))) {
         // Re-run validation
         log.verbose('Re-validating installation.');
       }
@@ -247,12 +246,12 @@ export class InstallationManager implements HasTelemetry {
    * @param installation The installation to resolve issues for
    * @throws If the base path is invalid or cannot be saved
    */
-  async resolveIssues(installation: ComfyInstallation) {
+  async resolveIssues(installation: ComfyInstallation, troubleshooting: Troubleshooting) {
     log.verbose('Resolving issues - awaiting user response:', installation.validation);
 
     // Await user close window request, validate if any errors remain
     const isValid = await new Promise<boolean>((resolve) => {
-      ipcMain.handleOnce(IPC_CHANNELS.COMPLETE_VALIDATION, async (): Promise<boolean> => {
+      const onInstallFix = async (): Promise<boolean> => {
         log.verbose('Attempting to close validation window');
         // Check if issues have been resolved externally
         if (!installation.isValid) await installation.validate();
@@ -261,8 +260,13 @@ export class InstallationManager implements HasTelemetry {
         const { isValid } = installation;
         resolve(isValid);
         return isValid;
-      });
+      };
+
+      troubleshooting.onInstallFix = onInstallFix;
+      ipcMain.handleOnce(IPC_CHANNELS.COMPLETE_VALIDATION, onInstallFix);
     });
+    // Handler is only called (and removed) when manually clicking the continue button.
+    ipcMain.removeHandler(IPC_CHANNELS.COMPLETE_VALIDATION);
 
     log.verbose('Resolution complete:', installation.validation);
     return isValid;
