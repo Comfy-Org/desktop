@@ -10,7 +10,7 @@
   "packageManager": "yarn@4.5.0",
   "type": "module",
   "config": {
-    "frontendVersion": "1.9.18",
+    "frontendVersion": "1.9.19",
     "comfyUI": {
       "version": "0.3.14",
       "optionalBranch": "desktop-release-feb192025"
