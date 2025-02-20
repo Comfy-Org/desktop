@@ -413,6 +413,11 @@ const electronAPI = {
     await ipcRenderer.invoke(IPC_CHANNELS.START_TROUBLESHOOTING);
   },
 
+  /** Disables custom nodes by setting the `Comfy.Server.LaunchArgs` to an empty array. */
+  disableCustomNodes: async () => {
+    await ipcRenderer.invoke(IPC_CHANNELS.DISABLE_CUSTOM_NODES);
+  },
+
   uv: {
     /**
      * Install the requirements for the ComfyUI server.
