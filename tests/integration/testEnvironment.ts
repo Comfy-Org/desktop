@@ -36,10 +36,7 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async restoreInstallPath() {
-    if (!this.#haveBrokenInstallPath) {
-      console.warn('Attempt to restore install path ignored - have not called breakInstallPath()');
-      return;
-    }
+    if (!this.#haveBrokenInstallPath) return;
     this.#haveBrokenInstallPath = false;
 
     const config = await this.readConfig();
@@ -54,10 +51,7 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async restoreVenv() {
-    if (!this.#haveBrokenVenv) {
-      console.warn('Attempt to restore venv ignored - have not called breakVenv()');
-      return;
-    }
+    if (!this.#haveBrokenVenv) return;
     this.#haveBrokenVenv = false;
 
     const venvPath = path.join(this.defaultInstallLocation, '.venv');
@@ -91,10 +85,7 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async restoreServerStart() {
-    if (!this.#haveBrokenServerStart) {
-      console.warn('Attempt to restore server start ignored - have not called breakServerStart()');
-      return;
-    }
+    if (!this.#haveBrokenServerStart) return;
     this.#haveBrokenServerStart = false;
     try {
       const filePath = path.join(this.defaultInstallLocation, 'user', 'default', 'comfy.settings.json');
