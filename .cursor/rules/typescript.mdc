@@ -1,0 +1,8 @@
+---
+description: TypeScript Code Standards
+globs: 
+---
+# TypeScript Code Standards
+
+- Instead of `@ts-ignore`, prefer `@ts-expect-error`
+- Prefer modern, clean code
