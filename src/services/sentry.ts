@@ -41,7 +41,7 @@ const getLogTail = (numLines: number, logFilename: string): string => {
  * @param error The error to capture
  * @returns The Sentry URL for the captured event
  */
-export function captureSentryException(error: Error) {
+export function captureSentryException(error: unknown) {
   const settings = useComfySettings();
   const eventId = Sentry.captureException(error, {
     tags: {

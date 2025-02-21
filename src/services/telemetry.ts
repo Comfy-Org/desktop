@@ -193,7 +193,7 @@ export function trackEvent<T extends HasTelemetry>(eventName: string) {
   type DecoratedMethod = (this: T, ...args: never[]) => Promise<void>;
   type MethodDescriptor = TypedPropertyDescriptor<DecoratedMethod>;
 
-  return function (target: T, propertyKey: string, descriptor: MethodDescriptor) {
+  return (target: T, propertyKey: string, descriptor: MethodDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args) {
@@ -204,11 +204,11 @@ export function trackEvent<T extends HasTelemetry>(eventName: string) {
         .then(() => {
           this.telemetry.track(`${eventName}_end`);
         })
-        .catch((error: Error) => {
+        .catch((error: unknown) => {
           const sentryUrl = captureSentryException(error);
           this.telemetry.track(`${eventName}_error`, {
-            error_message: error.message,
-            error_name: error.name,
+            error_message: (error as Error)?.message,
+            error_name: (error as Error)?.name,
             sentry_url: sentryUrl,
           });
           throw error;
