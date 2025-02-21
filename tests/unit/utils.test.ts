@@ -13,7 +13,7 @@ describe('validateHardware', () => {
   });
 
   it('accepts Apple Silicon Mac', async () => {
-    Object.defineProperty(process, 'platform', { value: 'darwin' });
+    vi.stubGlobal('process', { ...process, platform: 'darwin' });
     vi.mocked(si.cpu).mockResolvedValue({ manufacturer: 'Apple' } as Systeminformation.CpuData);
 
     const result = await validateHardware();
@@ -21,7 +21,7 @@ describe('validateHardware', () => {
   });
 
   it('rejects Intel Mac', async () => {
-    Object.defineProperty(process, 'platform', { value: 'darwin' });
+    vi.stubGlobal('process', { ...process, platform: 'darwin' });
     vi.mocked(si.cpu).mockResolvedValue({ manufacturer: 'Intel' } as Systeminformation.CpuData);
 
     const result = await validateHardware();
@@ -32,7 +32,7 @@ describe('validateHardware', () => {
   });
 
   it('accepts Windows with NVIDIA GPU', async () => {
-    Object.defineProperty(process, 'platform', { value: 'win32' });
+    vi.stubGlobal('process', { ...process, platform: 'win32' });
     vi.mocked(si.graphics).mockResolvedValue({
       controllers: [{ vendor: 'NVIDIA Corporation' }],
     } as Systeminformation.GraphicsData);
@@ -42,7 +42,7 @@ describe('validateHardware', () => {
   });
 
   it('rejects Windows with AMD GPU', async () => {
-    Object.defineProperty(process, 'platform', { value: 'win32' });
+    vi.stubGlobal('process', { ...process, platform: 'win32' });
     // Simulate a system with an AMD GPU
     vi.mocked(si.graphics).mockResolvedValue({
       controllers: [{ vendor: 'AMD', model: 'Radeon RX 6800' }],
