@@ -22,7 +22,7 @@ globs:
 
 ## Spec files: *.spec.ts
 
-- All spec files should import from `testExtensions.ts` in the `tests/integrations` directory
+- Prefer imports from [testExtensions.ts](mdc:tests/integration/testExtensions.ts) over playwright defaults.
 
 ## Test helper classes: tests/integration/test*.ts
 
