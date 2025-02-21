@@ -199,20 +199,18 @@ export function trackEvent<T extends HasTelemetry>(eventName: string) {
     descriptor.value = async function (...args) {
       this.telemetry.track(`${eventName}_start`);
 
-      return originalMethod!
-        .apply(this, args)
-        .then(() => {
-          this.telemetry.track(`${eventName}_end`);
-        })
-        .catch((error: unknown) => {
-          const sentryUrl = captureSentryException(error);
-          this.telemetry.track(`${eventName}_error`, {
-            error_message: (error as Error)?.message,
-            error_name: (error as Error)?.name,
-            sentry_url: sentryUrl,
-          });
-          throw error;
+      try {
+        await originalMethod!.apply(this, args);
+        this.telemetry.track(`${eventName}_end`);
+      } catch (error) {
+        const sentryUrl = captureSentryException(error);
+        this.telemetry.track(`${eventName}_error`, {
+          error_message: (error as Error)?.message,
+          error_name: (error as Error)?.name,
+          sentry_url: sentryUrl,
         });
+        throw error;
+      }
     };
 
     return descriptor;
