@@ -88,6 +88,7 @@ export class ComfyServer implements HasTelemetry {
       'front-end-root': this.webRootPath,
       'base-directory': this.basePath,
       'extra-model-paths-config': ComfyServerConfig.configPath,
+      'log-stdout': '',
     };
   }
 
