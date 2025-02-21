@@ -31,8 +31,6 @@ async function copyFixture(fixturePath: string, targetPath: string) {
 
 describe('ComfyServerConfig', () => {
   let tempDir = '';
-  const originalPlatform = process.platform;
-  const originalEnv = process.env;
 
   beforeAll(async () => {
     tempDir = await createTmpDir();
@@ -44,12 +42,11 @@ describe('ComfyServerConfig', () => {
 
   afterAll(async () => {
     await rm(tempDir, { recursive: true });
-    vi.stubGlobal('process', { platform: originalPlatform });
-    process.env = originalEnv;
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe('configPath', () => {
@@ -325,7 +322,7 @@ describe('ComfyServerConfig', () => {
       );
       expect(writeConfigSpy).toHaveBeenCalledWith(
         ComfyServerConfig.configPath,
-        expect.stringContaining('/mocked/app_resources/ComfyUI/custom_nodes')
+        expect.stringContaining(path.normalize('/mocked/app_resources/ComfyUI/custom_nodes'))
       );
     });
 
