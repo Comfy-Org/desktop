@@ -308,4 +308,100 @@ describe('ComfyServerConfig', () => {
       expect(result).toEqual({});
     });
   });
+
+  describe('addAppBundledCustomNodesToConfig', () => {
+    it('should add desktop_extensions when not present', async () => {
+      const mockConfig = {
+        comfyui_desktop: { base_path: '/test/path' },
+      };
+      vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(mockConfig);
+      const writeConfigSpy = vi.spyOn(ComfyServerConfig, 'writeConfigFile').mockResolvedValueOnce(true);
+
+      await ComfyServerConfig.addAppBundledCustomNodesToConfig();
+
+      expect(writeConfigSpy).toHaveBeenCalledWith(
+        ComfyServerConfig.configPath,
+        expect.stringContaining('desktop_extensions:')
+      );
+      expect(writeConfigSpy).toHaveBeenCalledWith(
+        ComfyServerConfig.configPath,
+        expect.stringContaining('/mocked/app_resources/ComfyUI/custom_nodes')
+      );
+    });
+
+    it('should not modify config when desktop_extensions already exists', async () => {
+      const mockConfig = {
+        comfyui_desktop: { base_path: '/test/path' },
+        desktop_extensions: { custom_nodes: '/existing/path' },
+      };
+      vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(mockConfig);
+      const writeConfigSpy = vi.spyOn(ComfyServerConfig, 'writeConfigFile');
+
+      await ComfyServerConfig.addAppBundledCustomNodesToConfig();
+
+      expect(writeConfigSpy).not.toHaveBeenCalled();
+    });
+
+    it('should handle config read failure', async () => {
+      vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(null);
+      const writeConfigSpy = vi.spyOn(ComfyServerConfig, 'writeConfigFile');
+
+      await ComfyServerConfig.addAppBundledCustomNodesToConfig();
+
+      expect(writeConfigSpy).not.toHaveBeenCalled();
+      expect(log.default.error).toHaveBeenCalledWith('Failed to read config file');
+    });
+  });
+
+  describe('setBasePathInDefaultConfig', () => {
+    it('should create new config file when none exists', async () => {
+      vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(null);
+      const createConfigSpy = vi.spyOn(ComfyServerConfig, 'createConfigFile').mockResolvedValueOnce(true);
+
+      const result = await ComfyServerConfig.setBasePathInDefaultConfig('/new/base/path');
+
+      expect(result).toBe(true);
+      expect(createConfigSpy).toHaveBeenCalledWith(
+        ComfyServerConfig.configPath,
+        expect.objectContaining({
+          comfyui_desktop: expect.objectContaining({
+            base_path: '/new/base/path',
+          }),
+        })
+      );
+    });
+
+    it('should update existing config file with new base path', async () => {
+      const existingConfig = {
+        comfyui_desktop: {
+          base_path: '/old/path',
+          custom_nodes: 'custom_nodes/',
+        },
+      };
+      vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(existingConfig);
+      const writeConfigSpy = vi.spyOn(ComfyServerConfig, 'writeConfigFile').mockResolvedValueOnce(true);
+
+      const result = await ComfyServerConfig.setBasePathInDefaultConfig('/new/base/path');
+
+      expect(result).toBe(true);
+      expect(writeConfigSpy).toHaveBeenCalledWith(
+        ComfyServerConfig.configPath,
+        expect.stringContaining('/new/base/path')
+      );
+    });
+
+    it('should create comfyui_desktop section if not present', async () => {
+      const existingConfig = {};
+      vi.spyOn(ComfyServerConfig, 'readConfigFile').mockResolvedValueOnce(existingConfig);
+      const writeConfigSpy = vi.spyOn(ComfyServerConfig, 'writeConfigFile').mockResolvedValueOnce(true);
+
+      const result = await ComfyServerConfig.setBasePathInDefaultConfig('/new/base/path');
+
+      expect(result).toBe(true);
+      expect(writeConfigSpy).toHaveBeenCalledWith(
+        ComfyServerConfig.configPath,
+        expect.stringContaining('comfyui_desktop:')
+      );
+    });
+  });
 });
