@@ -104,7 +104,7 @@ describe('ComfyConfigManager', () => {
 
       const structure = ['dir1', ['dir2', ['subdir1', 'subdir2']], ['dir3', [['subdir3', ['subsubdir1']]]]];
 
-      ComfyConfigManager['createNestedDirectories']('/fake/path', structure);
+      ComfyConfigManager.createNestedDirectories('/fake/path', structure);
 
       // Verify the correct paths were created
       expect(fs.mkdirSync).toHaveBeenCalledWith(expect.stringContaining('dir1'), expect.any(Object));
@@ -120,7 +120,7 @@ describe('ComfyConfigManager', () => {
         [123, ['subdir1']], // Invalid: non-string directory name
       ];
 
-      ComfyConfigManager['createNestedDirectories']('/fake/path', invalidStructure as DirectoryStructure);
+      ComfyConfigManager.createNestedDirectories('/fake/path', invalidStructure as DirectoryStructure);
 
       // Verify only valid directories were created
       expect(fs.mkdirSync).toHaveBeenCalledWith(expect.stringContaining('dir1'), expect.any(Object));
