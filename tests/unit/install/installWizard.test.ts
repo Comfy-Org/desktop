@@ -8,7 +8,7 @@ import { ComfyServerConfig, ModelPaths } from '../../../src/config/comfyServerCo
 import { ComfySettings } from '../../../src/config/comfySettings';
 import { InstallWizard } from '../../../src/install/installWizard';
 import { InstallOptions } from '../../../src/preload';
-import { ITelemetry } from '../../../src/services/telemetry';
+import { getTelemetry } from '../../../src/services/telemetry';
 
 vi.mock('node:fs', () => ({
   default: {
@@ -69,12 +69,6 @@ vi.mock('@sentry/electron/main', () => ({
 
 describe('InstallWizard', () => {
   let installWizard: InstallWizard;
-  const mockTelemetry: ITelemetry = {
-    track: vi.fn(),
-    hasConsent: true,
-    flush: vi.fn(),
-    registerHandlers: vi.fn(),
-  };
 
   const defaultInstallOptions: InstallOptions = {
     installPath: '/test/path',
@@ -89,7 +83,7 @@ describe('InstallWizard', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await ComfySettings.load('/test/path');
-    installWizard = new InstallWizard(defaultInstallOptions, mockTelemetry);
+    installWizard = new InstallWizard(defaultInstallOptions, getTelemetry());
   });
 
   describe('install', () => {
@@ -99,9 +93,9 @@ describe('InstallWizard', () => {
       await installWizard.install();
 
       expect(ComfyConfigManager.createComfyDirectories).toHaveBeenCalledWith('/test/path');
-      expect(mockTelemetry.track).toHaveBeenCalledTimes(2);
-      expect(mockTelemetry.track).toHaveBeenCalledWith('install_flow:create_comfy_directories_start');
-      expect(mockTelemetry.track).toHaveBeenCalledWith('install_flow:create_comfy_directories_end');
+      expect(getTelemetry().track).toHaveBeenCalledTimes(2);
+      expect(getTelemetry().track).toHaveBeenCalledWith('install_flow:create_comfy_directories_start');
+      expect(getTelemetry().track).toHaveBeenCalledWith('install_flow:create_comfy_directories_end');
     });
   });
 
@@ -110,7 +104,7 @@ describe('InstallWizard', () => {
       installWizard.initializeUserFiles();
 
       expect(fs.cpSync).not.toHaveBeenCalled();
-      expect(mockTelemetry.track).not.toHaveBeenCalled();
+      expect(getTelemetry().track).not.toHaveBeenCalled();
     });
 
     it('should copy user files when migration source is set and user_files is in migrationItemIds', () => {
@@ -120,7 +114,7 @@ describe('InstallWizard', () => {
           migrationSourcePath: '/source/path',
           migrationItemIds: ['user_files'],
         },
-        mockTelemetry
+        getTelemetry()
       );
 
       wizardWithMigration.initializeUserFiles();
@@ -128,7 +122,7 @@ describe('InstallWizard', () => {
       expect(fs.cpSync).toHaveBeenCalledWith(path.join('/source/path', 'user'), path.join('/test/path', 'user'), {
         recursive: true,
       });
-      expect(mockTelemetry.track).toHaveBeenCalledWith('migrate_flow:migrate_user_files');
+      expect(getTelemetry().track).toHaveBeenCalledWith('migrate_flow:migrate_user_files');
     });
   });
 
@@ -180,7 +174,7 @@ describe('InstallWizard', () => {
           ...defaultInstallOptions,
           device: 'cpu',
         },
-        mockTelemetry
+        getTelemetry()
       );
 
       await wizardWithCpu.initializeSettings();
@@ -214,7 +208,7 @@ describe('InstallWizard', () => {
           migrationSourcePath: '/source/path',
           migrationItemIds: ['models'],
         },
-        mockTelemetry
+        getTelemetry()
       );
 
       const baseConfig: ModelPaths = { test: 'config' };
@@ -238,7 +232,7 @@ describe('InstallWizard', () => {
           base_path: '/test/path',
         },
       });
-      expect(mockTelemetry.track).toHaveBeenCalledWith('migrate_flow:migrate_models');
+      expect(getTelemetry().track).toHaveBeenCalledWith('migrate_flow:migrate_models');
     });
   });
 });

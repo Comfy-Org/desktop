@@ -1,5 +1,7 @@
 import { vi } from 'vitest';
 
+import type { ITelemetry } from '@/services/telemetry';
+
 vi.mock('electron-log/main');
 
 vi.mock('@/main-process/appState', () => ({
@@ -14,3 +16,22 @@ vi.mock('@/main-process/appState', () => ({
     emitLoaded: vi.fn(),
   }),
 }));
+
+const mockTelemetry: ITelemetry = {
+  track: vi.fn(),
+  hasConsent: true,
+  flush: vi.fn(),
+  registerHandlers: vi.fn(),
+};
+
+vi.mock('@/services/sentry');
+
+vi.mock('@/services/telemetry', async () => {
+  const actual = await vi.importActual<typeof import('@/services/telemetry')>('@/services/telemetry');
+
+  return {
+    ...actual,
+    getTelemetry: vi.fn().mockReturnValue(mockTelemetry),
+    promptMetricsConsent: vi.fn().mockResolvedValue(true),
+  };
+});

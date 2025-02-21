@@ -9,6 +9,9 @@ import type { AppWindow } from '@/main-process/appWindow';
 import { MixpanelTelemetry, promptMetricsConsent } from '@/services/telemetry';
 import type { DesktopConfig } from '@/store/desktopConfig';
 
+vi.unmock('@sentry/electron/main');
+vi.unmock('@/services/telemetry');
+
 vi.mock('@sentry/electron/main', () => ({
   init: vi.fn(),
   captureException: vi.fn(),
