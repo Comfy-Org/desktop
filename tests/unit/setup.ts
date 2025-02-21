@@ -1,8 +1,18 @@
+import type { FileTransport, MainLogger, MainTransports } from 'electron-log';
+import log from 'electron-log/main';
 import { vi } from 'vitest';
 
 import type { ITelemetry } from '@/services/telemetry';
 
 vi.mock('electron-log/main');
+
+vi.mocked(log.create).mockReturnValue({
+  transports: {
+    file: {
+      transforms: [],
+    } as unknown as FileTransport,
+  } as unknown as MainTransports,
+} as unknown as MainLogger & { default: MainLogger });
 
 const appState = {
   initialize: vi.fn(),
