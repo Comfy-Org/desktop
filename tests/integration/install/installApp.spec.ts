@@ -35,12 +35,11 @@ test.describe('Install App', () => {
     await expect(serverStart.status.error).not.toBeVisible();
     await expect(serverStart.showTerminalButton).not.toBeVisible();
 
+    // Wait for the progress spinner to disappear
     await installedApp.waitUntilLoaded();
 
-    // This may cause flakiness.
-    await window.waitForTimeout(500);
-
     // Confirm post-install app state is as expected
+    await expect(installedApp.missingModelsDialogText).toBeVisible({ timeout: 30 * 1000 });
     await expect(window).toHaveScreenshot('installApp.png');
   });
 });
