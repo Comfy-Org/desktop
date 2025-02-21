@@ -65,9 +65,15 @@ export const test = baseTest.extend<DesktopTestOptions & DesktopTestFixtures>({
     await attachIfExists(testInfo, app.testEnvironment.mainLogPath);
     await attachIfExists(testInfo, app.testEnvironment.comfyuiLogPath);
   },
-  window: async ({ app }, use) => {
+  window: async ({ app }, use, testInfo) => {
     const window = await app.firstWindow();
     await use(window);
+
+    // Attach a screenshot if any errors occurred
+    if (testInfo.error) {
+      const screenshot = await window.screenshot();
+      await testInfo.attach('Tear-down screenshot.png', { body: screenshot, contentType: 'image/png' });
+    }
   },
   installedApp: async ({ window }, use) => {
     const installedApp = new TestInstalledApp(window);
@@ -98,5 +104,10 @@ export const test = baseTest.extend<DesktopTestOptions & DesktopTestFixtures>({
       await testInfo.attach(name, { body: screenshot, contentType: 'image/png' });
     };
     await use(attachScreenshot);
+
+    // When this fixture is requested but no screenshot is attached, attach a fallback
+    if (!testInfo.attachments.some((a) => a.contentType === 'image/png')) {
+      await attachScreenshot('Fallback screenshot.png');
+    }
   },
 });
