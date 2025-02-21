@@ -35,5 +35,6 @@ setup('Post-install Setup', async ({ installWizard, installedApp, serverStart, a
   await installedApp.waitUntilLoaded();
 
   // Always attach archival screenshot of installed app state
+  await expect(installedApp.missingModelsDialogText).toBeVisible({ timeout: 30 * 1000 });
   await attachScreenshot('installed app state.png');
 });
