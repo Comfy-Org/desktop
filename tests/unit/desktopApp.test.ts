@@ -25,8 +25,8 @@ vi.mock('electron', () => ({
     exit: vi.fn(() => {
       throw new Error('Test exited via app.exit()');
     }),
-    getPath: vi.fn().mockReturnValue('/mock/app/path'),
-    getAppPath: vi.fn().mockReturnValue('/mock/app/path'),
+    getPath: vi.fn(() => '/mock/app/path'),
+    getAppPath: vi.fn(() => '/mock/app/path'),
   },
   dialog: {
     showErrorBox: vi.fn(),
@@ -41,14 +41,14 @@ vi.mock('electron', () => ({
 }));
 
 const mockAppWindow = {
-  loadPage: vi.fn().mockResolvedValue(undefined),
+  loadPage: vi.fn(),
   send: vi.fn(),
   sendServerStartProgress: vi.fn(),
-  loadComfyUI: vi.fn().mockResolvedValue(undefined),
+  loadComfyUI: vi.fn(),
 };
 
 vi.mock('@/main-process/appWindow', () => ({
-  AppWindow: vi.fn().mockImplementation(() => mockAppWindow),
+  AppWindow: vi.fn(() => mockAppWindow),
 }));
 
 vi.mock('@/config/comfySettings', () => ({
@@ -59,18 +59,18 @@ vi.mock('@/config/comfySettings', () => ({
       saveSettings: vi.fn(),
     }),
   },
-  useComfySettings: vi.fn().mockReturnValue({
-    get: vi.fn().mockReturnValue('true'),
+  useComfySettings: vi.fn(() => ({
+    get: vi.fn(),
     set: vi.fn(),
     saveSettings: vi.fn(),
-  }),
+  })),
 }));
 
 vi.mock('@/store/desktopConfig', () => ({
-  useDesktopConfig: vi.fn().mockReturnValue({
-    get: vi.fn().mockReturnValue('/mock/path'),
+  useDesktopConfig: vi.fn(() => ({
+    get: vi.fn(() => '/mock/path'),
     set: vi.fn(),
-  }),
+  })),
 }));
 
 const mockInstallation: Partial<ComfyInstallation> = {
@@ -84,7 +84,7 @@ const mockInstallation: Partial<ComfyInstallation> = {
 };
 
 const mockInstallationManager = {
-  ensureInstalled: vi.fn().mockResolvedValue(mockInstallation),
+  ensureInstalled: vi.fn(() => Promise.resolve(mockInstallation)),
 };
 vi.mock('@/install/installationManager', () => ({
   InstallationManager: Object.assign(
@@ -94,27 +94,18 @@ vi.mock('@/install/installationManager', () => ({
 }));
 
 const mockComfyDesktopApp = {
-  buildServerArgs: vi.fn().mockResolvedValue({ port: '8188' }),
-  startComfyServer: vi.fn().mockResolvedValue(undefined),
+  buildServerArgs: vi.fn(),
+  startComfyServer: vi.fn(),
 };
 vi.mock('@/main-process/comfyDesktopApp', () => ({
-  ComfyDesktopApp: vi.fn().mockImplementation(() => mockComfyDesktopApp),
+  ComfyDesktopApp: vi.fn(() => mockComfyDesktopApp),
 }));
 
 vi.mock('@/services/sentry', () => ({
   default: {
-    setSentryGpuContext: vi.fn().mockResolvedValue(undefined),
+    setSentryGpuContext: vi.fn(),
     getBasePath: vi.fn(),
   },
-}));
-
-vi.mock('@/services/telemetry', () => ({
-  getTelemetry: vi.fn().mockReturnValue({
-    hasConsent: false,
-    track: vi.fn(),
-    flush: vi.fn(),
-  }),
-  promptMetricsConsent: vi.fn().mockResolvedValue(true),
 }));
 
 describe('DesktopApp', () => {

@@ -12,7 +12,7 @@ vi.mock('electron', () => ({
   app: {
     isPackaged: false,
     getPath: vi.fn(),
-    getVersion: vi.fn().mockReturnValue('1.0.0'),
+    getVersion: vi.fn(() => '1.0.0'),
   },
   ipcMain: {
     on: vi.fn(),
@@ -21,17 +21,17 @@ vi.mock('electron', () => ({
 }));
 
 vi.mock('@/store/desktopConfig', () => ({
-  useDesktopConfig: vi.fn().mockReturnValue({
-    get: vi.fn().mockImplementation((key) => {
+  useDesktopConfig: vi.fn(() => ({
+    get: vi.fn((key: string) => {
       if (key === 'basePath') return MOCK_BASE_PATH;
     }),
-    set: vi.fn().mockReturnValue(true),
-    getAsync: vi.fn().mockImplementation((key) => {
+    set: vi.fn(),
+    getAsync: vi.fn((key: string) => {
       if (key === 'windowStyle') return Promise.resolve(MOCK_WINDOW_STYLE);
       if (key === 'detectedGpu') return Promise.resolve(MOCK_GPU_NAME);
     }),
-    setAsync: vi.fn().mockReturnValue(Promise.resolve(true)),
-  }),
+    setAsync: vi.fn(),
+  })),
 }));
 
 vi.mock('@/config/comfyServerConfig', () => ({

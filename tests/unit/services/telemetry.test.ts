@@ -20,9 +20,9 @@ vi.mock('@sentry/electron/main', () => ({
 
 vi.mock('electron', () => ({
   app: {
-    getPath: vi.fn().mockReturnValue('/mock/user/data'),
+    getPath: vi.fn(() => '/mock/user/data'),
     isPackaged: true,
-    getVersion: vi.fn().mockReturnValue('1.0.0'),
+    getVersion: vi.fn(() => '1.0.0'),
   },
   ipcMain: {
     on: vi.fn(),
@@ -60,7 +60,7 @@ vi.mock('@/config/comfySettings', () => {
     ComfySettings: {
       load: vi.fn().mockResolvedValue(mockSettings),
     },
-    useComfySettings: vi.fn().mockReturnValue(mockSettings),
+    useComfySettings: vi.fn(() => mockSettings),
   };
 });
 
@@ -74,12 +74,14 @@ vi.mock('mixpanel', () => ({
   },
 }));
 
-vi.mock('@/store/desktopConfig', () => ({
-  useDesktopConfig: vi.fn().mockReturnValue({
-    get: vi.fn().mockReturnValue('/mock/path'),
-    set: vi.fn(),
-  }),
-}));
+const config = {
+  get: vi.fn(() => '/mock/path'),
+  set: vi.fn(),
+};
+const configModule = {
+  useDesktopConfig: vi.fn(() => config),
+};
+vi.mock('@/store/desktopConfig', () => configModule);
 
 describe('MixpanelTelemetry', () => {
   let telemetry: MixpanelTelemetry;
@@ -91,7 +93,7 @@ describe('MixpanelTelemetry', () => {
     },
   };
   const mockMixpanelClient = {
-    init: vi.fn().mockReturnValue(mockInitializedMixpanelClient),
+    init: vi.fn(() => mockInitializedMixpanelClient),
   };
 
   beforeEach(async () => {

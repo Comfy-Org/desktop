@@ -5,7 +5,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 
@@ -16,7 +16,7 @@ vi.mock('electron', () => ({
 }));
 
 vi.mock('@/install/resourcePaths', () => ({
-  getAppResourcesPath: vi.fn().mockReturnValue('/mocked/app_resources'),
+  getAppResourcesPath: vi.fn(() => '/mocked/app_resources'),
 }));
 
 async function createTmpDir() {
@@ -30,13 +30,17 @@ async function copyFixture(fixturePath: string, targetPath: string) {
 }
 
 describe('ComfyServerConfig', () => {
+  const mockUserDataPath = '/fake/user/data';
   let tempDir = '';
 
   beforeAll(async () => {
     tempDir = await createTmpDir();
-    vi.mocked(app.getPath).mockImplementation((name: string) => {
-      if (name === 'userData') return '/fake/user/data';
-      throw new Error(`Unexpected getPath key: ${name}`);
+  });
+
+  beforeEach(() => {
+    vi.mocked(app.getPath).mockImplementation((key: string) => {
+      if (key === 'userData') return '/fake/user/data';
+      throw new Error(`Unexpected getPath key: ${key}`);
     });
   });
 
@@ -46,17 +50,13 @@ describe('ComfyServerConfig', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-    vi.unstubAllGlobals();
   });
 
   describe('configPath', () => {
     it('should return the correct path', () => {
-      const mockUserDataPath = '/fake/user/data';
       const { getPath } = app;
       vi.mocked(getPath).mockImplementation((key: string) => {
-        if (key === 'userData') {
-          return mockUserDataPath;
-        }
+        if (key === 'userData') return mockUserDataPath;
         throw new Error(`Unexpected getPath key: ${key}`);
       });
 

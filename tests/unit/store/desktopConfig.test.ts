@@ -9,7 +9,7 @@ import { DesktopConfig, useDesktopConfig } from '@/store/desktopConfig';
 
 vi.mock('electron', () => ({
   app: {
-    getPath: vi.fn().mockReturnValue('/mock/user/data'),
+    getPath: vi.fn(() => '/mock/user/data'),
     quit: vi.fn(),
   },
   dialog: {

@@ -52,6 +52,8 @@ export default defineConfig((env) => {
       name: 'main',
       include: ['tests/unit/**/*.test.ts'],
       setupFiles: ['./tests/unit/setup.ts'],
+      restoreMocks: true,
+      unstubGlobals: true,
     },
   };
 

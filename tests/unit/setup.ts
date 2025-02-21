@@ -4,17 +4,18 @@ import type { ITelemetry } from '@/services/telemetry';
 
 vi.mock('electron-log/main');
 
+const appState = {
+  initialize: vi.fn(),
+  isQuitting: false,
+  ipcRegistered: false,
+  loaded: false,
+  currentPage: undefined,
+  emitIpcRegistered: vi.fn(),
+  emitLoaded: vi.fn(),
+};
 vi.mock('@/main-process/appState', () => ({
   initializeAppState: vi.fn(),
-  useAppState: vi.fn().mockReturnValue({
-    initialize: vi.fn(),
-    isQuitting: false,
-    ipcRegistered: false,
-    loaded: false,
-    currentPage: undefined,
-    emitIpcRegistered: vi.fn(),
-    emitLoaded: vi.fn(),
-  }),
+  useAppState: vi.fn(() => appState),
 }));
 
 const mockTelemetry: ITelemetry = {
@@ -31,7 +32,7 @@ vi.mock('@/services/telemetry', async () => {
 
   return {
     ...actual,
-    getTelemetry: vi.fn().mockReturnValue(mockTelemetry),
+    getTelemetry: vi.fn(() => mockTelemetry),
     promptMetricsConsent: vi.fn().mockResolvedValue(true),
   };
 });

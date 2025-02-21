@@ -15,15 +15,15 @@ import { findAvailablePort, getModelsDirectory } from '@/utils';
 // Mock dependencies
 vi.mock('@/config/comfySettings', () => {
   const mockSettings = {
-    get: vi.fn().mockReturnValue(true),
+    get: vi.fn(() => true),
     set: vi.fn(),
     saveSettings: vi.fn(),
   };
   return {
     ComfySettings: {
-      load: vi.fn().mockResolvedValue(mockSettings),
+      load: vi.fn(() => Promise.resolve(mockSettings)),
     },
-    useComfySettings: vi.fn().mockReturnValue(mockSettings),
+    useComfySettings: vi.fn(() => mockSettings),
   };
 });
 
@@ -63,7 +63,7 @@ const mockTerminal = {
   restore: vi.fn(),
 };
 vi.mock('@/shell/terminal', () => ({
-  Terminal: vi.fn().mockImplementation(() => mockTerminal),
+  Terminal: vi.fn(() => mockTerminal),
 }));
 
 vi.mock('@/main-process/comfyServer', () => ({

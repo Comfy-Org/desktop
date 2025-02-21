@@ -19,42 +19,43 @@ vi.mock('electron', () => ({
     on: vi.fn(),
   },
   app: {
-    getPath: vi.fn().mockReturnValue('valid/path'),
+    getPath: vi.fn(() => 'valid/path'),
   },
 }));
 
 vi.mock('node:fs/promises', () => ({
   default: {
     access: vi.fn(),
-    readFile: vi.fn().mockResolvedValue('{}'),
+    readFile: vi.fn(() => Promise.resolve('{}')),
   },
   access: vi.fn(),
-  readFile: vi.fn().mockResolvedValue('{}'),
+  readFile: vi.fn(() => Promise.resolve('{}')),
 }));
 
-vi.mock('@/store/desktopConfig', () => ({
-  useDesktopConfig: vi.fn().mockReturnValue({
-    get: vi.fn().mockImplementation((key: string) => {
-      if (key === 'installState') return 'installed';
-      if (key === 'basePath') return 'valid/base';
-    }),
-    set: vi.fn().mockImplementation((key: string, value: string) => {
-      if (key !== 'basePath') throw new Error(`Unexpected key: ${key}`);
-      if (!value) throw new Error(`Unexpected value: [${value}]`);
-    }),
+const config = {
+  get: vi.fn((key: string) => {
+    if (key === 'installState') return 'installed';
+    if (key === 'basePath') return 'valid/base';
   }),
+  set: vi.fn((key: string, value: string) => {
+    if (key !== 'basePath') throw new Error(`Unexpected key: ${key}`);
+    if (!value) throw new Error(`Unexpected value: [${value}]`);
+  }),
+};
+vi.mock('@/store/desktopConfig', () => ({
+  useDesktopConfig: vi.fn(() => config),
 }));
 
 vi.mock('@/utils', async () => {
   const actual = await vi.importActual<typeof utils>('@/utils');
   return {
     ...actual,
-    pathAccessible: vi.fn().mockImplementation((path: string) => {
+    pathAccessible: vi.fn((path: string) => {
       const isValid = path.startsWith('valid/') || path.endsWith(`\\System32\\vcruntime140.dll`);
       return Promise.resolve(isValid);
     }),
-    canExecute: vi.fn().mockResolvedValue(true),
-    canExecuteShellCommand: vi.fn().mockResolvedValue(true),
+    canExecute: vi.fn(() => Promise.resolve(true)),
+    canExecuteShellCommand: vi.fn(() => Promise.resolve(true)),
   };
 });
 
@@ -62,11 +63,13 @@ vi.mock('@/config/comfyServerConfig', () => {
   return {
     ComfyServerConfig: {
       configPath: 'valid/extra_models_config.yaml',
-      exists: vi.fn().mockReturnValue(true),
-      readBasePathFromConfig: vi.fn().mockResolvedValue({
-        status: 'success',
-        path: 'valid/base',
-      }),
+      exists: vi.fn(() => Promise.resolve(true)),
+      readBasePathFromConfig: vi.fn(() =>
+        Promise.resolve({
+          status: 'success',
+          path: 'valid/base',
+        })
+      ),
     },
   };
 });
@@ -74,9 +77,9 @@ vi.mock('@/config/comfyServerConfig', () => {
 // Mock VirtualEnvironment with basic implementation
 vi.mock('@/virtualEnvironment', () => {
   return {
-    VirtualEnvironment: vi.fn().mockImplementation(() => ({
-      exists: vi.fn().mockResolvedValue(true),
-      hasRequirements: vi.fn().mockResolvedValue(true),
+    VirtualEnvironment: vi.fn(() => ({
+      exists: vi.fn(() => Promise.resolve(true)),
+      hasRequirements: vi.fn(() => Promise.resolve(true)),
       pythonInterpreterPath: 'valid/python',
       uvPath: 'valid/uv',
       venvPath: 'valid/venv',
@@ -88,16 +91,16 @@ vi.mock('@/virtualEnvironment', () => {
 
 // Mock Telemetry
 vi.mock('@/services/telemetry', () => ({
-  getTelemetry: vi.fn().mockReturnValue({
+  getTelemetry: vi.fn(() => ({
     track: vi.fn(),
-  }),
+  })),
   trackEvent: () => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
 
 const createMockAppWindow = () => {
   const mock = {
     send: vi.fn(),
-    loadPage: vi.fn().mockResolvedValue(null),
+    loadPage: vi.fn(() => Promise.resolve(null)),
     showOpenDialog: vi.fn(),
     maximize: vi.fn(),
   };
@@ -147,10 +150,9 @@ describe('InstallationManager', () => {
 
   describe('ensureInstalled', () => {
     beforeEach(() => {
-      // eslint-disable-next-line @typescript-eslint/require-await
-      vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(async () => {
-        return new ComfyInstallation('installed', 'valid/base', createMockTelemetry());
-      });
+      vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() =>
+        Promise.resolve(new ComfyInstallation('installed', 'valid/base', createMockTelemetry()))
+      );
     });
 
     it('returns existing valid installation', async () => {
@@ -166,6 +168,9 @@ describe('InstallationManager', () => {
       {
         scenario: 'detects invalid base path',
         mockSetup: () => {
+          vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() =>
+            Promise.resolve(new ComfyInstallation('installed', 'invalid/base', createMockTelemetry()))
+          );
           vi.mocked(useDesktopConfig().get).mockImplementation((key: string) => {
             if (key === 'installState') return 'installed';
             if (key === 'basePath') return 'invalid/base';
