@@ -1,3 +1,5 @@
+import type { MainLogger } from 'electron-log';
+import log from 'electron-log/main';
 import { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import path from 'node:path';
@@ -17,7 +19,7 @@ vi.mock('electron', () => ({
 }));
 
 vi.mock('@/install/resourcePaths', () => ({
-  getAppResourcesPath: vi.fn().mockReturnValue('/mocked/app_resources'),
+  getAppResourcesPath: vi.fn(() => '/mocked/app_resources'),
 }));
 
 vi.mock('@sentry/electron/main', () => ({
@@ -62,6 +64,10 @@ const test = baseTest.extend<TestContext>({
     mockProcess.removeAllListeners();
   },
   server: async ({ mockServerArgs, mockVirtualEnvironment, mockAppWindow, mockTelemetry }, use) => {
+    vi.mocked(log.create).mockReturnValue({
+      transports: { file: { transforms: [] } },
+    } as unknown as MainLogger & { default: MainLogger });
+
     const server = new ComfyServer(
       basePath,
       mockServerArgs,
@@ -154,7 +160,7 @@ describe('coreLaunchArgs', () => {
       'front-end-root': server.webRootPath,
       'base-directory': basePath,
       'extra-model-paths-config': expect.any(String),
-      '--log-stdout': '',
+      'log-stdout': '',
     });
   });
 });
