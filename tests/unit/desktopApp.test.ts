@@ -113,9 +113,22 @@ interface TestFixtures {
   devOverrides: Mutable<DevOverrides>;
   desktopApp: DesktopApp;
   mockConfig: DesktopConfig;
+  mockInstallation: ComfyInstallation;
 }
 
 const test = baseTest.extend<TestFixtures>({
+  mockInstallation: async ({}, use) => {
+    const mockInstallation: Partial<ComfyInstallation> = {
+      basePath: '/mock/path',
+      virtualEnvironment: {} as any,
+      validation: {} as any,
+      hasIssues: false,
+      isValid: true,
+      state: 'installed',
+      telemetry: {} as ITelemetry,
+    };
+    await use(mockInstallation as ComfyInstallation);
+  },
   devOverrides: async ({}, use) => {
     const mockOverrides: Partial<DevOverrides> = {
       useExternalServer: false,
@@ -215,13 +228,12 @@ describe('DesktopApp', () => {
     expect(app.quit).toHaveBeenCalled();
   });
 
-  test('initializeTelemetry - initializes with user consent', async ({ desktopApp, mockConfig }) => {
-    const testInstallation = mockInstallation as ComfyInstallation;
+  test('initializeTelemetry - initializes with user consent', async ({ desktopApp, mockConfig, mockInstallation }) => {
     vi.mocked(promptMetricsConsent).mockResolvedValueOnce(true);
     vi.mocked(mockConfig.get).mockReturnValue('true');
     vi.mocked(useComfySettings().get).mockReturnValue('true');
 
-    await desktopApp['initializeTelemetry'](testInstallation);
+    await desktopApp['initializeTelemetry'](mockInstallation);
 
     expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow);
     expect(SentryLogging.setSentryGpuContext).toHaveBeenCalled();
@@ -229,13 +241,12 @@ describe('DesktopApp', () => {
     expect(desktopApp.telemetry.flush).toHaveBeenCalled();
   });
 
-  test('initializeTelemetry - respects user rejection', async ({ desktopApp, mockConfig }) => {
-    const testInstallation = mockInstallation as ComfyInstallation;
+  test('initializeTelemetry - respects user rejection', async ({ desktopApp, mockConfig, mockInstallation }) => {
     vi.mocked(promptMetricsConsent).mockResolvedValueOnce(false);
     vi.mocked(mockConfig.get).mockReturnValue('false');
     vi.mocked(useComfySettings().get).mockReturnValue('false');
 
-    await desktopApp['initializeTelemetry'](testInstallation);
+    await desktopApp['initializeTelemetry'](mockInstallation);
 
     expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow);
     expect(SentryLogging.setSentryGpuContext).toHaveBeenCalled();
@@ -287,8 +298,8 @@ describe('DesktopApp', () => {
     expect(app.exit).toHaveBeenCalledWith(2024);
   });
 
-  test('showTroubleshootingPage - shows page and restarts app', async ({ desktopApp }) => {
-    desktopApp.installation = mockInstallation as ComfyInstallation;
+  test('showTroubleshootingPage - shows page and restarts app', async ({ desktopApp, mockInstallation }) => {
+    desktopApp.installation = mockInstallation;
 
     // Mock IPC handler registration for COMPLETE_VALIDATION
     vi.mocked(ipcMain.handleOnce).mockImplementationOnce(
@@ -317,8 +328,8 @@ describe('DesktopApp', () => {
     expect(app.exit).toHaveBeenCalledWith(2001);
   });
 
-  test('showTroubleshootingPage - handles errors during page load', async ({ desktopApp }) => {
-    desktopApp.installation = mockInstallation as ComfyInstallation;
+  test('showTroubleshootingPage - handles errors during page load', async ({ desktopApp, mockInstallation }) => {
+    desktopApp.installation = mockInstallation;
     mockAppWindow.loadPage.mockRejectedValueOnce(new Error('Failed to load maintenance page'));
 
     await expect(() => desktopApp.showTroubleshootingPage()).rejects.toThrow('Test exited via app.exit()');
