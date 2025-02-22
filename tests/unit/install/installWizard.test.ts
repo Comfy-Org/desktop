@@ -107,6 +107,24 @@ describe('InstallWizard', () => {
       expect(getTelemetry().track).not.toHaveBeenCalled();
     });
 
+    it('should not copy files when source and destination are the same', () => {
+      const wizardWithSamePaths = new InstallWizard(
+        {
+          ...defaultInstallOptions,
+          installPath: '/test/path',
+          migrationSourcePath: '/test/path',
+          migrationItemIds: ['user_files'],
+        },
+        getTelemetry()
+      );
+
+      wizardWithSamePaths.initializeUserFiles();
+
+      expect(fs.cpSync).not.toHaveBeenCalled();
+      // Should still track that we attempted migration
+      expect(getTelemetry().track).toHaveBeenCalledWith('migrate_flow:migrate_user_files');
+    });
+
     it('should copy user files when migration source is set and user_files is in migrationItemIds', () => {
       const wizardWithMigration = new InstallWizard(
         {
