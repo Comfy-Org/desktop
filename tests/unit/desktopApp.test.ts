@@ -1,6 +1,6 @@
 import { IpcMainInvokeEvent, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
-import { test as baseTest, describe, expect, vi } from 'vitest';
+import { test as baseTest, beforeEach, describe, expect, vi } from 'vitest';
 
 import { useComfySettings } from '@/config/comfySettings';
 import { ProgressStatus } from '@/constants';
@@ -74,25 +74,7 @@ vi.mock('@/store/desktopConfig', () => ({
   })),
 }));
 
-const mockInstallation: Partial<ComfyInstallation> = {
-  basePath: '/mock/path',
-  virtualEnvironment: {} as any,
-  validation: {} as any,
-  hasIssues: false,
-  isValid: true,
-  state: 'installed',
-  telemetry: {} as ITelemetry,
-};
-
-const mockInstallationManager = {
-  ensureInstalled: vi.fn(() => Promise.resolve(mockInstallation)),
-};
-vi.mock('@/install/installationManager', () => ({
-  InstallationManager: Object.assign(
-    vi.fn(() => mockInstallationManager),
-    { setReinstallHandler: vi.fn() }
-  ),
-}));
+vi.mock('@/install/installationManager');
 
 const mockComfyDesktopApp = {
   buildServerArgs: vi.fn(),
@@ -114,10 +96,17 @@ interface TestFixtures {
   desktopApp: DesktopApp;
   mockConfig: DesktopConfig;
   mockInstallation: ComfyInstallation;
+  installationManager: InstallationManager;
   failingInstallationManager: InstallationManager;
 }
 
 const test = baseTest.extend<TestFixtures>({
+  installationManager: async ({ mockInstallation }, use) => {
+    const mockInstallationManager: Partial<InstallationManager> = {
+      ensureInstalled: vi.fn(() => Promise.resolve(mockInstallation)),
+    };
+    await use(mockInstallationManager as InstallationManager);
+  },
   failingInstallationManager: async ({}, use) => {
     const failingInstallationManager: Partial<InstallationManager> = {
       ensureInstalled: vi.fn(() => Promise.reject(new Error('Installation failed'))),
@@ -181,59 +170,65 @@ describe('DesktopApp', () => {
     expect(app.quit).toHaveBeenCalled();
   });
 
-  test('start - initializes and starts app successfully', async ({ desktopApp }) => {
-    await desktopApp.start();
-
-    expect(InstallationManager).toHaveBeenCalled();
-    expect(ComfyDesktopApp).toHaveBeenCalled();
-    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
-  });
-
-  test('start - handles installation failure', async ({ desktopApp, failingInstallationManager }) => {
-    vi.mocked(InstallationManager).mockImplementationOnce(() => failingInstallationManager);
-
-    await desktopApp.start();
-
-    expect(ComfyDesktopApp).not.toHaveBeenCalled();
-    expect(mockAppWindow.sendServerStartProgress).not.toHaveBeenCalledWith(ProgressStatus.READY);
-    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
-  });
-
-  test('start - handles server start failure', async ({ desktopApp }) => {
-    const error = new Error('Server start failed');
-    vi.mocked(mockComfyDesktopApp.startComfyServer).mockRejectedValueOnce(error);
-
-    await desktopApp.start();
-
-    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
-    expect(mockAppWindow.send).toHaveBeenCalledWith(
-      IPC_CHANNELS.LOG_MESSAGE,
-      expect.stringContaining(error.toString())
-    );
-  });
-
-  test('start - skips server start when using external server', async ({ devOverrides, mockConfig }) => {
-    devOverrides.useExternalServer = true;
-    const desktopApp = new DesktopApp(devOverrides, mockConfig);
-
-    await desktopApp.start();
-
-    expect(mockComfyDesktopApp.startComfyServer).not.toHaveBeenCalled();
-    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
-  });
-
-  test('start - handles unhandled exceptions during startup', async ({ desktopApp }) => {
-    const error = new Error('Unexpected error');
-    vi.mocked(mockComfyDesktopApp.buildServerArgs).mockImplementationOnce(() => {
-      throw error;
+  describe('start', () => {
+    beforeEach<TestFixtures>(({ installationManager }) => {
+      vi.mocked(InstallationManager).mockImplementation(() => installationManager);
     });
 
-    await expect(() => desktopApp.start()).rejects.toThrow('Test exited via app.quit()');
+    test('initializes and starts app successfully', async ({ desktopApp }) => {
+      await desktopApp.start();
 
-    expect(log.error).toHaveBeenCalledWith('Unhandled exception during app startup', error);
-    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
-    expect(dialog.showErrorBox).toHaveBeenCalled();
-    expect(app.quit).toHaveBeenCalled();
+      expect(InstallationManager).toHaveBeenCalled();
+      expect(ComfyDesktopApp).toHaveBeenCalled();
+      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
+    });
+
+    test('handles installation failure', async ({ desktopApp, failingInstallationManager }) => {
+      vi.mocked(InstallationManager).mockImplementationOnce(() => failingInstallationManager);
+
+      await desktopApp.start();
+
+      expect(ComfyDesktopApp).not.toHaveBeenCalled();
+      expect(mockAppWindow.sendServerStartProgress).not.toHaveBeenCalledWith(ProgressStatus.READY);
+      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
+    });
+
+    test('handles server start failure', async ({ desktopApp }) => {
+      const error = new Error('Server start failed');
+      vi.mocked(mockComfyDesktopApp.startComfyServer).mockRejectedValueOnce(error);
+
+      await desktopApp.start();
+
+      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
+      expect(mockAppWindow.send).toHaveBeenCalledWith(
+        IPC_CHANNELS.LOG_MESSAGE,
+        expect.stringContaining(error.toString())
+      );
+    });
+
+    test('skips server start when using external server', async ({ devOverrides, mockConfig }) => {
+      devOverrides.useExternalServer = true;
+      const desktopApp = new DesktopApp(devOverrides, mockConfig);
+
+      await desktopApp.start();
+
+      expect(mockComfyDesktopApp.startComfyServer).not.toHaveBeenCalled();
+      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
+    });
+
+    test('handles unhandled exceptions during startup', async ({ desktopApp }) => {
+      const error = new Error('Unexpected error');
+      vi.mocked(mockComfyDesktopApp.buildServerArgs).mockImplementationOnce(() => {
+        throw error;
+      });
+
+      await expect(() => desktopApp.start()).rejects.toThrow('Test exited via app.quit()');
+
+      expect(log.error).toHaveBeenCalledWith('Unhandled exception during app startup', error);
+      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
+      expect(dialog.showErrorBox).toHaveBeenCalled();
+      expect(app.quit).toHaveBeenCalled();
+    });
   });
 
   test('initializeTelemetry - initializes with user consent', async ({ desktopApp, mockConfig, mockInstallation }) => {
