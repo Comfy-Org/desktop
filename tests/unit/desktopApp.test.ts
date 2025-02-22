@@ -114,9 +114,16 @@ interface TestFixtures {
   desktopApp: DesktopApp;
   mockConfig: DesktopConfig;
   mockInstallation: ComfyInstallation;
+  failingInstallationManager: InstallationManager;
 }
 
 const test = baseTest.extend<TestFixtures>({
+  failingInstallationManager: async ({}, use) => {
+    const failingInstallationManager: Partial<InstallationManager> = {
+      ensureInstalled: vi.fn(() => Promise.reject(new Error('Installation failed'))),
+    };
+    await use(failingInstallationManager as InstallationManager);
+  },
   mockInstallation: async ({}, use) => {
     const mockInstallation: Partial<ComfyInstallation> = {
       basePath: '/mock/path',
@@ -182,13 +189,14 @@ describe('DesktopApp', () => {
     expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
   });
 
-  test('start - handles installation failure', async ({ desktopApp }) => {
-    vi.mocked(mockInstallationManager.ensureInstalled).mockRejectedValueOnce(new Error('Installation failed'));
+  test('start - handles installation failure', async ({ desktopApp, failingInstallationManager }) => {
+    vi.mocked(InstallationManager).mockImplementationOnce(() => failingInstallationManager);
 
     await desktopApp.start();
 
     expect(ComfyDesktopApp).not.toHaveBeenCalled();
     expect(mockAppWindow.sendServerStartProgress).not.toHaveBeenCalledWith(ProgressStatus.READY);
+    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
   });
 
   test('start - handles server start failure', async ({ desktopApp }) => {
