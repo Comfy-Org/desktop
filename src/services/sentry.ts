@@ -39,9 +39,10 @@ const getLogTail = (numLines: number, logFilename: string): string => {
 /**
  * Capture a Sentry exception and return the Sentry URL for the captured event.
  * @param error The error to capture
+ * @param eventName The name to tag the captured Sentry event with
  * @returns The Sentry URL for the captured event
  */
-export function captureSentryException(error: unknown) {
+export function captureSentryException(error: unknown, eventName: string) {
   const settings = useComfySettings();
   const eventId = Sentry.captureException(error, {
     tags: {
@@ -50,6 +51,7 @@ export function captureSentryException(error: unknown) {
       pythonMirror: settings.get('Comfy-Desktop.UV.PythonInstallMirror'),
       pypiMirror: settings.get('Comfy-Desktop.UV.PypiInstallMirror'),
       torchMirror: settings.get('Comfy-Desktop.UV.TorchInstallMirror'),
+      eventName,
     },
     extra: {
       logs: getLogTail(NUM_LOG_LINES_CAPTURED, MAIN_LOG_FILENAME),

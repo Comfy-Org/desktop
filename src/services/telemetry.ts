@@ -203,8 +203,9 @@ export function trackEvent<T extends HasTelemetry>(eventName: string) {
         await originalMethod!.apply(this, args);
         this.telemetry.track(`${eventName}_end`);
       } catch (error) {
-        const sentryUrl = captureSentryException(error);
-        this.telemetry.track(`${eventName}_error`, {
+        const errorEventName = `${eventName}_error`;
+        const sentryUrl = captureSentryException(error, errorEventName);
+        this.telemetry.track(errorEventName, {
           error_message: (error as Error)?.message,
           error_name: (error as Error)?.name,
           sentry_url: sentryUrl,

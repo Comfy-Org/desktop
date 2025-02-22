@@ -264,8 +264,12 @@ export class VirtualEnvironment implements HasTelemetry {
       });
       log.info('Successfully created virtual environment at', this.venvPath);
     } catch (error) {
-      const sentryUrl = captureSentryException(error instanceof Error ? error : new Error(String(error)));
-      this.telemetry.track('install_flow:virtual_environment_create_error', {
+      const errorEventName = 'install_flow:virtual_environment_create_error';
+      const sentryUrl = captureSentryException(
+        error instanceof Error ? error : new Error(String(error)),
+        errorEventName
+      );
+      this.telemetry.track(errorEventName, {
         error_name: error instanceof Error ? error.name : 'UnknownError',
         error_type: error instanceof Error ? error.constructor.name : typeof error,
         error_message: error instanceof Error ? error.message : 'Unknown error occurred',
