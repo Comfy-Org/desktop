@@ -1,6 +1,6 @@
 import { IpcMainInvokeEvent, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { test as baseTest, describe, expect, vi } from 'vitest';
 
 import { useComfySettings } from '@/config/comfySettings';
 import { ProgressStatus } from '@/constants';
@@ -108,20 +108,28 @@ vi.mock('@/services/sentry', () => ({
   },
 }));
 
-describe('DesktopApp', () => {
-  let desktopApp: DesktopApp;
-  let mockOverrides: Partial<DevOverrides>;
-  let mockConfig: DesktopConfig;
+interface TestFixtures {
+  desktopApp: DesktopApp;
+  mockConfig: DesktopConfig;
+}
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-
-    mockOverrides = {
+const test = baseTest.extend<TestFixtures>({
+  desktopApp: async ({ mockConfig }, use) => {
+    const mockOverrides: Partial<DevOverrides> = {
       useExternalServer: false,
       COMFY_HOST: undefined,
       COMFY_PORT: undefined,
     };
-    mockConfig = {
+
+    const desktopApp = new DesktopApp(mockOverrides as DevOverrides, mockConfig);
+
+    // Clear mocks before each test
+    vi.clearAllMocks();
+
+    await use(desktopApp);
+  },
+  mockConfig: async ({}, use) => {
+    const mockConfig = {
       get: vi.fn(),
       set: vi.fn(),
       delete: vi.fn(),
@@ -130,210 +138,208 @@ describe('DesktopApp', () => {
       permanentlyDeleteConfigFile: vi.fn(),
     } as unknown as DesktopConfig;
 
-    desktopApp = new DesktopApp(mockOverrides as DevOverrides, mockConfig);
+    await use(mockConfig);
+  },
+});
+
+describe('DesktopApp', () => {
+  test('showLoadingPage - loads desktop-start page successfully', async ({ desktopApp }) => {
+    await desktopApp.showLoadingPage();
+    expect(mockAppWindow.loadPage).toHaveBeenCalledWith('desktop-start');
   });
 
-  describe('showLoadingPage', () => {
-    it('should load the desktop-start page successfully', async () => {
-      await desktopApp.showLoadingPage();
-      expect(mockAppWindow.loadPage).toHaveBeenCalledWith('desktop-start');
-    });
+  test('showLoadingPage - handles errors when loading start page', async ({ desktopApp }) => {
+    const error = new Error('Failed to load');
+    mockAppWindow.loadPage.mockRejectedValueOnce(error);
 
-    it('should handle errors when loading the start page', async () => {
-      const error = new Error('Failed to load');
-      mockAppWindow.loadPage.mockRejectedValueOnce(error);
+    await expect(async () => await desktopApp.showLoadingPage()).rejects.toThrow('Test exited via app.quit()');
 
-      await expect(async () => await desktopApp.showLoadingPage()).rejects.toThrow('Test exited via app.quit()');
-
-      expect(dialog.showErrorBox).toHaveBeenCalledWith(
-        'Startup failed',
-        expect.stringContaining('Unknown error whilst loading start screen')
-      );
-      expect(app.quit).toHaveBeenCalled();
-    });
+    expect(dialog.showErrorBox).toHaveBeenCalledWith(
+      'Startup failed',
+      expect.stringContaining('Unknown error whilst loading start screen')
+    );
+    expect(app.quit).toHaveBeenCalled();
   });
 
-  describe('start', () => {
-    it('should initialize and start the app successfully', async () => {
-      await desktopApp.start();
+  test('start - initializes and starts app successfully', async ({ desktopApp }) => {
+    await desktopApp.start();
 
-      expect(InstallationManager).toHaveBeenCalled();
-      expect(ComfyDesktopApp).toHaveBeenCalled();
-      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
-    });
-
-    it('should handle installation failure', async () => {
-      vi.mocked(mockInstallationManager.ensureInstalled).mockRejectedValueOnce(new Error('Installation failed'));
-
-      await desktopApp.start();
-
-      expect(ComfyDesktopApp).not.toHaveBeenCalled();
-      expect(mockAppWindow.sendServerStartProgress).not.toHaveBeenCalledWith(ProgressStatus.READY);
-    });
-
-    it('should handle server start failure', async () => {
-      const error = new Error('Server start failed');
-      vi.mocked(mockComfyDesktopApp.startComfyServer).mockRejectedValueOnce(error);
-
-      await desktopApp.start();
-
-      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
-      expect(mockAppWindow.send).toHaveBeenCalledWith(
-        IPC_CHANNELS.LOG_MESSAGE,
-        expect.stringContaining(error.toString())
-      );
-    });
-
-    it('should skip server start when using external server', async () => {
-      mockOverrides = { ...mockOverrides, useExternalServer: true };
-      desktopApp = new DesktopApp(mockOverrides as DevOverrides, mockConfig);
-
-      await desktopApp.start();
-
-      expect(mockComfyDesktopApp.startComfyServer).not.toHaveBeenCalled();
-      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
-    });
-
-    it('should handle unhandled exceptions during startup', async () => {
-      const error = new Error('Unexpected error');
-      vi.mocked(mockComfyDesktopApp.buildServerArgs).mockImplementationOnce(() => {
-        throw error;
-      });
-
-      await expect(() => desktopApp.start()).rejects.toThrow('Test exited via app.quit()');
-
-      expect(log.error).toHaveBeenCalledWith('Unhandled exception during app startup', error);
-      expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
-      expect(dialog.showErrorBox).toHaveBeenCalled();
-      expect(app.quit).toHaveBeenCalled();
-    });
+    expect(InstallationManager).toHaveBeenCalled();
+    expect(ComfyDesktopApp).toHaveBeenCalled();
+    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
   });
 
-  describe('initializeTelemetry', () => {
-    let testInstallation: ComfyInstallation;
+  test('start - handles installation failure', async ({ desktopApp }) => {
+    vi.mocked(mockInstallationManager.ensureInstalled).mockRejectedValueOnce(new Error('Installation failed'));
 
-    beforeEach(() => {
-      testInstallation = mockInstallation as ComfyInstallation;
-      vi.mocked(promptMetricsConsent).mockClear();
-    });
+    await desktopApp.start();
 
-    it('should initialize telemetry with user consent', async () => {
-      vi.mocked(promptMetricsConsent).mockResolvedValueOnce(true);
-      vi.mocked(mockConfig.get).mockReturnValue('true');
-      vi.mocked(useComfySettings().get).mockReturnValue('true');
-
-      await desktopApp['initializeTelemetry'](testInstallation);
-
-      expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow);
-      expect(SentryLogging.setSentryGpuContext).toHaveBeenCalled();
-      expect(desktopApp.telemetry.hasConsent).toBe(true);
-      expect(desktopApp.telemetry.flush).toHaveBeenCalled();
-    });
-
-    it('should respect user rejection of telemetry', async () => {
-      vi.mocked(promptMetricsConsent).mockResolvedValueOnce(false);
-      vi.mocked(mockConfig.get).mockReturnValue('false');
-      vi.mocked(useComfySettings().get).mockReturnValue('false');
-
-      await desktopApp['initializeTelemetry'](testInstallation);
-
-      expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow);
-      expect(SentryLogging.setSentryGpuContext).toHaveBeenCalled();
-      expect(desktopApp.telemetry.hasConsent).toBe(false);
-      expect(desktopApp.telemetry.flush).not.toHaveBeenCalled();
-    });
+    expect(ComfyDesktopApp).not.toHaveBeenCalled();
+    expect(mockAppWindow.sendServerStartProgress).not.toHaveBeenCalledWith(ProgressStatus.READY);
   });
 
-  describe('fatalError', () => {
-    it('should show error dialog and quit with message', () => {
-      const message = 'Fatal error occurred';
-      const title = 'Error Title';
+  test('start - handles server start failure', async ({ desktopApp }) => {
+    const error = new Error('Server start failed');
+    vi.mocked(mockComfyDesktopApp.startComfyServer).mockRejectedValueOnce(error);
 
-      expect(() => DesktopApp.fatalError({ message, title })).toThrow('Test exited via app.quit()');
+    await desktopApp.start();
 
-      expect(dialog.showErrorBox).toHaveBeenCalledWith(title, message);
-      expect(app.quit).toHaveBeenCalled();
-    });
-
-    it('should exit with code when provided', () => {
-      const exitCode = 1;
-
-      expect(() => DesktopApp.fatalError({ message: 'Error', exitCode })).toThrow('Test exited via app.exit()');
-
-      expect(app.exit).toHaveBeenCalledWith(exitCode);
-      expect(app.quit).not.toHaveBeenCalled();
-    });
-
-    it('should log error when provided', () => {
-      const error = new Error('Test error');
-      const message = 'Fatal error occurred';
-
-      expect(() => DesktopApp.fatalError({ message, error })).toThrow('Test exited via app.quit()');
-
-      expect(log.error).toHaveBeenCalledWith(message, error);
-    });
+    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
+    expect(mockAppWindow.send).toHaveBeenCalledWith(
+      IPC_CHANNELS.LOG_MESSAGE,
+      expect.stringContaining(error.toString())
+    );
   });
 
-  describe('registerIpcHandlers', () => {
-    it('should register all handlers and emit ipcRegistered', () => {
-      desktopApp['registerIpcHandlers']();
+  test('start - skips server start when using external server', async () => {
+    const mockOverrides: Partial<DevOverrides> = {
+      useExternalServer: true,
+      COMFY_HOST: undefined,
+      COMFY_PORT: undefined,
+    };
+    const mockConfig = {
+      get: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
+      getAsync: vi.fn(),
+      setAsync: vi.fn(),
+      permanentlyDeleteConfigFile: vi.fn(),
+    } as unknown as DesktopConfig;
 
-      expect(useAppState().emitIpcRegistered).toHaveBeenCalled();
-      expect(ipcMain.handle).toHaveBeenCalledWith(IPC_CHANNELS.START_TROUBLESHOOTING, expect.any(Function));
-    });
+    const desktopApp = new DesktopApp(mockOverrides as DevOverrides, mockConfig);
 
-    it('should handle errors during registration', () => {
-      vi.mocked(ipcMain.handle).mockImplementationOnce(() => {
-        throw new Error('Registration failed');
-      });
+    await desktopApp.start();
 
-      expect(() => desktopApp['registerIpcHandlers']()).toThrow('Test exited via app.exit()');
-      expect(app.exit).toHaveBeenCalledWith(2024);
-    });
+    expect(mockComfyDesktopApp.startComfyServer).not.toHaveBeenCalled();
+    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.READY);
   });
 
-  describe('showTroubleshootingPage', () => {
-    it('should show troubleshooting page and restart app', async () => {
-      desktopApp.installation = mockInstallation as ComfyInstallation;
-
-      // Mock IPC handler registration for COMPLETE_VALIDATION
-      vi.mocked(ipcMain.handleOnce).mockImplementationOnce(
-        (channel: string, handler: (event: IpcMainInvokeEvent, ...args: any[]) => any) => {
-          // Simulate completion by calling the handler
-          setTimeout(() => handler({} as IpcMainInvokeEvent, {}), 0);
-          return vi.fn();
-        }
-      );
-
-      await desktopApp.showTroubleshootingPage();
-
-      expect(mockAppWindow.loadPage).toHaveBeenCalledWith('maintenance');
-      expect(ipcMain.handleOnce).toHaveBeenCalledWith(IPC_CHANNELS.COMPLETE_VALIDATION, expect.any(Function));
+  test('start - handles unhandled exceptions during startup', async ({ desktopApp }) => {
+    const error = new Error('Unexpected error');
+    vi.mocked(mockComfyDesktopApp.buildServerArgs).mockImplementationOnce(() => {
+      throw error;
     });
 
-    it('should fail if installation is not complete', async () => {
-      desktopApp.installation = undefined;
+    await expect(() => desktopApp.start()).rejects.toThrow('Test exited via app.quit()');
 
-      await expect(() => desktopApp.showTroubleshootingPage()).rejects.toThrow('Test exited via app.exit()');
+    expect(log.error).toHaveBeenCalledWith('Unhandled exception during app startup', error);
+    expect(mockAppWindow.sendServerStartProgress).toHaveBeenCalledWith(ProgressStatus.ERROR);
+    expect(dialog.showErrorBox).toHaveBeenCalled();
+    expect(app.quit).toHaveBeenCalled();
+  });
 
-      expect(dialog.showErrorBox).toHaveBeenCalledWith(
-        'Critical error',
-        expect.stringContaining('An error was detected, but the troubleshooting page could not be loaded')
-      );
-      expect(app.exit).toHaveBeenCalledWith(2001);
+  test('initializeTelemetry - initializes with user consent', async ({ desktopApp, mockConfig }) => {
+    const testInstallation = mockInstallation as ComfyInstallation;
+    vi.mocked(promptMetricsConsent).mockResolvedValueOnce(true);
+    vi.mocked(mockConfig.get).mockReturnValue('true');
+    vi.mocked(useComfySettings().get).mockReturnValue('true');
+
+    await desktopApp['initializeTelemetry'](testInstallation);
+
+    expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow);
+    expect(SentryLogging.setSentryGpuContext).toHaveBeenCalled();
+    expect(desktopApp.telemetry.hasConsent).toBe(true);
+    expect(desktopApp.telemetry.flush).toHaveBeenCalled();
+  });
+
+  test('initializeTelemetry - respects user rejection', async ({ desktopApp, mockConfig }) => {
+    const testInstallation = mockInstallation as ComfyInstallation;
+    vi.mocked(promptMetricsConsent).mockResolvedValueOnce(false);
+    vi.mocked(mockConfig.get).mockReturnValue('false');
+    vi.mocked(useComfySettings().get).mockReturnValue('false');
+
+    await desktopApp['initializeTelemetry'](testInstallation);
+
+    expect(promptMetricsConsent).toHaveBeenCalledWith(mockConfig, mockAppWindow);
+    expect(SentryLogging.setSentryGpuContext).toHaveBeenCalled();
+    expect(desktopApp.telemetry.hasConsent).toBe(false);
+    expect(desktopApp.telemetry.flush).not.toHaveBeenCalled();
+  });
+
+  test('fatalError - shows error dialog and quits with message', () => {
+    const message = 'Fatal error occurred';
+    const title = 'Error Title';
+
+    expect(() => DesktopApp.fatalError({ message, title })).toThrow('Test exited via app.quit()');
+
+    expect(dialog.showErrorBox).toHaveBeenCalledWith(title, message);
+    expect(app.quit).toHaveBeenCalled();
+  });
+
+  test('fatalError - exits with code when provided', () => {
+    const exitCode = 1;
+
+    expect(() => DesktopApp.fatalError({ message: 'Error', exitCode })).toThrow('Test exited via app.exit()');
+
+    expect(app.exit).toHaveBeenCalledWith(exitCode);
+    expect(app.quit).not.toHaveBeenCalled();
+  });
+
+  test('fatalError - logs error when provided', () => {
+    const error = new Error('Test error');
+    const message = 'Fatal error occurred';
+
+    expect(() => DesktopApp.fatalError({ message, error })).toThrow('Test exited via app.quit()');
+
+    expect(log.error).toHaveBeenCalledWith(message, error);
+  });
+
+  test('registerIpcHandlers - registers all handlers and emits ipcRegistered', ({ desktopApp }) => {
+    desktopApp['registerIpcHandlers']();
+
+    expect(useAppState().emitIpcRegistered).toHaveBeenCalled();
+    expect(ipcMain.handle).toHaveBeenCalledWith(IPC_CHANNELS.START_TROUBLESHOOTING, expect.any(Function));
+  });
+
+  test('registerIpcHandlers - handles errors during registration', ({ desktopApp }) => {
+    vi.mocked(ipcMain.handle).mockImplementationOnce(() => {
+      throw new Error('Registration failed');
     });
 
-    it('should handle errors during troubleshooting page load', async () => {
-      desktopApp.installation = mockInstallation as ComfyInstallation;
-      mockAppWindow.loadPage.mockRejectedValueOnce(new Error('Failed to load maintenance page'));
+    expect(() => desktopApp['registerIpcHandlers']()).toThrow('Test exited via app.exit()');
+    expect(app.exit).toHaveBeenCalledWith(2024);
+  });
 
-      await expect(() => desktopApp.showTroubleshootingPage()).rejects.toThrow('Test exited via app.exit()');
+  test('showTroubleshootingPage - shows page and restarts app', async ({ desktopApp }) => {
+    desktopApp.installation = mockInstallation as ComfyInstallation;
 
-      expect(dialog.showErrorBox).toHaveBeenCalledWith(
-        'Critical error',
-        expect.stringContaining('An error was detected, but the troubleshooting page could not be loaded')
-      );
-      expect(app.exit).toHaveBeenCalledWith(2001);
-    });
+    // Mock IPC handler registration for COMPLETE_VALIDATION
+    vi.mocked(ipcMain.handleOnce).mockImplementationOnce(
+      (channel: string, handler: (event: IpcMainInvokeEvent, ...args: any[]) => any) => {
+        // Simulate completion by calling the handler
+        setTimeout(() => handler({} as IpcMainInvokeEvent, {}), 0);
+        return vi.fn();
+      }
+    );
+
+    await desktopApp.showTroubleshootingPage();
+
+    expect(mockAppWindow.loadPage).toHaveBeenCalledWith('maintenance');
+    expect(ipcMain.handleOnce).toHaveBeenCalledWith(IPC_CHANNELS.COMPLETE_VALIDATION, expect.any(Function));
+  });
+
+  test('showTroubleshootingPage - fails if installation is not complete', async ({ desktopApp }) => {
+    desktopApp.installation = undefined;
+
+    await expect(() => desktopApp.showTroubleshootingPage()).rejects.toThrow('Test exited via app.exit()');
+
+    expect(dialog.showErrorBox).toHaveBeenCalledWith(
+      'Critical error',
+      expect.stringContaining('An error was detected, but the troubleshooting page could not be loaded')
+    );
+    expect(app.exit).toHaveBeenCalledWith(2001);
+  });
+
+  test('showTroubleshootingPage - handles errors during page load', async ({ desktopApp }) => {
+    desktopApp.installation = mockInstallation as ComfyInstallation;
+    mockAppWindow.loadPage.mockRejectedValueOnce(new Error('Failed to load maintenance page'));
+
+    await expect(() => desktopApp.showTroubleshootingPage()).rejects.toThrow('Test exited via app.exit()');
+
+    expect(dialog.showErrorBox).toHaveBeenCalledWith(
+      'Critical error',
+      expect.stringContaining('An error was detected, but the troubleshooting page could not be loaded')
+    );
+    expect(app.exit).toHaveBeenCalledWith(2001);
   });
 });
