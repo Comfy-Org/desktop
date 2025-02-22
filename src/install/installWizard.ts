@@ -46,7 +46,11 @@ export class InstallWizard implements HasTelemetry {
     // Copy user files from migration source to the new ComfyUI folder.
     const srcUserFilesDir = path.join(this.migrationSource, 'user');
     const destUserFilesDir = path.join(this.basePath, 'user');
-    fs.cpSync(srcUserFilesDir, destUserFilesDir, { recursive: true });
+    if (path.resolve(srcUserFilesDir) !== path.resolve(destUserFilesDir)) {
+      fs.cpSync(srcUserFilesDir, destUserFilesDir, { recursive: true });
+    } else {
+      log.warn(`Skipping user files migration: source and destination are the same (${srcUserFilesDir})`);
+    }
   }
 
   /**
