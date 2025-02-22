@@ -6,6 +6,7 @@ import { useComfySettings } from '@/config/comfySettings';
 import { ProgressStatus } from '@/constants';
 import { IPC_CHANNELS } from '@/constants';
 import { DesktopApp } from '@/desktopApp';
+import type { Mutable } from '@/infrastructure/interfaces';
 import { InstallationManager } from '@/install/installationManager';
 import { useAppState } from '@/main-process/appState';
 import { ComfyDesktopApp } from '@/main-process/comfyDesktopApp';
@@ -109,19 +110,22 @@ vi.mock('@/services/sentry', () => ({
 }));
 
 interface TestFixtures {
+  devOverrides: Mutable<DevOverrides>;
   desktopApp: DesktopApp;
   mockConfig: DesktopConfig;
 }
 
 const test = baseTest.extend<TestFixtures>({
-  desktopApp: async ({ mockConfig }, use) => {
+  devOverrides: async ({}, use) => {
     const mockOverrides: Partial<DevOverrides> = {
       useExternalServer: false,
       COMFY_HOST: undefined,
       COMFY_PORT: undefined,
     };
-
-    const desktopApp = new DesktopApp(mockOverrides as DevOverrides, mockConfig);
+    await use(mockOverrides as Mutable<DevOverrides>);
+  },
+  desktopApp: async ({ devOverrides, mockConfig }, use) => {
+    const desktopApp = new DesktopApp(devOverrides, mockConfig);
 
     // Clear mocks before each test
     vi.clearAllMocks();
@@ -191,22 +195,9 @@ describe('DesktopApp', () => {
     );
   });
 
-  test('start - skips server start when using external server', async () => {
-    const mockOverrides: Partial<DevOverrides> = {
-      useExternalServer: true,
-      COMFY_HOST: undefined,
-      COMFY_PORT: undefined,
-    };
-    const mockConfig = {
-      get: vi.fn(),
-      set: vi.fn(),
-      delete: vi.fn(),
-      getAsync: vi.fn(),
-      setAsync: vi.fn(),
-      permanentlyDeleteConfigFile: vi.fn(),
-    } as unknown as DesktopConfig;
-
-    const desktopApp = new DesktopApp(mockOverrides as DevOverrides, mockConfig);
+  test('start - skips server start when using external server', async ({ devOverrides, mockConfig }) => {
+    devOverrides.useExternalServer = true;
+    const desktopApp = new DesktopApp(devOverrides, mockConfig);
 
     await desktopApp.start();
 

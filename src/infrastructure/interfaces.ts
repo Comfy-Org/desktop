@@ -1,3 +1,15 @@
+/**
+ * A type that removes the readonly modifier from all properties of a given type.
+ *
+ * @example
+ * ```ts
+ * type ReadOnlyPerson = { readonly name: string };
+ * type MutablePerson = Mutable<ReadOnlyPerson>;
+ * // MutablePerson is { name: string }
+ * ```
+ */
+export type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+
 export interface FatalErrorOptions {
   /** The message to display to the user.  Also used for logging if {@link logMessage} is not set. */
   message: string;
