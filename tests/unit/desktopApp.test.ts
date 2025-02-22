@@ -126,10 +126,6 @@ const test = baseTest.extend<TestFixtures>({
   },
   desktopApp: async ({ devOverrides, mockConfig }, use) => {
     const desktopApp = new DesktopApp(devOverrides, mockConfig);
-
-    // Clear mocks before each test
-    vi.clearAllMocks();
-
     await use(desktopApp);
   },
   mockConfig: async ({}, use) => {
