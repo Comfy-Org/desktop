@@ -151,8 +151,3 @@ export enum LogFile {
   /** The desktop process log file. */
   Main = 'main.log',
 }
-
-/** @deprecated Use {@link LogFile.ComfyUI} instead. */
-export const COMFYUI_LOG_FILENAME = LogFile.ComfyUI;
-/** @deprecated Use {@link LogFile.Main} instead. */
-export const MAIN_LOG_FILENAME = LogFile.Main;
