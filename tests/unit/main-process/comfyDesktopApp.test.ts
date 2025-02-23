@@ -69,8 +69,6 @@ describe('ComfyDesktopApp', () => {
   let mockVirtualEnvironment: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockComfySettings = {
       get: vi.fn(),
     };
@@ -113,7 +111,6 @@ describe('ComfyDesktopApp', () => {
 
   describe('buildServerArgs', () => {
     beforeEach(() => {
-      vi.clearAllMocks();
       mockComfySettings.get.mockReturnValue({});
       vi.mocked(findAvailablePort).mockResolvedValue(8188);
     });

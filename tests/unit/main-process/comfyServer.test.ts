@@ -3,7 +3,7 @@ import log from 'electron-log/main';
 import { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import path from 'node:path';
-import { test as baseTest, beforeEach, describe, expect, vi } from 'vitest';
+import { test as baseTest, describe, expect, vi } from 'vitest';
 import waitOn from 'wait-on';
 
 import { ServerArgs } from '@/constants';
@@ -78,10 +78,6 @@ const test = baseTest.extend<TestContext>({
     server.comfyServerProcess = mockProcess;
     await use(server);
   },
-});
-
-beforeEach(() => {
-  vi.clearAllMocks();
 });
 
 describe('buildLaunchArgs', () => {

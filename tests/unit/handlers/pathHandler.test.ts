@@ -97,7 +97,6 @@ const getRegisteredHandler = <T extends (...args: never[]) => unknown>(
 
 describe('PathHandlers', () => {
   beforeEach(() => {
-    vi.resetAllMocks();
     vi.mocked(app.getPath).mockImplementation(
       (name: string) => (MOCK_PATHS as Record<string, string>)[name] ?? `/mock/${name}`
     );

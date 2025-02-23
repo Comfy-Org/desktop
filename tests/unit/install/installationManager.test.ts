@@ -109,7 +109,6 @@ describe('InstallationManager', () => {
   let validationUpdates: InstallValidation[];
 
   beforeEach(async () => {
-    vi.clearAllMocks();
     validationUpdates = [];
 
     // Reset fs mocks with default behaviors - only the ones we need

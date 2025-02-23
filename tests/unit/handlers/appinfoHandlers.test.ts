@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { IPC_CHANNELS } from '@/constants';
 import { registerAppInfoHandlers } from '@/handlers/appInfoHandlers';
@@ -48,10 +48,6 @@ describe('AppInfoHandlers', () => {
     { channel: IPC_CHANNELS.SET_WINDOW_STYLE, expected: undefined, args: [null, MOCK_WINDOW_STYLE] },
     { channel: IPC_CHANNELS.GET_WINDOW_STYLE, expected: MOCK_WINDOW_STYLE },
   ];
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
 
   describe('registerHandlers', () => {
     beforeEach(() => {

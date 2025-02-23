@@ -78,7 +78,6 @@ describe('InstallWizard', () => {
   };
 
   beforeEach(async () => {
-    vi.clearAllMocks();
     await ComfySettings.load('/test/path');
     installWizard = new InstallWizard(defaultInstallOptions, getTelemetry());
   });

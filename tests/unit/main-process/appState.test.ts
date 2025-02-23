@@ -12,7 +12,6 @@ const test = baseTest.extend<AppStateModule & { imported: AppStateModule }>({
   imported: async ({}, use) => {
     const imported = await import('@/main-process/appState');
     await use(imported);
-    vi.clearAllMocks();
     vi.resetModules();
   },
   initializeAppState: async ({ imported }, use) => {

@@ -3,7 +3,7 @@ import log from 'electron-log/main';
 import ElectronStore from 'electron-store';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DesktopConfig, useDesktopConfig } from '@/store/desktopConfig';
 
@@ -37,10 +37,6 @@ describe('DesktopConfig', () => {
       delete: vi.fn(),
     };
     (ElectronStore as unknown as Mock).mockImplementation(() => mockStore);
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   describe('load', () => {

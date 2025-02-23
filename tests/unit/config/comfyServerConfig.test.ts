@@ -5,7 +5,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 
@@ -40,10 +40,6 @@ describe('ComfyServerConfig', () => {
 
   afterAll(async () => {
     await rm(tempDir, { recursive: true });
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   describe('configPath', () => {

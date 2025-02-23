@@ -22,9 +22,6 @@ describe('ComfySettings', () => {
   let settings: ComfySettings;
 
   beforeEach(async () => {
-    vi.resetModules();
-    vi.clearAllMocks();
-
     // Reset writeLocked state
     // @ts-expect-error accessing private static
     ComfySettings.writeLocked = false;
@@ -76,10 +73,6 @@ describe('ComfySettings', () => {
   });
 
   describe('file operations', () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-    });
-
     it('should use correct file path', async () => {
       await settings.saveSettings();
       expect(fsPromises.writeFile).toHaveBeenCalledWith(expectedFilePath, JSON.stringify(DEFAULT_SETTINGS, null, 2));

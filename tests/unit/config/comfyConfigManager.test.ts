@@ -1,7 +1,7 @@
 import log from 'electron-log/main';
 import fs, { type PathLike } from 'node:fs';
 import path from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { ComfyConfigManager, DirectoryStructure } from '@/config/comfyConfigManager';
 
@@ -12,15 +12,6 @@ const { normalize } = path;
 vi.mock('node:fs');
 
 describe('ComfyConfigManager', () => {
-  // Reset all mocks before each test
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(fs.existsSync).mockReset();
-    vi.mocked(fs.mkdirSync).mockReset();
-    vi.mocked(fs.writeFileSync).mockReset();
-    vi.mocked(fs.renameSync).mockReset();
-  });
-
   describe('setUpComfyUI', () => {
     it('should allow existing directory when it contains ComfyUI structure', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);

@@ -75,7 +75,6 @@ describe('MixpanelTelemetry', () => {
   };
 
   beforeEach(async () => {
-    vi.clearAllMocks();
     // Initialize settings before each test
     await ComfySettings.load('/mock/path');
   });
@@ -232,7 +231,6 @@ describe('promptMetricsConsent', () => {
   const versionAfterUpdate = '1.0.1';
 
   beforeEach(async () => {
-    vi.clearAllMocks();
     store = { get: vi.fn(), set: vi.fn() };
     appWindow = { loadPage: vi.fn() };
     // Initialize settings before each test

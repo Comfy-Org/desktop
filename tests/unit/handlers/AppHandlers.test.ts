@@ -16,10 +16,6 @@ describe('AppHandlers', () => {
     registerAppHandlers();
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe('registerHandlers', () => {
     const channels = [IPC_CHANNELS.QUIT, IPC_CHANNELS.RESTART_APP];
 

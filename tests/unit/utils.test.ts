@@ -1,17 +1,12 @@
 import type { Systeminformation } from 'systeminformation';
 import si from 'systeminformation';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { validateHardware } from '@/utils';
 
 vi.mock('systeminformation');
 
 describe('validateHardware', () => {
-  beforeEach(() => {
-    vi.resetModules();
-    vi.resetAllMocks();
-  });
-
   it('accepts Apple Silicon Mac', async () => {
     vi.stubGlobal('process', { ...process, platform: 'darwin' });
     vi.mocked(si.cpu).mockResolvedValue({ manufacturer: 'Apple' } as Systeminformation.CpuData);
