@@ -12,6 +12,8 @@ import { IPC_CHANNELS } from '@/constants';
 import { REQUIRED_SPACE, registerPathHandlers } from '@/handlers/pathHandlers';
 import type { SystemPaths } from '@/preload';
 
+import { electronMock } from '../setup';
+
 const DEFAULT_FREE_SPACE = 20 * 1024 * 1024 * 1024; // 20GB
 const LOW_FREE_SPACE = 5 * 1024 * 1024 * 1024; // 5GB
 
@@ -23,37 +25,22 @@ const MOCK_PATHS = {
   appPath: '/mock/app/path',
 } as const;
 
-vi.mock('electron', () => {
-  return {
-    ipcMain: {
-      on: vi.fn(),
-      handle: vi.fn(),
-    },
-    app: {
-      getPath: vi.fn((name: string): string => {
-        switch (name) {
-          case 'userData':
-            return '/mock/user/data';
-          case 'logs':
-            return '/mock/logs/path';
-          case 'documents':
-            return '/mock/documents';
-          case 'appData':
-            return '/mock/appData';
-          default:
-            return `/mock/${name}`;
-        }
-      }),
-      getAppPath: vi.fn().mockReturnValue('/mock/app/path'),
-    },
-    shell: {
-      openPath: vi.fn(),
-    },
-    dialog: {
-      showOpenDialog: vi.fn(),
-    },
-  };
+electronMock.app.getPath = vi.fn((name: string) => {
+  switch (name) {
+    case 'userData':
+      return '/mock/user/data';
+    case 'logs':
+      return '/mock/logs/path';
+    case 'documents':
+      return '/mock/documents';
+    case 'appData':
+      return '/mock/appData';
+    default:
+      return `/mock/${name}`;
+  }
 });
+
+electronMock.shell = { openPath: vi.fn() };
 
 vi.mock('systeminformation');
 vi.mock('node:fs');

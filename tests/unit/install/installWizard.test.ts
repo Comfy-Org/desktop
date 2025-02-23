@@ -9,6 +9,7 @@ import { ComfySettings } from '../../../src/config/comfySettings';
 import { InstallWizard } from '../../../src/install/installWizard';
 import { InstallOptions } from '../../../src/preload';
 import { getTelemetry } from '../../../src/services/telemetry';
+import { electronMock } from '../setup';
 
 vi.mock('node:fs', () => ({
   default: {
@@ -32,23 +33,19 @@ vi.mock('node:fs/promises', () => ({
 
 vi.mock('../../../src/config/comfyConfigManager');
 vi.mock('../../../src/config/comfyServerConfig');
-vi.mock('electron', () => ({
-  app: {
-    isPackaged: true,
-    getPath: vi.fn((name: string) => {
-      switch (name) {
-        case 'userData':
-          return '/test/user/data';
-        case 'appData':
-          return '/test/app/data';
-        case 'temp':
-          return '/test/temp';
-        default:
-          return '/test/default';
-      }
-    }),
-  },
-}));
+
+electronMock.app.getPath = vi.fn((name: string) => {
+  switch (name) {
+    case 'userData':
+      return '/test/user/data';
+    case 'appData':
+      return '/test/app/data';
+    case 'temp':
+      return '/test/temp';
+    default:
+      return '/test/default';
+  }
+});
 
 // Mock process.resourcesPath since app.isPackaged is true
 vi.stubGlobal('process', {

@@ -8,7 +8,7 @@ import type { ITelemetry } from '@/services/telemetry';
 // Shared setup - run once before each test file
 
 /** I find this deeply mocking. */
-type PartialMock<T> = { -readonly [K in keyof T]?: PartialMock<T[K]> };
+export type PartialMock<T> = { -readonly [K in keyof T]?: PartialMock<T[K]> };
 
 // Logging
 vi.mock('electron-log/main');
@@ -41,10 +41,13 @@ export const electronMock: ElectronMock = {
     getAppPath: vi.fn(() => '/mock/app/path'),
     relaunch: vi.fn(),
     getVersion: vi.fn(() => '1.0.0'),
+    on: vi.fn(),
+    once: vi.fn(),
   },
   dialog: {
     showErrorBox: vi.fn(),
     showMessageBox: vi.fn(),
+    showOpenDialog: vi.fn(),
   },
   ipcMain: {
     on: vi.fn(),

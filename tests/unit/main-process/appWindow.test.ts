@@ -1,17 +1,12 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, type Tray } from 'electron';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppWindow } from '@/main-process/appWindow';
 
-vi.mock('electron', () => ({
-  BrowserWindow: vi.fn(),
-  app: {
-    on: vi.fn(),
-  },
-  ipcMain: {
-    on: vi.fn(),
-    handle: vi.fn(),
-  },
+import { type PartialMock, electronMock } from '../setup';
+
+const additionalMocks: PartialMock<typeof Electron> = {
+  BrowserWindow: vi.fn() as PartialMock<BrowserWindow>,
   nativeTheme: {
     shouldUseDarkColors: true,
   },
@@ -24,13 +19,15 @@ vi.mock('electron', () => ({
     setPressedImage: vi.fn(),
     setToolTip: vi.fn(),
     on: vi.fn(),
-  })),
+  })) as PartialMock<Tray>,
   screen: {
     getPrimaryDisplay: vi.fn(() => ({
       workAreaSize: { width: 1024, height: 768 },
     })),
   },
-}));
+};
+
+Object.assign(electronMock, additionalMocks);
 
 vi.mock('electron-store', () => ({
   default: vi.fn(() => ({

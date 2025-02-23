@@ -12,11 +12,7 @@ import { ComfyServer } from '@/main-process/comfyServer';
 import { type ITelemetry, getTelemetry } from '@/services/telemetry';
 import type { VirtualEnvironment } from '@/virtualEnvironment';
 
-const basePath = '/mock/base/path';
-
-vi.mock('electron', () => ({
-  app: { getPath: vi.fn(() => basePath) },
-}));
+const basePath = '/mock/app/path';
 
 vi.mock('@/install/resourcePaths', () => ({
   getAppResourcesPath: vi.fn(() => '/mocked/app_resources'),

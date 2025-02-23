@@ -27,16 +27,6 @@ vi.mock('@/config/comfySettings', () => {
   };
 });
 
-vi.mock('electron', () => ({
-  app: {
-    on: vi.fn(),
-  },
-  ipcMain: {
-    handle: vi.fn(),
-    removeHandler: vi.fn(),
-  },
-}));
-
 vi.mock('@todesktop/runtime', () => ({
   default: {
     init: vi.fn(),

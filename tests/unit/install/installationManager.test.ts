@@ -12,17 +12,6 @@ import type { ITelemetry } from '@/services/telemetry';
 import { useDesktopConfig } from '@/store/desktopConfig';
 import * as utils from '@/utils';
 
-vi.mock('electron', () => ({
-  ipcMain: {
-    handle: vi.fn(),
-    removeHandler: vi.fn(),
-    on: vi.fn(),
-  },
-  app: {
-    getPath: vi.fn(() => 'valid/path'),
-  },
-}));
-
 vi.mock('node:fs/promises', () => ({
   default: {
     access: vi.fn(),
