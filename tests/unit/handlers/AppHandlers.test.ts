@@ -1,5 +1,5 @@
 import { app, ipcMain } from 'electron';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { IPC_CHANNELS } from '@/constants';
 import { registerAppHandlers } from '@/handlers/AppHandlers';
