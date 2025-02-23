@@ -127,9 +127,32 @@ export enum DownloadStatus {
   CANCELLED = 'cancelled',
 }
 
-export const CUDA_TORCH_URL = 'https://download.pytorch.org/whl/cu126';
-export const NIGHTLY_CPU_TORCH_URL = 'https://download.pytorch.org/whl/nightly/cpu';
-export const DEFAULT_PYPI_INDEX_URL = 'https://pypi.org/simple/';
+/** Python package index URLs to use when installing torch, torchvision, and torchaudio. */
+export enum TorchMirrorUrl {
+  /** Regular PyPI index URL. */
+  Default = 'https://pypi.org/simple/',
+  /** PyTorch CUDA mirror. */
+  Cuda = 'https://download.pytorch.org/whl/cu126',
+  /** PyTorch nightly CPU mirror. */
+  NightlyCpu = 'https://download.pytorch.org/whl/nightly/cpu',
+}
 
-export const COMFYUI_LOG_FILENAME = 'comfyui.log';
-export const MAIN_LOG_FILENAME = 'main.log';
+/** @deprecated Use {@link TorchMirrorUrl} instead. */
+export const CUDA_TORCH_URL = TorchMirrorUrl.Cuda;
+/** @deprecated Use {@link TorchMirrorUrl} instead. */
+export const NIGHTLY_CPU_TORCH_URL = TorchMirrorUrl.NightlyCpu;
+/** @deprecated Use {@link TorchMirrorUrl} instead. */
+export const DEFAULT_PYPI_INDEX_URL = TorchMirrorUrl.Default;
+
+/** The log files used by the desktop process. */
+export enum LogFile {
+  /** The ComfyUI server log file. */
+  ComfyUI = 'comfyui.log',
+  /** The desktop process log file. */
+  Main = 'main.log',
+}
+
+/** @deprecated Use {@link LogFile.ComfyUI} instead. */
+export const COMFYUI_LOG_FILENAME = LogFile.ComfyUI;
+/** @deprecated Use {@link LogFile.Main} instead. */
+export const MAIN_LOG_FILENAME = LogFile.Main;

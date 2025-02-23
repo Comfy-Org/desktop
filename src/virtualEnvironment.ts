@@ -6,7 +6,7 @@ import { rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
-import { CUDA_TORCH_URL, DEFAULT_PYPI_INDEX_URL, NIGHTLY_CPU_TORCH_URL } from './constants';
+import { TorchMirrorUrl } from './constants';
 import type { TorchDeviceType } from './preload';
 import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
@@ -69,19 +69,19 @@ function getDefaultTorchMirror(device: TorchDeviceType): string {
   log.debug('Falling back to default torch mirror');
   switch (device) {
     case 'mps':
-      return NIGHTLY_CPU_TORCH_URL;
+      return TorchMirrorUrl.NightlyCpu;
     case 'nvidia':
-      return CUDA_TORCH_URL;
+      return TorchMirrorUrl.Cuda;
     default:
-      return DEFAULT_PYPI_INDEX_URL;
+      return TorchMirrorUrl.Default;
   }
 }
 
 /** Disallows using the default mirror (CPU torch) when the selected device is not CPU. */
 function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undefined) {
-  if (mirror === DEFAULT_PYPI_INDEX_URL) {
-    if (device === 'nvidia') return CUDA_TORCH_URL;
-    else if (device === 'mps') return NIGHTLY_CPU_TORCH_URL;
+  if (mirror === TorchMirrorUrl.Default) {
+    if (device === 'nvidia') return TorchMirrorUrl.Cuda;
+    else if (device === 'mps') return TorchMirrorUrl.NightlyCpu;
   }
   return mirror;
 }

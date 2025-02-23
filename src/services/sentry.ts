@@ -7,7 +7,7 @@ import { graphics } from 'systeminformation';
 
 import { useComfySettings } from '@/config/comfySettings';
 
-import { COMFYUI_LOG_FILENAME, MAIN_LOG_FILENAME, SENTRY_URL_ENDPOINT } from '../constants';
+import { LogFile, SENTRY_URL_ENDPOINT } from '../constants';
 
 const NUM_LOG_LINES_CAPTURED = 64;
 const SENTRY_PROJECT_ID = '4508007940685824';
@@ -54,8 +54,8 @@ export function captureSentryException(error: unknown, eventName: string) {
       eventName,
     },
     extra: {
-      logs: getLogTail(NUM_LOG_LINES_CAPTURED, MAIN_LOG_FILENAME),
-      comfyLogs: getLogTail(NUM_LOG_LINES_CAPTURED, COMFYUI_LOG_FILENAME),
+      logs: getLogTail(NUM_LOG_LINES_CAPTURED, LogFile.Main),
+      comfyLogs: getLogTail(NUM_LOG_LINES_CAPTURED, LogFile.ComfyUI),
     },
   });
   return createSentryUrl(eventId);
