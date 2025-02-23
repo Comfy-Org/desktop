@@ -10,6 +10,7 @@ globs:
   - Directory structure of `tests/unit/` should match that of the tested file in `src/`
 - Tests should be cross-platform compatible; able to run on Windows, macOS, and linux
   - e.g. the use of `path.normalize`, or `path.join` and `path.sep` to ensure that tests work the same on all platforms
+- vitest automatically runs the setup file [setup.ts](mdc:tests/unit/setup.ts) before running each test file
 - Tests should be mocked properly
   - Mocks should be cleanly written and easy to understand
   - Mocks should be re-usable where possible
