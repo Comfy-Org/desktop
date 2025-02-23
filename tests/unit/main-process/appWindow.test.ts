@@ -6,8 +6,6 @@ import { AppWindow } from '@/main-process/appWindow';
 vi.mock('electron', () => ({
   BrowserWindow: vi.fn(),
   app: {
-    // Required if process.resourcesPath is not mocked
-    isPackaged: false,
     on: vi.fn(),
   },
   ipcMain: {
@@ -59,6 +57,11 @@ describe('AppWindow.isOnPage', () => {
       getURL: vi.fn(),
       setWindowOpenHandler: vi.fn(),
     };
+
+    vi.stubGlobal('process', {
+      ...process,
+      resourcesPath: '/mock/app/path/assets',
+    });
 
     vi.mocked(BrowserWindow).mockImplementation(
       () =>
