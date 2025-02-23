@@ -28,6 +28,8 @@ type ElectronMock = PartialMock<typeof Electron> & {
   ipcMain: Partial<Electron.IpcMain>;
 };
 
+export const quitMessage = /^Test exited via app\.quit\(\)$/;
+
 export const electronMock: ElectronMock = {
   app: {
     isPackaged: true,

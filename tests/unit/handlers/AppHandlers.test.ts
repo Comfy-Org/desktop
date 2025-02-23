@@ -1,31 +1,17 @@
 import { app, ipcMain } from 'electron';
-import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { IPC_CHANNELS } from '@/constants';
 import { registerAppHandlers } from '@/handlers/AppHandlers';
 
-vi.mock('electron', () => ({
-  app: {
-    quit: vi.fn(),
-  },
-  ipcMain: {
-    handle: vi.fn(),
-  },
-}));
+import { quitMessage } from '../setup';
 
-interface TestCase {
-  channel: string;
-  expected: any;
-  args?: any[];
-}
 const getHandler = (channel: string) => {
-  const [, handlerFn] = (ipcMain.handle as Mock).mock.calls.find(([ch]) => ch === channel) || [];
+  const [, handlerFn] = vi.mocked(ipcMain.handle).mock.calls.find(([ch]) => ch === channel) || [];
   return handlerFn;
 };
 
 describe('AppHandlers', () => {
-  const testCases: TestCase[] = [{ channel: IPC_CHANNELS.QUIT, expected: undefined }];
-
   beforeEach(() => {
     registerAppHandlers();
   });
@@ -35,24 +21,24 @@ describe('AppHandlers', () => {
   });
 
   describe('registerHandlers', () => {
-    it.each(testCases)('should register handler for $channel', ({ channel }) => {
+    const channels = [IPC_CHANNELS.QUIT, IPC_CHANNELS.RESTART_APP];
+
+    test.each(channels)('should register handler for $channel', (channel) => {
       expect(ipcMain.handle).toHaveBeenCalledWith(channel, expect.any(Function));
     });
-
-    it.each(testCases)(
-      '$channel handler should return mock value ($expected)',
-      async ({ channel, expected, args = [] }) => {
-        const handlerFn = getHandler(channel);
-        const result = await handlerFn(...args);
-
-        expect(result).toEqual(expected);
-      }
-    );
   });
 
-  it('quit handler should call app.quit', async () => {
+  test('restart handler should call app.relaunch', async () => {
+    expect(ipcMain.handle).toHaveBeenCalledWith(IPC_CHANNELS.RESTART_APP, expect.any(Function));
+
+    const handlerFn = getHandler(IPC_CHANNELS.RESTART_APP);
+    await expect(handlerFn).rejects.toThrow(/^Cannot destructure property 'customMessage' of/);
+    await expect(handlerFn?.(null!, [{}])).rejects.toThrow(quitMessage);
+    expect(app.relaunch).toHaveBeenCalledTimes(1);
+  });
+
+  test('quit handler should call app.quit', () => {
     const handlerFn = getHandler(IPC_CHANNELS.QUIT);
-    await handlerFn();
-    expect(app.quit).toHaveBeenCalled();
+    expect(handlerFn).toThrow(quitMessage);
   });
 });
