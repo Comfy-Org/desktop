@@ -9,12 +9,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 
-vi.mock('electron', () => ({
-  app: {
-    getPath: vi.fn(),
-  },
-}));
-
 vi.mock('@/install/resourcePaths', () => ({
   getAppResourcesPath: vi.fn(() => '/mocked/app_resources'),
 }));

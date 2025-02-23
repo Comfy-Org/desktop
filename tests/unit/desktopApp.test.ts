@@ -18,29 +18,6 @@ import { promptMetricsConsent } from '@/services/telemetry';
 import type { DesktopConfig } from '@/store/desktopConfig';
 
 // Mock dependencies
-vi.mock('electron', () => ({
-  app: {
-    quit: vi.fn(() => {
-      throw new Error('Test exited via app.quit()');
-    }),
-    exit: vi.fn(() => {
-      throw new Error('Test exited via app.exit()');
-    }),
-    getPath: vi.fn(() => '/mock/app/path'),
-    getAppPath: vi.fn(() => '/mock/app/path'),
-  },
-  dialog: {
-    showErrorBox: vi.fn(),
-  },
-  ipcMain: {
-    on: vi.fn(),
-    once: vi.fn(),
-    handle: vi.fn(),
-    handleOnce: vi.fn(),
-    removeHandler: vi.fn(),
-  },
-}));
-
 const mockAppWindow = {
   loadPage: vi.fn(),
   send: vi.fn(),

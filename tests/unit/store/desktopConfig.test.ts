@@ -7,19 +7,11 @@ import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DesktopConfig, useDesktopConfig } from '@/store/desktopConfig';
 
-vi.mock('electron', () => ({
-  app: {
-    getPath: vi.fn(() => '/mock/user/data'),
-    quit: vi.fn(),
-  },
-  dialog: {
-    showMessageBox: vi.fn(),
-    showErrorBox: vi.fn(),
-  },
-  shell: {
-    showItemInFolder: vi.fn(),
-  },
-}));
+import { electronMock } from '../setup';
+
+electronMock.shell = {
+  showItemInFolder: vi.fn(),
+};
 
 vi.mock('electron-store', () => ({
   default: vi.fn(),
@@ -66,7 +58,7 @@ describe('DesktopConfig', () => {
 
       (dialog.showMessageBox as Mock).mockResolvedValueOnce({ response: 2 }); // Quit option
 
-      await DesktopConfig.load(shell);
+      await expect(DesktopConfig.load(shell)).rejects.toThrow('Test exited via app.quit()');
 
       expect(dialog.showMessageBox).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -81,11 +73,11 @@ describe('DesktopConfig', () => {
         throw new SyntaxError('Invalid JSON');
       });
 
-      (dialog.showMessageBox as Mock).mockResolvedValueOnce({ response: 1 }); // Show file option
+      vi.mocked(dialog.showMessageBox).mockResolvedValueOnce({ response: 1, checkboxChecked: false }); // Show file option
 
-      await DesktopConfig.load(shell);
+      await expect(DesktopConfig.load(shell)).rejects.toThrow('Test exited via app.quit()');
 
-      expect(shell.showItemInFolder).toHaveBeenCalledWith(path.join(path.sep, 'mock', 'user', 'data', 'config.json'));
+      expect(shell.showItemInFolder).toHaveBeenCalledWith(path.normalize('/mock/app/path/config.json'));
       expect(app.quit).toHaveBeenCalled();
     });
 
@@ -102,7 +94,7 @@ describe('DesktopConfig', () => {
 
       const config = await DesktopConfig.load(shell);
 
-      expect(fs.rm).toHaveBeenCalledWith(path.join(path.sep, 'mock', 'user', 'data', 'config.json'));
+      expect(fs.rm).toHaveBeenCalledWith(path.normalize('/mock/app/path/config.json'));
       expect(config).toBeInstanceOf(DesktopConfig);
     });
 
@@ -171,7 +163,7 @@ describe('DesktopConfig', () => {
 
       it('should permanently delete config file', async () => {
         await config.permanentlyDeleteConfigFile();
-        expect(fs.rm).toHaveBeenCalledWith(path.join(path.sep, 'mock', 'user', 'data', 'config.json'));
+        expect(fs.rm).toHaveBeenCalledWith(path.normalize('/mock/app/path/config.json'));
       });
     });
   });

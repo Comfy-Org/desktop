@@ -2,8 +2,15 @@ import type { FileTransport, MainLogger, MainTransports } from 'electron-log';
 import log from 'electron-log/main';
 import { vi } from 'vitest';
 
+import type { IAppState } from '@/main-process/appState';
 import type { ITelemetry } from '@/services/telemetry';
 
+// Shared setup - run once before each test file
+
+/** I find this deeply mocking. */
+type PartialMock<T> = { -readonly [K in keyof T]?: PartialMock<T[K]> };
+
+// Logging
 vi.mock('electron-log/main');
 
 vi.mocked(log.create).mockReturnValue({
@@ -14,8 +21,45 @@ vi.mocked(log.create).mockReturnValue({
   } as unknown as MainTransports,
 } as unknown as MainLogger & { default: MainLogger });
 
-const appState = {
-  initialize: vi.fn(),
+/** Partially mocks Electron API, but guarantees a few properties are non-null. */
+type ElectronMock = PartialMock<typeof Electron> & {
+  app: Partial<Electron.App>;
+  dialog: Partial<Electron.Dialog>;
+  ipcMain: Partial<Electron.IpcMain>;
+};
+
+export const electronMock: ElectronMock = {
+  app: {
+    isPackaged: true,
+    quit: vi.fn(() => {
+      throw new Error('Test exited via app.quit()');
+    }),
+    exit: vi.fn(() => {
+      throw new Error('Test exited via app.exit()');
+    }),
+    getPath: vi.fn(() => '/mock/app/path'),
+    getAppPath: vi.fn(() => '/mock/app/path'),
+    relaunch: vi.fn(),
+    getVersion: vi.fn(() => '1.0.0'),
+  },
+  dialog: {
+    showErrorBox: vi.fn(),
+    showMessageBox: vi.fn(),
+  },
+  ipcMain: {
+    on: vi.fn(),
+    once: vi.fn(),
+    handle: vi.fn(),
+    handleOnce: vi.fn(),
+    removeHandler: vi.fn(),
+  },
+};
+
+// Electron
+vi.mock('electron', () => electronMock);
+
+// App State
+const appState: PartialMock<IAppState> = {
   isQuitting: false,
   ipcRegistered: false,
   loaded: false,
@@ -28,15 +72,14 @@ vi.mock('@/main-process/appState', () => ({
   useAppState: vi.fn(() => appState),
 }));
 
+// Sentry & Telemetry
 const mockTelemetry: ITelemetry = {
   track: vi.fn(),
   hasConsent: true,
   flush: vi.fn(),
   registerHandlers: vi.fn(),
 };
-
 vi.mock('@/services/sentry');
-
 vi.mock('@/services/telemetry', async () => {
   const actual = await vi.importActual<typeof import('@/services/telemetry')>('@/services/telemetry');
 
