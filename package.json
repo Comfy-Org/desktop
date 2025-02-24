@@ -16,7 +16,7 @@
       "optionalBranch": "desktop-release-feb192025"
     },
     "managerCommit": "1434b12c343b58a401f1c9f913965ceb0cfd089e",
-    "uvVersion": "0.5.26"
+    "uvVersion": "0.5.31"
   },
   "scripts": {
     "clean": "rimraf .vite dist out",
