@@ -58,7 +58,7 @@ export class CmCli implements HasTelemetry {
     try {
       log.debug('Using temp file:', tmpFile.name);
       await this.saveSnapshot(fromComfyDir, tmpFile.name, callbacks);
-      await this.restoreSnapshot(tmpFile.name, this.virtualEnvironment.basePath, callbacks);
+      await this.restoreSnapshot(tmpFile.name, path.join(this.virtualEnvironment.basePath, 'custom_nodes'), callbacks);
     } finally {
       tmpFile?.removeCallback();
     }
@@ -82,7 +82,10 @@ export class CmCli implements HasTelemetry {
     log.info('Restoring snapshot', snapshotFile);
     const output = await this.runCommandAsync(
       ['restore-snapshot', snapshotFile, '--restore-to', toComfyDir],
-      callbacks
+      callbacks,
+      {
+        COMFYUI_PATH: path.join(getAppResourcesPath(), 'ComfyUI'),
+      }
     );
     log.info(output);
   }
