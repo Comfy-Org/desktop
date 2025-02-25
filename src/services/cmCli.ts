@@ -1,4 +1,3 @@
-import { app } from 'electron';
 import log from 'electron-log/main';
 import path from 'node:path';
 import { fileSync } from 'tmp';
@@ -59,7 +58,7 @@ export class CmCli implements HasTelemetry {
     try {
       log.debug('Using temp file:', tmpFile.name);
       await this.saveSnapshot(fromComfyDir, tmpFile.name, callbacks);
-      await this.restoreSnapshot(tmpFile.name, fromComfyDir, callbacks);
+      await this.restoreSnapshot(tmpFile.name, this.virtualEnvironment.basePath, callbacks);
     } finally {
       tmpFile?.removeCallback();
     }
@@ -79,14 +78,11 @@ export class CmCli implements HasTelemetry {
     log.info(output);
   }
 
-  public async restoreSnapshot(snapshotFile: string, fromComfyDir: string, callbacks: ProcessCallbacks) {
+  public async restoreSnapshot(snapshotFile: string, toComfyDir: string, callbacks: ProcessCallbacks) {
     log.info('Restoring snapshot', snapshotFile);
     const output = await this.runCommandAsync(
-      ['restore-snapshot', snapshotFile, '--user-directory', app.getPath('userData')],
-      callbacks,
-      {
-        COMFYUI_PATH: fromComfyDir,
-      }
+      ['restore-snapshot', snapshotFile, '--restore-to', toComfyDir],
+      callbacks
     );
     log.info(output);
   }
