@@ -1,7 +1,8 @@
-import { type ElectronApplication, type JSHandle } from '@playwright/test';
+import type { ElectronApplication, JSHandle, TestInfo } from '@playwright/test';
 import electronPath, { type BrowserWindow } from 'electron';
 import { _electron as electron } from 'playwright';
 
+import { createDesktopScreenshot } from '../shared/utils';
 import { TestEnvironment } from './testEnvironment';
 
 // eslint-disable-next-line @typescript-eslint/no-base-to-string
@@ -17,6 +18,16 @@ async function localTestQoL(app: ElectronApplication) {
   window.on('console', console.log);
 }
 
+/** Screen shot entire desktop */
+async function attachScreenshot(testInfo: TestInfo, name: string) {
+  try {
+    const filePath = await createDesktopScreenshot(name);
+    await testInfo.attach(name, { path: filePath });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 /**
  * Base class for desktop e2e tests.
  */
@@ -27,14 +38,17 @@ export class TestApp implements AsyncDisposable {
   /** Remove the install directory when disposed. */
   shouldDisposeTestEnvironment: boolean = false;
 
-  private constructor(readonly app: ElectronApplication) {
+  private constructor(
+    readonly app: ElectronApplication,
+    readonly testInfo: TestInfo
+  ) {
     app.once('close', () => (this.#appProcessTerminated = true));
   }
 
   /** Async static factory */
-  static async create() {
+  static async create(testInfo: TestInfo) {
     const app = await TestApp.launchElectron();
-    return new TestApp(app);
+    return new TestApp(app, testInfo);
   }
 
   /** Get the first window that the app opens.  Wait if necessary. */
@@ -78,9 +92,15 @@ export class TestApp implements AsyncDisposable {
     const windows = this.app.windows();
     if (windows.length === 0) return;
 
-    const close = this.app.waitForEvent('close', { timeout: 60 * 1000 });
-    await Promise.all(windows.map((x) => x.close()));
-    await close;
+    try {
+      const close = this.app.waitForEvent('close', { timeout: 60 * 1000 });
+      await Promise.all(windows.map((x) => x.close()));
+      await close;
+    } catch (error) {
+      console.error('App failed to close; attaching screenshot to TestInfo');
+      await attachScreenshot(this.testInfo, 'test-app-close-failure');
+      throw error;
+    }
   }
 
   #appProcessTerminated = false;

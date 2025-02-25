@@ -1,4 +1,5 @@
 import envPaths from 'env-paths';
+import { exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { access, constants } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -48,4 +49,39 @@ export function getDefaultInstallLocation() {
 
 export function addRandomSuffix(str: string) {
   return `${str}-${randomUUID().substring(0, 8)}`;
+}
+
+/**
+ * Create a screenshot of the entire desktop.
+ *
+ * Hard-coded to 1920x1080 resolution.
+ * @param filename - The name of the file to save the screenshot as.
+ * @returns The path to the screenshot file.
+ */
+export async function createDesktopScreenshot(filename: string) {
+  const width = 1920;
+  const height = 1080;
+  const powerShellScript = `
+Add-Type -AssemblyName System.Drawing
+
+$bounds = [Drawing.Rectangle]::FromLTRB(0, 0, ${width}, ${height})
+$bmp = New-Object Drawing.Bitmap $bounds.width, $bounds.height
+$graphics = [Drawing.Graphics]::FromImage($bmp)
+
+$graphics.CopyFromScreen($bounds.Location, [Drawing.Point]::Empty, $bounds.size)
+$bmp.Save("${filename}.png", "Png")
+
+$graphics.Dispose()
+$bmp.Dispose()
+`;
+
+  const process = exec(powerShellScript, { shell: 'powershell.exe' }, (error, stdout, stderr) => {
+    if (error) console.error(error);
+    if (stderr) console.error('Screenshot std error', stderr);
+    if (stdout) console.log('Screenshot std out', stdout);
+  });
+  await new Promise((resolve) => process.on('close', resolve));
+
+  const name = `${filename}.png`;
+  return path.resolve(globalThis.process.cwd(), name);
 }

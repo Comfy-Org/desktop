@@ -55,7 +55,7 @@ export const test = baseTest.extend<DesktopTestOptions & DesktopTestFixtures>({
   // Fixtures
   app: async ({ disposeTestEnvironment }, use, testInfo) => {
     // Launch Electron app.
-    await using app = await TestApp.create();
+    await using app = await TestApp.create(testInfo);
     app.shouldDisposeTestEnvironment = disposeTestEnvironment;
     await use(app);
 
