@@ -121,6 +121,12 @@ export class TestEnvironment implements AsyncDisposable {
     await rm(this.defaultInstallLocation, { recursive: true, force: true });
   }
 
+  async deleteLogsIfPresent() {
+    assertPlaywrightEnabled();
+    await rm(this.mainLogPath, { force: true });
+    await rm(this.comfyuiLogPath, { force: true });
+  }
+
   async [Symbol.asyncDispose]() {
     await this.restoreInstallPath();
     await this.restoreVenv();
