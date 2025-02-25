@@ -2,8 +2,8 @@ import { pathExists } from '../shared/utils';
 import { TestEnvironment } from './testEnvironment';
 import { assertPlaywrightEnabled, expect, test as teardown } from './testExtensions';
 
-// This "test" is a setup process.  Any failure here should break all post-install tests.
-// After running, the test environment will contain an installed ComfyUI app, ready for other tests to use as a base.
+// This "test" is a setup process.
+// After running, the test environment should be completely uninstalled.
 
 teardown('Completely uninstalls the app', async ({}) => {
   assertPlaywrightEnabled();
