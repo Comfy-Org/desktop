@@ -125,5 +125,6 @@ export class TestEnvironment implements AsyncDisposable {
     await this.restoreInstallPath();
     await this.restoreVenv();
     await this.restoreServerStart();
+    await this.installLocation[Symbol.asyncDispose]();
   }
 }
