@@ -531,7 +531,7 @@ export class VirtualEnvironment implements HasTelemetry {
    * `'manager-upgrade'` if `uv` and `toml` are missing,
    * or `'error'` when any other combination of packages are missing.
    */
-  async hasRequirements(): Promise<'OK' | 'error' | 'manager-upgrade'> {
+  async hasRequirements(): Promise<'OK' | 'error' | 'package-upgrade'> {
     const checkRequirements = async (requirementsPath: string) => {
       const args = ['pip', 'install', '--dry-run', '-r', requirementsPath];
       log.info(`Running direct process command: ${args.join(' ')}`);
@@ -557,9 +557,21 @@ export class VirtualEnvironment implements HasTelemetry {
       return venvOk;
     };
 
-    // Manager upgrade in 0.4.18
+    // Manager upgrade in 0.4.18 - uv, toml (exactly)
     const isManagerUpgrade = (output: string) => {
       return output.search(/\bWould install 2 packages(\s+\+ (toml|uv)==[\d.]+){2}\s*$/) !== -1;
+    };
+
+    // Package upgrade in 0.4.21 - aiohttp, av, yarl
+    const isPackageUpgrade = (output: string) => {
+      const lines = output.split('\n');
+      for (const line of lines) {
+        // Ignore lines that aren't package changes
+        if (line.search(/^\s*(\+|-) /) === -1) continue;
+        // An unexpected package means this is not a package upgrade
+        if (line.search(/^\s*(\+|-) (aiohttp|av|yarl)==/) !== -1) return false;
+      }
+      return true;
     };
 
     const coreOutput = await checkRequirements(this.comfyUIRequirementsPath);
@@ -568,9 +580,11 @@ export class VirtualEnvironment implements HasTelemetry {
     const coreOk = hasAllPackages(coreOutput);
     const managerOk = hasAllPackages(managerOutput);
 
-    if (coreOk && isManagerUpgrade(managerOutput)) {
-      log.info('ComfyUI-Manager requires toml and uv. Installing.');
-      return 'manager-upgrade';
+    const ugpradeCore = isPackageUpgrade(coreOutput);
+    const upgradeManager = isManagerUpgrade(managerOutput);
+
+    if ((managerOk && ugpradeCore) || (coreOk && upgradeManager) || (ugpradeCore && upgradeManager)) {
+      return 'package-upgrade';
     }
 
     return coreOk && managerOk ? 'OK' : 'error';

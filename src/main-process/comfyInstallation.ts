@@ -136,7 +136,7 @@ export class ComfyInstallation {
           // Python packages
           try {
             const result = await venv.hasRequirements();
-            if (result === 'manager-upgrade') {
+            if (result === 'package-upgrade') {
               validation.pythonPackages = 'OK';
               validation.upgradePackages = 'warning';
             } else {
