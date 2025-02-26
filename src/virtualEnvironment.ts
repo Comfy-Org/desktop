@@ -565,13 +565,17 @@ export class VirtualEnvironment implements HasTelemetry {
     // Package upgrade in 0.4.21 - aiohttp, av, yarl
     const isCoreUpgrade = (output: string) => {
       const lines = output.split('\n');
+      let adds = 0;
       for (const line of lines) {
         // Ignore lines that aren't package changes
-        if (line.search(/^\s*(\+|-) /) === -1) continue;
+        if (line.search(/^\s*(\+|-) /) === -1 && line.search(/^\s*- (aiohttp|av|yarl)==/) === -1) return false;
+        if (line.search(/^\s*\+ /) !== -1) {
+          if (line.search(/^\s*\+ (aiohttp|av|yarl)==/) === -1) return false;
+          adds++;
+        }
         // An unexpected package means this is not a package upgrade
-        if (line.search(/^\s*(\+|-) (aiohttp|av|yarl)==/) !== -1) return false;
       }
-      return true;
+      return adds > 0;
     };
 
     const coreOutput = await checkRequirements(this.comfyUIRequirementsPath);
