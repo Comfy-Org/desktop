@@ -40,10 +40,11 @@ export class ComfyInstallation {
     return this.state === 'installed' && !this.hasIssues;
   }
 
-  /** `true` if the virtual environment is missing required pip packages from ComfyUI or ComfyUI-Manager, otherwise `false`. */
-  get needsRequirementsUpdate() {
-    return this.validation.pythonPackages === 'error';
+  /** `true` if Manager needs toml and uv to be installed, otherwise `false`. */
+  get needsManagerPackageUpdate() {
+    return this.validation.managerPythonPackages === 'warning';
   }
+
   /**
    * Called during/after each step of validation
    * @param data The data to send to the renderer
@@ -134,8 +135,14 @@ export class ComfyInstallation {
 
           // Python packages
           try {
-            validation.pythonPackages = await venv.hasRequirements();
-            if (validation.pythonPackages !== 'OK') log.error('Virtual environment is incomplete.');
+            const result = await venv.hasRequirements();
+            if (result === 'manager-upgrade') {
+              validation.pythonPackages = 'OK';
+              validation.managerPythonPackages = 'warning';
+            } else {
+              validation.pythonPackages = result;
+              if (result !== 'OK') log.error('Virtual environment is incomplete.');
+            }
           } catch (error) {
             log.error('Failed to read venv packages.', error);
             validation.pythonPackages = 'error';
