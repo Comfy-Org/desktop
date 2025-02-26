@@ -567,8 +567,8 @@ export class VirtualEnvironment implements HasTelemetry {
       const lines = output.split('\n');
       let adds = 0;
       for (const line of lines) {
-        // Ignore lines that aren't package changes
-        if (line.search(/^\s*(\+|-) /) === -1 && line.search(/^\s*- (aiohttp|av|yarl)==/) === -1) return false;
+        // Reject upgrade if removing an unrecognised package
+        if (line.search(/^\s*- (?!aiohttp|av|yarl).*==/) !== -1) return false;
         if (line.search(/^\s*\+ /) !== -1) {
           if (line.search(/^\s*\+ (aiohttp|av|yarl)==/) === -1) return false;
           adds++;
