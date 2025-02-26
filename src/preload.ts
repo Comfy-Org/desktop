@@ -100,7 +100,7 @@ export interface InstallValidation {
   uv?: ValidationIssueState;
   git?: ValidationIssueState;
   vcRedist?: ValidationIssueState;
-  managerPythonPackages?: ValidationIssueState;
+  upgradePackages?: ValidationIssueState;
 }
 
 const electronAPI = {

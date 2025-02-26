@@ -41,8 +41,8 @@ export class ComfyInstallation {
   }
 
   /** `true` if Manager needs toml and uv to be installed, otherwise `false`. */
-  get needsManagerPackageUpdate() {
-    return this.validation.managerPythonPackages === 'warning';
+  get needsRequirementsUpdate() {
+    return this.validation.upgradePackages === 'warning';
   }
 
   /**
@@ -138,7 +138,7 @@ export class ComfyInstallation {
             const result = await venv.hasRequirements();
             if (result === 'manager-upgrade') {
               validation.pythonPackages = 'OK';
-              validation.managerPythonPackages = 'warning';
+              validation.upgradePackages = 'warning';
             } else {
               validation.pythonPackages = result;
               if (result !== 'OK') log.error('Virtual environment is incomplete.');

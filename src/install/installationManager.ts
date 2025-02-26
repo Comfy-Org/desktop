@@ -58,7 +58,7 @@ export class InstallationManager implements HasTelemetry {
     if (state === 'upgraded') installation.upgradeConfig();
 
     // Install updated manager requirements
-    if (installation.needsManagerPackageUpdate) await this.updateManagerPackages(installation);
+    if (installation.needsRequirementsUpdate) await this.updatePackages(installation);
 
     // Resolve issues and re-run validation
     if (installation.hasIssues) {
@@ -273,7 +273,7 @@ export class InstallationManager implements HasTelemetry {
   }
 
   @trackEvent('installation_manager:manager_packages_update')
-  private async updateManagerPackages(installation: ComfyInstallation) {
+  private async updatePackages(installation: ComfyInstallation) {
     const sendLogIpc = (data: string) => {
       log.info(data);
       this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
