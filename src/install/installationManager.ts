@@ -279,14 +279,14 @@ export class InstallationManager implements HasTelemetry {
       this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
     };
     await this.appWindow.loadPage('desktop-update');
-    await installation.virtualEnvironment.installComfyUIRequirements({
+
+    // Using requirements.txt again here ensures that uv installs the expected packages from the previous step (--dry-run)
+    const callbacks: ProcessCallbacks = {
       onStdout: sendLogIpc,
       onStderr: sendLogIpc,
-    });
-    await installation.virtualEnvironment.installComfyUIManagerRequirements({
-      onStdout: sendLogIpc,
-      onStderr: sendLogIpc,
-    });
+    };
+    await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
+    await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
     await installation.validate();
   }
 
