@@ -425,7 +425,7 @@ export class VirtualEnvironment implements HasTelemetry {
     callbacks?: ProcessCallbacks,
     cwd: string = this.basePath
   ): ChildProcess {
-    log.info(`Running command: ${command} ${args.join(' ')} in ${cwd} with env ${JSON.stringify(env)}`);
+    log.info(`Running command: ${command} ${args.join(' ')} in ${cwd}`);
     const childProcess = spawn(command, args, {
       cwd,
       env: {
@@ -559,7 +559,7 @@ export class VirtualEnvironment implements HasTelemetry {
 
     // Manager upgrade in 0.4.18 - uv, toml (exactly)
     const isManagerUpgrade = (output: string) => {
-      return output.search(/\bWould install 1 package\s+\+ chardet==[\d.]+\s*$/) !== -1;
+      return output.search(/\bWould install 2 packages(\s+\+ (toml|uv)==[\d.]+){2}\s*$/) !== -1;
     };
 
     // Package upgrade in 0.4.21 - aiohttp, av, yarl
