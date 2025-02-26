@@ -26,6 +26,9 @@ cffi==1.17.1
     #   pynacl
     #   soundfile
     # from https://pypi.org/simple
+chardet==5.2.0
+    # via -r assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
+    # from https://pypi.org/simple
 charset-normalizer==3.4.1
     # via requests
     # from https://pypi.org/simple
