@@ -281,7 +281,7 @@ export class InstallationManager implements HasTelemetry {
       this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
     };
     await this.appWindow.loadPage('desktop-update');
-    await installation.virtualEnvironment.installMissingRequirements(['av'], {
+    await installation.virtualEnvironment.installMissingRequirements(['"av"', '"yarl>=1.18.0"', '"aiohttp>=3.11.8"'], {
       onStdout: sendLogIpc,
       onStderr: sendLogIpc,
     });
