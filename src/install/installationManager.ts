@@ -281,7 +281,7 @@ export class InstallationManager implements HasTelemetry {
       this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
     };
     await this.appWindow.loadPage('desktop-update');
-    await installation.virtualEnvironment.installMissingRequirements(['chardet'], {
+    await installation.virtualEnvironment.installMissingRequirements(['av'], {
       onStdout: sendLogIpc,
       onStderr: sendLogIpc,
     });
