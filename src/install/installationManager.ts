@@ -279,6 +279,10 @@ export class InstallationManager implements HasTelemetry {
       this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
     };
     await this.appWindow.loadPage('desktop-update');
+    await installation.virtualEnvironment.installComfyUIRequirements({
+      onStdout: sendLogIpc,
+      onStderr: sendLogIpc,
+    });
     await installation.virtualEnvironment.installComfyUIManagerRequirements({
       onStdout: sendLogIpc,
       onStderr: sendLogIpc,
