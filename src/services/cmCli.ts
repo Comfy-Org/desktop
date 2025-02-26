@@ -1,4 +1,5 @@
 import log from 'electron-log/main';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileSync } from 'tmp';
 
@@ -59,6 +60,13 @@ export class CmCli implements HasTelemetry {
       log.debug('Using temp file:', tmpFile.name);
       await this.saveSnapshot(fromComfyDir, tmpFile.name, callbacks);
       await this.restoreSnapshot(tmpFile.name, path.join(this.virtualEnvironment.basePath, 'custom_nodes'), callbacks);
+
+      // Remove extra ComfyUI-Manager directory that was created by the migration.
+      const managerPath = path.join(this.virtualEnvironment.basePath, 'custom_nodes', 'ComfyUI-Manager');
+      if (fs.existsSync(managerPath)) {
+        await fs.promises.rm(managerPath, { recursive: true, force: true });
+        log.info('Removed extra ComfyUI-Manager directory:', managerPath);
+      }
     } finally {
       tmpFile?.removeCallback();
     }
