@@ -580,11 +580,11 @@ export class VirtualEnvironment implements HasTelemetry {
     const coreOk = hasAllPackages(coreOutput);
     const managerOk = hasAllPackages(managerOutput);
 
-    const ugpradeCore = isPackageUpgrade(coreOutput);
+    const upgradeCore = isPackageUpgrade(coreOutput);
     const upgradeManager = isManagerUpgrade(managerOutput);
 
-    if ((managerOk && ugpradeCore) || (coreOk && upgradeManager) || (ugpradeCore && upgradeManager)) {
-      log.info('Package update of known packages required. Core:', ugpradeCore, 'Manager:', upgradeManager);
+    if ((managerOk && upgradeCore) || (coreOk && upgradeManager) || (upgradeCore && upgradeManager)) {
+      log.info('Package update of known packages required. Core:', upgradeCore, 'Manager:', upgradeManager);
       return 'package-upgrade';
     }
 
