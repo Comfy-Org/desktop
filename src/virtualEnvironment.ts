@@ -519,6 +519,17 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
+  async installMissingRequirements(requirements: string[], callbacks?: ProcessCallbacks): Promise<void> {
+    const installCmd = getPipInstallArgs({
+      packages: requirements,
+      indexUrl: this.pypiMirror,
+    });
+    const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
+    if (exitCode !== 0) {
+      throw new Error(`Failed to install missing requirements: exit code ${exitCode}`);
+    }
+  }
+
   async exists(): Promise<boolean> {
     return await pathAccessible(this.venvPath);
   }
@@ -531,7 +542,7 @@ export class VirtualEnvironment implements HasTelemetry {
    * `'manager-upgrade'` if `uv` and `toml` are missing,
    * or `'error'` when any other combination of packages are missing.
    */
-  async hasRequirements(): Promise<'OK' | 'error' | 'manager-upgrade'> {
+  async hasRequirements(): Promise<'OK' | 'error'> {
     const checkRequirements = async (requirementsPath: string) => {
       const args = ['pip', 'install', '--dry-run', '-r', requirementsPath];
       log.info(`Running direct process command: ${args.join(' ')}`);
@@ -557,21 +568,11 @@ export class VirtualEnvironment implements HasTelemetry {
       return venvOk;
     };
 
-    // Manager upgrade in 0.4.18
-    const isManagerUpgrade = (output: string) => {
-      return output.search(/\bWould install 2 packages(\s+\+ (toml|uv)==[\d.]+){2}\s*$/) !== -1;
-    };
-
     const coreOutput = await checkRequirements(this.comfyUIRequirementsPath);
     const managerOutput = await checkRequirements(this.comfyUIManagerRequirementsPath);
 
     const coreOk = hasAllPackages(coreOutput);
     const managerOk = hasAllPackages(managerOutput);
-
-    if (coreOk && isManagerUpgrade(managerOutput)) {
-      log.info('ComfyUI-Manager requires toml and uv. Installing.');
-      return 'manager-upgrade';
-    }
 
     return coreOk && managerOk ? 'OK' : 'error';
   }
