@@ -563,7 +563,7 @@ export class VirtualEnvironment implements HasTelemetry {
     };
 
     // Package upgrade in 0.4.21 - aiohttp, av, yarl
-    const isPackageUpgrade = (output: string) => {
+    const isCoreUpgrade = (output: string) => {
       const lines = output.split('\n');
       for (const line of lines) {
         // Ignore lines that aren't package changes
@@ -580,7 +580,7 @@ export class VirtualEnvironment implements HasTelemetry {
     const coreOk = hasAllPackages(coreOutput);
     const managerOk = hasAllPackages(managerOutput);
 
-    const upgradeCore = isPackageUpgrade(coreOutput);
+    const upgradeCore = isCoreUpgrade(coreOutput);
     const upgradeManager = isManagerUpgrade(managerOutput);
 
     if ((managerOk && upgradeCore) || (coreOk && upgradeManager) || (upgradeCore && upgradeManager)) {
