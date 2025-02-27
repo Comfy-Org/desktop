@@ -39,3 +39,18 @@ App data directories:
 
 - `%APPDATA%\ComfyUI` (Windows)
 - `Application Support/ComfyUI` (Mac)
+
+### Updating screenshots (snapshots)
+
+When test screenshots are out of date, they must be updated with the following process:
+
+1. Run tests
+2. Manually verify that the only things changed are what's expected
+3. Run this locally:
+   ```bash
+   npm run test:e2e:update
+   ```
+4. Commit new expectations
+
+> [!TIP]
+> All screenshot expectations are overwritten by playwright. To update a single test, discard any unrelated changes before committing.
