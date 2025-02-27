@@ -7,12 +7,16 @@ export class TestServerStatus {
   readonly finishing;
   readonly error;
 
+  readonly errorDesktopVersion;
+
   constructor(readonly window: Page) {
     this.loading = window.getByText('Loading...');
     this.settingUpPython = window.getByText('Setting up Python Environment...');
     this.startingComfyUI = window.getByText('Starting ComfyUI server...');
     this.finishing = window.getByText('Finishing...');
     this.error = window.getByText('Unable to start ComfyUI Desktop');
+
+    this.errorDesktopVersion = this.error.locator('span');
   }
 
   async get() {
