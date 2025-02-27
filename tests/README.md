@@ -48,7 +48,7 @@ When test screenshots are out of date, they must be updated with the following p
 2. Manually verify that the only things changed are what's expected
 3. Run this locally:
    ```bash
-   npm run test:update-snapshots
+   npm run test:e2e:update
    ```
 4. Commit new expectations
 
