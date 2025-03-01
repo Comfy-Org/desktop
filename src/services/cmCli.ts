@@ -1,7 +1,9 @@
 import log from 'electron-log/main';
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileSync } from 'tmp';
+
+import { pathAccessible } from '@/utils';
 
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
@@ -63,8 +65,8 @@ export class CmCli implements HasTelemetry {
 
       // Remove extra ComfyUI-Manager directory that was created by the migration.
       const managerPath = path.join(this.virtualEnvironment.basePath, 'custom_nodes', 'ComfyUI-Manager');
-      if (fs.existsSync(managerPath)) {
-        await fs.promises.rm(managerPath, { recursive: true, force: true });
+      if (await pathAccessible(managerPath)) {
+        await fs.rm(managerPath, { recursive: true, force: true });
         log.info('Removed extra ComfyUI-Manager directory:', managerPath);
       }
     } finally {
