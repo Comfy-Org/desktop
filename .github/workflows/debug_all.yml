@@ -1,23 +1,6 @@
 name: Build - All Platforms
 
 on:
-  pull_request:
-    branches:
-      - 'main'
-    paths-ignore:
-      - '.prettierrc'
-      - '.eslintrc.json'
-      - '.prettierignore'
-      - 'README.md'
-      - '.husky/**'
-      - '.vscode/**'
-      - 'scripts/**'
-      - '.gitignore'
-      - 'todesktop.json'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.cursor/**'
-      - '*_example'
-      - 'tests/**'
   push:
     branches:
       - 'main'
