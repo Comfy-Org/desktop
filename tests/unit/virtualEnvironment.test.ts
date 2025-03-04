@@ -41,23 +41,6 @@ const test = baseTest.extend<TestFixtures>({
   },
 });
 
-const mockUvOutput = [
-  `Resolved 49 packages in 1.50s
-Would download 1 package
-Would install 1 package
- + av==14.2.0`,
-
-  `Resolved 49 packages in 1.50s
- Would download 1 package
- Would install 1 package
-  + av==14.2.0`,
-
-  `Resolved 40 packages in 974ms
-Would download 1 package
-Would install 1 package
- + chardet==5.2.0`,
-];
-
 function mockSpawnOutputOnce(output: string, exitCode = 0, signal: NodeJS.Signals | null = null, stderr?: string) {
   vi.mocked(spawn).mockImplementationOnce(() => {
     const process = {
@@ -106,7 +89,6 @@ function getAllPackageCombinations(core: string[], manager: string[]): PackageCo
   const coreCombinations = getCombinations(core);
   const managerCombinations = getCombinations(manager);
 
-  // Create all possible combinations of core and manager packages
   const allCombinations: PackageCombination[] = [];
   for (const coreComb of coreCombinations) {
     for (const managerComb of managerCombinations) {
