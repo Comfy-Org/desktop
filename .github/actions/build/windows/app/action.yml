@@ -20,7 +20,7 @@ runs:
   using: composite
   steps:
     - name: Use Node.js 20.x
-      uses: JP250552/setup-node@feature/corepack
+      uses: JP250552/setup-node@0c618ceb2e48275dc06e86901822fd966ce75ba2
       with:
         node-version: '20.x'
         corepack: true
