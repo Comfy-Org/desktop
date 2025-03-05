@@ -44,6 +44,7 @@ runs:
         set -x
         yarn make:assets
         yarn clean:assets:git
+        yarn patch:core:frontend
 
     - name: Make app
       shell: bash
