@@ -238,6 +238,7 @@ __metadata:
     "@todesktop/runtime": "npm:^1.6.4"
     "@trivago/prettier-plugin-sort-imports": "npm:^5.2.1"
     "@types/adm-zip": "npm:^0.5.5"
+    "@types/diff": "npm:^7"
     "@types/electron-squirrel-startup": "npm:^1.0.2"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/lodash": "npm:4.17.15"
@@ -249,6 +250,7 @@ __metadata:
     "@typescript-eslint/parser": "npm:^8.20.0"
     adm-zip: "npm:^0.5.15"
     axios: "npm:^1.7.7"
+    diff: "npm:^7.0.0"
     dotenv: "npm:^16.4.5"
     electron: "npm:31.3.1"
     electron-builder: "npm:^25.1.8"
@@ -2780,6 +2782,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/diff@npm:^7":
+  version: 7.0.1
+  resolution: "@types/diff@npm:7.0.1"
+  checksum: 10c0/5aaa77b8ab07dc0bd9d668e150a574536ed367553121ad4ae37e09ee7f23d110b2339c2b1f0f54e32c65d6acb46773e1b0d43d9d6ec75619384baeb3fec3ca3d
+  languageName: node
+  linkType: hard
+
 "@types/electron-squirrel-startup@npm:^1.0.2":
   version: 1.0.2
   resolution: "@types/electron-squirrel-startup@npm:1.0.2"
@@ -5169,6 +5178,13 @@ __metadata:
   version: 4.0.2
   resolution: "diff@npm:4.0.2"
   checksum: 10c0/81b91f9d39c4eaca068eb0c1eb0e4afbdc5bb2941d197f513dd596b820b956fef43485876226d65d497bebc15666aa2aa82c679e84f65d5f2bfbf14ee46e32c1
+  languageName: node
+  linkType: hard
+
+"diff@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "diff@npm:7.0.0"
+  checksum: 10c0/251fd15f85ffdf814cfc35a728d526b8d2ad3de338dcbd011ac6e57c461417090766b28995f8ff733135b5fbc3699c392db1d5e27711ac4e00244768cd1d577b
   languageName: node
   linkType: hard
 
