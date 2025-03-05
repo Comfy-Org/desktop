@@ -571,9 +571,9 @@ export class VirtualEnvironment implements HasTelemetry {
       let adds = 0;
       for (const line of lines) {
         // Reject upgrade if removing an unrecognised package
-        if (line.search(/^\s*- (?!aiohttp|av|yarl|comfyui-frontend-package).*==/) !== -1) return false;
+        if (line.search(/^\s*- (?!aiohttp|av|yarl).*==/) !== -1) return false;
         if (line.search(/^\s*\+ /) !== -1) {
-          if (line.search(/^\s*\+ (aiohttp|av|yarl|comfyui-frontend-package)==/) === -1) return false;
+          if (line.search(/^\s*\+ (aiohttp|av|yarl)==/) === -1) return false;
           adds++;
         }
         // An unexpected package means this is not a package upgrade

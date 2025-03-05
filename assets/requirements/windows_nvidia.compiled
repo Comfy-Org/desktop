@@ -41,9 +41,6 @@ colorama==0.4.6
     #   click
     #   tqdm
     # from https://download.pytorch.org/whl/cu126
-comfyui-frontend-package==1.10.17
-    # via -r assets/ComfyUI/requirements.txt
-    # from https://pypi.org/simple
 cryptography==44.0.0
     # via pyjwt
     # from https://pypi.org/simple
@@ -198,9 +195,6 @@ scipy==1.15.1
     # from https://pypi.org/simple
 sentencepiece==0.2.0
     # via -r assets/ComfyUI/requirements.txt
-    # from https://pypi.org/simple
-setuptools==75.8.2
-    # via torch
     # from https://pypi.org/simple
 shellingham==1.5.4
     # via typer
