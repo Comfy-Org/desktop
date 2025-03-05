@@ -30,3 +30,4 @@ async function applyPatch(filePath, patchFilePath) {
 }
 
 await applyPatch('./assets/ComfyUI/app/frontend_management.py', './scripts/core-remove-frontend.patch');
+await applyPatch('./assets/ComfyUI/requirements.txt', './scripts/core-requirements.patch');
