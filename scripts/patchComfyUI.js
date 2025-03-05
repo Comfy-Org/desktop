@@ -1,11 +1,11 @@
-import { applyPatch as _applyPatch } from 'diff';
+import { applyPatch } from 'diff';
 import fs from 'node:fs/promises';
 
 /**
  * @param {string} filePath
  * @param {string} patchFilePath
  */
-async function applyPatch(filePath, patchFilePath) {
+async function patchFile(filePath, patchFilePath) {
   try {
     // Read the original file and patch file
     const [originalContent, patchContent] = await Promise.all([
@@ -14,7 +14,7 @@ async function applyPatch(filePath, patchFilePath) {
     ]);
 
     // Apply the patch
-    const patchedContent = _applyPatch(originalContent, patchContent);
+    const patchedContent = applyPatch(originalContent, patchContent);
 
     // If patch was successfully applied (not false or null)
     if (patchedContent) {
@@ -29,5 +29,5 @@ async function applyPatch(filePath, patchFilePath) {
   }
 }
 
-await applyPatch('./assets/ComfyUI/app/frontend_management.py', './scripts/core-remove-frontend.patch');
-await applyPatch('./assets/ComfyUI/requirements.txt', './scripts/core-requirements.patch');
+await patchFile('./assets/ComfyUI/app/frontend_management.py', './scripts/core-remove-frontend.patch');
+await patchFile('./assets/ComfyUI/requirements.txt', './scripts/core-requirements.patch');
