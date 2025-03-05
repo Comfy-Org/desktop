@@ -1,7 +1,7 @@
-diff --git a/src/frontend_management.py b/src/frontend_management.py
+diff --git a/assets/ComfyUI/frontend_management.py b/assets/ComfyUI/frontend_management.py
 index e4d58920..289e1a47 100644
---- a/src/frontend_management.py
-+++ b/src/frontend_management.py
+--- a/assets/ComfyUI/frontend_management.py
++++ b/assets/ComfyUI/frontend_management.py
 @@ -18,15 +18,6 @@ from typing_extensions import NotRequired
  from comfy.cli_args import DEFAULT_VERSION_STRING
  
