@@ -37,7 +37,6 @@ runs:
       run: |
         (Get-Content node_modules\@electron\windows-sign\dist\cjs\sign-with-signtool.js) -replace [Regex]::Escape('await execute({ ...internalOptions, hash: "sha1'), [Regex]::Escape('//await execute({ ...internalOptions, hash: "sha1') | Out-File -encoding ASCII node_modules\@electron\windows-sign\dist\cjs\sign-with-signtool.js
         (Get-Content node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js) -replace [Regex]::Escape('await execute({ ...internalOptions, hash: "sha1'), [Regex]::Escape('//await execute({ ...internalOptions, hash: "sha1') | Out-File -encoding ASCII node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js
-        gc node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js
 
     - name: Set up Python
       uses: actions/setup-python@v4
