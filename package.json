@@ -10,12 +10,12 @@
   "packageManager": "yarn@4.5.0",
   "type": "module",
   "config": {
-    "frontendVersion": "1.10.18",
+    "frontendVersion": "1.11.8",
     "comfyUI": {
       "version": "0.3.23",
       "optionalBranch": ""
     },
-    "managerCommit": "0bd1bf260555b7101a8c5df6071dbf332cfa833d",
+    "managerCommit": "04fa540a8c09d890147fe158090d813be8d05d40",
     "uvVersion": "0.5.31"
   },
   "scripts": {
