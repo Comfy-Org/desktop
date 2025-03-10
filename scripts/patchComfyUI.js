@@ -16,16 +16,18 @@ async function patchFile(filePath, patchFilePath) {
     // Apply the patch
     const patchedContent = applyPatch(originalContent, patchContent);
 
-    // If patch was successfully applied (not false or null)
+    // If patch was successfully applied (not falsy)
     if (patchedContent) {
       // Write the result to the output file
       await fs.writeFile(filePath, patchedContent, 'utf8');
       console.log('Patch applied successfully!');
     } else {
-      console.error('Failed to apply patch - patch may be invalid or incompatible');
+      throw new Error(
+        `ComfyUI core patching returned falsy value (${typeof patchedContent}) - .patch file probably requires update`
+      );
     }
   } catch (error) {
-    console.error('Error applying patch:', error.message);
+    throw new Error(`Error applying core patch: ${error.message}`, { cause: error });
   }
 }
 
