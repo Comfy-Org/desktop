@@ -36,7 +36,7 @@
     "make:nvidia": "yarn run make -- --nvidia",
     "notarize": "node debug/notarize.js",
     "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
-    "patch:core:frontend": "node scripts/patchComfyUI.js",
+    "patch:core:frontend": "node scripts/patchComfyUI.js frontend requirements",
     "postinstall": "node .husky/install.mjs",
     "publish": "yarn run vite:compile && todesktop build",
     "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
