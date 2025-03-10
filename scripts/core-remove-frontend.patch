@@ -1,29 +1,31 @@
-diff --git a/assets/ComfyUI/frontend_management.py b/assets/ComfyUI/frontend_management.py
-index e4d58920..289e1a47 100644
---- a/assets/ComfyUI/frontend_management.py
-+++ b/assets/ComfyUI/frontend_management.py
-@@ -18,15 +18,6 @@ from typing_extensions import NotRequired
- from comfy.cli_args import DEFAULT_VERSION_STRING
- 
+diff --git a/frontend_management.py b/frontend_management.py
+index 308f71da..a4ba76ba 100644
+--- a/frontend_management.py
++++ b/frontend_management.py
+@@ -25,16 +25,9 @@ def frontend_install_warning_message():
+         extra = "-s "
+     return f"Please install the updated requirements.txt file by running:\n{sys.executable} {extra}-m pip install -r {req_path}\n\nThis error is happening because the ComfyUI frontend is no longer shipped as part of the main repo but as a pip package instead.\n\nIf you are on the portable package you can run: update\\update_comfyui.bat to solve this problem"
  
 -try:
 -    import comfyui_frontend_package
 -except ImportError:
 -    # TODO: Remove the check after roll out of 0.3.16
--    req_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'requirements.txt'))
--    logging.error(f"\n\n********** ERROR ***********\n\ncomfyui-frontend-package is not installed. Please install the updated requirements.txt file by running:\n{sys.executable} -m pip install -r {req_path}\n\nThis error is happening because the ComfyUI frontend is no longer shipped as part of the main repo but as a pip package instead.\n\nIf you are on the portable package you can run: update\\update_comfyui.bat to solve this problem\n********** ERROR **********\n")
+-    logging.error(f"\n\n********** ERROR ***********\n\ncomfyui-frontend-package is not installed. {frontend_install_warning_message()}\n********** ERROR **********\n")
 -    exit(-1)
 -
--
- REQUEST_TIMEOUT = 10  # seconds
  
- 
-@@ -121,7 +112,7 @@ def download_release_asset_zip(release: Release, destination_path: str) -> None:
+ try:
+-    frontend_version = tuple(map(int, comfyui_frontend_package.__version__.split(".")))
++    frontend_version = "1.10.18"
+ except:
+     frontend_version = (0,)
+     pass
+@@ -133,7 +126,7 @@ def download_release_asset_zip(release: Release, destination_path: str) -> None:
  
  
  class FrontendManager:
 -    DEFAULT_FRONTEND_PATH = str(importlib.resources.files(comfyui_frontend_package) / "static")
-+    DEFAULT_FRONTEND_PATH = str(Path(__file__).parents[1] / "web")
++    DEFAULT_FRONTEND_PATH = "web_custom_versions/desktop_app"
      CUSTOM_FRONTENDS_ROOT = str(Path(__file__).parents[1] / "web_custom_versions")
  
      @classmethod
