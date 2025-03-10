@@ -16,3 +16,4 @@ execSync(`git clone ${managerRepo} assets/ComfyUI/custom_nodes/ComfyUI-Manager`)
 execSync(`cd assets/ComfyUI/custom_nodes/ComfyUI-Manager && git checkout ${pkg.config.managerCommit} && cd ../../..`);
 execSync(`yarn run make:frontend`);
 execSync(`yarn run download:uv all`);
+execSync(`yarn run patch:core:frontend`);
