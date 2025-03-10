@@ -19,7 +19,6 @@ runs:
       run: |
         python -m pip install --upgrade pip
         yarn make:assets
-        yarn patch:core:frontend
 
     - name: Unzip Sign Lib/Bin Rezip
       if: ${{inputs.sign-and-publish == 'true'}}
