@@ -14,13 +14,6 @@ import fs from 'node:fs/promises';
  */
 const tasks = new Map([
   [
-    'frontend',
-    {
-      target: './assets/ComfyUI/app/frontend_management.py',
-      patch: './scripts/core-remove-frontend.patch',
-    },
-  ],
-  [
     'requirements',
     {
       target: './assets/ComfyUI/requirements.txt',

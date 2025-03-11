@@ -13,7 +13,7 @@
     "frontendVersion": "1.10.18",
     "comfyUI": {
       "version": "0.3.26",
-      "optionalBranch": ""
+      "optionalBranch": "desktop-release-mar112025"
     },
     "managerCommit": "04fa540a8c09d890147fe158090d813be8d05d40",
     "uvVersion": "0.5.31"
@@ -36,7 +36,7 @@
     "make:nvidia": "yarn run make -- --nvidia",
     "notarize": "node debug/notarize.js",
     "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
-    "patch:core:frontend": "node scripts/patchComfyUI.js frontend requirements",
+    "patch:core:frontend": "node scripts/patchComfyUI.js requirements",
     "postinstall": "node .husky/install.mjs",
     "publish": "yarn run vite:compile && todesktop build",
     "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
