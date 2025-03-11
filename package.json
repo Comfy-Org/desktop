@@ -15,7 +15,7 @@
       "version": "0.3.23",
       "optionalBranch": ""
     },
-    "managerCommit": "04fa540a8c09d890147fe158090d813be8d05d40",
+    "managerCommit": "0bd1bf260555b7101a8c5df6071dbf332cfa833d",
     "uvVersion": "0.5.31"
   },
   "scripts": {
