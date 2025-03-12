@@ -15,7 +15,7 @@
       "version": "0.3.26",
       "optionalBranch": "desktop-release-mar112025"
     },
-    "managerCommit": "402e2c384f338d0ed0a7fb19caa93f29a0dc35fd",
+    "managerCommit": "14b82d97ae9764b8ed50467bc4047bd3b90cd9e9",
     "uvVersion": "0.5.31"
   },
   "scripts": {
