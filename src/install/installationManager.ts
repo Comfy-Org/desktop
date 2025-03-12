@@ -285,9 +285,14 @@ export class InstallationManager implements HasTelemetry {
       onStdout: sendLogIpc,
       onStderr: sendLogIpc,
     };
-    await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
-    await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
-    await installation.validate();
+    try {
+      await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
+      await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
+      await installation.validate();
+    } catch (error) {
+      log.error('Error auto-updating packages:', error);
+      this.appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+    }
   }
 
   static setReinstallHandler(installation: ComfyInstallation) {
