@@ -291,7 +291,7 @@ export class InstallationManager implements HasTelemetry {
       await installation.validate();
     } catch (error) {
       log.error('Error auto-updating packages:', error);
-      this.appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+      await this.appWindow.loadPage('server-start');
     }
   }
 
