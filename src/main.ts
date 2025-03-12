@@ -71,6 +71,8 @@ function initalizeLogging() {
   log.transports.file.transforms.unshift(removeAnsiCodesTransform);
   replaceFileLoggingTransform(log.transports);
 
+  // Set the app version for the desktop app. Relied on by Manager and other sub-processes.
+  process.env.__COMFYUI_DESKTOP_VERSION__ = app.getVersion();
   log.info(`Starting app v${app.getVersion()}`);
 }
 
