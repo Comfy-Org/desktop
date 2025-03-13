@@ -357,7 +357,11 @@ export class AppWindow {
         const message = this.messageQueue.shift();
         if (message) {
           log.info('Sending queued message', message);
-          this.window.webContents.send(message.channel, message.data);
+          if (this.window.webContents.isDestroyed()) {
+            log.warn('Window is destroyed, cannot send message', message);
+          } else {
+            this.window.webContents.send(message.channel, message.data);
+          }
         }
       }
     });
