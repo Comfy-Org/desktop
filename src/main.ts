@@ -4,6 +4,7 @@ import { app, shell } from 'electron';
 import { LevelOption } from 'electron-log';
 import log from 'electron-log/main';
 
+import { LogFile } from './constants';
 import { DesktopApp } from './desktopApp';
 import { removeAnsiCodesTransform, replaceFileLoggingTransform } from './infrastructure/structuredLogging';
 import { initializeAppState } from './main-process/appState';
@@ -11,6 +12,7 @@ import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
 import { getTelemetry } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
+import { rotateLogFiles } from './utils';
 
 // Synchronous pre-start configuration
 dotenv.config();
@@ -41,8 +43,8 @@ if (!gotTheLock) {
 async function startApp() {
   // Wait for electron app ready event
   await new Promise<void>((resolve) => app.once('ready', () => resolve()));
+  await rotateLogFiles(app.getPath('logs'), LogFile.Main, 50);
   log.debug('App ready');
-
   telemetry.registerHandlers();
   telemetry.track('desktop:app_ready');
 

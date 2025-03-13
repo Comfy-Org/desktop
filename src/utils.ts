@@ -93,13 +93,13 @@ export function findAvailablePort(host: string, startPort: number, endPort: numb
  * @param maxFiles The maximum number of log files to keep. When 0, no files are removed. Default: 50
  */
 export async function rotateLogFiles(logDir: string, baseName: string, maxFiles = 50) {
-  const currentLogPath = path.join(logDir, `${baseName}.log`);
+  const currentLogPath = path.join(logDir, `${baseName}`);
 
   try {
     await fsPromises.access(logDir, fs.constants.R_OK | fs.constants.W_OK);
     await fsPromises.access(currentLogPath);
   } catch {
-    log.error('Log rotation: cannot access log dir.');
+    log.error('Log rotation: cannot access log dir', currentLogPath);
     // TODO: Report to user
     return;
   }

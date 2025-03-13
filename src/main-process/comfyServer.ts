@@ -122,7 +122,7 @@ export class ComfyServer implements HasTelemetry {
 
     ComfySettings.lockWrites();
     await ComfyServerConfig.addAppBundledCustomNodesToConfig();
-    await rotateLogFiles(app.getPath('logs'), 'comfyui', 50);
+    await rotateLogFiles(app.getPath('logs'), LogFile.ComfyUI, 50);
     return new Promise<void>((resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });
       comfyUILog.transports.file.fileName = LogFile.ComfyUI;
