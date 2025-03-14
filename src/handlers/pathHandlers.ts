@@ -50,9 +50,27 @@ export function registerPathHandlers() {
         isValid: true,
         freeSpace: -1,
         requiredSpace: requiredSpace,
+        isOneDrive: false,
+        isNonDefaultDrive: false,
+        parentMissing: false,
+        exists: false,
+        cannotWrite: false,
       };
 
       try {
+        if (process.platform === 'win32') {
+          // Check if path is in OneDrive
+          if (inputPath.toLowerCase().includes('onedrive')) {
+            result.isOneDrive = true;
+          }
+
+          // Check if path is on non-default drive
+          const systemDrive = process.env.SystemDrive || 'C:';
+          if (!inputPath.toUpperCase().startsWith(systemDrive)) {
+            result.isNonDefaultDrive = true;
+          }
+        }
+
         // Check if root path exists
         const parent = path.dirname(inputPath);
         if (!fs.existsSync(parent)) {
@@ -84,8 +102,16 @@ export function registerPathHandlers() {
         log.error('Error validating install path:', error);
         result.error = `${error}`;
       }
-      result.isValid = false;
-      if (result.cannotWrite || result.parentMissing || result.freeSpace < requiredSpace || result.error) {
+
+      result.isValid = true; // Start with true and set to false if any validation fails
+      if (
+        result.cannotWrite ||
+        result.parentMissing ||
+        result.freeSpace < requiredSpace ||
+        result.error ||
+        result.isOneDrive ||
+        result.isNonDefaultDrive
+      ) {
         result.isValid = false;
       }
       return result;

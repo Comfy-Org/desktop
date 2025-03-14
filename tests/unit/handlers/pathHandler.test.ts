@@ -9,14 +9,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComfyConfigManager } from '@/config/comfyConfigManager';
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 import { IPC_CHANNELS } from '@/constants';
-import { WIN_REQUIRED_SPACE, registerPathHandlers } from '@/handlers/pathHandlers';
+import { MAC_REQUIRED_SPACE, WIN_REQUIRED_SPACE, registerPathHandlers } from '@/handlers/pathHandlers';
 import type { SystemPaths } from '@/preload';
 
 import { electronMock } from '../setup';
 
 const DEFAULT_FREE_SPACE = 20 * 1024 * 1024 * 1024; // 20GB
 const LOW_FREE_SPACE = 5 * 1024 * 1024 * 1024; // 5GB
-
+const LOW_FREE_SPACE_MAC = 1 * 1024 * 1024 * 1024; // 1GB
 const MOCK_PATHS = {
   userData: '/mock/user/data',
   logs: '/mock/logs/path',
@@ -89,6 +89,21 @@ const mockFileSystem = ({ exists = true, writable = true, isDirectory = false, c
   }
 };
 
+const mockProcessPlatform = (platform: string, systemDrive?: string) => {
+  const originalPlatform = process.platform;
+  const originalSystemDrive = process.env.SystemDrive;
+  Object.defineProperty(process, 'platform', { value: platform });
+  if (systemDrive) {
+    process.env = { ...process.env, SystemDrive: systemDrive };
+  }
+  return () => {
+    Object.defineProperty(process, 'platform', { value: originalPlatform });
+    if (systemDrive) {
+      process.env = { ...process.env, SystemDrive: originalSystemDrive };
+    }
+  };
+};
+
 type HandlerType<T extends (...args: never[]) => unknown> = T;
 type IpcHandler = (event: IpcMainEvent, ...args: unknown[]) => unknown;
 
@@ -120,16 +135,18 @@ describe('PathHandlers', () => {
       mockDiskSpace(DEFAULT_FREE_SPACE);
     });
 
-    it('accepts valid install path with sufficient space', async () => {
+    it('Windows: accepts valid install path with sufficient space', async () => {
       mockFileSystem({ exists: true, writable: true });
-
+      const restorePlatform = mockProcessPlatform('win32', '/');
       const result = await validateHandler({}, '/valid/path');
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         isValid: true,
         exists: true,
         freeSpace: DEFAULT_FREE_SPACE,
         requiredSpace: WIN_REQUIRED_SPACE,
       });
+
+      restorePlatform();
     });
 
     it('does not exist if directory is empty', async () => {
@@ -147,25 +164,57 @@ describe('PathHandlers', () => {
     it('rejects path with insufficient disk space', async () => {
       mockFileSystem({ exists: true, writable: true });
       mockDiskSpace(LOW_FREE_SPACE);
+      const restorePlatform = mockProcessPlatform('win32');
 
       const result = await validateHandler({}, '/low/space/path');
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         isValid: false,
         exists: true,
         freeSpace: LOW_FREE_SPACE,
         requiredSpace: WIN_REQUIRED_SPACE,
       });
+
+      restorePlatform();
+    });
+
+    it('Mac: accepts valid install path with sufficient space', async () => {
+      mockFileSystem({ exists: true, writable: true });
+      const restorePlatform = mockProcessPlatform('darwin');
+      const result = await validateHandler({}, '/valid/path');
+      expect(result).toMatchObject({
+        isValid: true,
+        exists: true,
+        freeSpace: DEFAULT_FREE_SPACE,
+        requiredSpace: MAC_REQUIRED_SPACE,
+      });
+
+      restorePlatform();
+    });
+
+    it('Mac: rejects path with insufficient disk space', async () => {
+      mockFileSystem({ exists: true, writable: true });
+      mockDiskSpace(LOW_FREE_SPACE_MAC);
+      const restorePlatform = mockProcessPlatform('darwin');
+
+      const result = await validateHandler({}, '/low/space/path');
+      expect(result).toMatchObject({
+        isValid: false,
+        exists: true,
+        freeSpace: LOW_FREE_SPACE_MAC,
+        requiredSpace: MAC_REQUIRED_SPACE,
+      });
+
+      restorePlatform();
     });
 
     it('rejects path with missing parent directory', async () => {
       mockFileSystem({ exists: false });
 
       const result = await validateHandler({}, '/missing/parent/path');
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         isValid: false,
         parentMissing: true,
         freeSpace: DEFAULT_FREE_SPACE,
-        requiredSpace: WIN_REQUIRED_SPACE,
       });
     });
 
@@ -173,30 +222,70 @@ describe('PathHandlers', () => {
       mockFileSystem({ exists: true, writable: false, isDirectory: true, contentLength: 1 });
 
       const result = await validateHandler({}, '/non/writable/path');
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         isValid: false,
         cannotWrite: true,
         exists: true,
         freeSpace: DEFAULT_FREE_SPACE,
-        requiredSpace: WIN_REQUIRED_SPACE,
       });
     });
 
-    it('should handle and log errors during validation', async () => {
+    it('Windows: should handle and log errors during validation', async () => {
       const mockError = new Error('Test error');
       vi.mocked(fs.existsSync).mockImplementation(() => {
         throw mockError;
       });
       vi.spyOn(log, 'error').mockImplementation(() => {});
 
+      // Mock process.platform is win32
+      const restorePlatform = mockProcessPlatform('win32');
+
       const result = await validateHandler({}, '/error/path');
-      expect(result).toEqual({
+
+      expect(result).toMatchObject({
         isValid: false,
         error: 'Error: Test error',
         freeSpace: -1,
         requiredSpace: WIN_REQUIRED_SPACE,
       });
       expect(log.error).toHaveBeenCalledWith('Error validating install path:', mockError);
+
+      // Restore original platform
+      restorePlatform();
+    });
+
+    it('Windows: OneDrive paths not allowed', async () => {
+      mockFileSystem({ exists: true, writable: true });
+      const restorePlatform = mockProcessPlatform('win32');
+
+      const result = await validateHandler({}, String.raw`C:\Users\Test\OneDrive\ComfyUI`);
+
+      expect(result).toMatchObject({
+        isValid: false,
+        isOneDrive: true,
+        requiredSpace: WIN_REQUIRED_SPACE,
+      });
+
+      // Restore original platform
+      restorePlatform();
+    });
+
+    it('Windows: non-system drive paths not allowed', async () => {
+      mockFileSystem({ exists: true, writable: true });
+      const restorePlatform = mockProcessPlatform('win32', 'C:');
+
+      const result = await validateHandler({}, String.raw`D:\ComfyUI`);
+
+      expect(result).toMatchObject({
+        isValid: false,
+        exists: true,
+        isOneDrive: false,
+        isNonDefaultDrive: true,
+        requiredSpace: WIN_REQUIRED_SPACE,
+      });
+
+      // Restore original values
+      restorePlatform();
     });
   });
 

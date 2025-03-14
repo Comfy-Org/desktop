@@ -78,6 +78,10 @@ export type PathValidationResult = {
   exists?: boolean;
   /** `true` if the selected path is not writable. */
   cannotWrite?: boolean;
+  /** `true` if the selected path is within OneDrive. */
+  isOneDrive?: boolean;
+  /** `true` if the selected path is on a non-default drive. */
+  isNonDefaultDrive?: boolean;
   /** The amount of free space in the path. `-1` if this could not be determined. */
   freeSpace: number;
   /** The amount of space in bytes required to install ComfyUI. */
