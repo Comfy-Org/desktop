@@ -34,6 +34,12 @@ export function registerPathHandlers() {
     // Remove OneDrive from documents path if present
     if (process.platform === 'win32') {
       documentsPath = documentsPath.replace(/OneDrive\\/, '');
+      // We should use path.win32.join for Windows paths
+      return {
+        appData: app.getPath('appData'),
+        appPath: app.getAppPath(),
+        defaultInstallPath: path.win32.join(documentsPath, 'ComfyUI'),
+      };
     }
 
     return {
