@@ -116,6 +116,32 @@ const getRegisteredHandler = <T extends (...args: never[]) => unknown>(
   return handler as unknown as HandlerType<T>;
 };
 
+type ElectronPathName =
+  | 'home'
+  | 'appData'
+  | 'userData'
+  | 'sessionData'
+  | 'temp'
+  | 'exe'
+  | 'module'
+  | 'desktop'
+  | 'documents'
+  | 'downloads'
+  | 'music'
+  | 'pictures'
+  | 'videos'
+  | 'recent'
+  | 'logs'
+  | 'crashDumps';
+
+const mockPaths = (overrides: Partial<Record<ElectronPathName, string>> = {}) => {
+  vi.mocked(app.getPath).mockImplementation((name: ElectronPathName): string => {
+    if (name in overrides) return overrides[name]!;
+    if (name in MOCK_PATHS) return MOCK_PATHS[name as keyof typeof MOCK_PATHS];
+    return path.normalize(`/mock/${name}`);
+  });
+};
+
 describe('PathHandlers', () => {
   beforeEach(() => {
     vi.mocked(app.getPath).mockImplementation(
@@ -345,6 +371,19 @@ describe('PathHandlers', () => {
         appPath: '/mock/app/path',
         defaultInstallPath: path.join('/mock/documents', 'ComfyUI'),
       });
+    });
+
+    it('Windows: should remove OneDrive from documents path', async () => {
+      // Mock Windows platform
+      const restorePlatform = mockProcessPlatform('win32');
+      mockPaths({ documents: String.raw`C:\Users\Test\OneDrive\Documents` });
+
+      const result = await getSystemPathsHandler({});
+      const expected = String.raw`C:\Users\Test\Documents\ComfyUI`;
+      expect(result.defaultInstallPath).toBe(expected);
+
+      // Restore original platform
+      restorePlatform();
     });
   });
 
