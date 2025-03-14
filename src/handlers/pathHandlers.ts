@@ -9,7 +9,8 @@ import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { IPC_CHANNELS } from '../constants';
 import type { PathValidationResult, SystemPaths } from '../preload';
 
-export const REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
+export const WIN_REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
+export const MAC_REQUIRED_SPACE = 5 * 1024 * 1024 * 1024; // 5GB in bytes
 
 export function registerPathHandlers() {
   ipcMain.on(IPC_CHANNELS.OPEN_LOGS_PATH, (): void => {
@@ -28,10 +29,23 @@ export function registerPathHandlers() {
   });
 
   ipcMain.handle(IPC_CHANNELS.GET_SYSTEM_PATHS, (): SystemPaths => {
+    let documentsPath = app.getPath('documents');
+
+    // Remove OneDrive from documents path if present
+    if (process.platform === 'win32') {
+      documentsPath = documentsPath.replace(/OneDrive\\/, '');
+      // We should use path.win32.join for Windows paths
+      return {
+        appData: app.getPath('appData'),
+        appPath: app.getAppPath(),
+        defaultInstallPath: path.win32.join(documentsPath, 'ComfyUI'),
+      };
+    }
+
     return {
       appData: app.getPath('appData'),
       appPath: app.getAppPath(),
-      defaultInstallPath: path.join(app.getPath('documents'), 'ComfyUI'),
+      defaultInstallPath: path.join(documentsPath, 'ComfyUI'),
     };
   });
 
@@ -42,13 +56,34 @@ export function registerPathHandlers() {
   ipcMain.handle(
     IPC_CHANNELS.VALIDATE_INSTALL_PATH,
     async (event, inputPath: string): Promise<PathValidationResult> => {
+      // Determine required space based on OS
+      const requiredSpace = process.platform === 'darwin' ? MAC_REQUIRED_SPACE : WIN_REQUIRED_SPACE;
+
       const result: PathValidationResult = {
         isValid: true,
         freeSpace: -1,
-        requiredSpace: REQUIRED_SPACE,
+        requiredSpace: requiredSpace,
+        isOneDrive: false,
+        isNonDefaultDrive: false,
+        parentMissing: false,
+        exists: false,
+        cannotWrite: false,
       };
 
       try {
+        if (process.platform === 'win32') {
+          // Check if path is in OneDrive
+          if (inputPath.toLowerCase().includes('onedrive')) {
+            result.isOneDrive = true;
+          }
+
+          // Check if path is on non-default drive
+          const systemDrive = process.env.SystemDrive || 'C:';
+          if (!inputPath.toUpperCase().startsWith(systemDrive)) {
+            result.isNonDefaultDrive = true;
+          }
+        }
+
         // Check if root path exists
         const parent = path.dirname(inputPath);
         if (!fs.existsSync(parent)) {
@@ -67,7 +102,7 @@ export function registerPathHandlers() {
           result.cannotWrite = true;
         }
 
-        // Check available disk space (require at least 10GB free)
+        // Check available disk space
         const disks = await si.fsSize();
         const disk = disks.find((disk) => inputPath.startsWith(disk.mount));
         if (disk) result.freeSpace = disk.available;
@@ -76,7 +111,15 @@ export function registerPathHandlers() {
         result.error = `${error}`;
       }
 
-      if (result.cannotWrite || result.parentMissing || result.freeSpace < REQUIRED_SPACE || result.error) {
+      result.isValid = true; // Start with true and set to false if any validation fails
+      if (
+        result.cannotWrite ||
+        result.parentMissing ||
+        result.freeSpace < requiredSpace ||
+        result.error ||
+        result.isOneDrive ||
+        result.isNonDefaultDrive
+      ) {
         result.isValid = false;
       }
       return result;
