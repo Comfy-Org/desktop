@@ -29,10 +29,17 @@ export function registerPathHandlers() {
   });
 
   ipcMain.handle(IPC_CHANNELS.GET_SYSTEM_PATHS, (): SystemPaths => {
+    let documentsPath = app.getPath('documents');
+
+    // Remove OneDrive from documents path if present
+    if (process.platform === 'win32') {
+      documentsPath = documentsPath.replace(/OneDrive\\/, '');
+    }
+
     return {
       appData: app.getPath('appData'),
       appPath: app.getAppPath(),
-      defaultInstallPath: path.join(app.getPath('documents'), 'ComfyUI'),
+      defaultInstallPath: path.join(documentsPath, 'ComfyUI'),
     };
   });
 
