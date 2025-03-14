@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComfyConfigManager } from '@/config/comfyConfigManager';
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 import { IPC_CHANNELS } from '@/constants';
-import { REQUIRED_SPACE, registerPathHandlers } from '@/handlers/pathHandlers';
+import { WIN_REQUIRED_SPACE, registerPathHandlers } from '@/handlers/pathHandlers';
 import type { SystemPaths } from '@/preload';
 
 import { electronMock } from '../setup';
@@ -128,7 +128,7 @@ describe('PathHandlers', () => {
         isValid: true,
         exists: true,
         freeSpace: DEFAULT_FREE_SPACE,
-        requiredSpace: REQUIRED_SPACE,
+        requiredSpace: WIN_REQUIRED_SPACE,
       });
     });
 
@@ -153,7 +153,7 @@ describe('PathHandlers', () => {
         isValid: false,
         exists: true,
         freeSpace: LOW_FREE_SPACE,
-        requiredSpace: REQUIRED_SPACE,
+        requiredSpace: WIN_REQUIRED_SPACE,
       });
     });
 
@@ -165,7 +165,7 @@ describe('PathHandlers', () => {
         isValid: false,
         parentMissing: true,
         freeSpace: DEFAULT_FREE_SPACE,
-        requiredSpace: REQUIRED_SPACE,
+        requiredSpace: WIN_REQUIRED_SPACE,
       });
     });
 
@@ -178,7 +178,7 @@ describe('PathHandlers', () => {
         cannotWrite: true,
         exists: true,
         freeSpace: DEFAULT_FREE_SPACE,
-        requiredSpace: REQUIRED_SPACE,
+        requiredSpace: WIN_REQUIRED_SPACE,
       });
     });
 
@@ -194,7 +194,7 @@ describe('PathHandlers', () => {
         isValid: false,
         error: 'Error: Test error',
         freeSpace: -1,
-        requiredSpace: REQUIRED_SPACE,
+        requiredSpace: WIN_REQUIRED_SPACE,
       });
       expect(log.error).toHaveBeenCalledWith('Error validating install path:', mockError);
     });
