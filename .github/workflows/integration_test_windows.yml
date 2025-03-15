@@ -1,38 +1,8 @@
 name: End-to-End Test - Windows
 
 on:
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - '.prettierrc'
-      - '.eslintrc.json'
-      - '.prettierignore'
-      - 'README.md'
-      - '.husky/**'
-      - '.vscode/**'
-      - 'scripts/**'
-      - '.gitignore'
-      - 'todesktop.json'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.cursor/**'
-      - '*_example'
-      - 'tests/unit/**'
-  push:
-    branches: [main]
-    paths-ignore:
-      - '.prettierrc'
-      - '.eslintrc.json'
-      - '.prettierignore'
-      - 'README.md'
-      - '.husky/**'
-      - '.vscode/**'
-      - 'scripts/**'
-      - '.gitignore'
-      - 'todesktop.json'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.cursor/**'
-      - '*_example'
-      - 'tests/unit/**'
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
   integration-windows-test:
@@ -50,6 +20,12 @@ jobs:
         with:
           sign-and-publish: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: comfyui-electron-win32-debug-build-${{ env.sha_short }}
+          path: dist/*.zip
 
       - name: Set display resolution
         run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
