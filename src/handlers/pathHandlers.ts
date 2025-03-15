@@ -55,9 +55,14 @@ export function registerPathHandlers() {
           result.parentMissing = true;
         }
 
-        // Check if path exists
+        // Check if path exists and is not an empty directory
         if (fs.existsSync(inputPath)) {
-          result.exists = true;
+          if (fs.statSync(inputPath).isDirectory()) {
+            const contents = fs.readdirSync(inputPath);
+            result.exists = contents.length > 0;
+          } else {
+            result.exists = true;
+          }
         }
 
         // Check if path is writable

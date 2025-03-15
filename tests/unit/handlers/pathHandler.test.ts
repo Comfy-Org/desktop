@@ -72,8 +72,14 @@ const mockDiskSpace = (available: number) => {
   ]);
 };
 
-const mockFileSystem = ({ exists = true, writable = true } = {}) => {
+const mockFileSystem = ({ exists = true, writable = true, isDirectory = false, contentLength = 0 } = {}) => {
   vi.mocked(fs.existsSync).mockReturnValue(exists);
+  vi.mocked(fs.statSync).mockReturnValue({
+    isDirectory: () => isDirectory,
+  } as unknown as fs.Stats);
+  vi.mocked(fs.readdirSync).mockReturnValue(
+    Array.from({ length: contentLength }, () => ({ name: 'mock-file' }) as fs.Dirent)
+  );
   if (writable) {
     vi.mocked(fs.accessSync).mockReturnValue();
   } else {
@@ -126,6 +132,18 @@ describe('PathHandlers', () => {
       });
     });
 
+    it('does not exist if directory is empty', async () => {
+      mockFileSystem({ exists: true, writable: true, contentLength: 0, isDirectory: true });
+
+      const result = await validateHandler({}, '/valid/path');
+      expect(result).toEqual({
+        isValid: true,
+        exists: false,
+        freeSpace: DEFAULT_FREE_SPACE,
+        requiredSpace: REQUIRED_SPACE,
+      });
+    });
+
     it('rejects path with insufficient disk space', async () => {
       mockFileSystem({ exists: true, writable: true });
       mockDiskSpace(LOW_FREE_SPACE);
@@ -152,7 +170,7 @@ describe('PathHandlers', () => {
     });
 
     it('rejects non-writable path', async () => {
-      mockFileSystem({ exists: true, writable: false });
+      mockFileSystem({ exists: true, writable: false, isDirectory: true, contentLength: 1 });
 
       const result = await validateHandler({}, '/non/writable/path');
       expect(result).toEqual({
