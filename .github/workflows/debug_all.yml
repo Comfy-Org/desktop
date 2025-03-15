@@ -2,8 +2,7 @@ name: Build - All Platforms
 
 on:
   pull_request:
-    branches:
-      - 'main'
+    branches: [main]
     paths-ignore:
       - '.prettierrc'
       - '.eslintrc.json'
@@ -17,10 +16,9 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.cursor/**'
       - '*_example'
-      - 'tests/**'
+      - 'tests/unit/**'
   push:
-    branches:
-      - 'main'
+    branches: [main]
     paths-ignore:
       - '.prettierrc'
       - '.eslintrc.json'
@@ -34,12 +32,12 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.cursor/**'
       - '*_example'
-      - 'tests/**'
+      - 'tests/unit/**'
 
 jobs:
-  build-windows-debug-all:
+  build-and-test-e2e-windows:
     secrets: inherit
-    uses: ./.github/workflows/debug_windows.yml
+    uses: ./.github/workflows/integration_test_windows.yml
   build-apple-debug-all:
     secrets: inherit
     uses: ./.github/workflows/debug_macos.yml
