@@ -73,7 +73,9 @@ export function registerPathHandlers() {
       try {
         if (process.platform === 'win32') {
           // Check if path is in OneDrive
-          if (inputPath.toLowerCase().includes('onedrive')) {
+          const { oneDrive } = process.env;
+          const normalizedPath = path.resolve(inputPath);
+          if (oneDrive && path.resolve(oneDrive).toLowerCase().startsWith(normalizedPath.toLowerCase())) {
             result.isOneDrive = true;
           }
 
