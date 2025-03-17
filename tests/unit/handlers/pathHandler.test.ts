@@ -4,7 +4,7 @@ import log from 'electron-log/main';
 import fs from 'node:fs';
 import path from 'node:path';
 import si from 'systeminformation';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyConfigManager } from '@/config/comfyConfigManager';
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
@@ -24,6 +24,15 @@ const MOCK_PATHS = {
   appData: '/mock/appData',
   appPath: '/mock/app/path',
 } as const;
+
+// Add this mock for OneDrive environment variable
+const MOCK_ONEDRIVE = String.raw`C:\Users\Test\OneDrive`;
+const MOCK_SYSTEM_DRIVE = String.raw`C:`;
+const originalEnv = process.env;
+
+afterEach(() => {
+  process.env = originalEnv;
+});
 
 electronMock.app.getPath = vi.fn((name: string) => {
   switch (name) {
@@ -57,7 +66,7 @@ vi.mock('@/config/comfyConfigManager', () => ({
   },
 }));
 
-const mockDiskSpace = (available: number) => {
+const mockDiskSpace = (available: number, mount = '/') => {
   vi.mocked(si.fsSize).mockResolvedValue([
     {
       fs: 'test',
@@ -65,7 +74,7 @@ const mockDiskSpace = (available: number) => {
       size: 100,
       used: 0,
       available,
-      mount: '/',
+      mount,
       use: 0,
       rw: true,
     },
@@ -135,7 +144,13 @@ describe('PathHandlers', () => {
     vi.mocked(app.getAppPath).mockReturnValue(MOCK_PATHS.appPath);
     vi.mocked(shell.openPath).mockResolvedValue('');
 
+    process.env = { ...originalEnv, OneDrive: MOCK_ONEDRIVE, SystemDrive: MOCK_SYSTEM_DRIVE };
+
     registerPathHandlers();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   describe('validate-install-path', () => {
@@ -144,6 +159,7 @@ describe('PathHandlers', () => {
     beforeEach(() => {
       validateHandler = getRegisteredHandler(IPC_CHANNELS.VALIDATE_INSTALL_PATH);
       mockDiskSpace(DEFAULT_FREE_SPACE);
+      process.env = { ...originalEnv, OneDrive: MOCK_ONEDRIVE, SystemDrive: MOCK_SYSTEM_DRIVE };
     });
 
     it('Windows: accepts valid install path with sufficient space', async () => {
@@ -151,14 +167,17 @@ describe('PathHandlers', () => {
         return;
       }
       mockFileSystem({ exists: true, writable: true });
-
-      const result = await validateHandler({}, '/valid/path');
+      mockDiskSpace(DEFAULT_FREE_SPACE, 'C:');
+      const result = await validateHandler({}, String.raw`C:\valid\path`);
       expect(result).toMatchObject({
         isValid: true,
         exists: true,
         freeSpace: DEFAULT_FREE_SPACE,
         requiredSpace: WIN_REQUIRED_SPACE,
         isOneDrive: false,
+        isNonDefaultDrive: false,
+        parentMissing: false,
+        cannotWrite: false,
       });
     });
 
@@ -167,9 +186,9 @@ describe('PathHandlers', () => {
 
       const result = await validateHandler({}, '/valid/path');
       expect(result).toMatchObject({
-        isValid: true,
         exists: false,
         freeSpace: DEFAULT_FREE_SPACE,
+        cannotWrite: false,
       });
     });
 

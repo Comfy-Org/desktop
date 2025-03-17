@@ -73,11 +73,13 @@ export function registerPathHandlers() {
       try {
         if (process.platform === 'win32') {
           // Check if path is in OneDrive
-          const { oneDrive } = process.env;
-          if (oneDrive) {
+          const { OneDrive } = process.env;
+          if (OneDrive) {
             const normalizedInput = path.resolve(inputPath).toLowerCase();
-            const normalizedOneDrive = path.resolve(oneDrive).toLowerCase();
+            const normalizedOneDrive = path.resolve(OneDrive).toLowerCase();
             // Check if the normalized OneDrive path is a parent of the input path
+            process.stdout.write(`normalizedInput: ${normalizedInput}\n`);
+            process.stdout.write(`normalizedOneDrive: ${normalizedOneDrive}\n`);
             if (normalizedInput.startsWith(normalizedOneDrive)) {
               result.isOneDrive = true;
             }
