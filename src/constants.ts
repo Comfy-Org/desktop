@@ -49,6 +49,7 @@ export const IPC_CHANNELS = {
   CAN_ACCESS_URL: 'can-access-url',
   START_TROUBLESHOOTING: 'start-troubleshooting',
   DISABLE_CUSTOM_NODES: 'disable-custom-nodes',
+  IMPORT_MODEL: 'import-model',
 } as const;
 
 export enum ProgressStatus {
