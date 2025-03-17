@@ -38,7 +38,7 @@ export function registerPathHandlers() {
       return {
         appData: app.getPath('appData'),
         appPath: app.getAppPath(),
-        defaultInstallPath: path.win32.join(documentsPath, 'ComfyUI'),
+        defaultInstallPath: path.join(documentsPath, 'ComfyUI'),
       };
     }
 
@@ -74,9 +74,13 @@ export function registerPathHandlers() {
         if (process.platform === 'win32') {
           // Check if path is in OneDrive
           const { oneDrive } = process.env;
-          const normalizedPath = path.resolve(inputPath);
-          if (oneDrive && path.resolve(oneDrive).toLowerCase().startsWith(normalizedPath.toLowerCase())) {
-            result.isOneDrive = true;
+          if (oneDrive) {
+            const normalizedInput = path.resolve(inputPath).toLowerCase();
+            const normalizedOneDrive = path.resolve(oneDrive).toLowerCase();
+            // Check if the normalized OneDrive path is a parent of the input path
+            if (normalizedInput.startsWith(normalizedOneDrive)) {
+              result.isOneDrive = true;
+            }
           }
 
           // Check if path is on non-default drive
@@ -118,17 +122,15 @@ export function registerPathHandlers() {
         result.error = `${error}`;
       }
 
-      result.isValid = true; // Start with true and set to false if any validation fails
-      if (
+      result.isValid =
         result.cannotWrite ||
         result.parentMissing ||
         result.freeSpace < requiredSpace ||
         result.error ||
         result.isOneDrive ||
         result.isNonDefaultDrive
-      ) {
-        result.isValid = false;
-      }
+          ? false
+          : true;
       return result;
     }
   );

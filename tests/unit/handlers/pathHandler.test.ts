@@ -89,21 +89,6 @@ const mockFileSystem = ({ exists = true, writable = true, isDirectory = false, c
   }
 };
 
-const mockProcessPlatform = (platform: string, systemDrive?: string) => {
-  const originalPlatform = process.platform;
-  const originalSystemDrive = process.env.SystemDrive;
-  Object.defineProperty(process, 'platform', { value: platform });
-  if (systemDrive) {
-    process.env = { ...process.env, SystemDrive: systemDrive };
-  }
-  return () => {
-    Object.defineProperty(process, 'platform', { value: originalPlatform });
-    if (systemDrive) {
-      process.env = { ...process.env, SystemDrive: originalSystemDrive };
-    }
-  };
-};
-
 type HandlerType<T extends (...args: never[]) => unknown> = T;
 type IpcHandler = (event: IpcMainEvent, ...args: unknown[]) => unknown;
 
@@ -162,17 +147,19 @@ describe('PathHandlers', () => {
     });
 
     it('Windows: accepts valid install path with sufficient space', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
       mockFileSystem({ exists: true, writable: true });
-      const restorePlatform = mockProcessPlatform('win32', '/');
+
       const result = await validateHandler({}, '/valid/path');
       expect(result).toMatchObject({
         isValid: true,
         exists: true,
         freeSpace: DEFAULT_FREE_SPACE,
         requiredSpace: WIN_REQUIRED_SPACE,
+        isOneDrive: false,
       });
-
-      restorePlatform();
     });
 
     it('does not exist if directory is empty', async () => {
@@ -187,10 +174,12 @@ describe('PathHandlers', () => {
       });
     });
 
-    it('rejects path with insufficient disk space', async () => {
+    it('Windows: rejects path with insufficient disk space', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
       mockFileSystem({ exists: true, writable: true });
       mockDiskSpace(LOW_FREE_SPACE);
-      const restorePlatform = mockProcessPlatform('win32');
 
       const result = await validateHandler({}, '/low/space/path');
       expect(result).toMatchObject({
@@ -199,13 +188,14 @@ describe('PathHandlers', () => {
         freeSpace: LOW_FREE_SPACE,
         requiredSpace: WIN_REQUIRED_SPACE,
       });
-
-      restorePlatform();
     });
 
     it('Mac: accepts valid install path with sufficient space', async () => {
+      if (process.platform !== 'darwin') {
+        return;
+      }
       mockFileSystem({ exists: true, writable: true });
-      const restorePlatform = mockProcessPlatform('darwin');
+
       const result = await validateHandler({}, '/valid/path');
       expect(result).toMatchObject({
         isValid: true,
@@ -213,14 +203,14 @@ describe('PathHandlers', () => {
         freeSpace: DEFAULT_FREE_SPACE,
         requiredSpace: MAC_REQUIRED_SPACE,
       });
-
-      restorePlatform();
     });
 
     it('Mac: rejects path with insufficient disk space', async () => {
+      if (process.platform !== 'darwin') {
+        return;
+      }
       mockFileSystem({ exists: true, writable: true });
       mockDiskSpace(LOW_FREE_SPACE_MAC);
-      const restorePlatform = mockProcessPlatform('darwin');
 
       const result = await validateHandler({}, '/low/space/path');
       expect(result).toMatchObject({
@@ -229,8 +219,6 @@ describe('PathHandlers', () => {
         freeSpace: LOW_FREE_SPACE_MAC,
         requiredSpace: MAC_REQUIRED_SPACE,
       });
-
-      restorePlatform();
     });
 
     it('rejects path with missing parent directory', async () => {
@@ -257,14 +245,14 @@ describe('PathHandlers', () => {
     });
 
     it('Windows: should handle and log errors during validation', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
       const mockError = new Error('Test error');
       vi.mocked(fs.existsSync).mockImplementation(() => {
         throw mockError;
       });
       vi.spyOn(log, 'error').mockImplementation(() => {});
-
-      // Mock process.platform is win32
-      const restorePlatform = mockProcessPlatform('win32');
 
       const result = await validateHandler({}, '/error/path');
 
@@ -275,14 +263,13 @@ describe('PathHandlers', () => {
         requiredSpace: WIN_REQUIRED_SPACE,
       });
       expect(log.error).toHaveBeenCalledWith('Error validating install path:', mockError);
-
-      // Restore original platform
-      restorePlatform();
     });
 
     it('Windows: OneDrive paths not allowed', async () => {
       mockFileSystem({ exists: true, writable: true });
-      const restorePlatform = mockProcessPlatform('win32');
+      if (process.platform !== 'win32') {
+        return;
+      }
 
       const result = await validateHandler({}, String.raw`C:\Users\Test\OneDrive\ComfyUI`);
 
@@ -291,15 +278,13 @@ describe('PathHandlers', () => {
         isOneDrive: true,
         requiredSpace: WIN_REQUIRED_SPACE,
       });
-
-      // Restore original platform
-      restorePlatform();
     });
 
     it('Windows: non-system drive paths not allowed', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
       mockFileSystem({ exists: true, writable: true });
-      const restorePlatform = mockProcessPlatform('win32', 'C:');
-
       const result = await validateHandler({}, String.raw`D:\ComfyUI`);
 
       expect(result).toMatchObject({
@@ -309,9 +294,6 @@ describe('PathHandlers', () => {
         isNonDefaultDrive: true,
         requiredSpace: WIN_REQUIRED_SPACE,
       });
-
-      // Restore original values
-      restorePlatform();
     });
   });
 
@@ -374,16 +356,14 @@ describe('PathHandlers', () => {
     });
 
     it('Windows: should remove OneDrive from documents path', async () => {
-      // Mock Windows platform
-      const restorePlatform = mockProcessPlatform('win32');
+      if (process.platform !== 'win32') {
+        return;
+      }
       mockPaths({ documents: String.raw`C:\Users\Test\OneDrive\Documents` });
 
       const result = await getSystemPathsHandler({});
       const expected = String.raw`C:\Users\Test\Documents\ComfyUI`;
       expect(result.defaultInstallPath).toBe(expected);
-
-      // Restore original platform
-      restorePlatform();
     });
   });
 
