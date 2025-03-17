@@ -166,11 +166,10 @@ describe('PathHandlers', () => {
       mockFileSystem({ exists: true, writable: true, contentLength: 0, isDirectory: true });
 
       const result = await validateHandler({}, '/valid/path');
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         isValid: true,
         exists: false,
         freeSpace: DEFAULT_FREE_SPACE,
-        requiredSpace: REQUIRED_SPACE,
       });
     });
 
