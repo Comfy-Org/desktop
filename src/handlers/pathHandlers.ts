@@ -129,8 +129,7 @@ export function registerPathHandlers() {
         result.parentMissing ||
         result.freeSpace < requiredSpace ||
         result.error ||
-        result.isOneDrive ||
-        result.isNonDefaultDrive
+        result.isOneDrive
           ? false
           : true;
       return result;
