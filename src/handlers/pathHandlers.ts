@@ -25,7 +25,22 @@ export function registerPathHandlers() {
   ipcMain.on(IPC_CHANNELS.OPEN_PATH, (event, folderPath: string): void => {
     log.info(`Opening path: ${folderPath}`);
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    shell.openPath(folderPath);
+    shell.openPath(folderPath).then((errorStr) => {
+      if (errorStr !== '') {
+        log.error(`Error opening path: ${errorStr}`);
+        dialog
+          .showMessageBox({
+            title: 'Error Opening File',
+            message: `Could not open file: ${folderPath}. Error: ${errorStr}`,
+          })
+          .then((response) => {
+            log.info(`Open message box response: ${response.response}`);
+          })
+          .catch((error) => {
+            log.error(`Error showing message box: ${error}`);
+          });
+      }
+    });
   });
 
   ipcMain.handle(IPC_CHANNELS.GET_SYSTEM_PATHS, (): SystemPaths => {
