@@ -44,7 +44,7 @@ export class MixpanelTelemetry implements ITelemetry {
   private readonly queue: MixPanelEvent[] = [];
   private readonly mixpanelClient: mixpanel.Mixpanel;
   private cachedGpuInfo: GpuInfo[] | null = null;
-  private generationCount: number = 0;
+  private hasGeneratedSuccessfully: boolean = false;
 
   constructor(mixpanelClass: mixpanel.Mixpanel) {
     this.mixpanelClient = mixpanelClass.init(MIXPANEL_TOKEN, {
@@ -85,13 +85,13 @@ export class MixpanelTelemetry implements ITelemetry {
    * @param properties
    */
   track(eventName: string, properties?: PropertyDict): void {
-    if (eventName === 'execution') {
-      if (this.generationCount > 0) {
+    if (eventName === 'execution' && properties?.['status'] === 'completed') {
+      if (this.hasGeneratedSuccessfully) {
         return;
       } else {
-        // We only update the generation count if it's <= 0.
-        this.generationCount++;
-        this.saveGenerationCount();
+        // We only update the flag if it's false
+        this.hasGeneratedSuccessfully = true;
+        this.saveGenerationStatus();
       }
     }
 
@@ -166,14 +166,14 @@ export class MixpanelTelemetry implements ITelemetry {
   }
 
   public loadGenerationCount(config: DesktopConfig): void {
-    this.generationCount = config.get('generationCount') ?? 0;
+    this.hasGeneratedSuccessfully = config.get('hasGeneratedSuccessfully') ?? false;
   }
 
-  private saveGenerationCount(): void {
+  private saveGenerationStatus(): void {
     try {
-      useDesktopConfig().set('generationCount', this.generationCount);
+      useDesktopConfig().set('hasGeneratedSuccessfully', this.hasGeneratedSuccessfully);
     } catch (error) {
-      log.debug('Failed to save generation count:', error);
+      log.debug('Failed to save generation status:', error);
     }
   }
 
