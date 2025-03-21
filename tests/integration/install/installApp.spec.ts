@@ -39,7 +39,7 @@ test.describe('Install App', () => {
     await installedApp.waitUntilLoaded();
 
     // Confirm post-install app state is as expected
-    await expect(installedApp.missingModelsDialogText).toBeVisible({ timeout: 30 * 1000 });
+    await expect(installedApp.firstTimeTemplateWorkflowText).toBeVisible({ timeout: 30 * 1000 });
     await expect(window).toHaveScreenshot('installApp.png');
   });
 });

@@ -8,14 +8,14 @@ export class TestInstalledApp {
   readonly vueApp;
   readonly uiBlockedSpinner;
 
-  readonly missingModelsDialogText;
+  readonly firstTimeTemplateWorkflowText;
 
   constructor(readonly window: Page) {
     this.graphCanvas = new TestGraphCanvas(window);
     this.vueApp = window.locator('#vue-app');
     this.uiBlockedSpinner = this.vueApp.locator('.p-progressspinner');
 
-    this.missingModelsDialogText = window.getByText('When loading the graph, the following models were not found');
+    this.firstTimeTemplateWorkflowText = window.getByText('Get started with a template');
   }
 
   /** Waits until the app is completely loaded. */
