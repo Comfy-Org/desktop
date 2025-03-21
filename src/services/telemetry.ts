@@ -170,7 +170,11 @@ export class MixpanelTelemetry implements ITelemetry {
   }
 
   private saveGenerationCount(): void {
-    useDesktopConfig().set('generationCount', this.generationCount);
+    try {
+      useDesktopConfig().set('generationCount', this.generationCount);
+    } catch (error) {
+      log.debug('Failed to save generation count:', error);
+    }
   }
 
   private identify(): void {
