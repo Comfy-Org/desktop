@@ -101,6 +101,7 @@ const createMockTelemetry = (): ITelemetry => ({
   hasConsent: true,
   flush: vi.fn(),
   registerHandlers: vi.fn(),
+  loadGenerationCount: vi.fn(),
 });
 
 describe('InstallationManager', () => {

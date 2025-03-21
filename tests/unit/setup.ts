@@ -81,6 +81,7 @@ vi.mock('@/main-process/appState', () => ({
 const mockTelemetry: ITelemetry = {
   track: vi.fn(),
   hasConsent: true,
+  loadGenerationCount: vi.fn(),
   flush: vi.fn(),
   registerHandlers: vi.fn(),
 };

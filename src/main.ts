@@ -58,6 +58,7 @@ async function startApp() {
     });
   }
 
+  telemetry.loadGenerationCount(config);
   const desktopApp = new DesktopApp(overrides, config);
   await desktopApp.showLoadingPage();
   await desktopApp.start();

@@ -22,6 +22,7 @@ const mockTelemetry: ITelemetry = {
   hasConsent: false,
   flush: vi.fn(),
   registerHandlers: vi.fn(),
+  loadGenerationCount: vi.fn(),
 };
 
 const test = baseTest.extend<TestFixtures>({
