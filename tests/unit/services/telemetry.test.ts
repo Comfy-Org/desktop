@@ -52,14 +52,12 @@ vi.mock('@/config/comfySettings', () => {
 
 vi.mock('mixpanel');
 
-const config = {
-  get: vi.fn(() => '/mock/path'),
-  set: vi.fn(),
-};
-const configModule = {
-  useDesktopConfig: vi.fn(() => config),
-};
-vi.mock('@/store/desktopConfig', () => configModule);
+vi.mock('@/store/desktopConfig', () => ({
+  useDesktopConfig: vi.fn(() => ({
+    get: vi.fn(() => '/mock/path'),
+    set: vi.fn(),
+  })),
+}));
 
 describe('MixpanelTelemetry', () => {
   let telemetry: MixpanelTelemetry;
