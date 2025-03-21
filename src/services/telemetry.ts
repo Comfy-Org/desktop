@@ -89,7 +89,7 @@ export class MixpanelTelemetry implements ITelemetry {
       if (this.generationCount > 0) {
         return;
       } else {
-        // We only update the generation count if it's >= 0.
+        // We only update the generation count if it's <= 0.
         this.generationCount++;
         this.saveGenerationCount();
       }
