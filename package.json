@@ -12,7 +12,7 @@
   "config": {
     "frontendVersion": "1.14.5",
     "comfyUI": {
-      "version": "0.3.26",
+      "version": "0.3.27",
       "optionalBranch": "desktop-release-mar112025"
     },
     "managerCommit": "402e2c384f338d0ed0a7fb19caa93f29a0dc35fd",
