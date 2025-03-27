@@ -242,6 +242,7 @@ __metadata:
     "@types/electron-squirrel-startup": "npm:^1.0.2"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/lodash": "npm:4.17.15"
+    "@types/mv": "npm:^2"
     "@types/node": "npm:^22.10.2"
     "@types/tar": "npm:6.1.13"
     "@types/tmp": "npm:^0.2.6"
@@ -264,6 +265,7 @@ __metadata:
     lint-staged: "npm:^15.2.10"
     lodash: "npm:4.17.21"
     mixpanel: "npm:^0.18.0"
+    mv: "npm:^2.1.1"
     node-pty: "npm:^1.0.0"
     prettier: "npm:^3.3.3"
     rimraf: "npm:^6.0.1"
@@ -2879,6 +2881,13 @@ __metadata:
   version: 2.1.0
   resolution: "@types/ms@npm:2.1.0"
   checksum: 10c0/5ce692ffe1549e1b827d99ef8ff71187457e0eb44adbae38fdf7b9a74bae8d20642ee963c14516db1d35fa2652e65f47680fdf679dcbde52bbfadd021f497225
+  languageName: node
+  linkType: hard
+
+"@types/mv@npm:^2":
+  version: 2.1.4
+  resolution: "@types/mv@npm:2.1.4"
+  checksum: 10c0/9372401a4381aacc0dd004b8ba37c954a26c98b1937952cb0dc9c8933c904dceb509e2e697c1f9d21c62eb0d4de965f669d157ad1e4a8c8ea1d28252c26f8faa
   languageName: node
   linkType: hard
 
@@ -8895,7 +8904,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mv@npm:~2":
+"mv@npm:^2.1.1, mv@npm:~2":
   version: 2.1.1
   resolution: "mv@npm:2.1.1"
   dependencies:
