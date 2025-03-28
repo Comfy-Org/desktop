@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/prefer-top-level-await */
 import dotenv from 'dotenv';
-import { app, shell } from 'electron';
+import { app, session, shell } from 'electron';
 import { LevelOption } from 'electron-log';
 import log from 'electron-log/main';
 
@@ -59,6 +59,16 @@ async function startApp() {
   }
 
   telemetry.loadGenerationCount(config);
+
+  // Load the Vue DevTools extension
+  if (process.env.VUE_DEVTOOLS_PATH) {
+    try {
+      await session.defaultSession.loadExtension(process.env.VUE_DEVTOOLS_PATH);
+    } catch (error) {
+      log.error('Error loading Vue DevTools extension', error);
+    }
+  }
+
   const desktopApp = new DesktopApp(overrides, config);
   await desktopApp.showLoadingPage();
   await desktopApp.start();
