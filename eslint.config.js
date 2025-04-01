@@ -55,6 +55,7 @@ export default tseslint.config(
       'unicorn/explicit-length-check': 'off',
       'unicorn/consistent-function-scoping': 'off',
       'unicorn/prefer-event-target': 'off',
+      'unicorn/prefer-ternary': ['error', 'only-single-line'],
     },
   },
 
