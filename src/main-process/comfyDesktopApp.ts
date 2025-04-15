@@ -3,6 +3,7 @@ import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
 import { useComfySettings } from '@/config/comfySettings';
+import { registerImportModelHandlers } from '@/handlers/importModelHandlers';
 
 import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { DownloadManager } from '../models/DownloadManager';
@@ -76,6 +77,7 @@ export class ComfyDesktopApp implements HasTelemetry {
   registerIPCHandlers(): void {
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => await this.restartComfyServer());
+    registerImportModelHandlers();
 
     app.on('before-quit', () => {
       if (!this.comfyServer) return;

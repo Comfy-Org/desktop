@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import path from 'node:path';
 
 import { DownloadStatus, ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
@@ -298,6 +298,23 @@ const electronAPI = {
    */
   showContextMenu: (options?: ElectronContextMenuOptions): void => {
     return ipcRenderer.send(IPC_CHANNELS.SHOW_CONTEXT_MENU, options);
+  },
+  /**
+   * Get the path for a file.
+   * @param file The file to get the path for.
+   * @returns The path for the file.
+   */
+  getFilePath: (file: File) => {
+    return webUtils.getPathForFile(file);
+  },
+  /**
+   * Imports a model file.
+   * @param file The file to import.
+   * @param type The type of model to import.
+   * @param mode If the file should be moved or copied.
+   */
+  importModel: (file: File, type: string, mode: 'move' | 'copy') => {
+    return ipcRenderer.invoke(IPC_CHANNELS.IMPORT_MODEL, webUtils.getPathForFile(file), type, mode);
   },
   Config: {
     /**
