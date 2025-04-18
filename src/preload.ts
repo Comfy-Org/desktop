@@ -422,6 +422,13 @@ const electronAPI = {
     await ipcRenderer.invoke(IPC_CHANNELS.DISABLE_CUSTOM_NODES);
   },
 
+  /**
+   * Checks if the system is running on NVIDIA's Blackwell architecture.
+   */
+  isBlackwell: (): Promise<boolean> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.CHECK_BLACKWELL);
+  },
+
   uv: {
     /**
      * Install the requirements for the ComfyUI server.

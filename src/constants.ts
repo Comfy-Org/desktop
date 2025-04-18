@@ -51,6 +51,7 @@ export const IPC_CHANNELS = {
   DISABLE_CUSTOM_NODES: 'disable-custom-nodes',
   CHECK_FOR_UPDATES: 'check-for-updates',
   RESTART_AND_INSTALL: 'restart-and-install',
+  CHECK_BLACKWELL: 'check-blackwell',
 } as const;
 
 export enum ProgressStatus {
@@ -136,6 +137,8 @@ export enum TorchMirrorUrl {
   Default = 'https://pypi.org/simple/',
   /** PyTorch CUDA mirror. */
   Cuda = 'https://download.pytorch.org/whl/cu126',
+  /** PyTorch Nightly CUDA mirror. */
+  NightlyCuda = 'https://download.pytorch.org/whl/nightly/cu128',
   /** PyTorch nightly CPU mirror. */
   NightlyCpu = 'https://download.pytorch.org/whl/nightly/cpu',
 }
