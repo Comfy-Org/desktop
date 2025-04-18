@@ -88,10 +88,9 @@ export class ComfyDesktopApp implements HasTelemetry {
         }
 
         const result = await todesktop.autoUpdater.checkForUpdates();
-        log.info('Update check result:', result);
+        log.info('Update check result:', result.updateInfo);
 
         // Return true if an update is available
-        // The exact structure will depend on todesktop's API
         return !!result.updateInfo;
       } catch (error) {
         log.error('Error checking for updates:', error);
