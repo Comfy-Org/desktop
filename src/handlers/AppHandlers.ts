@@ -65,7 +65,13 @@ export function registerAppHandlers() {
         }
 
         const result = await updater.checkForUpdates(options);
-        log.info('Update check result:', result.updateInfo);
+        if (result.updateInfo) {
+          const { version, releaseDate } = result.updateInfo;
+          const prettyDate = new Date(releaseDate).toLocaleString();
+          log.info(`Update available: version ${version} released on ${prettyDate}`);
+        } else {
+          log.info('No updates available');
+        }
 
         return {
           isUpdateAvailable: !!result.updateInfo,
