@@ -1,3 +1,4 @@
+import todesktop from '@todesktop/runtime';
 import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
@@ -50,4 +51,42 @@ export function registerAppHandlers() {
       }
     }
   );
+
+  // Check for updates
+  ipcMain.handle(IPC_CHANNELS.CHECK_FOR_UPDATES, async (options: object): Promise<boolean> => {
+    try {
+      log.info('Manually checking for updates');
+
+      const updater = todesktop.autoUpdater;
+      if (!updater) {
+        log.warn('todesktop.autoUpdater is not available');
+        return false;
+      }
+
+      const result = await updater.checkForUpdates(options);
+      log.info('Update check result:', result.updateInfo);
+
+      // Return true if update detected
+      return !!result.updateInfo;
+    } catch (error) {
+      log.error('Error checking for updates:', error);
+      return false;
+    }
+  });
+
+  ipcMain.on(IPC_CHANNELS.RESTART_AND_INSTALL, (options: object) => {
+    log.info('Restarting and installing update');
+
+    const updater = todesktop.autoUpdater;
+    if (!updater) {
+      log.warn('todesktop.autoUpdater is not available');
+      return;
+    }
+
+    try {
+      updater.restartAndInstall(options);
+    } catch (error) {
+      log.error('Error restarting and installing update:', error);
+    }
+  });
 }
