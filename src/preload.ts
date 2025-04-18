@@ -452,10 +452,7 @@ const electronAPI = {
    * Restarts and installs updates using todesktop.autoUpdater.restartAndInstall().
    */
   // "Fire and forget", code on desktop side will catch errors pre-restart
-  restartAndInstall: (): void => {
-    console.log('Restarting & installing updates…');
-    ipcRenderer.send(IPC_CHANNELS.RESTART_AND_INSTALL);
-  },
+  restartAndInstall: (): void => ipcRenderer.send(IPC_CHANNELS.RESTART_AND_INSTALL),
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
