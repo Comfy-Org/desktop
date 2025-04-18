@@ -77,6 +77,28 @@ export class ComfyDesktopApp implements HasTelemetry {
     // Restart core
     ipcMain.handle(IPC_CHANNELS.RESTART_CORE, async (): Promise<boolean> => await this.restartComfyServer());
 
+    // Check for updates
+    ipcMain.handle(IPC_CHANNELS.CHECK_FOR_UPDATES, async (): Promise<boolean> => {
+      try {
+        log.info('Manually checking for updates');
+
+        if (!todesktop.autoUpdater) {
+          log.warn('todesktop.autoUpdater is not available');
+          return false;
+        }
+
+        const result = await todesktop.autoUpdater.checkForUpdates();
+        log.info('Update check result:', result);
+
+        // Return true if an update is available
+        // The exact structure will depend on todesktop's API
+        return !!result.updateInfo;
+      } catch (error) {
+        log.error('Error checking for updates:', error);
+        return false;
+      }
+    });
+
     app.on('before-quit', () => {
       if (!this.comfyServer) return;
 

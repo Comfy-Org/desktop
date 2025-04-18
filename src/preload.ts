@@ -441,6 +441,12 @@ const electronAPI = {
      */
     resetVenv: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.UV_RESET_VENV),
   },
+
+  /**
+   * Manually check for application updates.
+   * @returns A promise that resolves to true if an update is available, false otherwise
+   */
+  checkForUpdates: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.CHECK_FOR_UPDATES),
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
