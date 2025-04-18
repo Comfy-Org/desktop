@@ -52,7 +52,6 @@ export function registerAppHandlers() {
     }
   );
 
-  // Check for updates
   ipcMain.handle(
     IPC_CHANNELS.CHECK_FOR_UPDATES,
     async (options?: object): Promise<{ isUpdateAvailable: boolean; version?: string }> => {
