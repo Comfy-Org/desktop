@@ -53,7 +53,7 @@ export function registerAppHandlers() {
   );
 
   // Check for updates
-  ipcMain.handle(IPC_CHANNELS.CHECK_FOR_UPDATES, async (options: object): Promise<boolean> => {
+  ipcMain.handle(IPC_CHANNELS.CHECK_FOR_UPDATES, async (options?: object): Promise<boolean> => {
     try {
       log.info('Manually checking for updates');
 
@@ -74,7 +74,7 @@ export function registerAppHandlers() {
     }
   });
 
-  ipcMain.on(IPC_CHANNELS.RESTART_AND_INSTALL, (options: object) => {
+  ipcMain.on(IPC_CHANNELS.RESTART_AND_INSTALL, (options?: object) => {
     log.info('Restarting and installing update');
 
     const updater = todesktop.autoUpdater;
