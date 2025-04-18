@@ -50,6 +50,7 @@ export const IPC_CHANNELS = {
   START_TROUBLESHOOTING: 'start-troubleshooting',
   DISABLE_CUSTOM_NODES: 'disable-custom-nodes',
   CHECK_FOR_UPDATES: 'check-for-updates',
+  RESTART_AND_INSTALL: 'restart-and-install',
 } as const;
 
 export enum ProgressStatus {
