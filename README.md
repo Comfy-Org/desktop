@@ -72,13 +72,13 @@ On Linux: `~/.config/ComfyUI/config.json`
 
 #### Model Paths
 
-This directory is also written as the `base_path` in `extra_model_config.yaml`. The Desktop app will look for model checkpoints here by default, but you can add additional models to the search path by editing this file.
+This directory is also written as the `base_path` in `extra_models_config.yaml`. The Desktop app will look for model checkpoints here by default, but you can add additional models to the search path by editing this file.
 
-On Windows: `%APPDATA%\ComfyUI\extra_model_config.yaml`
+On Windows: `%APPDATA%\ComfyUI\extra_models_config.yaml`
 
-On macOS: `~/Library/Application Support/ComfyUI/extra_model_config.yaml`
+On macOS: `~/Library/Application Support/ComfyUI/extra_models_config.yaml`
 
-On Linux: `~/.config/ComfyUI/extra_model_config.yaml`
+On Linux: `~/.config/ComfyUI/extra_models_config.yaml`
 
 ### Logs
 
