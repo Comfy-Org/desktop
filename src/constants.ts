@@ -49,6 +49,8 @@ export const IPC_CHANNELS = {
   CAN_ACCESS_URL: 'can-access-url',
   START_TROUBLESHOOTING: 'start-troubleshooting',
   DISABLE_CUSTOM_NODES: 'disable-custom-nodes',
+  CHECK_FOR_UPDATES: 'check-for-updates',
+  RESTART_AND_INSTALL: 'restart-and-install',
   CHECK_BLACKWELL: 'check-blackwell',
 } as const;
 

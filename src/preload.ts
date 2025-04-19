@@ -448,6 +448,18 @@ const electronAPI = {
      */
     resetVenv: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.UV_RESET_VENV),
   },
+
+  /**
+   * Manually check for application updates.
+   * @returns A promise that resolves to true if an update is available, false otherwise
+   */
+  checkForUpdates: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.CHECK_FOR_UPDATES),
+
+  /**
+   * Restarts and installs updates using todesktop.autoUpdater.restartAndInstall().
+   */
+  // "Fire and forget", code on desktop side will catch errors pre-restart
+  restartAndInstall: (): void => ipcRenderer.send(IPC_CHANNELS.RESTART_AND_INSTALL),
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
