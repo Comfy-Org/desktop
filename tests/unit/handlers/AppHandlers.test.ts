@@ -1,5 +1,4 @@
 import todesktop from '@todesktop/runtime';
-// <— add
 import { app, ipcMain } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
