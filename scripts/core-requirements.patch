@@ -4,6 +4,7 @@ index 278e3eaa..819b1c55 100644
 +++ b/requirements.txt
 @@ -1,4 +1,3 @@
 -comfyui-frontend-package==1.16.8
- comfyui-workflow-templates==0.1.1
+-comfyui-workflow-templates==0.1.1
++comfyui-workflow-templates==0.1.3
  torch
  torchsde
