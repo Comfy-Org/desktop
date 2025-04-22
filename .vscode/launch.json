@@ -30,5 +30,11 @@
       "webRoot": "${workspaceFolder}",
       "timeout": 30000
     }
+  ],
+  "compounds": [
+    {
+      "name": "Electron: All",
+      "configurations": ["Electron: Main", "Electron: Renderer"]
+    }
   ]
 }
