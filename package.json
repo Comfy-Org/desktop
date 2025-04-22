@@ -10,10 +10,10 @@
   "packageManager": "yarn@4.5.0",
   "type": "module",
   "config": {
-    "frontendVersion": "1.16.8",
+    "frontendVersion": "1.16.9",
     "comfyUI": {
       "version": "0.3.29",
-      "optionalBranch": ""
+      "optionalBranch": "desktop-release-apr222025"
     },
     "managerCommit": "402e2c384f338d0ed0a7fb19caa93f29a0dc35fd",
     "uvVersion": "0.5.31"
