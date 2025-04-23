@@ -10,7 +10,7 @@
   "packageManager": "yarn@4.5.0",
   "type": "module",
   "config": {
-    "frontendVersion": "1.17.9",
+    "frontendVersion": "1.17.10",
     "comfyUI": {
       "version": "0.3.29",
       "optionalBranch": "api-nodes"
