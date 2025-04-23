@@ -200,7 +200,7 @@ You can generate the compiled requirements files by running the following comman
 ## Nvidia Cuda requirements
 uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_nvidia.compiled --override assets\override.txt `
 --index-url https://pypi.org/simple `
---extra-index-url https://download.pytorch.org/whl/cu126
+--extra-index-url https://download.pytorch.org/whl/cu128
 
 ## CPU requirements
 uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_cpu.compiled `
