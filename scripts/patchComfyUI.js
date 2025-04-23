@@ -72,7 +72,9 @@ async function patchFile(targetPath, patchFilePath) {
       );
     }
   } catch (error) {
-    throw new Error(`Error applying core patch: ${error.message}`, { cause: error });
+    throw new Error(`Error applying core patch: ${error.message} target: ${targetPath} patch: ${patchFilePath}`, {
+      cause: error,
+    });
   }
 }
 
