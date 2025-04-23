@@ -321,10 +321,19 @@ export class AppWindow {
     this.window.on('close', () => log.info('App window closed.'));
 
     this.window.webContents.setWindowOpenHandler(({ url }) => {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      shell.openExternal(url);
-      return { action: 'deny' };
+      if (this.#shouldOpenInPopup(url)) {
+        return { action: 'allow' };
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        shell.openExternal(url);
+        return { action: 'deny' };
+      }
     });
+  }
+
+  /** Allows Electron popup windows for e.g. login/checkout popups. */
+  #shouldOpenInPopup(url: string): boolean {
+    return url.startsWith('https://dreamboothy.firebaseapp.com/') || url.startsWith('https://checkout.comfy.org/');
   }
 
   private setupAppEvents(): void {
