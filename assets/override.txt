@@ -1,5 +1,5 @@
 # ensure usage of GPU_OPTION.NVIDIA version of pytorch
---extra-index-url https://download.pytorch.org/whl/cu126
+--extra-index-url https://download.pytorch.org/whl/cu128
 torch
 torchaudio
 torchsde
