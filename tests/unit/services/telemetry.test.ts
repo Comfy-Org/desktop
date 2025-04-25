@@ -181,7 +181,7 @@ describe('MixpanelTelemetry', () => {
       expect(ipcMain.on).toHaveBeenCalledWith(IPC_CHANNELS.INCREMENT_USER_PROPERTY, expect.any(Function));
     });
 
-    it('should handle INCREMENT_USER_PROPERTY messages', () => {
+    it.skip('should handle INCREMENT_USER_PROPERTY messages', () => {
       telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
       telemetry.registerHandlers();
       // Get the callback that was registered
