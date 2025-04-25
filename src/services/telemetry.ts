@@ -144,7 +144,12 @@ export class MixpanelTelemetry implements ITelemetry {
     });
 
     ipcMain.on(IPC_CHANNELS.INCREMENT_USER_PROPERTY, (event, propertyName: string, number: number) => {
-      this.mixpanelClient.people.increment(this.distinctId, propertyName, number);
+      if (this.hasConsent) {
+        if (propertyName.includes('execution') && this.hasGeneratedSuccessfully) {
+          return;
+        }
+        this.mixpanelClient.people.increment(this.distinctId, propertyName, number);
+      }
     });
   }
 
