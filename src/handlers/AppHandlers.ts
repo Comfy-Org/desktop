@@ -93,7 +93,7 @@ export function registerAppHandlers() {
     try {
       updater.restartAndInstall(options);
     } catch (error) {
-      log.error(`Failed to restart and install update: ${error}`);
+      log.error(`Failed to restart and install update`, error);
       throw new Error(`Failed to restart and install update: ${error}`);
     }
   });
