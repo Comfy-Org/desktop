@@ -55,6 +55,8 @@ export function registerAppHandlers() {
   ipcMain.handle(
     IPC_CHANNELS.CHECK_FOR_UPDATES,
     async (options?: object): Promise<{ isUpdateAvailable: boolean; version?: string }> => {
+      log.info('Manually checking for updates');
+
       const updater = todesktop.autoUpdater;
 
       if (!updater) {
@@ -62,6 +64,14 @@ export function registerAppHandlers() {
       }
 
       const result = await updater.checkForUpdates(options);
+
+      if (result.updateInfo) {
+        const { version, releaseDate } = result.updateInfo;
+        const prettyDate = new Date(releaseDate).toLocaleString();
+        log.info(`Update available: version ${version} released on ${prettyDate}`);
+      } else {
+        log.info('No updates available');
+      }
 
       return {
         isUpdateAvailable: !!result.updateInfo,
@@ -81,7 +91,7 @@ export function registerAppHandlers() {
     try {
       updater.restartAndInstall(options);
     } catch (error) {
-      log.error('Error restarting and installing update:', error);
+      throw new Error(`Failed to restart and install update: ${error}`);
     }
   });
 }
