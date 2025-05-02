@@ -11,10 +11,6 @@ const getHandler = (channel: string) => {
   const [, handlerFn] = vi.mocked(ipcMain.handle).mock.calls.find(([ch]) => ch === channel) || [];
   return handlerFn;
 };
-const getListener = (channel: string) => {
-  const [, listener] = vi.mocked(ipcMain.on).mock.calls.find(([ch]) => ch === channel) || [];
-  return listener;
-};
 
 describe('AppHandlers', () => {
   beforeEach(() => {
@@ -23,12 +19,14 @@ describe('AppHandlers', () => {
   });
 
   describe('registerHandlers', () => {
-    const handleChannels = [IPC_CHANNELS.QUIT, IPC_CHANNELS.RESTART_APP, IPC_CHANNELS.CHECK_FOR_UPDATES];
+    const handleChannels = [
+      IPC_CHANNELS.QUIT,
+      IPC_CHANNELS.RESTART_APP,
+      IPC_CHANNELS.CHECK_FOR_UPDATES,
+      IPC_CHANNELS.RESTART_AND_INSTALL,
+    ];
     test.each(handleChannels)('should register handler for %s', (ch) => {
       expect(ipcMain.handle).toHaveBeenCalledWith(ch, expect.any(Function));
-    });
-    test('should register listener for RESTART_AND_INSTALL', () => {
-      expect(ipcMain.on).toHaveBeenCalledWith(IPC_CHANNELS.RESTART_AND_INSTALL, expect.any(Function));
     });
   });
 
@@ -52,9 +50,9 @@ describe('AppHandlers', () => {
       handler = getHandler(IPC_CHANNELS.CHECK_FOR_UPDATES);
     });
 
-    test('returns false when updater is unavailable', async () => {
+    test('throws error when updater is unavailable', async () => {
       todesktop.autoUpdater = undefined;
-      await expect(handler()).resolves.toEqual({ isUpdateAvailable: false });
+      await expect(handler()).rejects.toThrow('todesktop.autoUpdater is not available');
     });
 
     test('returns update info when available', async () => {
@@ -76,21 +74,21 @@ describe('AppHandlers', () => {
     });
   });
 
-  describe('restartAndInstall listener', () => {
-    let listener: any;
+  describe('restartAndInstall handler', () => {
+    let handler: any;
     beforeEach(() => {
-      listener = getListener(IPC_CHANNELS.RESTART_AND_INSTALL);
+      handler = getHandler(IPC_CHANNELS.RESTART_AND_INSTALL);
     });
 
-    test('does not throw when updater is unavailable', () => {
+    test('throws error when updater is unavailable', () => {
       todesktop.autoUpdater = undefined;
-      expect(() => listener()).not.toThrow();
+      expect(() => handler()).toThrow('todesktop.autoUpdater is not available');
     });
 
     test('calls restartAndInstall when updater is available', () => {
       const restartAndInstall = vi.fn();
       todesktop.autoUpdater = { restartAndInstall } as any;
-      listener();
+      handler();
       expect(restartAndInstall).toHaveBeenCalled();
     });
   });
