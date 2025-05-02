@@ -60,6 +60,7 @@ export function registerAppHandlers() {
       const updater = todesktop.autoUpdater;
 
       if (!updater) {
+        log.error('todesktop.autoUpdater is not available');
         throw new Error('todesktop.autoUpdater is not available');
       }
 
@@ -85,12 +86,14 @@ export function registerAppHandlers() {
 
     const updater = todesktop.autoUpdater;
     if (!updater) {
+      log.error('todesktop.autoUpdater is not available');
       throw new Error('todesktop.autoUpdater is not available');
     }
 
     try {
       updater.restartAndInstall(options);
     } catch (error) {
+      log.error(`Failed to restart and install update: ${error}`);
       throw new Error(`Failed to restart and install update: ${error}`);
     }
   });
