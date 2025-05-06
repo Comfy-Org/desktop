@@ -1,11 +1,11 @@
-# ComfyUI Desktop (beta)
+# ComfyUI Desktop
 
 [![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
 ![Beta](https://img.shields.io/badge/beta-blue.svg)
 
 # USER GUIDE
 
-Please read this https://comfyorg.notion.site
+Please read the [user guide](https://docs.comfy.org/installation/desktop)
 
 # Download
 
