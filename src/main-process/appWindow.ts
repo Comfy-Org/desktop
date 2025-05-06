@@ -408,7 +408,9 @@ export class AppWindow {
     // For Mac you can have a separate icon when you press.
     // The current design language for Mac Eco System is White or Black icon then when you click it is in color
     if (process.platform === 'darwin') {
-      tray.setPressedImage(path.join(app.isPackaged ? process.resourcesPath : './assets', 'UI', 'Comfy_Logo_x16.png'));
+      tray.setPressedImage(
+        path.join(app.isPackaged ? process.resourcesPath : './assets', 'UI', 'Comfy_Logo_x16_BW.png')
+      );
     }
 
     const contextMenu = Menu.buildFromTemplate([
