@@ -13,7 +13,7 @@
     "frontendVersion": "1.18.9",
     "comfyUI": {
       "version": "0.3.31",
-      "optionalBranch": ""
+      "optionalBranch": "desktop-release-may062025"
     },
     "managerCommit": "402e2c384f338d0ed0a7fb19caa93f29a0dc35fd",
     "uvVersion": "0.5.31"
