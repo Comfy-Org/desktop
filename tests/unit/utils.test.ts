@@ -43,6 +43,17 @@ describe('validateHardware', () => {
       controllers: [{ vendor: 'AMD', model: 'Radeon RX 6800' }],
     } as Systeminformation.GraphicsData);
 
+    vi.mock('node:child_process', async () => {
+      const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process');
+      return {
+        ...actual,
+        exec: (_cmd: string, callback: (error: Error | null, stdout: string, stderr: string) => void) => {
+          setImmediate(() => callback(new Error('mocked exec failure'), '', ''));
+          return { kill: () => {}, on: () => {} } as any;
+        },
+      };
+    });
+
     const result = await validateHardware();
     expect(result).toStrictEqual({
       isValid: false,
