@@ -24,13 +24,14 @@ const frontendRepo = 'https://github.com/Comfy-Org/ComfyUI_frontend';
 if (frontend.optionalBranch) {
   // Optional branch, no release; build from source
   console.log('Building frontend from source...');
+  const frontendDir = 'assets/frontend';
 
   try {
-    execAndLog(`git clone ${frontendRepo} --depth 1 --branch ${frontend.optionalBranch} assets/frontend`);
-    execAndLog(`cd assets/frontend`);
-    execAndLog(`npm ci`);
-    execAndLog(`npm run build`);
-    execAndLog(`cp dist/* ../ComfyUI/web_custom_versions/desktop_app/`);
+    execAndLog(`git clone ${frontendRepo} --depth 1 --branch ${frontend.optionalBranch} ${frontendDir}`);
+    execAndLog(`npm ci`, frontendDir);
+    execAndLog(`npm run build`, frontendDir);
+    execAndLog(`cp dist/* ../ComfyUI/web_custom_versions/desktop_app/`, frontendDir);
+    execAndLog(`rm -rf ${frontendDir}`);
   } catch (error) {
     console.error('Error building frontend:', error.message);
     process.exit(1);
@@ -39,9 +40,10 @@ if (frontend.optionalBranch) {
   /**
    * Run a command and log the output.
    * @param {string} command The command to run.
+   * @param {string | undefined} cwd The working directory.
    */
-  function execAndLog(command) {
-    const output = execSync(command, { encoding: 'utf8' });
+  function execAndLog(command, cwd) {
+    const output = execSync(command, { cwd, encoding: 'utf8' });
     console.log(output);
   }
 } else {
