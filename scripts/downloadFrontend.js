@@ -30,8 +30,9 @@ if (frontend.optionalBranch) {
     execAndLog(`git clone ${frontendRepo} --depth 1 --branch ${frontend.optionalBranch} ${frontendDir}`);
     execAndLog(`npm ci`, frontendDir);
     execAndLog(`npm run build`, frontendDir);
-    execAndLog(`cp -r dist ../ComfyUI/web_custom_versions/desktop_app`, frontendDir);
-    execAndLog(`rm -rf ${frontendDir}`);
+    await fs.mkdir('assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
+    await fs.cp(path.join(frontendDir, 'dist'), 'assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
+    await fs.rm(frontendDir, { recursive: true });
   } catch (error) {
     console.error('Error building frontend:', error.message);
     process.exit(1);
