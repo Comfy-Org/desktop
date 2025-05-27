@@ -2,8 +2,7 @@ diff --git a/requirements.txt b/requirements.txt
 --- a/requirements.txt
 +++ b/requirements.txt
 @@ -1,4 +1,3 @@
--comfyui-frontend-package==1.18.10
--comfyui-workflow-templates==0.1.14
-+comfyui-workflow-templates==0.1.16
+-comfyui-frontend-package==1.20.6
+ comfyui-workflow-templates==0.1.20
  torch
  torchsde

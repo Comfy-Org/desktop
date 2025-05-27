@@ -43,7 +43,7 @@ colorama==0.4.6
     #   click
     #   tqdm
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.1.16
+comfyui-workflow-templates==0.1.20
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 cryptography==44.0.0
