@@ -8,6 +8,8 @@ on:
       - '.cursor/**'
       - '.husky/**'
       - '.vscode/**'
+      - '.claude/**'
+      - 'CLAUDE.md'
       - '*_example'
   push:
     branches: [main]
@@ -16,6 +18,8 @@ on:
       - '.cursor/**'
       - '.husky/**'
       - '.vscode/**'
+      - '.claude/**'
+      - 'CLAUDE.md'
       - '*_example'
 
 jobs:
