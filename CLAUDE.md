@@ -90,10 +90,10 @@ yarn vite:compile      # Compile with Vite
 
 ## Bundled Components
 The app packages these components:
-- **ComfyUI** (stable release v0.3.38) - AI diffusion model GUI
-- **ComfyUI_frontend** (v1.20.6) - Modern web frontend
+- **ComfyUI** - AI diffusion model GUI
+- **ComfyUI_frontend** - Modern web frontend
 - **ComfyUI-Manager** - Plugin/extension manager
-- **uv** (v0.5.31) - Fast Python package manager
+- **uv** - Fast Python package manager
 
 ## Development Environment Variables
 - **`--dev-mode`** - Flag for packaged apps in development
