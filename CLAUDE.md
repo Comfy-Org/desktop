@@ -114,9 +114,9 @@ The app packages these components:
 - Test changes with both unit tests (Vitest) and E2E tests (Playwright)
 
 ## Before Committing
+1. Use `yarn format:fix` to ensure consistent formatting
 1. Run `yarn lint` and `yarn typescript` to check code quality
-2. Run `yarn test:unit` to ensure unit tests pass
-3. Consider running `yarn test:e2e` for UI changes
-4. Use `yarn format:fix` to ensure consistent formatting
+1. Run `yarn test:unit` to ensure unit tests pass
+1. Consider running `yarn test:e2e` for UI changes
 
 This is a sophisticated Electron application with comprehensive testing, automated CI/CD, cross-platform support, and professional development practices.
