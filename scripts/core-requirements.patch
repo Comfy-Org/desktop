@@ -6,4 +6,3 @@ diff --git a/requirements.txt b/requirements.txt
  comfyui-workflow-templates==0.1.25
  comfyui-embedded-docs==0.2.0
  torch
- torchsde
