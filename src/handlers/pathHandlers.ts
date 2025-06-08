@@ -70,7 +70,7 @@ export function registerPathHandlers() {
    */
   ipcMain.handle(
     IPC_CHANNELS.VALIDATE_INSTALL_PATH,
-    async (event, inputPath: string): Promise<PathValidationResult> => {
+    async (event, inputPath: string, bypassSpaceCheck = false): Promise<PathValidationResult> => {
       // Determine required space based on OS
       const requiredSpace = process.platform === 'darwin' ? MAC_REQUIRED_SPACE : WIN_REQUIRED_SPACE;
 
@@ -142,7 +142,7 @@ export function registerPathHandlers() {
       result.isValid =
         result.cannotWrite ||
         result.parentMissing ||
-        result.freeSpace < requiredSpace ||
+        (!bypassSpaceCheck && result.freeSpace < requiredSpace) ||
         result.error ||
         result.isOneDrive
           ? false
