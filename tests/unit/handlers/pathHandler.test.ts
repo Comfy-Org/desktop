@@ -154,7 +154,7 @@ describe('PathHandlers', () => {
   });
 
   describe('validate-install-path', () => {
-    let validateHandler: HandlerType<(event: unknown, path: string) => Promise<unknown>>;
+    let validateHandler: HandlerType<(event: unknown, path: string, bypassSpaceCheck?: boolean) => Promise<unknown>>;
 
     beforeEach(() => {
       validateHandler = getRegisteredHandler(IPC_CHANNELS.VALIDATE_INSTALL_PATH);
@@ -311,6 +311,51 @@ describe('PathHandlers', () => {
         isOneDrive: false,
         isNonDefaultDrive: true,
         requiredSpace: WIN_REQUIRED_SPACE,
+      });
+    });
+
+    it('Windows: accepts path with insufficient space when bypass is enabled', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      mockDiskSpace(LOW_FREE_SPACE);
+
+      const result = await validateHandler({}, '/low/space/path', true);
+      expect(result).toMatchObject({
+        isValid: true,
+        exists: true,
+        freeSpace: LOW_FREE_SPACE,
+        requiredSpace: WIN_REQUIRED_SPACE,
+      });
+    });
+
+    it('Mac: accepts path with insufficient space when bypass is enabled', async () => {
+      if (process.platform !== 'darwin') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      mockDiskSpace(LOW_FREE_SPACE_MAC);
+
+      const result = await validateHandler({}, '/low/space/path', true);
+      expect(result).toMatchObject({
+        isValid: true,
+        exists: true,
+        freeSpace: LOW_FREE_SPACE_MAC,
+        requiredSpace: MAC_REQUIRED_SPACE,
+      });
+    });
+
+    it('bypass does not override other validation failures', async () => {
+      mockFileSystem({ exists: true, writable: false });
+      mockDiskSpace(LOW_FREE_SPACE);
+
+      const result = await validateHandler({}, '/non/writable/path', true);
+      expect(result).toMatchObject({
+        isValid: false,
+        cannotWrite: true,
+        exists: true,
+        freeSpace: LOW_FREE_SPACE,
       });
     });
   });
