@@ -1,0 +1,215 @@
+name: Update Requirements
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request number to update'
+        required: true
+        type: string
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-requirements-${{ github.event.inputs.pr_number || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  update-requirements:
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'pull_request' && github.event.label.name == 'update-requirements')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Get PR details
+        id: pr-details
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const pr_number = ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.pr_number || github.event.pull_request.number }};
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr_number
+            });
+            
+            const isFromFork = pr.data.head.repo.full_name !== pr.data.base.repo.full_name;
+            
+            core.setOutput('pr_number', pr_number);
+            core.setOutput('head_ref', pr.data.head.ref);
+            core.setOutput('head_sha', pr.data.head.sha);
+            core.setOutput('is_fork', isFromFork);
+            
+            if (isFromFork) {
+              core.warning('This PR is from a fork. The workflow will provide manual instructions.');
+            }
+      
+      - name: Handle fork PRs
+        if: steps.pr-details.outputs.is_fork == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const pr_number = ${{ steps.pr-details.outputs.pr_number }};
+            const comment = `This PR is from a fork, so I cannot automatically update the requirements files.
+            
+            To update the requirements manually, run these commands in your local fork:
+            
+            \`\`\`bash
+            # Update Windows CPU requirements
+            uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/windows_cpu.compiled --index-url https://pypi.org/simple
+            
+            # Update Windows NVIDIA requirements  
+            uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --override assets/override.txt --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu128 -o assets/requirements/windows_nvidia.compiled
+            
+            # Update macOS requirements
+            uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/macos.compiled --override assets/override.txt --index-url https://pypi.org/simple
+            \`\`\`
+            
+            Then commit and push the changes to your PR branch.`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr_number,
+              body: comment
+            });
+            
+            core.setFailed('Cannot update requirements for fork PRs automatically.');
+      
+      - name: Checkout PR
+        if: steps.pr-details.outputs.is_fork == 'false'
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ steps.pr-details.outputs.head_sha }}
+          fetch-depth: 0
+      
+      - name: Setup Python
+        if: steps.pr-details.outputs.is_fork == 'false'
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: '3.12'
+      
+      - name: Install uv
+        if: steps.pr-details.outputs.is_fork == 'false'
+        run: |
+          set -e
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Verify uv is installed
+          $HOME/.local/bin/uv --version
+      
+      - name: Configure git
+        if: steps.pr-details.outputs.is_fork == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Update Windows CPU requirements
+        if: steps.pr-details.outputs.is_fork == 'false'
+        id: update-cpu
+        run: |
+          set -e
+          echo "Updating Windows CPU requirements..."
+          if uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/windows_cpu.compiled --index-url https://pypi.org/simple; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Failed to compile Windows CPU requirements"
+            exit 1
+          fi
+      
+      - name: Update Windows NVIDIA requirements
+        if: steps.pr-details.outputs.is_fork == 'false'
+        id: update-nvidia
+        run: |
+          set -e
+          echo "Updating Windows NVIDIA requirements..."
+          if uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --override assets/override.txt --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu128 -o assets/requirements/windows_nvidia.compiled; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Failed to compile Windows NVIDIA requirements"
+            exit 1
+          fi
+      
+      - name: Update macOS requirements
+        if: steps.pr-details.outputs.is_fork == 'false'
+        id: update-macos
+        run: |
+          set -e
+          echo "Updating macOS requirements..."
+          if uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/macos.compiled --override assets/override.txt --index-url https://pypi.org/simple; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Failed to compile macOS requirements"
+            exit 1
+          fi
+      
+      - name: Check for changes
+        if: steps.pr-details.outputs.is_fork == 'false'
+        id: check-changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in compiled requirements"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in compiled requirements:"
+            git diff --stat
+          fi
+      
+      - name: Commit and push changes
+        if: steps.pr-details.outputs.is_fork == 'false' && steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          set -e
+          git add assets/requirements/*.compiled
+          git commit -m "Update compiled requirements
+          
+          - Updated windows_cpu.compiled
+          - Updated windows_nvidia.compiled  
+          - Updated macos.compiled"
+          
+          echo "Pushing to branch: ${{ steps.pr-details.outputs.head_ref }}"
+          git push origin HEAD:${{ steps.pr-details.outputs.head_ref }}
+      
+      - name: Comment on PR - Success
+        if: steps.pr-details.outputs.is_fork == 'false' && steps.check-changes.outputs.has_changes == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const pr_number = ${{ steps.pr-details.outputs.pr_number }};
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr_number,
+              body: '✅ Compiled requirements have been updated successfully!'
+            });
+      
+      - name: Comment on PR - No Changes
+        if: steps.pr-details.outputs.is_fork == 'false' && steps.check-changes.outputs.has_changes == 'false'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const pr_number = ${{ steps.pr-details.outputs.pr_number }};
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr_number,
+              body: 'ℹ️ No changes needed - compiled requirements are already up to date.'
+            });
+      
+      - name: Remove label
+        if: github.event_name == 'pull_request' && github.event.label.name == 'update-requirements'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              name: 'update-requirements'
+            });
