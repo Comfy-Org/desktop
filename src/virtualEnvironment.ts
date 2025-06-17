@@ -573,14 +573,14 @@ export class VirtualEnvironment implements HasTelemetry {
         // Reject upgrade if removing an unrecognised package
         if (
           line.search(
-            /^\s*- (?!aiohttp|av|yarl|comfyui-workflow-templates|pydantic|pydantic-core|pydantic-settings|annotated-types|typing-inspection|alembic|sqlalchemy|greenlet|mako|python-dotenv).*==/
+            /^\s*- (?!aiohttp|av|yarl|comfyui-workflow-templates|comfyui-embedded-docs|pydantic|pydantic-core|pydantic-settings|annotated-types|typing-inspection|alembic|sqlalchemy|greenlet|mako|python-dotenv).*==/
           ) !== -1
         )
           return false;
         if (line.search(/^\s*\+ /) !== -1) {
           if (
             line.search(
-              /^\s*\+ (aiohttp|av|yarl|comfyui-workflow-templates|pydantic|pydantic-core|pydantic-settings|annotated-types|typing-inspection|alembic|sqlalchemy|greenlet|mako|python-dotenv)==/
+              /^\s*\+ (aiohttp|av|yarl|comfyui-workflow-templates|comfyui-embedded-docs|pydantic|pydantic-core|pydantic-settings|annotated-types|typing-inspection|alembic|sqlalchemy|greenlet|mako|python-dotenv)==/
             ) === -1
           )
             return false;
