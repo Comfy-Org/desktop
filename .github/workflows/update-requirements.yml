@@ -32,7 +32,7 @@ jobs:
   update-requirements:
     if: |
       github.event_name == 'workflow_dispatch' || 
-      (github.event_name == 'pull_request' && github.event.label.name == 'update-requirements')
+      (github.event_name == 'pull_request' && github.event.label.name == 'Update Compiled Requirements')
     runs-on: ubuntu-latest
     
     steps:
@@ -265,9 +265,9 @@ jobs:
           fi
       
       - name: Remove label
-        if: github.event_name == 'pull_request' && github.event.label.name == 'update-requirements'
+        if: github.event_name == 'pull_request' && github.event.label.name == 'Update Compiled Requirements'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh pr edit ${{ github.event.pull_request.number }} \
-            --remove-label "update-requirements"
+            --remove-label "Update Compiled Requirements"
