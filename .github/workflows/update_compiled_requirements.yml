@@ -29,11 +29,16 @@ env:
   PR_MSG_WARNING: '⚠️ **Warning**: The uv pip compile commands in this workflow may be out of sync with the .compiled files. This could happen if the commands were changed manually. Please review the workflow logs for details.'
 
 jobs:
-  update-requirements:
+  get-pr-details:
     if: |
       github.event_name == 'workflow_dispatch' || 
       (github.event_name == 'pull_request' && github.event.label.name == 'Update Compiled Requirements')
     runs-on: ubuntu-latest
+    outputs:
+      pr_number: ${{ steps.pr-details.outputs.pr_number }}
+      head_ref: ${{ steps.pr-details.outputs.head_ref }}
+      head_sha: ${{ steps.pr-details.outputs.head_sha }}
+      is_fork: ${{ steps.pr-details.outputs.is_fork }}
     steps:
       - name: Get PR details
         id: pr-details
@@ -76,16 +81,20 @@ jobs:
           echo "::error::Cannot update requirements in fork PRs."
           exit 1
 
+  update-requirements:
+    needs: get-pr-details
+    if: needs.get-pr-details.outputs.is_fork == 'false'
+    runs-on: ubuntu-latest
+    steps:
+
       - name: Checkout PR
-        if: steps.pr-details.outputs.is_fork == 'false'
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ steps.pr-details.outputs.head_sha }}
+          ref: ${{ needs.get-pr-details.outputs.head_sha }}
           fetch-depth: 0
 
       - name: Extract ComfyUI versions
-        if: steps.pr-details.outputs.is_fork == 'false'
         id: versions
         run: |
           COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
@@ -94,7 +103,6 @@ jobs:
           echo "manager_commit=${MANAGER_COMMIT}" >> $GITHUB_OUTPUT
 
       - name: Checkout ComfyUI
-        if: steps.pr-details.outputs.is_fork == 'false'
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           repository: comfyanonymous/ComfyUI
@@ -102,7 +110,6 @@ jobs:
           path: assets/ComfyUI
 
       - name: Checkout ComfyUI-Manager
-        if: steps.pr-details.outputs.is_fork == 'false'
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           repository: ltdrdata/ComfyUI-Manager
@@ -110,13 +117,11 @@ jobs:
           path: assets/ComfyUI/custom_nodes/ComfyUI-Manager
 
       - name: Setup Python
-        if: steps.pr-details.outputs.is_fork == 'false'
         uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
         with:
           python-version: '3.12'
 
       - name: Install uv
-        if: steps.pr-details.outputs.is_fork == 'false'
         run: |
           set -e
           curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -125,13 +130,11 @@ jobs:
           $HOME/.local/bin/uv --version
 
       - name: Configure git
-        if: steps.pr-details.outputs.is_fork == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Validate uv commands match .compiled files
-        if: steps.pr-details.outputs.is_fork == 'false'
         id: validate-commands
         run: |
           echo "Validating that workflow commands match .compiled file headers..."
@@ -179,7 +182,6 @@ jobs:
           fi
 
       - name: Update Windows CPU requirements
-        if: steps.pr-details.outputs.is_fork == 'false'
         id: update-cpu
         run: |
           set -e
@@ -192,7 +194,6 @@ jobs:
           fi
 
       - name: Update Windows NVIDIA requirements
-        if: steps.pr-details.outputs.is_fork == 'false'
         id: update-nvidia
         run: |
           set -e
@@ -205,7 +206,6 @@ jobs:
           fi
 
       - name: Update macOS requirements
-        if: steps.pr-details.outputs.is_fork == 'false'
         id: update-macos
         run: |
           set -e
@@ -218,7 +218,6 @@ jobs:
           fi
 
       - name: Check for changes
-        if: steps.pr-details.outputs.is_fork == 'false'
         id: check-changes
         run: |
           if git diff --quiet; then
@@ -231,35 +230,35 @@ jobs:
           fi
 
       - name: Commit and push changes
-        if: steps.pr-details.outputs.is_fork == 'false' && steps.check-changes.outputs.has_changes == 'true'
+        if: steps.check-changes.outputs.has_changes == 'true'
         run: |
           set -e
           git add assets/requirements/*.compiled
           git commit -m "Update compiled requirements"
 
-          echo "Pushing to branch: ${{ steps.pr-details.outputs.head_ref }}"
-          git push origin HEAD:${{ steps.pr-details.outputs.head_ref }}
+          echo "Pushing to branch: ${{ needs.get-pr-details.outputs.head_ref }}"
+          git push origin HEAD:${{ needs.get-pr-details.outputs.head_ref }}
 
       - name: Comment on PR - Success
-        if: steps.pr-details.outputs.is_fork == 'false' && steps.check-changes.outputs.has_changes == 'true'
+        if: steps.check-changes.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "${{ steps.validate-commands.outputs.validation_failed }}" = "true" ]; then
-            gh pr comment ${{ steps.pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
           else
-            gh pr comment ${{ steps.pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"
           fi
 
       - name: Comment on PR - No Changes
-        if: steps.pr-details.outputs.is_fork == 'false' && steps.check-changes.outputs.has_changes == 'false'
+        if: steps.check-changes.outputs.has_changes == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "${{ steps.validate-commands.outputs.validation_failed }}" = "true" ]; then
-            gh pr comment ${{ steps.pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
           else
-            gh pr comment ${{ steps.pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"
           fi
 
       - name: Remove label
