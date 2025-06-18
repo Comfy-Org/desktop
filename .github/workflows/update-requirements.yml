@@ -232,12 +232,8 @@ jobs:
         run: |
           set -e
           git add assets/requirements/*.compiled
-          git commit -m "Update compiled requirements
-
-          - Updated windows_cpu.compiled
-          - Updated windows_nvidia.compiled  
-          - Updated macos.compiled"
-
+          git commit -m "Update compiled requirements"
+          
           echo "Pushing to branch: ${{ steps.pr-details.outputs.head_ref }}"
           git push origin HEAD:${{ steps.pr-details.outputs.head_ref }}
 
