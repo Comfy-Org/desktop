@@ -70,10 +70,12 @@ jobs:
           fi
 
           # Set outputs
-          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
-          echo "head_ref=${HEAD_REF}" >> $GITHUB_OUTPUT
-          echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
-          echo "is_fork=${IS_FORK}" >> $GITHUB_OUTPUT
+          {
+            echo "pr_number=${PR_NUMBER}"
+            echo "head_ref=${HEAD_REF}"
+            echo "head_sha=${HEAD_SHA}"
+            echo "is_fork=${IS_FORK}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Handle fork PRs
         if: steps.pr-details.outputs.is_fork == 'true'
@@ -99,8 +101,10 @@ jobs:
         run: |
           COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
           MANAGER_COMMIT=$(jq -r '.config.managerCommit' package.json)
-          echo "comfyui_version=${COMFYUI_VERSION}" >> $GITHUB_OUTPUT
-          echo "manager_commit=${MANAGER_COMMIT}" >> $GITHUB_OUTPUT
+          {
+            echo "comfyui_version=${COMFYUI_VERSION}"
+            echo "manager_commit=${MANAGER_COMMIT}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Checkout ComfyUI
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
@@ -166,8 +170,10 @@ jobs:
         run: |
           COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
           MANAGER_COMMIT=$(jq -r '.config.managerCommit' package.json)
-          echo "comfyui_version=${COMFYUI_VERSION}" >> $GITHUB_OUTPUT
-          echo "manager_commit=${MANAGER_COMMIT}" >> $GITHUB_OUTPUT
+          {
+            echo "comfyui_version=${COMFYUI_VERSION}"
+            echo "manager_commit=${MANAGER_COMMIT}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Checkout ComfyUI
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
@@ -192,9 +198,9 @@ jobs:
         run: |
           set -e
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           # Verify uv is installed
-          $HOME/.local/bin/uv --version
+          "$HOME/.local/bin/uv" --version
 
       - name: Update macOS requirements
         run: |
@@ -278,20 +284,20 @@ jobs:
           if [ "$VALIDATION_FAILED" = "true" ]; then
             echo "::warning::The uv pip compile commands in this workflow may be out of sync with the .compiled files."
             echo "::warning::This could happen if the commands were changed manually. Please review and update as needed."
-            echo "validation_failed=true" >> $GITHUB_OUTPUT
+            echo "validation_failed=true" >> "$GITHUB_OUTPUT"
           else
             echo "✅ All uv commands match the .compiled file headers"
-            echo "validation_failed=false" >> $GITHUB_OUTPUT
+            echo "validation_failed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check for changes
         id: check-changes
         run: |
           if git diff --quiet; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
             echo "No changes detected in compiled requirements"
           else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
             echo "Changes detected in compiled requirements:"
             git diff --stat
           fi
