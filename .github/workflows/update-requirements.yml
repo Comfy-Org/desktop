@@ -72,30 +72,8 @@ jobs:
 
       - name: Handle fork PRs
         if: steps.pr-details.outputs.is_fork == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          PR_NUMBER=${{ steps.pr-details.outputs.pr_number }}
-
-          # Create comment with instructions
-          gh pr comment ${PR_NUMBER} --body "This PR is from a fork, so I cannot automatically update the requirements files.
-
-          To update the requirements manually, run these commands in your local fork:
-
-          \`\`\`bash
-          # Update Windows CPU requirements
-          ${{ env.UV_CMD_WINDOWS_CPU }}
-
-          # Update Windows NVIDIA requirements  
-          ${{ env.UV_CMD_WINDOWS_NVIDIA }}
-
-          # Update macOS requirements
-          ${{ env.UV_CMD_MACOS }}
-          \`\`\`
-
-          Then commit and push the changes to your PR branch."
-
-          echo "::error::Cannot update requirements for fork PRs automatically."
+          echo "::error::Cannot update requirements in fork PRs."
           exit 1
 
       - name: Checkout PR
@@ -233,7 +211,7 @@ jobs:
           set -e
           git add assets/requirements/*.compiled
           git commit -m "Update compiled requirements"
-          
+
           echo "Pushing to branch: ${{ steps.pr-details.outputs.head_ref }}"
           git push origin HEAD:${{ steps.pr-details.outputs.head_ref }}
 
