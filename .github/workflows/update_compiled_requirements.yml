@@ -132,6 +132,13 @@ jobs:
           $env:PATH = "$env:USERPROFILE\.local\bin;$env:PATH"
           uv --version
 
+      - name: Apply core requirements patch
+        shell: bash
+        run: |
+          cd assets/ComfyUI
+          patch -p1 < ../../scripts/core-requirements.patch
+          echo "Applied core requirements patch"
+
       - name: Update Windows CPU requirements
         shell: bash
         run: |
@@ -201,6 +208,12 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           # Verify uv is installed
           "$HOME/.local/bin/uv" --version
+
+      - name: Apply core requirements patch
+        run: |
+          cd assets/ComfyUI
+          patch -p1 < ../../scripts/core-requirements.patch
+          echo "Applied core requirements patch"
 
       - name: Update macOS requirements
         run: |
