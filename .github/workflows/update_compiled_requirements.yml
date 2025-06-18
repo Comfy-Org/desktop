@@ -1,4 +1,4 @@
-name: Update Compiled Requirements
+name: Update Requirements
 
 on:
   workflow_dispatch:
@@ -80,160 +80,6 @@ jobs:
         run: |
           echo "::error::Cannot update requirements in fork PRs."
           exit 1
-
-  update-requirements:
-    needs: get-pr-details
-    if: needs.get-pr-details.outputs.is_fork == 'false'
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout PR
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ needs.get-pr-details.outputs.head_sha }}
-          fetch-depth: 0
-
-      - name: Extract ComfyUI versions
-        id: versions
-        run: |
-          COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
-          MANAGER_COMMIT=$(jq -r '.config.managerCommit' package.json)
-          echo "comfyui_version=${COMFYUI_VERSION}" >> $GITHUB_OUTPUT
-          echo "manager_commit=${MANAGER_COMMIT}" >> $GITHUB_OUTPUT
-
-      - name: Checkout ComfyUI
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
-        with:
-          repository: comfyanonymous/ComfyUI
-          ref: v${{ steps.versions.outputs.comfyui_version }}
-          path: assets/ComfyUI
-
-      - name: Checkout ComfyUI-Manager
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
-        with:
-          repository: ltdrdata/ComfyUI-Manager
-          ref: ${{ steps.versions.outputs.manager_commit }}
-          path: assets/ComfyUI/custom_nodes/ComfyUI-Manager
-
-      - name: Setup Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
-        with:
-          python-version: '3.12'
-
-      - name: Install uv
-        run: |
-          set -e
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          # Verify uv is installed
-          $HOME/.local/bin/uv --version
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Validate uv commands match .compiled files
-        id: validate-commands
-        run: |
-          echo "Validating that workflow commands match .compiled file headers..."
-
-          # Extract commands from .compiled files (line 2 contains the command)
-          VALIDATION_FAILED=false
-
-          if [ -f "assets/requirements/windows_cpu.compiled" ]; then
-            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/windows_cpu.compiled)
-            if [ "${{ env.UV_CMD_WINDOWS_CPU }}" != "$FILE_CMD" ]; then
-              echo "::warning::Windows CPU command in workflow differs from .compiled file!"
-              echo "::warning::Workflow: ${{ env.UV_CMD_WINDOWS_CPU }}"
-              echo "::warning::File: $FILE_CMD"
-              VALIDATION_FAILED=true
-            fi
-          fi
-
-          if [ -f "assets/requirements/windows_nvidia.compiled" ]; then
-            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/windows_nvidia.compiled)
-            if [ "${{ env.UV_CMD_WINDOWS_NVIDIA }}" != "$FILE_CMD" ]; then
-              echo "::warning::Windows NVIDIA command in workflow differs from .compiled file!"
-              echo "::warning::Workflow: ${{ env.UV_CMD_WINDOWS_NVIDIA }}"
-              echo "::warning::File: $FILE_CMD"
-              VALIDATION_FAILED=true
-            fi
-          fi
-
-          if [ -f "assets/requirements/macos.compiled" ]; then
-            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/macos.compiled)
-            if [ "${{ env.UV_CMD_MACOS }}" != "$FILE_CMD" ]; then
-              echo "::warning::macOS command in workflow differs from .compiled file!"
-              echo "::warning::Workflow: ${{ env.UV_CMD_MACOS }}"
-              echo "::warning::File: $FILE_CMD"
-              VALIDATION_FAILED=true
-            fi
-          fi
-
-          if [ "$VALIDATION_FAILED" = "true" ]; then
-            echo "::warning::The uv pip compile commands in this workflow may be out of sync with the .compiled files."
-            echo "::warning::This could happen if the commands were changed manually. Please review and update as needed."
-            echo "validation_failed=true" >> $GITHUB_OUTPUT
-          else
-            echo "✅ All uv commands match the .compiled file headers"
-            echo "validation_failed=false" >> $GITHUB_OUTPUT
-          fi
-
-
-
-      - name: Check for changes
-        id: check-changes
-        run: |
-          if git diff --quiet; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No changes detected in compiled requirements"
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "Changes detected in compiled requirements:"
-            git diff --stat
-          fi
-
-      - name: Commit and push changes
-        if: steps.check-changes.outputs.has_changes == 'true'
-        run: |
-          set -e
-          git add assets/requirements/*.compiled
-          git commit -m "Update compiled requirements"
-
-          echo "Pushing to branch: ${{ needs.get-pr-details.outputs.head_ref }}"
-          git push origin HEAD:${{ needs.get-pr-details.outputs.head_ref }}
-
-      - name: Comment on PR - Success
-        if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ "${{ steps.validate-commands.outputs.validation_failed }}" = "true" ]; then
-            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
-          else
-            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"
-          fi
-
-      - name: Comment on PR - No Changes
-        if: steps.check-changes.outputs.has_changes == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ "${{ steps.validate-commands.outputs.validation_failed }}" = "true" ]; then
-            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
-          else
-            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"
-          fi
-
-      - name: Remove label
-        if: github.event_name == 'pull_request' && github.event.label.name == 'Update Compiled Requirements'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} \
-            --remove-label "Update Compiled Requirements"
 
   update-windows-requirements:
     needs: get-pr-details
@@ -361,3 +207,131 @@ jobs:
           name: macos-requirements
           path: assets/requirements/macos.compiled
           retention-days: 1
+
+  consolidate-and-commit:
+    needs: [get-pr-details, update-windows-requirements, update-macos-requirements]
+    if: needs.get-pr-details.outputs.is_fork == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ needs.get-pr-details.outputs.head_sha }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Download Windows requirements
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-requirements
+          path: assets/requirements/
+
+      - name: Download macOS requirements
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-requirements
+          path: assets/requirements/
+
+      - name: Validate uv commands match .compiled files
+        id: validate-commands
+        run: |
+          echo "Validating that workflow commands match .compiled file headers..."
+
+          # Extract commands from .compiled files (line 2 contains the command)
+          VALIDATION_FAILED=false
+
+          if [ -f "assets/requirements/windows_cpu.compiled" ]; then
+            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/windows_cpu.compiled)
+            if [ "${{ env.UV_CMD_WINDOWS_CPU }}" != "$FILE_CMD" ]; then
+              echo "::warning::Windows CPU command in workflow differs from .compiled file!"
+              echo "::warning::Workflow: ${{ env.UV_CMD_WINDOWS_CPU }}"
+              echo "::warning::File: $FILE_CMD"
+              VALIDATION_FAILED=true
+            fi
+          fi
+
+          if [ -f "assets/requirements/windows_nvidia.compiled" ]; then
+            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/windows_nvidia.compiled)
+            if [ "${{ env.UV_CMD_WINDOWS_NVIDIA }}" != "$FILE_CMD" ]; then
+              echo "::warning::Windows NVIDIA command in workflow differs from .compiled file!"
+              echo "::warning::Workflow: ${{ env.UV_CMD_WINDOWS_NVIDIA }}"
+              echo "::warning::File: $FILE_CMD"
+              VALIDATION_FAILED=true
+            fi
+          fi
+
+          if [ -f "assets/requirements/macos.compiled" ]; then
+            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/macos.compiled)
+            if [ "${{ env.UV_CMD_MACOS }}" != "$FILE_CMD" ]; then
+              echo "::warning::macOS command in workflow differs from .compiled file!"
+              echo "::warning::Workflow: ${{ env.UV_CMD_MACOS }}"
+              echo "::warning::File: $FILE_CMD"
+              VALIDATION_FAILED=true
+            fi
+          fi
+
+          if [ "$VALIDATION_FAILED" = "true" ]; then
+            echo "::warning::The uv pip compile commands in this workflow may be out of sync with the .compiled files."
+            echo "::warning::This could happen if the commands were changed manually. Please review and update as needed."
+            echo "validation_failed=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ All uv commands match the .compiled file headers"
+            echo "validation_failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in compiled requirements"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in compiled requirements:"
+            git diff --stat
+          fi
+
+      - name: Commit and push changes
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          set -e
+          git add assets/requirements/*.compiled
+          git commit -m "Update compiled requirements"
+
+          echo "Pushing to branch: ${{ needs.get-pr-details.outputs.head_ref }}"
+          git push origin HEAD:${{ needs.get-pr-details.outputs.head_ref }}
+
+      - name: Comment on PR - Success
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ steps.validate-commands.outputs.validation_failed }}" = "true" ]; then
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
+          else
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"
+          fi
+
+      - name: Comment on PR - No Changes
+        if: steps.check-changes.outputs.has_changes == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ steps.validate-commands.outputs.validation_failed }}" = "true" ]; then
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
+          else
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"
+          fi
+
+      - name: Remove label
+        if: github.event_name == 'pull_request' && github.event.label.name == 'Update Compiled Requirements'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --remove-label "Update Compiled Requirements"
