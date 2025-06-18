@@ -129,7 +129,7 @@ jobs:
         shell: powershell
         run: |
           irm https://astral.sh/uv/install.ps1 | iex
-          $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
+          $env:PATH = "$env:USERPROFILE\.local\bin;$env:PATH"
           uv --version
 
       - name: Update Windows CPU requirements
