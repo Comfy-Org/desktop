@@ -1,4 +1,4 @@
-name: Update Requirements
+name: Update Compiled Requirements
 
 on:
   workflow_dispatch:
