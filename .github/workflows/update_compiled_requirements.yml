@@ -84,6 +84,31 @@ jobs:
           ref: ${{ steps.pr-details.outputs.head_sha }}
           fetch-depth: 0
 
+      - name: Extract ComfyUI versions
+        if: steps.pr-details.outputs.is_fork == 'false'
+        id: versions
+        run: |
+          COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
+          MANAGER_COMMIT=$(jq -r '.config.managerCommit' package.json)
+          echo "comfyui_version=${COMFYUI_VERSION}" >> $GITHUB_OUTPUT
+          echo "manager_commit=${MANAGER_COMMIT}" >> $GITHUB_OUTPUT
+
+      - name: Checkout ComfyUI
+        if: steps.pr-details.outputs.is_fork == 'false'
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          repository: comfyanonymous/ComfyUI
+          ref: v${{ steps.versions.outputs.comfyui_version }}
+          path: assets/ComfyUI
+
+      - name: Checkout ComfyUI-Manager
+        if: steps.pr-details.outputs.is_fork == 'false'
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          repository: ltdrdata/ComfyUI-Manager
+          ref: ${{ steps.versions.outputs.manager_commit }}
+          path: assets/ComfyUI/custom_nodes/ComfyUI-Manager
+
       - name: Setup Python
         if: steps.pr-details.outputs.is_fork == 'false'
         uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
