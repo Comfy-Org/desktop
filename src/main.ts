@@ -23,7 +23,6 @@ initializeAppState();
 const overrides = new DevOverrides();
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
-quitWhenAllWindowsAreClosed();
 trackAppQuitEvents();
 initializeSentry();
 
@@ -87,14 +86,6 @@ function initalizeLogging() {
   // Set the app version for the desktop app. Relied on by Manager and other sub-processes.
   process.env.__COMFYUI_DESKTOP_VERSION__ = app.getVersion();
   log.info(`Starting app v${app.getVersion()}`);
-}
-
-/** Quit when all windows are closed.*/
-function quitWhenAllWindowsAreClosed() {
-  app.on('window-all-closed', () => {
-    log.info('Quitting ComfyUI because window all closed');
-    app.quit();
-  });
 }
 
 /** Add telemetry for the app quit event. */

@@ -45,6 +45,18 @@ export const electronMock: ElectronMock = {
     getVersion: vi.fn(() => '1.0.0'),
     on: vi.fn(),
     once: vi.fn(),
+    dock: {
+      show: vi.fn().mockResolvedValue(undefined),
+      hide: vi.fn(),
+      bounce: vi.fn(),
+      cancelBounce: vi.fn(),
+      downloadFinished: vi.fn(),
+      getBadge: vi.fn(),
+      setBadge: vi.fn(),
+      getMenu: vi.fn(),
+      setMenu: vi.fn(),
+      setIcon: vi.fn(),
+    } as any,
   },
   dialog: {
     showErrorBox: vi.fn(),
