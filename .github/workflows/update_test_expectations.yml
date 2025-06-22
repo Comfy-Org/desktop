@@ -22,15 +22,9 @@ jobs:
         with:
           sign-and-publish: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: comfyui-electron-win32-debug-build-${{ env.sha_short }}
-          path: dist/*.zip
-
-      # - name: Set display resolution
-      #   run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+          
+      - name: Set display resolution
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
 
       - name: Run Playwright Tests
         run: npm run test:e2e
@@ -40,8 +34,8 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-${{ env.sha_short }}
-          path: test-results/
+          name: tests
+          path: tests/
           retention-days: 30
 
       - name: Debugging info
@@ -55,6 +49,6 @@ jobs:
           git config --global user.email 'github-actions@github.com'
           git fetch origin ${{ github.head_ref }}
           git checkout -B ${{ github.head_ref }} origin/${{ github.head_ref }}
-          git add test-results
+          git add tests
           git commit -m "Update test expectations [skip ci]" || echo "No changes to commit"
           git push origin HEAD:${{ github.head_ref }}
