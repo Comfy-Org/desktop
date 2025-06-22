@@ -1,0 +1,356 @@
+name: Update Requirements
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request number to update'
+        required: true
+        type: string
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-requirements-${{ github.event.inputs.pr_number || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # Define uv pip compile commands as environment variables for consistency
+  UV_CMD_WINDOWS_CPU: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/windows_cpu.compiled --index-url https://pypi.org/simple'
+  UV_CMD_WINDOWS_NVIDIA: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --override assets/override.txt --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu128 -o assets/requirements/windows_nvidia.compiled'
+  UV_CMD_MACOS: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/macos.compiled --override assets/override.txt --index-url https://pypi.org/simple'
+  # PR comment messages
+  PR_MSG_SUCCESS: '✅ Compiled requirements have been updated successfully!'
+  PR_MSG_NO_CHANGES: 'ℹ️ No changes needed - compiled requirements are already up to date.'
+  PR_MSG_WARNING: '⚠️ **Warning**: The uv pip compile commands in this workflow may be out of sync with the .compiled files. This could happen if the commands were changed manually. Please review the workflow logs for details.'
+
+jobs:
+  get-pr-details:
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'pull_request' && github.event.label.name == 'Update Compiled Requirements')
+    runs-on: ubuntu-latest
+    outputs:
+      pr_number: ${{ steps.pr-details.outputs.pr_number }}
+      head_ref: ${{ steps.pr-details.outputs.head_ref }}
+      head_sha: ${{ steps.pr-details.outputs.head_sha }}
+      is_fork: ${{ steps.pr-details.outputs.is_fork }}
+    steps:
+      - name: Get PR details
+        id: pr-details
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Determine PR number based on event type
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          else
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+          fi
+
+          # Get PR data using GitHub CLI
+          PR_DATA=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER})
+
+          # Extract values using jq
+          HEAD_REF=$(echo "$PR_DATA" | jq -r '.head.ref')
+          HEAD_SHA=$(echo "$PR_DATA" | jq -r '.head.sha')
+          HEAD_REPO=$(echo "$PR_DATA" | jq -r '.head.repo.full_name')
+          BASE_REPO=$(echo "$PR_DATA" | jq -r '.base.repo.full_name')
+
+          # Check if it's a fork
+          if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            IS_FORK="true"
+            echo "::warning::This PR is from a fork. The workflow will provide manual instructions."
+          else
+            IS_FORK="false"
+          fi
+
+          # Set outputs
+          {
+            echo "pr_number=${PR_NUMBER}"
+            echo "head_ref=${HEAD_REF}"
+            echo "head_sha=${HEAD_SHA}"
+            echo "is_fork=${IS_FORK}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Handle fork PRs
+        if: steps.pr-details.outputs.is_fork == 'true'
+        run: |
+          echo "::error::Cannot update requirements in fork PRs."
+          exit 1
+
+  update-windows-requirements:
+    needs: get-pr-details
+    if: needs.get-pr-details.outputs.is_fork == 'false'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ needs.get-pr-details.outputs.head_sha }}
+          fetch-depth: 0
+
+      - name: Extract ComfyUI versions
+        id: versions
+        shell: bash
+        run: |
+          COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
+          MANAGER_COMMIT=$(jq -r '.config.managerCommit' package.json)
+          {
+            echo "comfyui_version=${COMFYUI_VERSION}"
+            echo "manager_commit=${MANAGER_COMMIT}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout ComfyUI
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          repository: comfyanonymous/ComfyUI
+          ref: v${{ steps.versions.outputs.comfyui_version }}
+          path: assets/ComfyUI
+
+      - name: Checkout ComfyUI-Manager
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          repository: ltdrdata/ComfyUI-Manager
+          ref: ${{ steps.versions.outputs.manager_commit }}
+          path: assets/ComfyUI/custom_nodes/ComfyUI-Manager
+
+      - name: Setup Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        shell: powershell
+        run: |
+          irm https://astral.sh/uv/install.ps1 | iex
+          $env:PATH = "$env:USERPROFILE\.local\bin;$env:PATH"
+          uv --version
+
+      - name: Apply core requirements patch
+        shell: bash
+        run: |
+          cd assets/ComfyUI
+          patch -p1 < ../../scripts/core-requirements.patch
+          echo "Applied core requirements patch"
+
+      - name: Update Windows CPU requirements
+        shell: bash
+        run: |
+          echo "Updating Windows CPU requirements..."
+          ${{ env.UV_CMD_WINDOWS_CPU }}
+
+      - name: Update Windows NVIDIA requirements
+        shell: bash
+        run: |
+          echo "Updating Windows NVIDIA requirements..."
+          ${{ env.UV_CMD_WINDOWS_NVIDIA }}
+
+      - name: Upload Windows requirements
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-requirements
+          path: |
+            assets/requirements/windows_cpu.compiled
+            assets/requirements/windows_nvidia.compiled
+          retention-days: 1
+
+  update-macos-requirements:
+    needs: get-pr-details
+    if: needs.get-pr-details.outputs.is_fork == 'false'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ needs.get-pr-details.outputs.head_sha }}
+          fetch-depth: 0
+
+      - name: Extract ComfyUI versions
+        id: versions
+        run: |
+          COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
+          MANAGER_COMMIT=$(jq -r '.config.managerCommit' package.json)
+          {
+            echo "comfyui_version=${COMFYUI_VERSION}"
+            echo "manager_commit=${MANAGER_COMMIT}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout ComfyUI
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          repository: comfyanonymous/ComfyUI
+          ref: v${{ steps.versions.outputs.comfyui_version }}
+          path: assets/ComfyUI
+
+      - name: Checkout ComfyUI-Manager
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          repository: ltdrdata/ComfyUI-Manager
+          ref: ${{ steps.versions.outputs.manager_commit }}
+          path: assets/ComfyUI/custom_nodes/ComfyUI-Manager
+
+      - name: Setup Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: |
+          set -e
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          # Verify uv is installed
+          "$HOME/.local/bin/uv" --version
+
+      - name: Apply core requirements patch
+        run: |
+          cd assets/ComfyUI
+          patch -p1 < ../../scripts/core-requirements.patch
+          echo "Applied core requirements patch"
+
+      - name: Update macOS requirements
+        run: |
+          echo "Updating macOS requirements..."
+          ${{ env.UV_CMD_MACOS }}
+
+      - name: Upload macOS requirements
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-requirements
+          path: assets/requirements/macos.compiled
+          retention-days: 1
+
+  consolidate-and-commit:
+    needs: [get-pr-details, update-windows-requirements, update-macos-requirements]
+    if: needs.get-pr-details.outputs.is_fork == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ needs.get-pr-details.outputs.head_sha }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Download Windows requirements
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-requirements
+          path: assets/requirements/
+
+      - name: Download macOS requirements
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-requirements
+          path: assets/requirements/
+
+      - name: Validate uv commands match .compiled files
+        id: validate-commands
+        run: |
+          echo "Validating that workflow commands match .compiled file headers..."
+
+          # Extract commands from .compiled files (line 2 contains the command)
+          VALIDATION_FAILED=false
+
+          if [ -f "assets/requirements/windows_cpu.compiled" ]; then
+            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/windows_cpu.compiled)
+            if [ "${{ env.UV_CMD_WINDOWS_CPU }}" != "$FILE_CMD" ]; then
+              echo "::warning::Windows CPU command in workflow differs from .compiled file!"
+              echo "::warning::Workflow: ${{ env.UV_CMD_WINDOWS_CPU }}"
+              echo "::warning::File: $FILE_CMD"
+              VALIDATION_FAILED=true
+            fi
+          fi
+
+          if [ -f "assets/requirements/windows_nvidia.compiled" ]; then
+            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/windows_nvidia.compiled)
+            if [ "${{ env.UV_CMD_WINDOWS_NVIDIA }}" != "$FILE_CMD" ]; then
+              echo "::warning::Windows NVIDIA command in workflow differs from .compiled file!"
+              echo "::warning::Workflow: ${{ env.UV_CMD_WINDOWS_NVIDIA }}"
+              echo "::warning::File: $FILE_CMD"
+              VALIDATION_FAILED=true
+            fi
+          fi
+
+          if [ -f "assets/requirements/macos.compiled" ]; then
+            FILE_CMD=$(sed -n '2s/^#[[:space:]]*//p' assets/requirements/macos.compiled)
+            if [ "${{ env.UV_CMD_MACOS }}" != "$FILE_CMD" ]; then
+              echo "::warning::macOS command in workflow differs from .compiled file!"
+              echo "::warning::Workflow: ${{ env.UV_CMD_MACOS }}"
+              echo "::warning::File: $FILE_CMD"
+              VALIDATION_FAILED=true
+            fi
+          fi
+
+          if [ "$VALIDATION_FAILED" = "true" ]; then
+            echo "::warning::The uv pip compile commands in this workflow may be out of sync with the .compiled files."
+            echo "::warning::This could happen if the commands were changed manually. Please review and update as needed."
+            echo "validation_failed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "✅ All uv commands match the .compiled file headers"
+            echo "validation_failed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected in compiled requirements"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected in compiled requirements:"
+            git diff --stat
+          fi
+
+      - name: Commit and push changes
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          set -e
+          git add assets/requirements/*.compiled
+          git commit -m "Update compiled requirements"
+
+          echo "Pushing to branch: ${{ needs.get-pr-details.outputs.head_ref }}"
+          git push origin HEAD:${{ needs.get-pr-details.outputs.head_ref }}
+
+      - name: Comment on PR - Success
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ steps.validate-commands.outputs.validation_failed }}" = "true" ]; then
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
+          else
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_SUCCESS }}"
+          fi
+
+      - name: Comment on PR - No Changes
+        if: steps.check-changes.outputs.has_changes == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ steps.validate-commands.outputs.validation_failed }}" = "true" ]; then
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"$'\n\n'"${{ env.PR_MSG_WARNING }}"
+          else
+            gh pr comment ${{ needs.get-pr-details.outputs.pr_number }} --body "${{ env.PR_MSG_NO_CHANGES }}"
+          fi
+
+      - name: Remove label
+        if: github.event_name == 'pull_request' && github.event.label.name == 'Update Compiled Requirements'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --remove-label "Update Compiled Requirements"

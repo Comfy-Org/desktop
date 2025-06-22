@@ -31,6 +31,8 @@ export interface InstallOptions {
   /** pip mirrors */
   pypiMirror?: string; // Common pip install mirror
   torchMirror?: string; // Torch install mirror
+  /** Whether to bypass disk space requirements during installation */
+  bypassSpaceCheck?: boolean;
 }
 
 export interface SystemPaths {
@@ -261,9 +263,11 @@ const electronAPI = {
   /**
    * Validate the install path for the application. Check whether the path is valid
    * and writable. The disk should have enough free space to install the application.
+   * @param path The path to validate
+   * @param bypassSpaceCheck Optional flag to bypass disk space requirement
    */
-  validateInstallPath: (path: string): Promise<PathValidationResult> => {
-    return ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_INSTALL_PATH, path);
+  validateInstallPath: (path: string, bypassSpaceCheck?: boolean): Promise<PathValidationResult> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.VALIDATE_INSTALL_PATH, path, bypassSpaceCheck);
   },
   /**
    * Validate whether the given path is a valid ComfyUI source path.
