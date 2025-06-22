@@ -3,7 +3,7 @@ name: Update Test Expectations
 
 on:
   pull_request:
-    types: [ labeled ]
+    types: [labeled]
 
 jobs:
   test:
@@ -12,7 +12,7 @@ jobs:
     env:
       SKIP_HARDWARE_VALIDATION: 'true'
       LOG_LEVEL: 'debug'
-      
+
     steps:
       - name: Github checkout
         uses: actions/checkout@v4
@@ -42,12 +42,12 @@ jobs:
           name: test-results-${{ env.sha_short }}
           path: test-results/
           retention-days: 30
-      
+
       - name: Debugging info
         run: |
           echo "Branch: ${{ github.head_ref }}"
           git status
-      
+
       - name: Commit updated expectations
         run: |
           git config --global user.name 'github-actions'
