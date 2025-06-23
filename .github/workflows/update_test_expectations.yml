@@ -27,7 +27,7 @@ jobs:
         run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
 
       - name: Run Playwright Tests
-        run: npm run test:e2e
+        run: npm run test:e2e:update
         continue-on-error: true
 
       - name: Upload Test Results
