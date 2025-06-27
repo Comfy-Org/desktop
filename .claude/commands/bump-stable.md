@@ -27,7 +27,7 @@ Please update the version of ComfyUI to the latest:
 ## General
 
 - Prefer `gh` commands over fetching websites
-- Use named `gh` commands to perform actions, e.g. `gh release list`
+- Use named `gh` commands to perform actions, e.g. `gh release list`, rather than `gh api` commands. This is much faster as named commands can be approved automatically.
 - Use subagents to verify details or investigate any particular questions you may have.
 - For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
 - After receiving tool results, carefully reflect on their quality and determine optimal next steps before proceeding. Use your thinking to plan and iterate based on this new information, and then take the best next action.
