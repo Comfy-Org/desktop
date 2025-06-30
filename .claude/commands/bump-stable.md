@@ -19,6 +19,16 @@ Please update the version of ComfyUI to the latest:
      | Frontend      | FRONTEND_VERSION      |
      | Templates     | TEMPLATES_VERSION     |
      | Embedded docs | EMBEDDED_DOCS_VERSION |
+8. Wait for all tests to pass, then squash-merge the PR.
+9. Switch to main branch and git pull
+10. Bump the version using `npm version` with the `--no-git-tag-version` arg
+11. Create a version bump PR with the title `vVERSION` e.g. `v0.4.10`. It must have the `Release` label, and no content in the PR description.
+12. Squash-merge the PR - do not wait for tests, as bumping package version will not cause test breakage.
+13. Publish a GitHub Release:
+    - Set to pre-release (not latest)
+    - The tag should be `vVERSION` e.g. `v0.4.10`
+    - Use GitHub's generate release notes option
+14. Remove merged local branches
 
 ## Commit messages
 
