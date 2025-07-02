@@ -19,6 +19,16 @@ Please update the version of ComfyUI to the latest:
      | Frontend      | FRONTEND_VERSION      |
      | Templates     | TEMPLATES_VERSION     |
      | Embedded docs | EMBEDDED_DOCS_VERSION |
+8. Wait for all tests to pass, then squash-merge the PR.
+9. Switch to main branch and git pull
+10. Bump the version using `npm version` with the `--no-git-tag-version` arg
+11. Create a version bump PR with the title `vVERSION` e.g. `v0.4.10`. It must have the `Release` label, and no content in the PR description.
+12. Squash-merge the PR - do not wait for tests, as bumping package version will not cause test breakage.
+13. Publish a GitHub Release:
+    - Set to pre-release (not latest)
+    - The tag should be `vVERSION` e.g. `v0.4.10`
+    - Use GitHub's generate release notes option
+14. Remove merged local branches
 
 ## Commit messages
 
@@ -27,7 +37,7 @@ Please update the version of ComfyUI to the latest:
 ## General
 
 - Prefer `gh` commands over fetching websites
-- Use named `gh` commands to perform actions, e.g. `gh release list`
+- Use named `gh` commands to perform actions, e.g. `gh release list`, rather than `gh api` commands. This is much faster as named commands can be approved automatically.
 - Use subagents to verify details or investigate any particular questions you may have.
 - For maximum efficiency, whenever you need to perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially.
 - After receiving tool results, carefully reflect on their quality and determine optimal next steps before proceeding. Use your thinking to plan and iterate based on this new information, and then take the best next action.

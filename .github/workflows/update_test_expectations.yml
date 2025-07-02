@@ -1,0 +1,54 @@
+# Update Test Expectations for Playwright
+name: Update Test Expectations
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  test:
+    runs-on: windows-latest
+    if: github.event.label.name == 'New Browser Test Expectations'
+    env:
+      SKIP_HARDWARE_VALIDATION: 'true'
+      LOG_LEVEL: 'debug'
+
+    steps:
+      - name: Github checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        uses: ./.github/actions/build/windows/app
+        with:
+          sign-and-publish: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set display resolution
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+
+      - name: Run Playwright Tests
+        run: npm run test:e2e:update
+        continue-on-error: true
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests
+          path: tests/
+          retention-days: 30
+
+      - name: Debugging info
+        run: |
+          echo "Branch: ${{ github.head_ref }}"
+          git status
+
+      - name: Commit updated expectations
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git fetch origin ${{ github.head_ref }}
+          git checkout -B ${{ github.head_ref }} origin/${{ github.head_ref }}
+          git add tests
+          git commit -m "Update test expectations [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:${{ github.head_ref }}

@@ -286,6 +286,10 @@ We use Todesktop to build and codesign our distributables. To make a new release
 
 If a build fails for some reason, you can manually retry by running the "Publish All" GH action with a release tag as input.
 
+## Release using Claude Code
+
+There is a Claude Code command, "bump-stable", that can be used to automate the release process.
+
 ## Utility scripts
 
 A number of utility scripts are defined under the "scripts" field of package.json. For example, to clean up the build artifacts you can run:
