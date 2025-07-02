@@ -1,7 +1,8 @@
 import type { FileTransport, MainLogger, MainTransports } from 'electron-log';
 import log from 'electron-log/main';
-import { vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
 
+import { ComfySettings } from '@/config/comfySettings';
 import type { IAppState } from '@/main-process/appState';
 import type { ITelemetry } from '@/services/telemetry';
 
@@ -106,4 +107,9 @@ vi.mock('@/services/telemetry', async () => {
     getTelemetry: vi.fn(() => mockTelemetry),
     promptMetricsConsent: vi.fn().mockResolvedValue(true),
   };
+});
+
+// Initialize ComfySettings for tests
+beforeEach(async () => {
+  await ComfySettings.load('/test/path');
 });

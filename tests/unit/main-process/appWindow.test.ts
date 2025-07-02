@@ -1,6 +1,7 @@
 import { BrowserWindow, type Tray } from 'electron';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useComfySettings } from '@/config/comfySettings';
 import { AppWindow } from '@/main-process/appWindow';
 
 import { type PartialMock, electronMock } from '../setup';
@@ -137,27 +138,64 @@ describe('AppWindow tray behavior', () => {
     vi.mocked(BrowserWindow).mockImplementation(() => mockWindow as BrowserWindow);
   });
 
-  it('should hide to tray when window closed and app not quitting', () => {
-    vi.stubGlobal('process', { ...process, platform: 'win32', resourcesPath: '/mock' });
-    new AppWindow();
-    const mockEvent = { preventDefault: vi.fn() };
+  describe('when RunInBackgroundOnClose is enabled', () => {
+    beforeEach(() => {
+      const settings = useComfySettings();
+      settings.set('Comfy-Desktop.RunInBackgroundOnClose', true);
+    });
 
-    windowCloseHandler(mockEvent as any);
+    it('should hide to tray when window closed and app not quitting', () => {
+      vi.stubGlobal('process', { ...process, platform: 'win32', resourcesPath: '/mock' });
+      new AppWindow();
+      const mockEvent = { preventDefault: vi.fn() };
 
-    expect(mockEvent.preventDefault).toHaveBeenCalled();
-    expect(mockWindow.hide).toHaveBeenCalled();
+      windowCloseHandler(mockEvent as any);
+
+      expect(mockEvent.preventDefault).toHaveBeenCalled();
+      expect(mockWindow.hide).toHaveBeenCalled();
+    });
+
+    it('should still allow window close when app is quitting', () => {
+      vi.stubGlobal('process', { ...process, platform: 'win32', resourcesPath: '/mock' });
+      mockAppState.isQuitting = true;
+      new AppWindow();
+      const mockEvent = { preventDefault: vi.fn() };
+
+      windowCloseHandler(mockEvent as any);
+
+      expect(mockEvent.preventDefault).not.toHaveBeenCalled();
+      expect(mockWindow.hide).not.toHaveBeenCalled();
+    });
   });
 
-  it('should allow window close when app is quitting', () => {
-    vi.stubGlobal('process', { ...process, platform: 'win32', resourcesPath: '/mock' });
-    mockAppState.isQuitting = true;
-    new AppWindow();
-    const mockEvent = { preventDefault: vi.fn() };
+  describe('when RunInBackgroundOnClose is disabled (default)', () => {
+    beforeEach(() => {
+      const settings = useComfySettings();
+      settings.set('Comfy-Desktop.RunInBackgroundOnClose', false);
+    });
 
-    windowCloseHandler(mockEvent as any);
+    it('should allow window to close normally', () => {
+      vi.stubGlobal('process', { ...process, platform: 'win32', resourcesPath: '/mock' });
+      new AppWindow();
+      const mockEvent = { preventDefault: vi.fn() };
 
-    expect(mockEvent.preventDefault).not.toHaveBeenCalled();
-    expect(mockWindow.hide).not.toHaveBeenCalled();
+      windowCloseHandler(mockEvent as any);
+
+      expect(mockEvent.preventDefault).not.toHaveBeenCalled();
+      expect(mockWindow.hide).not.toHaveBeenCalled();
+    });
+
+    it('should allow window close when app is quitting', () => {
+      vi.stubGlobal('process', { ...process, platform: 'win32', resourcesPath: '/mock' });
+      mockAppState.isQuitting = true;
+      new AppWindow();
+      const mockEvent = { preventDefault: vi.fn() };
+
+      windowCloseHandler(mockEvent as any);
+
+      expect(mockEvent.preventDefault).not.toHaveBeenCalled();
+      expect(mockWindow.hide).not.toHaveBeenCalled();
+    });
   });
 
   describe('macOS dock behavior', () => {
