@@ -4,6 +4,7 @@ import { app, session, shell } from 'electron';
 import { LevelOption } from 'electron-log';
 import log from 'electron-log/main';
 
+import { useComfySettings } from './config/comfySettings';
 import { LogFile } from './constants';
 import { DesktopApp } from './desktopApp';
 import { removeAnsiCodesTransform, replaceFileLoggingTransform } from './infrastructure/structuredLogging';
@@ -23,7 +24,7 @@ initializeAppState();
 const overrides = new DevOverrides();
 
 // Register the quit handlers regardless of single instance lock and before squirrel startup events.
-quitWhenAllWindowsAreClosed();
+maybeQuitWhenAllWindowsAreClosed();
 trackAppQuitEvents();
 initializeSentry();
 
@@ -89,10 +90,24 @@ function initalizeLogging() {
   log.info(`Starting app v${app.getVersion()}`);
 }
 
-/** Quit when all windows are closed.*/
-function quitWhenAllWindowsAreClosed() {
+/** Quit when all windows are closed, unless run in background setting is enabled.*/
+function maybeQuitWhenAllWindowsAreClosed() {
   app.on('window-all-closed', () => {
-    log.info('Quitting ComfyUI because window all closed');
+    try {
+      // Check if run in background setting is enabled
+      const settings = useComfySettings();
+      const runInBackground = settings.get('Comfy-Desktop.RunInBackgroundOnClose');
+
+      if (runInBackground) {
+        log.info('All windows closed but keeping app running in background');
+        return; // Don't quit, keep running in background
+      }
+    } catch (error) {
+      // Settings not loaded yet or other error - fall back to default behavior (quit)
+      log.warn('Could not check RunInBackgroundOnClose setting, defaulting to quit:', error);
+    }
+
+    log.info('Quitting ComfyUI because all windows closed');
     app.quit();
   });
 }
