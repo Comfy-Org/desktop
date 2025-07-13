@@ -99,7 +99,7 @@ function maybeQuitWhenAllWindowsAreClosed() {
       const runInBackground = settings.get('Comfy-Desktop.RunInBackgroundOnClose');
 
       if (runInBackground) {
-        log.info('All windows closed but keeping app running in background');
+        log.verbose('All windows closed but keeping app running in background');
         return; // Don't quit, keep running in background
       }
     } catch (error) {

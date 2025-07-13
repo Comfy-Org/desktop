@@ -31,7 +31,7 @@ import { useDesktopConfig } from '../store/desktopConfig';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
- * Conditionally hides to system tray when the window is closed (based on 'Comfy-Desktop.RunInBackgroundOnClose' setting).
+ * Closes the application or hides to system tray when the window is closed (based on 'Comfy-Desktop.RunInBackgroundOnClose' setting).
  */
 export class AppWindow {
   private readonly appState: IAppState = useAppState();
