@@ -1,7 +1,7 @@
 import { BrowserWindow, type Tray } from 'electron';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useComfySettings } from '@/config/comfySettings';
+import { ComfySettings, useComfySettings } from '@/config/comfySettings';
 import { AppWindow } from '@/main-process/appWindow';
 
 import { type PartialMock, electronMock } from '../setup';
@@ -139,7 +139,8 @@ describe('AppWindow tray behavior', () => {
   });
 
   describe('when RunInBackgroundOnClose is enabled', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+      await ComfySettings.load('/test/path');
       const settings = useComfySettings();
       settings.set('Comfy-Desktop.RunInBackgroundOnClose', true);
     });
@@ -169,7 +170,8 @@ describe('AppWindow tray behavior', () => {
   });
 
   describe('when RunInBackgroundOnClose is disabled (default)', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+      await ComfySettings.load('/test/path');
       const settings = useComfySettings();
       settings.set('Comfy-Desktop.RunInBackgroundOnClose', false);
     });

@@ -87,7 +87,7 @@ const mockFileSystem = ({ exists = true, writable = true, isDirectory = false, c
     isDirectory: () => isDirectory,
   } as unknown as fs.Stats);
   vi.mocked(fs.readdirSync).mockReturnValue(
-    Array.from({ length: contentLength }, () => ({ name: 'mock-file' }) as any)
+    Array.from({ length: contentLength }, () => ({ name: 'mock-file' }) as fs.Dirent)
   );
   if (writable) {
     vi.mocked(fs.accessSync).mockReturnValue();

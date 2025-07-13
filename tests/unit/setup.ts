@@ -1,8 +1,7 @@
 import type { FileTransport, MainLogger, MainTransports } from 'electron-log';
 import log from 'electron-log/main';
-import { beforeEach, vi } from 'vitest';
+import { vi } from 'vitest';
 
-import { ComfySettings } from '@/config/comfySettings';
 import type { IAppState } from '@/main-process/appState';
 import type { ITelemetry } from '@/services/telemetry';
 
@@ -46,18 +45,6 @@ export const electronMock: ElectronMock = {
     getVersion: vi.fn(() => '1.0.0'),
     on: vi.fn(),
     once: vi.fn(),
-    dock: {
-      show: vi.fn().mockResolvedValue(undefined),
-      hide: vi.fn(),
-      bounce: vi.fn(),
-      cancelBounce: vi.fn(),
-      downloadFinished: vi.fn(),
-      getBadge: vi.fn(),
-      setBadge: vi.fn(),
-      getMenu: vi.fn(),
-      setMenu: vi.fn(),
-      setIcon: vi.fn(),
-    } as any,
   },
   dialog: {
     showErrorBox: vi.fn(),
@@ -107,9 +94,4 @@ vi.mock('@/services/telemetry', async () => {
     getTelemetry: vi.fn(() => mockTelemetry),
     promptMetricsConsent: vi.fn().mockResolvedValue(true),
   };
-});
-
-// Initialize ComfySettings for tests
-beforeEach(async () => {
-  await ComfySettings.load('/test/path');
 });
