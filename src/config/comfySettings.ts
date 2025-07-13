@@ -5,7 +5,6 @@ import path from 'node:path';
 export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.AutoUpdate': true,
   'Comfy-Desktop.SendStatistics': true,
-  'Comfy-Desktop.RunInBackgroundOnClose': false,
   'Comfy.ColorPalette': 'dark',
   'Comfy.UseNewMenu': 'Top',
   'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
@@ -19,7 +18,6 @@ export const DEFAULT_SETTINGS: ComfySettingsData = {
 export interface ComfySettingsData {
   'Comfy-Desktop.AutoUpdate': boolean;
   'Comfy-Desktop.SendStatistics': boolean;
-  'Comfy-Desktop.RunInBackgroundOnClose': boolean;
   'Comfy.ColorPalette': 'dark' | 'light';
   'Comfy.UseNewMenu': 'Top' | 'Bottom';
   'Comfy.Workflow.WorkflowTabsPosition': 'Topbar' | 'Sidebar';
