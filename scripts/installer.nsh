@@ -78,5 +78,6 @@
 
     FileClose $0
     Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
+    Delete "$APPDATA\ComfyUI\config.json"
   ${endIf}
 !macroend
