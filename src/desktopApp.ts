@@ -18,6 +18,7 @@ import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import type { ComfyInstallation } from './main-process/comfyInstallation';
 import { DevOverrides } from './main-process/devOverrides';
+import type { ComfyProtocolAction } from './protocol/protocolParser';
 import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
@@ -29,6 +30,9 @@ export class DesktopApp implements HasTelemetry {
 
   comfyDesktopApp?: ComfyDesktopApp;
   installation?: ComfyInstallation;
+  
+  /** Queue of protocol actions to process when ComfyUI is ready */
+  private readonly protocolActionQueue: ComfyProtocolAction[] = [];
 
   constructor(
     private readonly overrides: DevOverrides,
@@ -114,6 +118,9 @@ export class DesktopApp implements HasTelemetry {
 
       // App start complete
       appState.emitLoaded();
+      
+      // Process any queued protocol actions now that ComfyUI is ready
+      this.processQueuedProtocolActions();
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
@@ -187,5 +194,96 @@ export class DesktopApp implements HasTelemetry {
     else app.quit();
     // Unreachable - library type is void instead of never.
     throw _error;
+  }
+
+  /**
+   * Queue a protocol action to be processed when ComfyUI is ready
+   * @param action The protocol action to queue
+   */
+  queueProtocolAction(action: ComfyProtocolAction): void {
+    log.info('Queueing protocol action:', action);
+    this.protocolActionQueue.push(action);
+  }
+
+  /**
+   * Handle a protocol action immediately (if ComfyUI is ready) or queue it
+   * @param action The protocol action to handle
+   */
+  handleProtocolAction(action: ComfyProtocolAction): void {
+    log.info('Handling protocol action:', action);
+    
+    // If ComfyUI is not ready yet, queue the action
+    if (!this.appState.loaded || !this.comfyDesktopApp?.serverRunning) {
+      this.queueProtocolAction(action);
+      return;
+    }
+
+    // Process the action immediately
+    this.processProtocolAction(action);
+  }
+
+  /**
+   * Process all queued protocol actions
+   */
+  private processQueuedProtocolActions(): void {
+    if (this.protocolActionQueue.length === 0) return;
+
+    log.info(`Processing ${this.protocolActionQueue.length} queued protocol actions`);
+    
+    while (this.protocolActionQueue.length > 0) {
+      const action = this.protocolActionQueue.shift();
+      if (action) {
+        this.processProtocolAction(action);
+      }
+    }
+  }
+
+  /**
+   * Process a single protocol action
+   * @param action The action to process
+   */
+  private processProtocolAction(action: ComfyProtocolAction): void {
+    log.info('Processing protocol action:', action);
+
+    try {
+      this.telemetry.track('desktop:protocol_action', {
+        action: action.action,
+        nodeId: action.params.nodeId,
+      });
+
+      // Send the action to the renderer for processing
+      this.appWindow.send(IPC_CHANNELS.PROTOCOL_ACTION, action);
+      
+      // Show a notification to the user
+      this.showProtocolActionNotification(action);
+    } catch (error) {
+      log.error('Error processing protocol action:', error);
+      dialog.showErrorBox(
+        'Protocol Action Error',
+        `Failed to process protocol action: ${action.action}\n\nError: ${error}`
+      );
+    }
+  }
+
+  /**
+   * Show a notification for the protocol action being processed
+   * @param action The action being processed
+   */
+  private showProtocolActionNotification(action: ComfyProtocolAction): void {
+    const messages = {
+      'install-custom-node': `Installing custom node: ${action.params.nodeId}`,
+      'import': `Importing: ${action.params.nodeId}`,
+    };
+
+    const message = messages[action.action] || `Processing action: ${action.action}`;
+    
+    // Focus the window to bring it to the front
+    if (this.appWindow.isMinimized()) {
+      this.appWindow.restore();
+    }
+    this.appWindow.focus();
+    
+    // Log the action for visibility
+    this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `[Protocol] ${message}\n`);
   }
 }
