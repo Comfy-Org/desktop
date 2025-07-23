@@ -20,6 +20,7 @@ import type { ComfyInstallation } from './main-process/comfyInstallation';
 import { DevOverrides } from './main-process/devOverrides';
 import type { ComfyProtocolAction } from './protocol/protocolParser';
 import SentryLogging from './services/sentry';
+import { ComfyManagerService } from './services/comfyManagerService';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
 
@@ -33,6 +34,9 @@ export class DesktopApp implements HasTelemetry {
   
   /** Queue of protocol actions to process when ComfyUI is ready */
   private readonly protocolActionQueue: ComfyProtocolAction[] = [];
+  
+  /** Service for interacting with ComfyUI Manager API */
+  private comfyManagerService?: ComfyManagerService;
 
   constructor(
     private readonly overrides: DevOverrides,
@@ -116,11 +120,15 @@ export class DesktopApp implements HasTelemetry {
       appWindow.sendServerStartProgress(ProgressStatus.READY);
       await appWindow.loadComfyUI(serverArgs);
 
+      // Initialize ComfyUI Manager service now that the server is running
+      const comfyServerUrl = `http://${serverArgs.listen}:${serverArgs.port}`;
+      this.comfyManagerService = new ComfyManagerService(comfyServerUrl);
+
       // App start complete
       appState.emitLoaded();
       
       // Process any queued protocol actions now that ComfyUI is ready
-      this.processQueuedProtocolActions();
+      await this.processQueuedProtocolActions();
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
@@ -213,19 +221,21 @@ export class DesktopApp implements HasTelemetry {
     log.info('Handling protocol action:', action);
     
     // If ComfyUI is not ready yet, queue the action
-    if (!this.appState.loaded || !this.comfyDesktopApp?.serverRunning) {
+    if (!this.appState.loaded || !this.comfyDesktopApp?.serverRunning || !this.comfyManagerService) {
       this.queueProtocolAction(action);
       return;
     }
 
-    // Process the action immediately
-    this.processProtocolAction(action);
+    // Process the action immediately (fire and forget)
+    this.processProtocolAction(action).catch((error) => {
+      log.error('Error in protocol action processing:', error);
+    });
   }
 
   /**
    * Process all queued protocol actions
    */
-  private processQueuedProtocolActions(): void {
+  private async processQueuedProtocolActions(): Promise<void> {
     if (this.protocolActionQueue.length === 0) return;
 
     log.info(`Processing ${this.protocolActionQueue.length} queued protocol actions`);
@@ -233,7 +243,7 @@ export class DesktopApp implements HasTelemetry {
     while (this.protocolActionQueue.length > 0) {
       const action = this.protocolActionQueue.shift();
       if (action) {
-        this.processProtocolAction(action);
+        await this.processProtocolAction(action);
       }
     }
   }
@@ -242,8 +252,14 @@ export class DesktopApp implements HasTelemetry {
    * Process a single protocol action
    * @param action The action to process
    */
-  private processProtocolAction(action: ComfyProtocolAction): void {
+  private async processProtocolAction(action: ComfyProtocolAction): Promise<void> {
     log.info('Processing protocol action:', action);
+
+    if (!this.comfyManagerService) {
+      log.error('ComfyUI Manager service not available');
+      this.showProtocolActionError(action, 'ComfyUI Manager service not available');
+      return;
+    }
 
     try {
       this.telemetry.track('desktop:protocol_action', {
@@ -251,31 +267,64 @@ export class DesktopApp implements HasTelemetry {
         nodeId: action.params.nodeId,
       });
 
-      // Send the action to the renderer for processing
-      this.appWindow.send(IPC_CHANNELS.PROTOCOL_ACTION, action);
+      // Show notification that processing has started
+      this.showProtocolActionNotification(action, 'Processing...');
       
-      // Show a notification to the user
-      this.showProtocolActionNotification(action);
+      // Process the action via ComfyUI Manager API
+      const result = await this.comfyManagerService.processProtocolAction(action);
+      
+      if (result.success) {
+        log.info('Protocol action completed successfully:', action);
+        this.showProtocolActionNotification(action, result.message || 'Completed successfully');
+      } else {
+        log.warn('Protocol action failed:', { action, message: result.message });
+        this.showProtocolActionError(action, result.message || 'Action failed');
+      }
     } catch (error) {
       log.error('Error processing protocol action:', error);
-      dialog.showErrorBox(
-        'Protocol Action Error',
-        `Failed to process protocol action: ${action.action}\n\nError: ${error}`
-      );
+      this.showProtocolActionError(action, error instanceof Error ? error.message : 'Unknown error');
     }
+  }
+
+  /**
+   * Show an error notification for a failed protocol action
+   * @param action The action that failed
+   * @param errorMessage The error message
+   */
+  private showProtocolActionError(action: ComfyProtocolAction, errorMessage: string): void {
+    const actionNames = {
+      'install-custom-node': 'Installing custom node',
+      'import': 'Importing resource',
+    };
+
+    const actionName = actionNames[action.action] || 'Processing action';
+    const message = `${actionName} failed: ${errorMessage}`;
+    
+    // Focus the window to bring it to the front
+    if (this.appWindow.isMinimized()) {
+      this.appWindow.restore();
+    }
+    this.appWindow.focus();
+    
+    // Show error in logs and as dialog
+    this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `[Protocol Error] ${message}\n`);
+    
+    dialog.showErrorBox('Protocol Action Error', message);
   }
 
   /**
    * Show a notification for the protocol action being processed
    * @param action The action being processed
+   * @param status Optional status message
    */
-  private showProtocolActionNotification(action: ComfyProtocolAction): void {
+  private showProtocolActionNotification(action: ComfyProtocolAction, status?: string): void {
     const messages = {
       'install-custom-node': `Installing custom node: ${action.params.nodeId}`,
       'import': `Importing: ${action.params.nodeId}`,
     };
 
     const message = messages[action.action] || `Processing action: ${action.action}`;
+    const fullMessage = status ? `${message} - ${status}` : message;
     
     // Focus the window to bring it to the front
     if (this.appWindow.isMinimized()) {
@@ -284,6 +333,6 @@ export class DesktopApp implements HasTelemetry {
     this.appWindow.focus();
     
     // Log the action for visibility
-    this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `[Protocol] ${message}\n`);
+    this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `[Protocol] ${fullMessage}\n`);
   }
 }
