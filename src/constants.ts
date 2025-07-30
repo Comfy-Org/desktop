@@ -52,6 +52,7 @@ export const IPC_CHANNELS = {
   CHECK_FOR_UPDATES: 'check-for-updates',
   RESTART_AND_INSTALL: 'restart-and-install',
   CHECK_BLACKWELL: 'check-blackwell',
+  PROTOCOL_ACTION: 'protocol-action',
 } as const;
 
 export enum ProgressStatus {
