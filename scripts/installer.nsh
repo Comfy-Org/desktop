@@ -1,5 +1,90 @@
 !include 'LogicLib.nsh'
 
+; Function to check if VC++ Runtime is installed
+!ifndef BUILD_UNINSTALLER
+Function checkVCRedist
+    ; Check primary registry location for x64 runtime
+    ClearErrors
+    SetRegView 64
+    ReadRegDWORD $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" "Installed"
+    SetRegView 32
+    
+    ; Return 1 if installed, 0 if not
+    ${If} ${Errors}
+        StrCpy $0 0
+    ${EndIf}
+FunctionEnd
+!endif
+
+; Custom initialization macro - runs early in the installation process
+!macro customInit
+    ; Save register state
+    Push $0
+    Push $1
+    Push $2
+    
+    ; Check if VC++ Runtime is already installed
+    Call checkVCRedist
+    
+    ${If} $0 != 1
+        ; Not installed - ask user if they want to install it
+        MessageBox MB_YESNO|MB_ICONINFORMATION \
+            "ComfyUI Desktop requires Microsoft Visual C++ 2015-2022 Redistributable (x64) to function properly.$\r$\n$\r$\n\
+            This component is not currently installed on your system.$\r$\n$\r$\n\
+            Would you like to install it now?$\r$\n$\r$\n\
+            Note: If you choose No, some features may not work correctly." \
+            /SD IDYES IDYES InstallVCRedist IDNO SkipVCRedist
+        
+        InstallVCRedist:
+            ; Extract bundled VC++ redistributable to temp directory
+            DetailPrint "Extracting Microsoft Visual C++ Redistributable..."
+            
+            ; Copy bundled redistributable from build resources to temp
+            File /oname=$TEMP\vc_redist.x64.exe "${BUILD_RESOURCES_DIR}\vc_redist.x64.exe"
+            
+            ; Install it
+            DetailPrint "Installing Microsoft Visual C++ Redistributable..."
+            
+            ; Execute installer silently
+            ExecWait '"$TEMP\vc_redist.x64.exe" /install /quiet /norestart' $2
+            
+            ; Check installation result
+            ${If} $2 != 0
+                ; Installation failed but not critical - warn user
+                MessageBox MB_OK|MB_ICONEXCLAMATION \
+                    "Visual C++ Redistributable installation returned error code: $2$\r$\n$\r$\n\
+                    ComfyUI Desktop installation will continue, but some features may not work correctly.$\r$\n$\r$\n\
+                    You may need to install Visual C++ Redistributable manually from Microsoft's website."
+            ${Else}
+                ; Verify installation succeeded by checking registry again
+                Call checkVCRedist
+                ${If} $0 == 1
+                    DetailPrint "Visual C++ Redistributable installed successfully."
+                ${Else}
+                    DetailPrint "Warning: Visual C++ Redistributable installation could not be verified."
+                ${EndIf}
+            ${EndIf}
+            
+            ; Clean up downloaded file
+            Delete "$TEMP\vc_redist.x64.exe"
+            Goto ContinueInstall
+        
+        SkipVCRedist:
+            ; User chose to skip - warn them
+            MessageBox MB_OK|MB_ICONEXCLAMATION \
+                "Visual C++ Redistributable will not be installed.$\r$\n$\r$\n\
+                Warning: ComfyUI Desktop may not function correctly without this component.$\r$\n$\r$\n\
+                You can download it manually from:$\r$\n\
+                https://aka.ms/vs/17/release/vc_redist.x64.exe"
+    ${EndIf}
+    
+    ContinueInstall:
+    ; Restore register state
+    Pop $2
+    Pop $1
+    Pop $0
+!macroend
+
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
 !macro customUnInstallCheckCommon
