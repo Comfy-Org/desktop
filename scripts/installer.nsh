@@ -14,6 +14,21 @@ Function checkVCRedist
         StrCpy $0 0
     ${EndIf}
 FunctionEnd
+
+; Function to verify VC++ installation and show appropriate message
+Function verifyVCRedistInstallation
+    Call checkVCRedist
+    ${If} $0 == 1
+        DetailPrint "Visual C++ Redistributable installed successfully."
+    ${Else}
+        ; Installation may have failed or was cancelled
+        MessageBox MB_OK|MB_ICONEXCLAMATION \
+            "Visual C++ Redistributable installation could not be verified.$\r$\n$\r$\n\
+            ComfyUI Desktop installation will continue, but some features may not work correctly.$\r$\n$\r$\n\
+            You may need to install Visual C++ Redistributable manually from Microsoft's website."
+        DetailPrint "Warning: Visual C++ Redistributable installation could not be verified."
+    ${EndIf}
+FunctionEnd
 !endif
 
 ; Custom initialization macro - runs early in the installation process
@@ -63,13 +78,8 @@ FunctionEnd
                     ComfyUI Desktop installation will continue, but some features may not work correctly.$\r$\n$\r$\n\
                     You may need to install Visual C++ Redistributable manually from Microsoft's website."
             ${Else}
-                ; Verify installation succeeded by checking registry again
-                Call checkVCRedist
-                ${If} $0 == 1
-                    DetailPrint "Visual C++ Redistributable installed successfully."
-                ${Else}
-                    DetailPrint "Warning: Visual C++ Redistributable installation could not be verified."
-                ${EndIf}
+                ; Verify installation succeeded
+                Call verifyVCRedistInstallation
             ${EndIf}
 
             ; Clean up downloaded file
