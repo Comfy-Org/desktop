@@ -8,7 +8,7 @@ Function checkVCRedist
     SetRegView 64
     ReadRegDWORD $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" "Installed"
     SetRegView 32
-    
+
     ; Return 1 if installed, 0 if not
     ${If} ${Errors}
         StrCpy $0 0
@@ -22,10 +22,10 @@ FunctionEnd
     Push $0
     Push $1
     Push $2
-    
+
     ; Check if VC++ Runtime is already installed
     Call checkVCRedist
-    
+
     ${If} $0 != 1
         ; Not installed - ask user if they want to install it
         MessageBox MB_YESNO|MB_ICONINFORMATION \
@@ -34,28 +34,27 @@ FunctionEnd
             Would you like to install it now?$\r$\n$\r$\n\
             Note: If you choose No, some features may not work correctly." \
             /SD IDYES IDYES InstallVCRedist IDNO SkipVCRedist
-        
+
         InstallVCRedist:
             ; Show progress message
             Banner::show /NOUNLOAD "Installing Visual C++ Redistributable..."
-            
+
             ; Extract bundled VC++ redistributable to temp directory
             DetailPrint "Extracting Microsoft Visual C++ Redistributable..."
-            
+
             ; Copy bundled redistributable from assets to temp
             File /oname=$TEMP\vc_redist.x64.exe "${BUILD_RESOURCES_DIR}\vcredist\vc_redist.x64.exe"
-            
+
             ; Install it
             DetailPrint "Installing Microsoft Visual C++ Redistributable..."
             DetailPrint "Please wait, this may take a minute..."
-            
+
             ; Use nsExec to run without console window and reduce flashing
             nsExec::ExecToLog '"$TEMP\vc_redist.x64.exe" /install /quiet /norestart'
             Pop $2
-            
+
             ; Hide progress message
             Banner::destroy
-            
             ; Check installation result
             ${If} $2 != 0
                 ; Installation failed but not critical - warn user
@@ -72,11 +71,11 @@ FunctionEnd
                     DetailPrint "Warning: Visual C++ Redistributable installation could not be verified."
                 ${EndIf}
             ${EndIf}
-            
+
             ; Clean up downloaded file
             Delete "$TEMP\vc_redist.x64.exe"
             Goto ContinueInstall
-        
+
         SkipVCRedist:
             ; User chose to skip - warn them
             MessageBox MB_OK|MB_ICONEXCLAMATION \
@@ -85,7 +84,7 @@ FunctionEnd
                 You can download it manually from:$\r$\n\
                 https://aka.ms/vs/17/release/vc_redist.x64.exe"
     ${EndIf}
-    
+
     ContinueInstall:
     ; Restore register state
     Pop $2
@@ -131,14 +130,14 @@ FunctionEnd
     StrCpy $prefix "base_path: " ; Space at the end is important to strip away correct number of letters
     StrLen $prefixLength $prefix
     StrCpy $prefixFirstLetter $prefix 1
-    
+
     StrCpy $R3 $R0
     StrCpy $R0 -1
     IntOp $R0 $R0 + 1
     StrCpy $R2 $R3 1 $R0
     StrCmp $R2 "" +2
     StrCmp $R2 $R1 +2 -3
-  
+
     StrCpy $R0 -1
 
     ${DoUntil} ${Errors}
