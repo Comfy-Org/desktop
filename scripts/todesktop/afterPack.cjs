@@ -14,6 +14,7 @@ async function downloadVCRedist(outDir) {
   const vcredistPath = path.join(vcredistDir, 'vc_redist.x64.exe');
 
   console.log('VC++ Redistributable paths:');
+  console.log('  - BUILD_RESOURCES_DIR env:', process.env.BUILD_RESOURCES_DIR);
   console.log('  - outDir:', outDir);
   console.log('  - mainPath:', mainPath);
   console.log('  - buildDir:', buildDir);
