@@ -6,7 +6,6 @@ const axios = require('axios');
 const fsSync = require('fs');
 
 async function downloadVCRedist(outDir) {
-  // BUILD_RESOURCES_DIR is the parent's build directory
   const vcredistDir = path.join(path.dirname(outDir), 'build', 'vcredist');
   const vcredistPath = path.join(vcredistDir, 'vc_redist.x64.exe');
 
