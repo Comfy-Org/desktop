@@ -39,8 +39,8 @@ FunctionEnd
             ; Extract bundled VC++ redistributable to temp directory
             DetailPrint "Extracting Microsoft Visual C++ Redistributable..."
             
-            ; Copy bundled redistributable from build resources to temp
-            File /oname=$TEMP\vc_redist.x64.exe "${BUILD_RESOURCES_DIR}\vc_redist.x64.exe"
+            ; Copy bundled redistributable from assets to temp
+            File /oname=$TEMP\vc_redist.x64.exe "${BUILD_RESOURCES_DIR}\vcredist\vc_redist.x64.exe"
             
             ; Install it
             DetailPrint "Installing Microsoft Visual C++ Redistributable..."

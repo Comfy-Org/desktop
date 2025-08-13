@@ -123,3 +123,6 @@ venv/
 
 # UV
 assets/uv
+
+# Visual C++ Redistributable
+assets/vcredist
