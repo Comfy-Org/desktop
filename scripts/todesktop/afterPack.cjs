@@ -6,19 +6,11 @@ const axios = require('axios');
 const fsSync = require('fs');
 
 async function downloadVCRedist(outDir) {
-  // outDir is something like C:\Users\VSSADM~1\AppData\Local\Temp\todesktop\241012ess7yxs0e\dist
   // BUILD_RESOURCES_DIR is the parent's build directory
   const mainPath = path.dirname(outDir);
   const buildDir = path.join(mainPath, 'build');
   const vcredistDir = path.join(buildDir, 'vcredist');
   const vcredistPath = path.join(vcredistDir, 'vc_redist.x64.exe');
-
-  console.log('VC++ Redistributable paths:');
-  console.log('  - BUILD_RESOURCES_DIR env:', process.env.BUILD_RESOURCES_DIR);
-  console.log('  - outDir:', outDir);
-  console.log('  - mainPath:', mainPath);
-  console.log('  - buildDir:', buildDir);
-  console.log('  - vcredistPath:', vcredistPath);
 
   // Check if already downloaded
   if (fsSync.existsSync(vcredistPath)) {
@@ -37,7 +29,7 @@ async function downloadVCRedist(outDir) {
   });
 
   fsSync.writeFileSync(vcredistPath, response.data);
-  console.log('FINISHED DOWNLOADING VC++ REDISTRIBUTABLE to:', vcredistPath);
+  console.log('FINISHED DOWNLOADING VC++ REDISTRIBUTABLE');
 }
 
 module.exports = async ({ appOutDir, packager, outDir }) => {
