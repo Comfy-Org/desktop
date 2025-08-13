@@ -64,23 +64,27 @@ FunctionEnd
             DetailPrint "Installing Microsoft Visual C++ Redistributable..."
             DetailPrint "Please wait, this may take a minute..."
 
-            ; Use nsExec to run without console window and reduce flashing
-            nsExec::ExecToLog '"$TEMP\vc_redist.x64.exe" /install /quiet /norestart'
-            Pop $2
+            ; Use ExecShellWait with proper verb to handle UAC elevation
+            ; "runas" verb ensures UAC prompt appears properly
+            !define VCREDIST_PARAMS "/install /quiet /norestart"
+
+            ; Try to bring installer to front before launching VC++
+            BringToFront
+
+            ; Launch with runas to ensure UAC prompt is visible
+            ExecShell "runas" "$TEMP\vc_redist.x64.exe" "${VCREDIST_PARAMS}" SW_SHOWNORMAL
+
+            ; Wait a moment for the process to start
+            Sleep 1000
+
+            ; Keep our installer visible
+            BringToFront
 
             ; Hide progress message
             Banner::destroy
-            ; Check installation result
-            ${If} $2 != 0
-                ; Installation failed but not critical - warn user
-                MessageBox MB_OK|MB_ICONEXCLAMATION \
-                    "Visual C++ Redistributable installation returned error code: $2$\r$\n$\r$\n\
-                    ComfyUI Desktop installation will continue, but some features may not work correctly.$\r$\n$\r$\n\
-                    You may need to install Visual C++ Redistributable manually from Microsoft's website."
-            ${Else}
-                ; Verify installation succeeded
-                Call verifyVCRedistInstallation
-            ${EndIf}
+
+            ; Verify installation succeeded
+            Call verifyVCRedistInstallation
 
             ; Clean up downloaded file
             Delete "$TEMP\vc_redist.x64.exe"
