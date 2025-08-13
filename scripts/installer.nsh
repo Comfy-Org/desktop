@@ -68,8 +68,8 @@ FunctionEnd
             ; This combines the benefits of ExecShell (proper UAC) with waiting
             DetailPrint "Waiting for Visual C++ Redistributable installation to complete..."
             
-            ; ExecShellWait with "open" verb (let Windows detect elevation need from manifest)
-            ExecShellWait "open" "$TEMP\vc_redist.x64.exe" "/install /quiet /norestart" SW_SHOW
+            ; ExecShellWait with "runas" verb for explicit UAC elevation
+            ExecShellWait "runas" "$TEMP\vc_redist.x64.exe" "/install /quiet /norestart" SW_SHOWNORMAL
 
             ; Hide progress message
             Banner::destroy
