@@ -40,10 +40,10 @@ charset-normalizer==3.4.0
 click==8.1.7
     # via typer
     # from https://pypi.org/simple
-comfyui-embedded-docs==0.2.4
+comfyui-embedded-docs==0.2.6
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.1.51
+comfyui-workflow-templates==0.1.59
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 cryptography==43.0.3
