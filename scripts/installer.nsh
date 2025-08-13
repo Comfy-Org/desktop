@@ -64,21 +64,12 @@ FunctionEnd
             DetailPrint "Installing Microsoft Visual C++ Redistributable..."
             DetailPrint "Please wait, this may take a minute..."
 
-            ; Use ExecShellWait with proper verb to handle UAC elevation
-            ; "runas" verb ensures UAC prompt appears properly
-            !define VCREDIST_PARAMS "/install /quiet /norestart"
-
-            ; Try to bring installer to front before launching VC++
-            BringToFront
-
-            ; Launch with runas to ensure UAC prompt is visible
-            ExecShell "runas" "$TEMP\vc_redist.x64.exe" "${VCREDIST_PARAMS}" SW_SHOWNORMAL
-
-            ; Wait a moment for the process to start
-            Sleep 1000
-
-            ; Keep our installer visible
-            BringToFront
+            ; Use ExecShellWait to handle UAC properly AND wait for completion
+            ; This combines the benefits of ExecShell (proper UAC) with waiting
+            DetailPrint "Waiting for Visual C++ Redistributable installation to complete..."
+            
+            ; ExecShellWait with "open" verb (let Windows detect elevation need from manifest)
+            ExecShellWait "open" "$TEMP\vc_redist.x64.exe" "/install /quiet /norestart" SW_SHOW
 
             ; Hide progress message
             Banner::destroy
