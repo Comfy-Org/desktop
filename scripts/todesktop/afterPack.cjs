@@ -7,9 +7,7 @@ const fsSync = require('fs');
 
 async function downloadVCRedist(outDir) {
   // BUILD_RESOURCES_DIR is the parent's build directory
-  const mainPath = path.dirname(outDir);
-  const buildDir = path.join(mainPath, 'build');
-  const vcredistDir = path.join(buildDir, 'vcredist');
+  const vcredistDir = path.join(path.dirname(outDir), 'build', 'vcredist');
   const vcredistPath = path.join(vcredistDir, 'vc_redist.x64.exe');
 
   // Check if already downloaded
