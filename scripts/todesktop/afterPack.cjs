@@ -2,6 +2,32 @@ const os = require('os');
 const fs = require('fs/promises');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const axios = require('axios');
+const fsSync = require('fs');
+
+async function downloadVCRedist() {
+  const vcredistDir = path.join('build', 'vcredist');
+  const vcredistPath = path.join(vcredistDir, 'vc_redist.x64.exe');
+
+  // Check if already downloaded
+  if (fsSync.existsSync(vcredistPath)) {
+    console.log('< VC++ Redistributable already exists, skipping >');
+    return;
+  }
+
+  // Ensure directory exists
+  await fs.mkdir(vcredistDir, { recursive: true });
+
+  console.log('Downloading Visual C++ Redistributable...');
+  const response = await axios({
+    method: 'GET',
+    url: 'https://aka.ms/vs/17/release/vc_redist.x64.exe',
+    responseType: 'arraybuffer',
+  });
+
+  fsSync.writeFileSync(vcredistPath, response.data);
+  console.log('FINISHED DOWNLOADING VC++ REDISTRIBUTABLE');
+}
 
 module.exports = async ({ appOutDir, packager, outDir }) => {
   /**
@@ -43,6 +69,9 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
   }
 
   if (os.platform() === 'win32') {
+    // Download VC++ redistributable for Windows installer
+    await downloadVCRedist();
+
     const appName = packager.appInfo.productFilename;
     const appPath = path.join(`${appOutDir}`, `${appName}.exe`);
     const mainPath = path.dirname(outDir);
