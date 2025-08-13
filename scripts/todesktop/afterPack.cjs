@@ -5,9 +5,19 @@ const { spawnSync } = require('child_process');
 const axios = require('axios');
 const fsSync = require('fs');
 
-async function downloadVCRedist() {
-  const vcredistDir = path.join('build', 'vcredist');
+async function downloadVCRedist(outDir) {
+  // outDir is something like C:\Users\VSSADM~1\AppData\Local\Temp\todesktop\241012ess7yxs0e\dist
+  // BUILD_RESOURCES_DIR is the parent's build directory
+  const mainPath = path.dirname(outDir);
+  const buildDir = path.join(mainPath, 'build');
+  const vcredistDir = path.join(buildDir, 'vcredist');
   const vcredistPath = path.join(vcredistDir, 'vc_redist.x64.exe');
+
+  console.log('VC++ Redistributable paths:');
+  console.log('  - outDir:', outDir);
+  console.log('  - mainPath:', mainPath);
+  console.log('  - buildDir:', buildDir);
+  console.log('  - vcredistPath:', vcredistPath);
 
   // Check if already downloaded
   if (fsSync.existsSync(vcredistPath)) {
@@ -26,7 +36,7 @@ async function downloadVCRedist() {
   });
 
   fsSync.writeFileSync(vcredistPath, response.data);
-  console.log('FINISHED DOWNLOADING VC++ REDISTRIBUTABLE');
+  console.log('FINISHED DOWNLOADING VC++ REDISTRIBUTABLE to:', vcredistPath);
 }
 
 module.exports = async ({ appOutDir, packager, outDir }) => {
@@ -70,7 +80,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
 
   if (os.platform() === 'win32') {
     // Download VC++ redistributable for Windows installer
-    await downloadVCRedist();
+    await downloadVCRedist(outDir);
 
     const appName = packager.appInfo.productFilename;
     const appPath = path.join(`${appOutDir}`, `${appName}.exe`);
