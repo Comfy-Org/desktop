@@ -36,6 +36,9 @@ FunctionEnd
             /SD IDYES IDYES InstallVCRedist IDNO SkipVCRedist
         
         InstallVCRedist:
+            ; Show progress message
+            Banner::show /NOUNLOAD "Installing Visual C++ Redistributable..."
+            
             ; Extract bundled VC++ redistributable to temp directory
             DetailPrint "Extracting Microsoft Visual C++ Redistributable..."
             
@@ -44,9 +47,14 @@ FunctionEnd
             
             ; Install it
             DetailPrint "Installing Microsoft Visual C++ Redistributable..."
+            DetailPrint "Please wait, this may take a minute..."
             
-            ; Execute installer silently
-            ExecWait '"$TEMP\vc_redist.x64.exe" /install /quiet /norestart' $2
+            ; Use nsExec to run without console window and reduce flashing
+            nsExec::ExecToLog '"$TEMP\vc_redist.x64.exe" /install /quiet /norestart'
+            Pop $2
+            
+            ; Hide progress message
+            Banner::destroy
             
             ; Check installation result
             ${If} $2 != 0
