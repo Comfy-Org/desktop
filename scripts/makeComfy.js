@@ -21,16 +21,6 @@ execAndLog(
 );
 execAndLog(`yarn run make:frontend`);
 execAndLog(`yarn run download:uv all`);
-
-// Only download VC++ redistributable for production builds (ToDesktop or signed Windows builds)
-// Check for PUBLISH=true which is set by ToDesktop builds and Windows signing builds
-if (process.env.PUBLISH === 'true') {
-  console.log('Production build detected (PUBLISH=true) - downloading VC++ redistributable for Windows installer');
-  execAndLog(`yarn run download:vcredist`);
-} else {
-  console.log('Skipping VC++ redistributable download (PUBLISH != true)');
-}
-
 execAndLog(`yarn run patch:core:frontend`);
 /**
  * Run a command and log the output.
