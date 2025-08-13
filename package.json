@@ -28,7 +28,6 @@
     "clean:assets:git": "rimraf assets/ComfyUI/.git assets/ComfyUI/custom_nodes/ComfyUI-Manager/.git",
     "clean:slate": "yarn run clean & yarn run clean:assets & rimraf node_modules",
     "download:uv": "node scripts/downloadUV.js",
-    "download:vcredist": "node scripts/downloadVCRedist.js",
     "download-frontend": "node scripts/downloadFrontend.js",
     "make:frontend": "yarn run download-frontend",
     "format": "prettier --check .",
