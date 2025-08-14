@@ -44,6 +44,31 @@ Function checkGit
         StrCpy $0 0
     ${EndIf}
 FunctionEnd
+
+; Function to download Git installer
+Function downloadGitInstaller
+    DetailPrint "Downloading Git for Windows installer..."
+    
+    ; Use inetc plugin to download
+    ; Git version 2.50.1
+    inetc::get \
+        "https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe" \
+        "$TEMP\Git-installer.exe" \
+        /END
+    
+    Pop $R0
+    ${If} $R0 != "OK"
+        MessageBox MB_OK|MB_ICONEXCLAMATION \
+            "Failed to download Git installer.$\r$\n$\r$\n\
+            Error: $R0$\r$\n$\r$\n\
+            You can download Git manually from: https://git-scm.com"
+        DetailPrint "Failed to download Git installer: $R0"
+        StrCpy $0 0  ; Set failure flag
+    ${Else}
+        DetailPrint "Git installer downloaded successfully."
+        StrCpy $0 1  ; Set success flag
+    ${EndIf}
+FunctionEnd
 !endif
 
 ; Custom initialization macro - runs early in the installation process
