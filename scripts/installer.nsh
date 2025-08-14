@@ -131,6 +131,68 @@ FunctionEnd
     ${EndIf}
 
     ContinueInstall:
+    
+    ; Check if Git is available in PATH
+    Call checkGit
+    
+    ${If} $0 != 1
+        ; Git not found - ask user if they want to install it
+        MessageBox MB_YESNO|MB_ICONINFORMATION \
+            "ComfyUI Desktop requires Git to install custom nodes through ComfyUI Manager.$\r$\n$\r$\n\
+            Git is not currently available in your system PATH.$\r$\n$\r$\n\
+            Would you like to install Git for Windows now?$\r$\n$\r$\n\
+            Note: Administrator privileges are not required." \
+            /SD IDYES IDYES InstallGit IDNO SkipGit
+    
+        InstallGit:
+            Banner::show /NOUNLOAD "Downloading Git for Windows..."
+            
+            ; Download Git installer from GitHub
+            Call downloadGitInstaller
+            
+            ${If} $0 != 1
+                ; Download failed
+                Banner::destroy
+                Goto FinishGitInstall
+            ${EndIf}
+            
+            Banner::destroy
+            Banner::show /NOUNLOAD "Installing Git for Windows..."
+            
+            ; Install Git
+            DetailPrint "Installing Git for Windows..."
+            DetailPrint "If prompted for administrator access, you can choose 'No' to install for current user only."
+            
+            ; Run installer - will automatically handle scope based on privileges
+            ExecWait '"$TEMP\Git-installer.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-' $R0
+            
+            Banner::destroy
+            
+            ; Verify installation
+            Call checkGit
+            ${If} $0 == 1
+                DetailPrint "Git installed successfully."
+            ${Else}
+                MessageBox MB_OK|MB_ICONEXCLAMATION \
+                    "Git installation could not be verified.$\r$\n$\r$\n\
+                    ComfyUI Desktop will continue, but custom node installation may not work.$\r$\n$\r$\n\
+                    You can install Git manually from: https://git-scm.com"
+                DetailPrint "Warning: Git installation could not be verified."
+            ${EndIf}
+            
+            ; Clean up installer
+            Delete "$TEMP\Git-installer.exe"
+            Goto FinishGitInstall
+        
+        SkipGit:
+            ; User chose to skip - warn them
+            MessageBox MB_OK|MB_ICONEXCLAMATION \
+                "Git will not be installed.$\r$\n$\r$\n\
+                Warning: Custom node installation through ComfyUI Manager will not work.$\r$\n$\r$\n\
+                You can install Git manually from: https://git-scm.com"
+    ${EndIf}
+    
+    FinishGitInstall:
     ; Restore register state
     Pop $2
     Pop $1
