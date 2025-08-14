@@ -29,6 +29,21 @@ Function verifyVCRedistInstallation
         DetailPrint "Warning: Visual C++ Redistributable installation could not be verified."
     ${EndIf}
 FunctionEnd
+
+; Function to check if Git is available in PATH
+Function checkGit
+    ; Simple PATH check - try to run git --version
+    nsExec::ExecToStack 'cmd /c "git --version"'
+    Pop $0  ; Exit code
+    Pop $1  ; Output
+    
+    ; Return 1 if git found (exit code 0), 0 if not found
+    ${If} $0 == 0
+        StrCpy $0 1
+    ${Else}
+        StrCpy $0 0
+    ${EndIf}
+FunctionEnd
 !endif
 
 ; Custom initialization macro - runs early in the installation process
