@@ -36,14 +36,7 @@
   },
   "windows": {
     "icon": "./assets/UI/Comfy_Icon_Windows.png",
-    "nsisInclude": "./scripts/installer.nsh",
-    "oneClick": false,
-    "allowToChangeInstallationDirectory": true,
-    "perMachine": true,
-    "allowElevation": true,
-    "runAfterFinish": true,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true
+    "nsisInclude": "./scripts/installer.nsh"
   },
   "updateUrlBase": "https://updater.comfy.org"
 }
