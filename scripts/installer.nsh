@@ -31,7 +31,11 @@ Function verifyVCRedistInstallation
 FunctionEnd
 !endif
 
+; Global variable to track if VC++ needs to be installed
+Var /GLOBAL needsVCRedist
+
 ; Custom initialization macro - runs early in the installation process
+; Now only checks if VC++ is installed, doesn't perform installation
 !macro customInit
     ; Save register state
     Push $0
@@ -41,60 +45,52 @@ FunctionEnd
     ; Check if VC++ Runtime is already installed
     Call checkVCRedist
 
+    ; Store result for later use in customInstall
     ${If} $0 != 1
-        ; Not installed - ask user if they want to install it
-        MessageBox MB_YESNO|MB_ICONINFORMATION \
-            "ComfyUI Desktop requires Microsoft Visual C++ 2015-2022 Redistributable (x64) to function properly.$\r$\n$\r$\n\
-            This component is not currently installed on your system.$\r$\n$\r$\n\
-            Would you like to install it now?$\r$\n$\r$\n\
-            Note: If you choose No, some features may not work correctly." \
-            /SD IDYES IDYES InstallVCRedist IDNO SkipVCRedist
-
-        InstallVCRedist:
-            ; Show progress message
-            Banner::show /NOUNLOAD "Installing Visual C++ Redistributable..."
-
-            ; Extract bundled VC++ redistributable to temp directory
-            DetailPrint "Extracting Microsoft Visual C++ Redistributable..."
-
-            ; Copy bundled redistributable from assets to temp
-            File /oname=$TEMP\vc_redist.x64.exe "${BUILD_RESOURCES_DIR}\vcredist\vc_redist.x64.exe"
-
-            ; Install it
-            DetailPrint "Installing Microsoft Visual C++ Redistributable..."
-            DetailPrint "Please wait, this may take a minute..."
-
-            ; Use ExecShellWait to handle UAC properly AND wait for completion
-            ; This combines the benefits of ExecShell (proper UAC) with waiting
-            DetailPrint "Waiting for Visual C++ Redistributable installation to complete..."
-            
-            ; ExecShellWait with "runas" verb for explicit UAC elevation
-            ExecShellWait "runas" "$TEMP\vc_redist.x64.exe" "/install /quiet /norestart" SW_SHOWNORMAL
-
-            ; Hide progress message
-            Banner::destroy
-
-            ; Verify installation succeeded
-            Call verifyVCRedistInstallation
-
-            ; Clean up downloaded file
-            Delete "$TEMP\vc_redist.x64.exe"
-            Goto ContinueInstall
-
-        SkipVCRedist:
-            ; User chose to skip - warn them
-            MessageBox MB_OK|MB_ICONEXCLAMATION \
-                "Visual C++ Redistributable will not be installed.$\r$\n$\r$\n\
-                Warning: ComfyUI Desktop may not function correctly without this component.$\r$\n$\r$\n\
-                You can download it manually from:$\r$\n\
-                https://aka.ms/vs/17/release/vc_redist.x64.exe"
+        StrCpy $needsVCRedist "1"
+    ${Else}
+        StrCpy $needsVCRedist "0"
     ${EndIf}
 
-    ContinueInstall:
     ; Restore register state
     Pop $2
     Pop $1
     Pop $0
+!macroend
+
+; Custom install macro - runs during the main installation phase
+; Installs VC++ Redistributable if needed
+!macro customInstall
+    ${If} $needsVCRedist == "1"
+        ; Install VC++ during main installation process
+        DetailPrint "Installing Microsoft Visual C++ 2015-2022 Redistributable (x64)..."
+        
+        ; Extract bundled VC++ redistributable to temp directory
+        File /oname=$TEMP\vc_redist.x64.exe "${BUILD_RESOURCES_DIR}\vcredist\vc_redist.x64.exe"
+        
+        ; Install silently
+        DetailPrint "Please wait, installing prerequisites..."
+        ExecWait '"$TEMP\vc_redist.x64.exe" /install /quiet /norestart' $0
+        
+        ; Check installation result
+        ${If} $0 == 0
+            DetailPrint "Visual C++ Redistributable installed successfully."
+        ${Else}
+            DetailPrint "Warning: Visual C++ Redistributable installation returned code $0"
+            ; Don't show a popup - just log the warning
+            ; The app might still work, and we don't want to interrupt the installation
+        ${EndIf}
+        
+        ; Clean up
+        Delete "$TEMP\vc_redist.x64.exe"
+        
+        ; Verify installation succeeded
+        Call checkVCRedist
+        ${If} $0 != 1
+            DetailPrint "Note: Visual C++ Redistributable may need to be installed manually from:"
+            DetailPrint "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+        ${EndIf}
+    ${EndIf}
 !macroend
 
 ; The following is used to add the "/SD" flag to MessageBox so that the
