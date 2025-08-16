@@ -15,21 +15,6 @@ Function checkVCRedist
     ${EndIf}
 FunctionEnd
 
-; Function to verify VC++ installation and show appropriate message
-Function verifyVCRedistInstallation
-    Call checkVCRedist
-    ${If} $0 == 1
-        DetailPrint "Visual C++ Redistributable installed successfully."
-    ${Else}
-        ; Installation may have failed or was cancelled
-        MessageBox MB_OK|MB_ICONEXCLAMATION \
-            "Visual C++ Redistributable installation could not be verified.$\r$\n$\r$\n\
-            ComfyUI Desktop installation will continue, but some features may not work correctly.$\r$\n$\r$\n\
-            You may need to install Visual C++ Redistributable manually from Microsoft's website."
-        DetailPrint "Warning: Visual C++ Redistributable installation could not be verified."
-    ${EndIf}
-FunctionEnd
-
 ; Global variable to track if VC++ needs to be installed
 Var /GLOBAL needsVCRedist
 !endif
