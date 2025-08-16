@@ -23,7 +23,7 @@ Please update the version of ComfyUI to the latest:
 9. Switch to main branch and git pull
 10. Bump the version using `npm version` with the `--no-git-tag-version` arg
 11. Create a version bump PR with the title `vVERSION` e.g. `v0.4.10`. It must have the `Release` label, and no content in the PR description.
-12. Squash-merge the PR - do not wait for tests, as bumping package version will not cause test breakage.
+12. Squash-merge the PR using `gh pr merge --squash --admin` to bypass branch protection rules - do not wait for tests, as bumping package version will not cause test breakage.
 13. Publish a GitHub Release:
     - Set to pre-release (not latest)
     - The tag should be `vVERSION` e.g. `v0.4.10`
