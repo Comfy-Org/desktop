@@ -29,10 +29,10 @@ Function verifyVCRedistInstallation
         DetailPrint "Warning: Visual C++ Redistributable installation could not be verified."
     ${EndIf}
 FunctionEnd
-!endif
 
 ; Global variable to track if VC++ needs to be installed
 Var /GLOBAL needsVCRedist
+!endif
 
 ; Custom initialization macro - runs early in the installation process
 ; Now only checks if VC++ is installed, doesn't perform installation
