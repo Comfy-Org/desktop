@@ -19,6 +19,17 @@ FunctionEnd
 Var /GLOBAL needsVCRedist
 !endif
 
+!macro customInstallMode
+  # Disable one-click installation
+  !ifdef ONE_CLICK
+    !undef ONE_CLICK
+  !endif
+
+  # Allow user to choose install location and scope
+  !define MUI_DIRECTORYPAGE_VARIABLE $INSTDIR
+  !define MUI_DIRECTORYPAGE_TEXT_TOP "Choose the folder in which to install $(^NameDA)."
+!macroend
+
 ; Custom initialization macro - runs early in the installation process
 ; Now only checks if VC++ is installed, doesn't perform installation
 !macro customInit
