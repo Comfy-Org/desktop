@@ -1,4 +1,6 @@
 !include 'LogicLib.nsh'
+!include 'nsDialogs.nsh'
+!include 'MUI2.nsh'
 
 ; Function to check if VC++ Runtime is installed
 !ifndef BUILD_UNINSTALLER
@@ -19,13 +21,76 @@ FunctionEnd
 Var /GLOBAL needsVCRedist
 !endif
 
+; This macro is called AFTER the template (oneClick.nsh) is loaded but BEFORE compilation
+; We use it to transform the oneClick installer into a full assisted installer
+!macro customHeader
+  ; Only modify if ONE_CLICK env var is set
+  !ifdef ONE_CLICK
+    ; Define the flag that enables directory selection
+    !define allowToChangeInstallationDirectory
+
+    ; Include helper for directory sanitization
+    !include StrContains.nsh
+
+    ; Add Welcome page
+    !insertmacro MUI_PAGE_WELCOME
+
+    ; Add Directory Selection page
+    !insertmacro MUI_PAGE_DIRECTORY
+
+    ; The MUI_PAGE_INSTFILES from oneClick.nsh will be here in the page order
+
+    ; Add Finish page with Run option
+    !ifndef HIDE_RUN_AFTER_FINISH
+      !define MUI_FINISHPAGE_RUN
+      !define MUI_FINISHPAGE_RUN_FUNCTION "StartApp"
+    !endif
+    !insertmacro MUI_PAGE_FINISH
+  !endif
+!macroend
+
+; Function to sanitize the installation directory
+; Ensures it includes the application name as a subfolder
+!ifdef ONE_CLICK
+Function instFilesPre
+    ${StrContains} $0 "${APP_FILENAME}" $INSTDIR
+    ${If} $0 == ""
+        StrCpy $INSTDIR "$INSTDIR\${APP_FILENAME}"
+    ${EndIf}
+FunctionEnd
+
+; Function to start the application after installation
+!ifndef BUILD_UNINSTALLER
+Function StartApp
+    ${if} ${isUpdated}
+        StrCpy $1 "--updated"
+    ${else}
+        StrCpy $1 ""
+    ${endif}
+
+    ; Use the launch link if available, otherwise use the exe directly
+    ${If} ${FileExists} "$newStartMenuLink"
+        StrCpy $launchLink "$newStartMenuLink"
+    ${Else}
+        StrCpy $launchLink "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+    ${EndIf}
+    ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+FunctionEnd
+!endif
+!endif
+
 ; Custom initialization macro - runs early in the installation process
-; Now only checks if VC++ is installed, doesn't perform installation
 !macro customInit
     ; Save register state
     Push $0
     Push $1
     Push $2
+
+    ; Set default installation directory if not already set
+    ${If} $INSTDIR == ""
+        ; Try to use Program Files for default location
+        StrCpy $INSTDIR "$PROGRAMFILES64\${PRODUCT_NAME}"
+    ${EndIf}
 
     ; Check if VC++ Runtime is already installed
     Call checkVCRedist
@@ -49,14 +114,14 @@ Var /GLOBAL needsVCRedist
     ${If} $needsVCRedist == "1"
         ; Install VC++ during main installation process
         DetailPrint "Installing Microsoft Visual C++ 2015-2022 Redistributable (x64)..."
-        
+
         ; Extract bundled VC++ redistributable to temp directory
         File /oname=$TEMP\vc_redist.x64.exe "${BUILD_RESOURCES_DIR}\vcredist\vc_redist.x64.exe"
-        
+
         ; Install silently
         DetailPrint "Please wait, installing prerequisites..."
         ExecWait '"$TEMP\vc_redist.x64.exe" /install /quiet /norestart' $0
-        
+
         ; Check installation result
         ${If} $0 == 0
             DetailPrint "Visual C++ Redistributable installed successfully."
@@ -65,10 +130,10 @@ Var /GLOBAL needsVCRedist
             ; Don't show a popup - just log the warning
             ; The app might still work, and we don't want to interrupt the installation
         ${EndIf}
-        
+
         ; Clean up
         Delete "$TEMP\vc_redist.x64.exe"
-        
+
         ; Verify installation succeeded
         Call checkVCRedist
         ${If} $0 != 1
