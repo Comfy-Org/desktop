@@ -29,9 +29,6 @@ Var /GLOBAL needsVCRedist
     ; Define the flag that enables directory selection
     !define allowToChangeInstallationDirectory
 
-    ; Include helper for directory sanitization
-    !include StrContains.nsh
-
     ; Add Welcome page
     !insertmacro MUI_PAGE_WELCOME
 
@@ -48,16 +45,6 @@ Var /GLOBAL needsVCRedist
     !insertmacro MUI_PAGE_FINISH
   !endif
 !macroend
-
-; Function to sanitize the installation directory
-; Ensures it includes the application name as a subfolder
-!ifdef ONE_CLICK
-Function instFilesPre
-    ${StrContains} $0 "${APP_FILENAME}" $INSTDIR
-    ${If} $0 == ""
-        StrCpy $INSTDIR "$INSTDIR\${APP_FILENAME}"
-    ${EndIf}
-FunctionEnd
 
 ; Function to start the application after installation
 !ifndef BUILD_UNINSTALLER
@@ -76,7 +63,6 @@ Function StartApp
     ${EndIf}
     ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
 FunctionEnd
-!endif
 !endif
 
 ; Custom initialization macro - runs early in the installation process
