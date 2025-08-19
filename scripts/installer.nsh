@@ -207,3 +207,48 @@ FunctionEnd
   ; Remove all files (or remaining shallow directories from the block above)
   RMDir /r $INSTDIR
 !macroend
+
+; Custom uninstaller page with checkbox options
+!macro customUninstallPage
+  Page custom un.RemovalOptionsPage un.RemovalOptionsPageLeave
+!macroend
+
+; Function to create the removal options page
+Function un.RemovalOptionsPage
+  ; Create the dialog
+  nsDialogs::Create 1018
+  Pop $0
+  
+  ${If} $0 == error
+    Abort
+  ${EndIf}
+  
+  ; Create title text
+  ${NSD_CreateLabel} 10u 5u 280u 12u "Choose which components to remove:"
+  Pop $0
+  
+  ; Create group box for removal options
+  ${NSD_CreateGroupBox} 10u 20u 280u 80u "Remove"
+  Pop $0
+  
+  ; Create checkbox for .venv removal (checked by default)
+  ${NSD_CreateCheckbox} 20u 35u 260u 12u "Virtual environment (.venv) - Recommended"
+  Pop $DeleteVenvCheckbox
+  ${NSD_Check} $DeleteVenvCheckbox  ; Set checked by default
+  
+  ; Additional info text
+  ${NSD_CreateLabel} 20u 50u 260u 20u "Removes Python virtual environment and deprecated uv-cache directory.$\nRecommended."
+  Pop $0
+  
+  ; Note at the bottom
+  ${NSD_CreateLabel} 10u 105u 280u 20u "Application files and settings will always be removed."
+  Pop $0
+  
+  nsDialogs::Show
+FunctionEnd
+
+; Function called when leaving the removal options page
+Function un.RemovalOptionsPageLeave
+  ; Save the checkbox state for use in customRemoveFiles
+  ${NSD_GetState} $DeleteVenvCheckbox $DeleteVenvState
+FunctionEnd
