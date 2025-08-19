@@ -121,6 +121,7 @@ FunctionEnd
 !macroend
 
 !macro customRemoveFiles
+  ; First perform custom ComfyUI cleanup
   ${ifNot} ${isUpdated}
     ClearErrors
     FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
@@ -177,4 +178,27 @@ FunctionEnd
     Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
     Delete "$APPDATA\ComfyUI\config.json"
   ${endIf}
+
+  ; Now perform the default electron-builder uninstall logic
+  ${if} ${isUpdated}
+    CreateDirectory "$PLUGINSDIR\old-install"
+
+    Push ""
+    Call un.atomicRMDir
+    Pop $R0
+
+    ${if} $R0 != 0
+      DetailPrint "File is busy, aborting: $R0"
+
+      ; Attempt to restore previous directory
+      Push ""
+      Call un.restoreFiles
+      Pop $R0
+
+      Abort `Can't rename "$INSTDIR" to "$PLUGINSDIR\old-install".`
+    ${endif}
+  ${endif}
+
+  ; Remove all files (or remaining shallow directories from the block above)
+  RMDir /r $INSTDIR
 !macroend
