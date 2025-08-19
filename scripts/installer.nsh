@@ -1,6 +1,10 @@
 !include 'LogicLib.nsh'
 !include 'nsDialogs.nsh'
 
+; Variables for uninstaller checkbox states
+Var DeleteVenvCheckbox
+Var DeleteVenvState
+
 ; Function to check if VC++ Runtime is installed
 !ifndef BUILD_UNINSTALLER
 Function checkVCRedist
