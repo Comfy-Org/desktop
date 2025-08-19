@@ -171,8 +171,11 @@ FunctionEnd
         StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
 
         ; $3 now contains value of base_path
-        RMDir /r /REBOOTOK "$3\.venv"
-        RMDir /r /REBOOTOK "$3\uv-cache"
+        ; Only delete .venv and cache if checkbox was checked
+        ${If} $DeleteVenvState == ${BST_CHECKED}
+          RMDir /r /REBOOTOK "$3\.venv"
+          RMDir /r /REBOOTOK "$3\uv-cache"
+        ${EndIf}
 
         ${ExitDo} ; No need to continue, break the cycle
       ${EndIf}
