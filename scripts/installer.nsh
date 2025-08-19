@@ -1,7 +1,9 @@
 !include 'LogicLib.nsh'
 
 ; Include uninstaller-specific code
+!ifdef BUILD_UNINSTALLER
 !include '${__FILEDIR__}\uninstaller.nsh'
+!endif
 
 ; Function to check if VC++ Runtime is installed
 !ifndef BUILD_UNINSTALLER

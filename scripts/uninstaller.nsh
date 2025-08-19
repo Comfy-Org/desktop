@@ -120,7 +120,6 @@ Var DeleteVenvState
 !macroend
 
 ; Function to create the removal options page
-!ifdef BUILD_UNINSTALLER
 Function un.RemovalOptionsPage
   ; Create the dialog
   nsDialogs::Create 1018
@@ -159,4 +158,3 @@ Function un.RemovalOptionsPageLeave
   ; Save the checkbox state for use in customRemoveFiles
   ${NSD_GetState} $DeleteVenvCheckbox $DeleteVenvState
 FunctionEnd
-!endif
