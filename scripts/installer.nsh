@@ -1,4 +1,5 @@
 !include 'LogicLib.nsh'
+!include 'nsDialogs.nsh'
 
 ; Function to check if VC++ Runtime is installed
 !ifndef BUILD_UNINSTALLER
