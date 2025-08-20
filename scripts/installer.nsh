@@ -2,7 +2,7 @@
 
 ; Include uninstaller-specific code
 !ifdef BUILD_UNINSTALLER
-!include '${__FILEDIR__}\uninstaller.nsh'
+  !include "${BUILD_RESOURCES_DIR}\..\scripts\uninstaller.nsh"
 !endif
 
 ; Function to check if VC++ Runtime is installed
