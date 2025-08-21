@@ -266,13 +266,18 @@ Function un.RemovalOptionsPage
   Pop $RemoveUserDataCheckbox
   ; Don't check by default - this is destructive
   
+  ; Disable checkbox if user data path not found
+  ${If} $UserDataPath == ""
+    EnableWindow $RemoveUserDataCheckbox 0  ; Disable the checkbox
+  ${EndIf}
+  
   ; Warning text for user data deletion
   ${If} $UserDataPath != ""
     ${NSD_CreateLabel} 35u 88u 245u 35u "WARNING: Permanently deletes:$\n$UserDataPath$\nThis cannot be undone!"
     Pop $0
     SetCtlColors $0 FF0000 transparent  ; Red text for warning
   ${Else}
-    ${NSD_CreateLabel} 35u 88u 245u 20u "User data location not detected"
+    ${NSD_CreateLabel} 35u 88u 245u 25u "User data location not detected.$\nNo user data can be removed."
     Pop $0
     SetCtlColors $0 666666 transparent  ; Gray text
   ${EndIf}
@@ -291,14 +296,10 @@ FunctionEnd
 Function un.OnRemoveUserDataClick
   ${NSD_GetState} $RemoveUserDataCheckbox $0
   ${If} $0 == ${BST_CHECKED}
-    ; Show warning dialog
-    ${If} $UserDataPath != ""
-      MessageBox MB_YESNO|MB_ICONEXCLAMATION "WARNING: This will permanently delete ALL data in:$\n$\n$UserDataPath$\n$\nThis includes all your models, generated images, and workflows!$\n$\nThis action cannot be undone. Are you sure?" IDYES +2
-      ${NSD_Uncheck} $RemoveUserDataCheckbox
-    ${Else}
-      MessageBox MB_OK|MB_ICONINFORMATION "User data location not detected.$\n$\nNo user data will be removed."
-      ${NSD_Uncheck} $RemoveUserDataCheckbox
-    ${EndIf}
+  ${AndIf} $UserDataPath != ""
+    ; Show warning dialog only if path exists
+    MessageBox MB_YESNO|MB_ICONEXCLAMATION "WARNING: This will permanently delete ALL data in:$\n$\n$UserDataPath$\n$\nThis includes all your models, generated images, and workflows!$\n$\nThis action cannot be undone. Are you sure?" IDYES +2
+    ${NSD_Uncheck} $RemoveUserDataCheckbox
   ${EndIf}
 FunctionEnd
 
