@@ -222,6 +222,13 @@ Var DeleteVenvState
 
   ; Remove all files (or remaining shallow directories from the block above)
   RMDir /r $INSTDIR
+  
+  ; Remove the ComfyUI folder if empty (parent directory)
+  ${GetParent} $INSTDIR $R0
+  RMDir $R0  ; This will only remove if empty
+  
+  ; Remove updater folder
+  RMDir /r "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
 !macroend
 
 ; Function to create the removal options page
