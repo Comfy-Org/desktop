@@ -111,6 +111,8 @@ Var DeleteVenvCheckbox
 Var DeleteVenvState
 Var DeleteUpdaterCheckbox
 Var DeleteUpdaterState
+Var DeleteAppDataCheckbox
+Var DeleteAppDataState
 Var DeleteAllUserDataCheckbox
 Var DeleteAllUserDataState
 Var UserDataPath
@@ -183,9 +185,15 @@ FunctionEnd
       RMDir /r /REBOOTOK "$UserDataPath\uv-cache"
     ${EndIf}
     
-    ; Clean up config files
-    Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
-    Delete "$APPDATA\ComfyUI\config.json"
+    ; Handle AppData folder removal based on checkbox
+    ${If} $DeleteAppDataState == ${BST_CHECKED}
+      ; Remove entire AppData\ComfyUI folder
+      RMDir /r "$APPDATA\ComfyUI"
+    ${Else}
+      ; Just clean up config files but leave folder
+      Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
+      Delete "$APPDATA\ComfyUI\config.json"
+    ${EndIf}
   ${endIf}
 
   ; Now perform the default electron-builder uninstall logic
@@ -215,10 +223,14 @@ FunctionEnd
   ${GetParent} $INSTDIR $R0
   RMDir $R0  ; This will only remove if empty
   
-  ; Remove updater folder if checkbox was checked
+  ; Handle updater folder based on checkbox
   ${If} $DeleteUpdaterState == ${BST_CHECKED}
     RMDir /r "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
   ${EndIf}
+  
+  ; Always remove the main application folder in LOCALAPPDATA
+  ; This is the auto-updater's download cache location
+  RMDir /r "$LOCALAPPDATA\comfyui-electron-updater"
   
   ; Remove ALL user data if master checkbox was checked
   ${If} $DeleteAllUserDataState == ${BST_CHECKED}
@@ -247,7 +259,7 @@ Function un.RemovalOptionsPage
   Pop $0
   
   ; Create group box for removal options
-  ${NSD_CreateGroupBox} 10u 20u 280u 100u "Remove Components"
+  ${NSD_CreateGroupBox} 10u 20u 280u 120u "Remove Components"
   Pop $0
   
   ; Create checkbox for .venv removal (checked by default)
@@ -260,23 +272,28 @@ Function un.RemovalOptionsPage
   Pop $DeleteUpdaterCheckbox
   ${NSD_Check} $DeleteUpdaterCheckbox  ; Set checked by default
   
+  ; Create checkbox for AppData folder (unchecked by default)
+  ${NSD_CreateCheckbox} 20u 65u 260u 12u "Application settings (%APPDATA%\ComfyUI)"
+  Pop $DeleteAppDataCheckbox
+  ; Don't check by default - contains user settings
+  
   ; Master checkbox for all user data (unchecked by default)
-  ${NSD_CreateCheckbox} 20u 70u 260u 12u "Remove ALL user data (models, images, workflows)"
+  ${NSD_CreateCheckbox} 20u 85u 260u 12u "Remove ALL user data (models, images, workflows)"
   Pop $DeleteAllUserDataCheckbox
   ; Don't check by default - this is destructive
   
   ; Warning text for user data deletion
   ${If} $UserDataPath != ""
-    ${NSD_CreateLabel} 30u 85u 250u 30u "WARNING: This will delete EVERYTHING in:$\n$UserDataPath$\nIncluding all models, images, and workflows!"
+    ${NSD_CreateLabel} 30u 100u 250u 30u "WARNING: This will delete EVERYTHING in:$\n$UserDataPath$\nIncluding all models, images, and workflows!"
     Pop $0
     SetCtlColors $0 FF0000 transparent  ; Red text for warning
   ${Else}
-    ${NSD_CreateLabel} 30u 85u 250u 20u "User data location not detected"
+    ${NSD_CreateLabel} 30u 100u 250u 20u "User data location not detected"
     Pop $0
   ${EndIf}
   
   ; Note at the bottom
-  ${NSD_CreateLabel} 10u 125u 280u 20u "Application files will always be removed.$\nOptional components can be preserved for reinstallation."
+  ${NSD_CreateLabel} 10u 145u 280u 20u "Application files will always be removed.$\nOptional components can be preserved for reinstallation."
   Pop $0
   
   ; Set up checkbox event handlers
@@ -292,6 +309,7 @@ Function un.OnAllUserDataClick
     ; When master is checked, check all others
     ${NSD_Check} $DeleteVenvCheckbox
     ${NSD_Check} $DeleteUpdaterCheckbox
+    ${NSD_Check} $DeleteAppDataCheckbox
     
     ; Show warning
     ${If} $UserDataPath != ""
@@ -306,6 +324,7 @@ Function un.RemovalOptionsPageLeave
   ; Save all checkbox states for use in customRemoveFiles
   ${NSD_GetState} $DeleteVenvCheckbox $DeleteVenvState
   ${NSD_GetState} $DeleteUpdaterCheckbox $DeleteUpdaterState
+  ${NSD_GetState} $DeleteAppDataCheckbox $DeleteAppDataState
   ${NSD_GetState} $DeleteAllUserDataCheckbox $DeleteAllUserDataState
 FunctionEnd
 
