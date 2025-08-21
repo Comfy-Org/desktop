@@ -121,7 +121,7 @@ Function un.ExtractBasePath
   Push $1
   
   ; Use ConfigRead from TextFunc.nsh to read the value
-  ${ConfigRead} "$APPDATA\ComfyUI\extra_models_config.yaml" "base_path: " $0
+  ${ConfigRead} "$APPDATA\ComfyUI\extra_models_config.yaml" "  base_path: " $0
   
   ; ConfigRead returns the value or empty string if not found
   ${If} $0 != ""
