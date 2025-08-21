@@ -220,7 +220,7 @@ Var DeleteVenvState
 
 ; Custom uninstaller page with checkbox options
 !macro customUninstallPage
-  Page custom un.RemovalOptionsPage un.RemovalOptionsPageLeave
+  UninstPage custom un.RemovalOptionsPage un.RemovalOptionsPageLeave
 !macroend
 
 ; Function to create the removal options page
