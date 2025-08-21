@@ -109,6 +109,12 @@ FunctionEnd
 Var DeleteVenvCheckbox
 Var DeleteVenvState
 
+; Add custom page after welcome page, before uninstall starts
+!macro customUnWelcomePage
+  !insertmacro MUI_UNPAGE_WELCOME
+  UninstPage custom un.RemovalOptionsPage un.RemovalOptionsPageLeave
+!macroend
+
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
 !macro customUnInstallCheckCommon
@@ -216,11 +222,6 @@ Var DeleteVenvState
 
   ; Remove all files (or remaining shallow directories from the block above)
   RMDir /r $INSTDIR
-!macroend
-
-; Custom uninstaller page with checkbox options
-!macro customUninstallPage
-  UninstPage custom un.RemovalOptionsPage un.RemovalOptionsPageLeave
 !macroend
 
 ; Function to create the removal options page
