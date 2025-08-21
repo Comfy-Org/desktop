@@ -1,4 +1,5 @@
 !include 'LogicLib.nsh'
+!include 'TextFunc.nsh'
 
 ; Function to check if VC++ Runtime is installed
 !ifndef BUILD_UNINSTALLER
@@ -108,6 +109,36 @@ FunctionEnd
 ; Variables for uninstaller checkbox states
 Var DeleteVenvCheckbox
 Var DeleteVenvState
+Var DeleteUpdaterCheckbox
+Var DeleteUpdaterState
+Var DeleteAllUserDataCheckbox
+Var DeleteAllUserDataState
+Var UserDataPath
+
+; Function to extract base_path from ComfyUI config file
+; Returns the path in $0, or empty string if not found
+Function un.ExtractBasePath
+  Push $1
+  
+  ; Use ConfigRead from TextFunc.nsh to read the value
+  ${ConfigRead} "$APPDATA\ComfyUI\extra_models_config.yaml" "base_path: " $0
+  
+  ; ConfigRead returns the value or empty string if not found
+  ${If} $0 != ""
+    ; Remove quotes if present
+    StrCpy $1 $0 1  ; First char
+    ${If} $1 == '"'
+      StrCpy $1 $0 1 -1  ; Last char
+      ${If} $1 == '"'
+        StrLen $1 $0
+        IntOp $1 $1 - 2
+        StrCpy $0 $0 $1 1  ; Remove both quotes
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+  
+  Pop $1
+FunctionEnd
 
 ; Add custom page after welcome page, before uninstall starts
 !macro customUnWelcomePage
@@ -141,61 +172,18 @@ Var DeleteVenvState
 !macro customRemoveFiles
   ; First perform custom ComfyUI cleanup
   ${ifNot} ${isUpdated}
-    ClearErrors
-    FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
-    var /global line
-    var /global lineLength
-    var /global prefix
-    var /global prefixLength
-    var /global prefixFirstLetter
-
-    FileRead $0 $line
-
-    StrCpy $prefix "base_path: " ; Space at the end is important to strip away correct number of letters
-    StrLen $prefixLength $prefix
-    StrCpy $prefixFirstLetter $prefix 1
-
-    StrCpy $R3 $R0
-    StrCpy $R0 -1
-    IntOp $R0 $R0 + 1
-    StrCpy $R2 $R3 1 $R0
-    StrCmp $R2 "" +2
-    StrCmp $R2 $R1 +2 -3
-
-    StrCpy $R0 -1
-
-    ${DoUntil} ${Errors}
-      StrCpy $R3 0 ; Whitespace padding counter
-      StrLen $lineLength $line
-
-      ${Do} ; Find first letter of prefix
-          StrCpy $R4 $line 1 $R3
-
-          ${IfThen} $R4 == $prefixFirstLetter ${|} ${ExitDo} ${|}
-          ${IfThen} $R3 > $lineLength ${|} ${ExitDo} ${|}
-
-          IntOp $R3 $R3 + 1
-      ${Loop}
-
-      StrCpy $R2 $line $prefixLength $R3 ; Copy part from first letter to length of prefix
-
-      ${If} $R2 == $prefix
-        StrCpy $2 $line 1024 $R3 ; Strip off whitespace padding
-        StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
-
-        ; $3 now contains value of base_path
-        ; Only delete .venv and cache if checkbox was checked
-        ${If} $DeleteVenvState == ${BST_CHECKED}
-          RMDir /r /REBOOTOK "$3\.venv"
-          RMDir /r /REBOOTOK "$3\uv-cache"
-        ${EndIf}
-
-        ${ExitDo} ; No need to continue, break the cycle
-      ${EndIf}
-      FileRead $0 $line
-    ${LoopUntil} 1 = 0
-
-    FileClose $0
+    ; Extract the base path using our unified function
+    Call un.ExtractBasePath
+    StrCpy $UserDataPath $0
+    
+    ; Only delete .venv and cache if checkbox was checked and path exists
+    ${If} $UserDataPath != ""
+    ${AndIf} $DeleteVenvState == ${BST_CHECKED}
+      RMDir /r /REBOOTOK "$UserDataPath\.venv"
+      RMDir /r /REBOOTOK "$UserDataPath\uv-cache"
+    ${EndIf}
+    
+    ; Clean up config files
     Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
     Delete "$APPDATA\ComfyUI\config.json"
   ${endIf}
@@ -227,8 +215,17 @@ Var DeleteVenvState
   ${GetParent} $INSTDIR $R0
   RMDir $R0  ; This will only remove if empty
   
-  ; Remove updater folder
-  RMDir /r "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
+  ; Remove updater folder if checkbox was checked
+  ${If} $DeleteUpdaterState == ${BST_CHECKED}
+    RMDir /r "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
+  ${EndIf}
+  
+  ; Remove ALL user data if master checkbox was checked
+  ${If} $DeleteAllUserDataState == ${BST_CHECKED}
+    ${If} $UserDataPath != ""
+      RMDir /r /REBOOTOK "$UserDataPath"
+    ${EndIf}
+  ${EndIf}
 !macroend
 
 ; Function to create the removal options page
@@ -241,12 +238,16 @@ Function un.RemovalOptionsPage
     Abort
   ${EndIf}
   
+  ; Detect the user data path using our unified function
+  Call un.ExtractBasePath
+  StrCpy $UserDataPath $0
+  
   ; Create title text
   ${NSD_CreateLabel} 10u 5u 280u 12u "Choose which components to remove:"
   Pop $0
   
   ; Create group box for removal options
-  ${NSD_CreateGroupBox} 10u 20u 280u 80u "Remove"
+  ${NSD_CreateGroupBox} 10u 20u 280u 100u "Remove Components"
   Pop $0
   
   ; Create checkbox for .venv removal (checked by default)
@@ -254,21 +255,58 @@ Function un.RemovalOptionsPage
   Pop $DeleteVenvCheckbox
   ${NSD_Check} $DeleteVenvCheckbox  ; Set checked by default
   
-  ; Additional info text
-  ${NSD_CreateLabel} 20u 50u 260u 20u "Removes Python virtual environment and deprecated uv-cache directory.$\nRecommended."
-  Pop $0
+  ; Create checkbox for updater folder (checked by default)
+  ${NSD_CreateCheckbox} 20u 50u 260u 12u "Update cache - Recommended"
+  Pop $DeleteUpdaterCheckbox
+  ${NSD_Check} $DeleteUpdaterCheckbox  ; Set checked by default
+  
+  ; Master checkbox for all user data (unchecked by default)
+  ${NSD_CreateCheckbox} 20u 70u 260u 12u "Remove ALL user data (models, images, workflows)"
+  Pop $DeleteAllUserDataCheckbox
+  ; Don't check by default - this is destructive
+  
+  ; Warning text for user data deletion
+  ${If} $UserDataPath != ""
+    ${NSD_CreateLabel} 30u 85u 250u 30u "WARNING: This will delete EVERYTHING in:$\n$UserDataPath$\nIncluding all models, images, and workflows!"
+    Pop $0
+    SetCtlColors $0 FF0000 transparent  ; Red text for warning
+  ${Else}
+    ${NSD_CreateLabel} 30u 85u 250u 20u "User data location not detected"
+    Pop $0
+  ${EndIf}
   
   ; Note at the bottom
-  ${NSD_CreateLabel} 10u 105u 280u 20u "Application files and settings will always be removed."
+  ${NSD_CreateLabel} 10u 125u 280u 20u "Application files will always be removed.$\nOptional components can be preserved for reinstallation."
   Pop $0
+  
+  ; Set up checkbox event handlers
+  ${NSD_OnClick} $DeleteAllUserDataCheckbox un.OnAllUserDataClick
   
   nsDialogs::Show
 FunctionEnd
 
+; Handler for "Remove all user data" checkbox
+Function un.OnAllUserDataClick
+  ${NSD_GetState} $DeleteAllUserDataCheckbox $0
+  ${If} $0 == ${BST_CHECKED}
+    ; When master is checked, check all others
+    ${NSD_Check} $DeleteVenvCheckbox
+    ${NSD_Check} $DeleteUpdaterCheckbox
+    
+    ; Show warning
+    ${If} $UserDataPath != ""
+      MessageBox MB_YESNO|MB_ICONEXCLAMATION "WARNING: This will permanently delete ALL data in:$\n$\n$UserDataPath$\n$\nThis includes all your models, generated images, and workflows!$\n$\nAre you sure you want to continue?" IDYES +2
+      ${NSD_Uncheck} $DeleteAllUserDataCheckbox
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
 ; Function called when leaving the removal options page
 Function un.RemovalOptionsPageLeave
-  ; Save the checkbox state for use in customRemoveFiles
+  ; Save all checkbox states for use in customRemoveFiles
   ${NSD_GetState} $DeleteVenvCheckbox $DeleteVenvState
+  ${NSD_GetState} $DeleteUpdaterCheckbox $DeleteUpdaterState
+  ${NSD_GetState} $DeleteAllUserDataCheckbox $DeleteAllUserDataState
 FunctionEnd
 
 !endif ; BUILD_UNINSTALLER
