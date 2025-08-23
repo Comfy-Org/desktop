@@ -464,8 +464,17 @@ export class UvLogParser implements IUvLogParser {
         transfer.lastFrameTime = Date.now();
 
         // Ensure transfer has associated package
-        if (!transfer.associatedPackage && this.streamToPackage.has(streamId)) {
-          transfer.associatedPackage = this.streamToPackage.get(streamId);
+        if (!transfer.associatedPackage) {
+          if (this.streamToPackage.has(streamId)) {
+            transfer.associatedPackage = this.streamToPackage.get(streamId);
+          } else {
+            // Try to associate with any active download if only one exists
+            const activeDownloads = [...this.downloads.values()].filter((d) => d.status === 'downloading');
+            if (activeDownloads.length === 1) {
+              transfer.associatedPackage = activeDownloads[0].package;
+              this.streamToPackage.set(streamId, activeDownloads[0].package);
+            }
+          }
         }
 
         // Update progress for associated package
