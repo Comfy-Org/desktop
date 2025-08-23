@@ -298,7 +298,7 @@ export class UvLogParser implements IUvLogParser {
         version,
         totalBytes: size,
         url,
-        status: hasValidSize ? 'downloading' : 'pending', // Only downloading if size is known
+        status: 'pending', // Always pending until "Downloading" message
         startTime: Date.now(),
       };
 

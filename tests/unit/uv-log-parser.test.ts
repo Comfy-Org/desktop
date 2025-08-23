@@ -326,15 +326,16 @@ describe('UvLogParser', () => {
       // Record the download info immediately
       let downloads = parser.getActiveDownloads();
       let numpy = downloads.find((d) => d.package === 'numpy');
-      expect(numpy?.status).toBe('downloading');
+      expect(numpy?.status).toBe('pending');
       const startTime1 = numpy?.startTime;
 
       // Later, the user-friendly message appears
       parser.parseLine(`${downloadingTime} Downloading numpy (15.5MiB)`);
 
-      // Start time should not change
+      // Status should now be downloading, but start time should not change
       downloads = parser.getActiveDownloads();
       numpy = downloads.find((d) => d.package === 'numpy');
+      expect(numpy?.status).toBe('downloading');
       expect(numpy?.startTime).toBe(startTime1);
     });
 
