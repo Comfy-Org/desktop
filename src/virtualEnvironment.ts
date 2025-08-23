@@ -12,10 +12,12 @@ import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
+import { UvLogParser, type UvStatus } from './uvLogParser';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
   onStderr?: (data: string) => void;
+  onUvStatus?: (status: UvStatus) => void;
 };
 
 interface PipInstallConfig {
@@ -374,7 +376,35 @@ export class VirtualEnvironment implements HasTelemetry {
     const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
     const command = `${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`;
     log.info('Running uv command:', command);
-    return this.runPtyCommandAsync(command, callbacks?.onStdout);
+
+    // Check if this is a pip install command
+    const isPipInstall = args.length >= 2 && args[0] === 'pip' && args[1] === 'install';
+
+    // Create parser for pip install commands
+    let parser: UvLogParser | undefined;
+    if (isPipInstall && callbacks?.onUvStatus) {
+      parser = new UvLogParser();
+    }
+
+    // Create enhanced callback that parses output
+    const enhancedCallback = (data: string) => {
+      // Always call original stdout callback
+      callbacks?.onStdout?.(data);
+
+      // Parse with UvLogParser if available
+      if (parser && callbacks?.onUvStatus) {
+        // Split data into lines and parse each line
+        const lines = data.split(/\r?\n/);
+        for (const line of lines) {
+          if (line.trim()) {
+            const status = parser.parseLine(line);
+            callbacks.onUvStatus(status);
+          }
+        }
+      }
+    };
+
+    return this.runPtyCommandAsync(command, enhancedCallback);
   }
 
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
