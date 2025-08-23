@@ -6,7 +6,7 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { DownloadProgress, Phase, TransferRateSample, UvLogParser } from '../src/uvLogParser';
+import { DownloadProgress, Phase, TransferRateSample, UvLogParser } from '../../src/uvLogParser';
 
 describe('UvLogParser', () => {
   let parser: UvLogParser;
