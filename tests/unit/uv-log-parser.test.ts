@@ -72,12 +72,12 @@ describe('UvLogParser', () => {
         '   uv_installer::preparer::get_wheel name=aiohttp==3.12.15, size=Some(469787), url="https://files.pythonhosted.org/packages/3a/1d/aiohttp-3.12.15-cp312-cp312-macosx_11_0_arm64.whl"';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('downloading');
+      expect(status.phase).toBe('preparing_download');
       expect(status.currentPackage).toBe('aiohttp');
       expect(status.packageVersion).toBe('3.12.15');
       expect(status.packageSize).toBe(469_787);
       expect(status.downloadUrl).toContain('aiohttp-3.12.15');
-      expect(status.message).toBe('Downloading aiohttp==3.12.15 (459.2 KB)');
+      expect(status.message).toBe('Preparing to download aiohttp==3.12.15 (459.2 KB)');
     });
 
     it('should detect when package download starts', () => {
@@ -364,14 +364,14 @@ describe('UvLogParser', () => {
     });
 
     it('should prioritize get_wheel for phase detection over user messages', () => {
-      // get_wheel indicates download phase has begun
+      // get_wheel indicates preparing to download
       parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(1000), url="..."');
 
       const status1 = parser.getOverallState();
-      expect(status1.currentPhase).toBe('downloading');
+      expect(status1.currentPhase).toBe('preparing_download');
 
-      // Even without "Downloading" message, we're in download phase
-      parser.parseLine('2.100000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(3) }');
+      // "Downloading" message transitions to downloading phase
+      parser.parseLine('Downloading package (1.0KB)');
 
       const status2 = parser.getOverallState();
       expect(status2.currentPhase).toBe('downloading');
