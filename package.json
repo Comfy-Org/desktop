@@ -55,6 +55,8 @@
     "verify:build": "node scripts/verifyBuild.js",
     "vite:compile": "yarn run typescript && vite build && vite build --config vite.preload.config.ts",
     "vite:types": "yarn run typescript && vite build --config vite.types.config.ts && node scripts/prepareTypes.js",
+    "vite:types:local": "node scripts/watchTypes.js",
+    "vite:types:watch": "node scripts/watchTypes.js --watch",
     "release:types": "node scripts/releaseTypes.js",
     "update:frontend": "node scripts/updateFrontend.js"
   },
