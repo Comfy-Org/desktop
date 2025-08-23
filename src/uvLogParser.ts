@@ -140,6 +140,8 @@ export const UV_LOG_PATTERNS = {
   DOWNLOADING: /Downloading (\S+) \(([^)]+)\)/,
 
   // HTTP/2 transfer
+  H2_HEADERS_FRAME:
+    /([\d.]+)s.*h2::codec::framed_write send, frame=Headers { stream_id: StreamId\((\d+)\)(?:, flags: \([^)]+\))?\s*}/,
   H2_DATA_FRAME:
     /([\d.]+)s.*h2::codec::framed_read received, frame=Data { stream_id: StreamId\((\d+)\)(?:, flags: \(0x1: END_STREAM\))?\s*}/,
 
@@ -384,10 +386,10 @@ export class UvLogParser implements IUvLogParser {
     }
 
     // HTTP/2 frame tracking
-    if (trimmedLine.includes('h2::codec::framed_write send, frame=Headers')) {
-      const streamIdMatch = trimmedLine.match(/StreamId\((\d+)\)/);
-      if (streamIdMatch) {
-        const streamId = streamIdMatch[1];
+    if (UV_LOG_PATTERNS.H2_HEADERS_FRAME.test(trimmedLine)) {
+      const match = trimmedLine.match(UV_LOG_PATTERNS.H2_HEADERS_FRAME);
+      if (match) {
+        const streamId = match[2];
 
         // Try to associate with the next unassigned download
         const assignedPackages = new Set(this.streamToPackage.values());
