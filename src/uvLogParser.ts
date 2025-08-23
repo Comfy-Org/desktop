@@ -295,12 +295,12 @@ export class UvLogParser implements IUvLogParser {
         version,
         totalBytes: size,
         url,
-        status: 'pending', // Always start as pending until actually downloading
+        status: 'downloading', // get_wheel means download has started
         startTime: Date.now(),
       };
 
       this.downloads.set(packageName, downloadInfo);
-      this.setPhase('preparing_download');
+      this.setPhase('downloading');
 
       // Initialize progress tracking
       const progress: DownloadProgress = {
@@ -316,13 +316,12 @@ export class UvLogParser implements IUvLogParser {
       };
       this.downloadProgress.set(packageName, progress);
 
-      // Mark package as pending initially, will be updated to downloading later
-      // Keep as pending until we see the actual Downloading message
+      // get_wheel indicates the actual download has started
 
       const sizeFormatted = this.formatBytes(size);
       return {
-        phase: 'preparing_download',
-        message: `Preparing to download ${packageName}==${version} (${sizeFormatted})`,
+        phase: 'downloading',
+        message: `Downloading ${packageName}==${version} (${sizeFormatted})`,
         currentPackage: packageName,
         packageVersion: version,
         packageSize: size,
