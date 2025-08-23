@@ -42,7 +42,8 @@ export interface UvStatus {
   totalWheels?: number;
 
   // Download progress info
-  downloadProgress?: number; // 0-100 percentage
+  totalBytes?: number; // Total bytes to download for current package
+  downloadedBytes?: number; // Bytes downloaded so far
   transferRate?: number; // bytes per second
   etaSeconds?: number; // estimated time remaining
   isComplete?: boolean;
@@ -342,6 +343,8 @@ export class UvLogParser implements IUvLogParser {
         currentPackage: packageName,
         packageVersion: version,
         packageSize: size,
+        totalBytes: size, // Include total bytes for the package
+        downloadedBytes: 0, // Not started downloading yet
         downloadUrl: url,
         rawLine: line,
       };
@@ -414,6 +417,7 @@ export class UvLogParser implements IUvLogParser {
 
       // Get download progress if available
       const progress = this.downloadProgress.get(packageName);
+      const download = this.downloads.get(packageName);
 
       return {
         phase: 'downloading',
@@ -422,7 +426,8 @@ export class UvLogParser implements IUvLogParser {
         packageSizeFormatted: sizeFormatted,
         totalPackages: this.totalPackages,
         installedPackages: this.installedPackages,
-        downloadProgress: progress?.percentComplete,
+        totalBytes: download?.totalBytes || progress?.totalBytes,
+        downloadedBytes: progress?.bytesReceived || progress?.estimatedBytesReceived || 0,
         transferRate: progress?.averageTransferRate,
         etaSeconds: progress?.estimatedTimeRemaining,
         rawLine: line,
@@ -663,7 +668,8 @@ export class UvLogParser implements IUvLogParser {
           currentPackage: packageName,
           totalPackages: this.totalPackages,
           installedPackages: this.installedPackages,
-          downloadProgress: progress?.percentComplete,
+          totalBytes: progress?.totalBytes,
+          downloadedBytes: progress?.bytesReceived || progress?.totalBytes, // Complete = total bytes
           transferRate: progress?.averageTransferRate,
           etaSeconds: progress?.estimatedTimeRemaining,
           streamId,
@@ -682,7 +688,8 @@ export class UvLogParser implements IUvLogParser {
         currentPackage: packageName,
         totalPackages: this.totalPackages,
         installedPackages: this.installedPackages,
-        downloadProgress: progress?.percentComplete,
+        totalBytes: progress?.totalBytes,
+        downloadedBytes: progress?.bytesReceived || progress?.estimatedBytesReceived || 0,
         transferRate: progress?.averageTransferRate,
         etaSeconds: progress?.estimatedTimeRemaining,
         streamId,

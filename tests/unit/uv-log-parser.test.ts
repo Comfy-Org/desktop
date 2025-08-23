@@ -874,7 +874,7 @@ describe('UvLogParser', () => {
       expect(status.installedPackages).toBeDefined();
     });
 
-    it('should include download progress fields when downloading', () => {
+    it('should include download byte values when downloading', () => {
       const parser = new UvLogParser();
 
       // First, prepare a download
@@ -889,11 +889,13 @@ describe('UvLogParser', () => {
       expect(status.currentPackage).toBe('numpy');
       expect(status.totalPackages).toBeDefined();
       expect(status.installedPackages).toBeDefined();
-      // Progress fields should be defined (even if 0)
-      expect(status.downloadProgress).toBeDefined();
+      // Byte values should be defined
+      expect(status.totalBytes).toBe(16_277_507);
+      expect(status.downloadedBytes).toBeDefined();
+      expect(status.downloadedBytes).toBeGreaterThanOrEqual(0);
     });
 
-    it('should include progress in HTTP/2 data frames', () => {
+    it('should include byte values in HTTP/2 data frames', () => {
       const parser = new UvLogParser();
 
       // Setup a download
@@ -910,9 +912,10 @@ describe('UvLogParser', () => {
 
       expect(status.currentPackage).toBeDefined();
       expect(status.totalPackages).toBe(3);
-      expect(status.downloadProgress).toBeDefined();
-      expect(status.downloadProgress).toBeGreaterThanOrEqual(0);
-      expect(status.downloadProgress).toBeLessThanOrEqual(100);
+      expect(status.totalBytes).toBe(1_000_000);
+      expect(status.downloadedBytes).toBeDefined();
+      expect(status.downloadedBytes).toBeGreaterThan(0);
+      expect(status.downloadedBytes).toBeLessThanOrEqual(1_000_000);
     });
 
     it('should mark as complete in installed phase', () => {
@@ -945,7 +948,7 @@ describe('UvLogParser', () => {
       expect(progress?.percentComplete).toBeLessThanOrEqual(100);
     });
 
-    it('should handle END_STREAM with 100% completion', () => {
+    it('should handle END_STREAM with full bytes downloaded', () => {
       const parser = new UvLogParser();
 
       // Setup a download
@@ -960,7 +963,8 @@ describe('UvLogParser', () => {
       );
 
       expect(status.streamCompleted).toBe(true);
-      expect(status.downloadProgress).toBe(100);
+      expect(status.totalBytes).toBe(500_000);
+      expect(status.downloadedBytes).toBe(500_000); // Should equal total when complete
     });
 
     it('should provide transfer rate and ETA when available', () => {

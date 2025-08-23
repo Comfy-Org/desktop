@@ -211,24 +211,27 @@ describe('VirtualEnvironment UV Parser Integration', () => {
       expect(resolvedCall).toBeDefined();
       expect(resolvedCall![0].totalPackages).toBe(3);
 
-      // Downloading phase should have progress fields
+      // Downloading phase should have byte values
       const downloadingCall = calls.find((c) => c[0].phase === 'downloading');
       expect(downloadingCall).toBeDefined();
       expect(downloadingCall![0].currentPackage).toBe('numpy');
       expect(downloadingCall![0].totalPackages).toBe(3);
-      expect(downloadingCall![0].downloadProgress).toBeDefined();
+      expect(downloadingCall![0].totalBytes).toBe(16_277_507);
+      expect(downloadingCall![0].downloadedBytes).toBeDefined();
 
-      // HTTP/2 frames should update progress
+      // HTTP/2 frames should update byte progress
       const frameCall = calls.find((c) => c[0].streamId && !c[0].streamCompleted);
       if (frameCall) {
-        expect(frameCall[0].downloadProgress).toBeDefined();
+        expect(frameCall[0].totalBytes).toBeDefined();
+        expect(frameCall[0].downloadedBytes).toBeDefined();
         expect(frameCall[0].totalPackages).toBe(3);
       }
 
-      // END_STREAM should show 100% completion
+      // END_STREAM should show full bytes downloaded
       const endStreamCall = calls.find((c) => c[0].streamCompleted === true);
       expect(endStreamCall).toBeDefined();
-      expect(endStreamCall![0].downloadProgress).toBe(100);
+      expect(endStreamCall![0].totalBytes).toBeDefined();
+      expect(endStreamCall![0].downloadedBytes).toBeDefined();
 
       // Installed phase should be complete
       const installedCall = calls.find((c) => c[0].phase === 'installed');

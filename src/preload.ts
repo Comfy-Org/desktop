@@ -136,8 +136,10 @@ export interface UvInstallStatus {
   installedPackages?: number;
   /** Currently downloading package name */
   currentPackage?: string;
-  /** Download progress for current package (0-100) */
-  downloadProgress?: number;
+  /** Total bytes to download for current package */
+  totalBytes?: number;
+  /** Bytes downloaded so far for current package */
+  downloadedBytes?: number;
   /** Estimated time remaining in seconds */
   etaSeconds?: number;
   /** Transfer rate in bytes per second */
