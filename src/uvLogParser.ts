@@ -451,13 +451,27 @@ export class UvLogParser implements IUvLogParser {
         }
 
         // Create transfer if not exists
+        const associatedPackage = this.streamToPackage.get(streamId);
         const transfer: HttpTransferInfo = {
           streamId,
           frameCount: 1,
           lastFrameTime: Date.now(),
-          associatedPackage: this.streamToPackage.get(streamId),
+          associatedPackage,
         };
         this.transfers.set(streamId, transfer);
+
+        // Update progress immediately for new transfer
+        if (associatedPackage) {
+          const progress = this.downloadProgress.get(associatedPackage);
+          if (progress) {
+            const estimatedBytes = transfer.frameCount * this.maxFrameSize;
+            progress.estimatedBytesReceived = Math.min(estimatedBytes, progress.totalBytes);
+            progress.percentComplete =
+              progress.totalBytes > 0 ? (progress.estimatedBytesReceived / progress.totalBytes) * 100 : 0;
+            progress.currentTime = Date.now();
+            this.updateTransferRate(progress);
+          }
+        }
       } else {
         const transfer = this.transfers.get(streamId)!;
         transfer.frameCount++;
