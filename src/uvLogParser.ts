@@ -531,6 +531,34 @@ export class UvLogParser implements IUvLogParser {
 
             // Calculate transfer rate
             this.updateTransferRate(progress);
+          } else {
+            // DEBUG: Progress not found in map!
+            // This might happen if getDownloadProgress created a new one
+            const download = this.downloads.get(transfer.associatedPackage);
+            if (download && download.totalBytes > 0) {
+              // Re-fetch or ensure progress exists
+              let prog = this.downloadProgress.get(transfer.associatedPackage);
+              if (!prog) {
+                // Create it if missing
+                prog = {
+                  package: transfer.associatedPackage,
+                  totalBytes: download.totalBytes,
+                  bytesReceived: 0,
+                  estimatedBytesReceived: transfer.frameCount * this.maxFrameSize,
+                  percentComplete: 0,
+                  startTime: download.startTime || Date.now(),
+                  currentTime: Date.now(),
+                  transferRateSamples: [],
+                  averageTransferRate: 0,
+                };
+                this.downloadProgress.set(transfer.associatedPackage, prog);
+              }
+              // Update the progress
+              prog.estimatedBytesReceived = Math.min(transfer.frameCount * this.maxFrameSize, prog.totalBytes);
+              prog.percentComplete = (prog.estimatedBytesReceived / prog.totalBytes) * 100;
+              prog.currentTime = Date.now();
+              this.updateTransferRate(prog);
+            }
           }
         }
       }

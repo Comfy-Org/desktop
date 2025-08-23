@@ -513,19 +513,6 @@ describe('UvLogParser', () => {
       }
 
       const progress = parser.getDownloadProgress('package');
-
-      // Debug output to understand test failure
-      if (!progress || progress.transferRateSamples.length === 0) {
-        const downloads = parser.getActiveDownloads();
-        const transfers = parser.getActiveTransfers();
-        console.error('Test failure debug:', {
-          progressExists: !!progress,
-          samplesLength: progress?.transferRateSamples?.length,
-          downloads: downloads.map((d) => ({ pkg: d.package, status: d.status })),
-          transfers: Object.keys(transfers).map((k) => ({ streamId: k, package: transfers[k].associatedPackage })),
-        });
-      }
-
       expect(progress?.transferRateSamples.length).toBeGreaterThan(0);
       expect(progress?.averageTransferRate).toBeGreaterThan(0);
     });
