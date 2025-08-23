@@ -143,7 +143,7 @@ export const UV_LOG_PATTERNS = {
   H2_HEADERS_FRAME:
     /([\d.]+)s.*h2::codec::framed_write send, frame=Headers { stream_id: StreamId\((\d+)\)(?:, flags: \([^)]+\))?\s*}/,
   H2_DATA_FRAME:
-    /([\d.]+)s.*h2::codec::framed_read received, frame=Data { stream_id: StreamId\((\d+)\)(?:, flags: \(0x1: END_STREAM\))?\s*}/,
+    /([\d.]+)m?s.*h2::codec::framed_read received, frame=Data { stream_id: StreamId\((\d+)\)(?:, flags: \(0x1: END_STREAM\))?\s*}/,
 
   // Completion phases
   PREPARED_PACKAGES: /Prepared (\d+) packages? in (\d+)ms/,
