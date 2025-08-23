@@ -252,12 +252,16 @@ export class UvLogParser implements IUvLogParser {
 
     if (UV_LOG_PATTERNS.ADDING_DEPENDENCY.test(trimmedLine)) {
       const match = trimmedLine.match(UV_LOG_PATTERNS.ADDING_DEPENDENCY);
-      this.setPhase('resolving');
+      // Only set phase to resolving if we're not already past it
+      const phaseOrder = ['idle', 'started', 'reading_requirements', 'resolving', 'resolved'];
+      if (phaseOrder.includes(this.currentPhase)) {
+        this.setPhase('resolving');
+      }
       const packageName = match![1].trim();
       const versionSpec = match![2].trim();
 
       return {
-        phase: 'resolving',
+        phase: this.currentPhase,
         message: `Resolving dependency: ${packageName}${versionSpec}`,
         currentPackage: packageName,
         packageVersion: versionSpec,
