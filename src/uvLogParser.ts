@@ -424,11 +424,9 @@ export class UvLogParser implements IUvLogParser {
         const assignedPackages = new Set(this.streamToPackage.values());
         const unassignedDownloads = [...this.downloads.values()]
           .filter(
-            (d) =>
-              (d.status === 'downloading' || d.status === 'pending') &&
-              !assignedPackages.has(d.package) &&
-              d.totalBytes > 0
-          ) // Only packages with size need downloading
+            (d) => (d.status === 'downloading' || d.status === 'pending') && !assignedPackages.has(d.package)
+            // All packages need downloading, even zero-size ones
+          )
           .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
         if (unassignedDownloads.length > 0) {
@@ -478,10 +476,8 @@ export class UvLogParser implements IUvLogParser {
           const assignedPackages = new Set(this.streamToPackage.values());
           const unassignedDownloads = [...this.downloads.values()]
             .filter(
-              (d) =>
-                (d.status === 'downloading' || d.status === 'pending') &&
-                !assignedPackages.has(d.package) &&
-                d.totalBytes > 0
+              (d) => (d.status === 'downloading' || d.status === 'pending') && !assignedPackages.has(d.package)
+              // Removed d.totalBytes > 0 check - even zero-size packages need tracking
             )
             .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
@@ -525,7 +521,7 @@ export class UvLogParser implements IUvLogParser {
             // Try to associate with any active download
             const assignedPackages = new Set(this.streamToPackage.values());
             const unassignedDownloads = [...this.downloads.values()]
-              .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package) && d.totalBytes > 0)
+              .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package))
               .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
             if (unassignedDownloads.length > 0) {
@@ -554,7 +550,7 @@ export class UvLogParser implements IUvLogParser {
             progress.estimatedBytesReceived = Math.min(estimatedBytes, progress.totalBytes);
 
             // Handle exact final frame for completed downloads
-            if (isEndStream && progress.totalBytes > 0) {
+            if (isEndStream) {
               progress.bytesReceived = progress.totalBytes;
               progress.percentComplete = 100;
 
@@ -577,7 +573,7 @@ export class UvLogParser implements IUvLogParser {
             // DEBUG: Progress not found in map!
             // This might happen if getDownloadProgress created a new one
             const download = this.downloads.get(transfer.associatedPackage);
-            if (download && download.totalBytes > 0) {
+            if (download) {
               // Re-fetch or ensure progress exists
               let prog = this.downloadProgress.get(transfer.associatedPackage);
               if (!prog) {
@@ -597,7 +593,22 @@ export class UvLogParser implements IUvLogParser {
               }
               // Update the progress
               prog.estimatedBytesReceived = Math.min(transfer.frameCount * this.maxFrameSize, prog.totalBytes);
-              prog.percentComplete = (prog.estimatedBytesReceived / prog.totalBytes) * 100;
+
+              // Handle END_STREAM for completion
+              if (isEndStream) {
+                prog.bytesReceived = prog.totalBytes;
+                prog.percentComplete = 100;
+
+                // Mark download as complete
+                const dl = this.downloads.get(transfer.associatedPackage);
+                if (dl) {
+                  dl.status = 'completed';
+                  dl.endTime = Date.now();
+                }
+              } else {
+                prog.percentComplete = prog.totalBytes > 0 ? (prog.estimatedBytesReceived / prog.totalBytes) * 100 : 0;
+              }
+
               prog.currentTime = Date.now();
               this.updateTransferRate(prog);
             }
