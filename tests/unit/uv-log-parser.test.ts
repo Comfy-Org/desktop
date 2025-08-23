@@ -159,11 +159,9 @@ describe('UvLogParser', () => {
       parser.parseLine('Downloading numpy (10.0MiB)');
 
       // Simulate progress over time with HTTP/2 frames
-      const startTime = Date.now();
       for (let i = 0; i < 100; i++) {
-        parser.parseLine(
-          `${startTime + i * 100}ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`
-        );
+        const timestamp = (2.1 + i * 0.01).toFixed(6);
+        parser.parseLine(`${timestamp}s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`);
       }
 
       const progress = parser.getDownloadProgress('numpy');
