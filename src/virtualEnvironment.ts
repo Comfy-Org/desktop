@@ -393,6 +393,7 @@ export class VirtualEnvironment implements HasTelemetry {
     if (isPipInstall && callbacks?.onUvStatus) {
       env.UV_LOG_CONTEXT = '1';
       env.RUST_LOG = 'debug';
+      log.debug('UV debug logging enabled for pip install with status callback');
     }
 
     log.info(`Running uv command: ${this.uvPath} ${args.join(' ')}`);
@@ -402,17 +403,25 @@ export class VirtualEnvironment implements HasTelemetry {
       onStdout: (data: string) => {
         // Parse with UvLogParser if available
         if (parser && callbacks?.onUvStatus) {
-          // Split data into lines and parse each line
+          // Log that we're receiving data for debugging
           const lines = data.split(/\r?\n/);
+          let meaningfulUpdates = 0;
           for (const line of lines) {
             if (line.trim()) {
               const status = parser.parseLine(line);
               // Only send meaningful status updates, not raw log lines
               if (status.phase !== 'unknown') {
                 callbacks.onUvStatus(status);
+                meaningfulUpdates++;
               }
             }
           }
+
+          // Debug log to track parsing activity
+          if (lines.length > 0) {
+            log.debug(`UV parser processed ${lines.length} lines, sent ${meaningfulUpdates} status updates`);
+          }
+
           // Don't forward raw stdout when parsing - we're sending structured updates instead
           return;
         }
@@ -420,7 +429,30 @@ export class VirtualEnvironment implements HasTelemetry {
         // Only forward stdout if not parsing
         callbacks?.onStdout?.(data);
       },
-      onStderr: callbacks?.onStderr,
+      onStderr: (data: string) => {
+        // UV debug output might come through stderr
+        if (parser && callbacks?.onUvStatus) {
+          // Try parsing stderr as well for UV debug output
+          const lines = data.split(/\r?\n/);
+          let meaningfulUpdates = 0;
+          for (const line of lines) {
+            if (line.trim()) {
+              const status = parser.parseLine(line);
+              if (status.phase !== 'unknown') {
+                callbacks.onUvStatus(status);
+                meaningfulUpdates++;
+              }
+            }
+          }
+
+          if (lines.length > 0) {
+            log.debug(`UV parser processed ${lines.length} stderr lines, sent ${meaningfulUpdates} status updates`);
+          }
+        }
+
+        // Also forward stderr to original callback
+        callbacks?.onStderr?.(data);
+      },
     };
 
     // Run UV directly as a process instead of through PTY
