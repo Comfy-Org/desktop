@@ -303,7 +303,7 @@ export class UvLogParser implements IUvLogParser {
       };
 
       this.downloads.set(packageName, downloadInfo);
-      this.setPhase(hasValidSize ? 'downloading' : 'preparing_download');
+      this.setPhase('preparing_download'); // Always preparing when get_wheel is called
 
       // Initialize progress tracking
       const progress: DownloadProgress = {
@@ -323,9 +323,9 @@ export class UvLogParser implements IUvLogParser {
 
       const sizeFormatted = this.formatBytes(size);
       return {
-        phase: hasValidSize ? 'downloading' : 'preparing_download',
+        phase: 'preparing_download',
         message: hasValidSize
-          ? `Downloading ${packageName}==${version} (${sizeFormatted})`
+          ? `Preparing to download ${packageName}==${version} (${sizeFormatted})`
           : `Preparing to download ${packageName}==${version}`,
         currentPackage: packageName,
         packageVersion: version,
