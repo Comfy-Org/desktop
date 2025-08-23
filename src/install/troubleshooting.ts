@@ -67,18 +67,11 @@ export class Troubleshooting implements Disposable {
     ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, async () => {
       getTelemetry().track('installation_manager:uv_requirements_install');
 
-      // Enhanced callback that also tracks installation progress
+      // Enhanced callback that tracks installation progress
       const onStatus = (status: UvStatus) => {
-        // Log significant phase changes
+        // Log significant phase changes to debug log (not sent to frontend)
         if (status.phase !== 'unknown' && status.message) {
           log.debug(`UV Install Status: [${status.phase}] ${status.message}`);
-
-          // Send structured progress updates to renderer if needed
-          if (status.phase === 'downloading' && status.currentPackage) {
-            this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `📦 ${status.message}`);
-          } else if (status.phase === 'installed') {
-            this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `✅ ${status.message}`);
-          }
         }
 
         // Convert UvStatus to UvInstallStatus for frontend

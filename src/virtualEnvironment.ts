@@ -3,7 +3,7 @@ import log from 'electron-log/main';
 import pty from 'node-pty';
 import { ChildProcess, spawn } from 'node:child_process';
 import { rm } from 'node:fs/promises';
-import os, { EOL } from 'node:os';
+import { EOL } from 'node:os';
 import path from 'node:path';
 
 import { TorchMirrorUrl } from './constants';
@@ -376,42 +376,55 @@ export class VirtualEnvironment implements HasTelemetry {
     // Check if this is a pip install command
     const isPipInstall = args.length >= 2 && args[0] === 'pip' && args[1] === 'install';
 
-    // Add debug environment variables for pip install commands if UV status callback is present
-    let envPrefix = '';
-    if (isPipInstall && callbacks?.onUvStatus) {
-      // Set environment variables for verbose UV logging
-      envPrefix = os.platform() === 'win32' ? '$env:UV_LOG_CONTEXT=1; $env:RUST_LOG="debug"; ' : 'UV_LOG_CONTEXT=1 RUST_LOG=debug ';
-    }
-
-    const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
-    const command = `${envPrefix}${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`;
-    log.info('Running uv command:', command);
-
     // Create parser for pip install commands
     let parser: UvLogParser | undefined;
     if (isPipInstall && callbacks?.onUvStatus) {
       parser = new UvLogParser();
     }
 
-    // Create enhanced callback that parses output
-    const enhancedCallback = (data: string) => {
-      // Always call original stdout callback
-      callbacks?.onStdout?.(data);
-
-      // Parse with UvLogParser if available
-      if (parser && callbacks?.onUvStatus) {
-        // Split data into lines and parse each line
-        const lines = data.split(/\r?\n/);
-        for (const line of lines) {
-          if (line.trim()) {
-            const status = parser.parseLine(line);
-            callbacks.onUvStatus(status);
-          }
-        }
-      }
+    // Build environment variables
+    const env: Record<string, string> = {
+      VIRTUAL_ENV: this.venvPath,
+      // Add Python mirror if configured
+      ...(this.pythonMirror ? { UV_PYTHON_INSTALL_MIRROR: this.pythonMirror } : {}),
     };
 
-    return this.runPtyCommandAsync(command, enhancedCallback);
+    // Add debug environment variables for pip install commands if UV status callback is present
+    if (isPipInstall && callbacks?.onUvStatus) {
+      env.UV_LOG_CONTEXT = '1';
+      env.RUST_LOG = 'debug';
+    }
+
+    log.info(`Running uv command: ${this.uvPath} ${args.join(' ')}`);
+
+    // Create enhanced callbacks that parse output but don't send raw logs to frontend
+    const enhancedCallbacks: ProcessCallbacks = {
+      onStdout: (data: string) => {
+        // Parse with UvLogParser if available
+        if (parser && callbacks?.onUvStatus) {
+          // Split data into lines and parse each line
+          const lines = data.split(/\r?\n/);
+          for (const line of lines) {
+            if (line.trim()) {
+              const status = parser.parseLine(line);
+              // Only send meaningful status updates, not raw log lines
+              if (status.phase !== 'unknown') {
+                callbacks.onUvStatus(status);
+              }
+            }
+          }
+        }
+
+        // Only forward stdout if not parsing or if explicitly requested
+        if (!parser || !callbacks?.onUvStatus) {
+          callbacks?.onStdout?.(data);
+        }
+      },
+      onStderr: callbacks?.onStderr,
+    };
+
+    // Run UV directly as a process instead of through PTY
+    return this.runCommandAsync(this.uvPath, args, env, enhancedCallbacks);
   }
 
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
@@ -692,8 +705,10 @@ export class VirtualEnvironment implements HasTelemetry {
    * Reinstalls the required packages for ComfyUI core.
    */
   async reinstallRequirements(onData: (data: string) => void, onStatus?: (status: UvStatus) => void) {
+    // Only pass stdout callback if we're not parsing UV status
+    // This prevents sending excessive debug logs to frontend
     const callbacks: ProcessCallbacks = {
-      onStdout: onData,
+      onStdout: onStatus ? undefined : onData,
       onUvStatus: onStatus,
     };
 
@@ -702,7 +717,7 @@ export class VirtualEnvironment implements HasTelemetry {
     } catch (error) {
       log.error('Failed to reinstall requirements:', error);
 
-      const created = await this.createVenv(onData);
+      const created = await this.createVenv(onStatus ? undefined : onData);
       if (!created) return false;
 
       const pipEnsured = await this.upgradePip(callbacks);
