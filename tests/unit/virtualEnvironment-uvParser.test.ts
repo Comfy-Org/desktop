@@ -178,5 +178,64 @@ describe('VirtualEnvironment UV Parser Integration', () => {
       expect(calledStatus.phase).toBe('resolved');
       expect(calledStatus.totalPackages).toBe(10);
     });
+
+    it('should pass progress fields through callbacks', () => {
+      const onUvStatus = vi.fn();
+      const callbacks: ProcessCallbacks = { onUvStatus };
+
+      const parser = new UvLogParser();
+
+      // Simulate a complete download sequence
+      const lines = [
+        'Resolved 3 packages in 1.00s',
+        '   uv_installer::preparer::get_wheel name=numpy==2.0.0, size=Some(16277507), url="https://..."',
+        'Downloading numpy (15.5MiB)',
+        '2.100000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }',
+        '2.200000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }',
+        '2.300000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1), flags: (0x1: END_STREAM) }',
+        'Installed 3 packages in 100ms',
+      ];
+
+      for (const line of lines) {
+        const status = parser.parseLine(line);
+        if (status.phase !== 'unknown') {
+          callbacks.onUvStatus?.(status);
+        }
+      }
+
+      // Check that progress fields were passed
+      const calls = onUvStatus.mock.calls;
+
+      // Resolved phase should have totalPackages
+      const resolvedCall = calls.find((c) => c[0].phase === 'resolved');
+      expect(resolvedCall).toBeDefined();
+      expect(resolvedCall![0].totalPackages).toBe(3);
+
+      // Downloading phase should have progress fields
+      const downloadingCall = calls.find((c) => c[0].phase === 'downloading');
+      expect(downloadingCall).toBeDefined();
+      expect(downloadingCall![0].currentPackage).toBe('numpy');
+      expect(downloadingCall![0].totalPackages).toBe(3);
+      expect(downloadingCall![0].downloadProgress).toBeDefined();
+
+      // HTTP/2 frames should update progress
+      const frameCall = calls.find((c) => c[0].streamId && !c[0].streamCompleted);
+      if (frameCall) {
+        expect(frameCall[0].downloadProgress).toBeDefined();
+        expect(frameCall[0].totalPackages).toBe(3);
+      }
+
+      // END_STREAM should show 100% completion
+      const endStreamCall = calls.find((c) => c[0].streamCompleted === true);
+      expect(endStreamCall).toBeDefined();
+      expect(endStreamCall![0].downloadProgress).toBe(100);
+
+      // Installed phase should be complete
+      const installedCall = calls.find((c) => c[0].phase === 'installed');
+      expect(installedCall).toBeDefined();
+      expect(installedCall![0].isComplete).toBe(true);
+      expect(installedCall![0].totalPackages).toBe(3);
+      expect(installedCall![0].installedPackages).toBe(3);
+    });
   });
 });

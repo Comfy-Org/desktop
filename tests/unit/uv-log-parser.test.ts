@@ -862,4 +862,136 @@ describe('UvLogParser', () => {
       expect(state.installedPackages).toBe(5);
     });
   });
+
+  describe('Progress Field Population', () => {
+    it('should include totalPackages and installedPackages in resolved phase', () => {
+      const parser = new UvLogParser();
+
+      const status = parser.parseLine('Resolved 60 packages in 2.00s');
+
+      expect(status.phase).toBe('resolved');
+      expect(status.totalPackages).toBe(60);
+      expect(status.installedPackages).toBeDefined();
+    });
+
+    it('should include download progress fields when downloading', () => {
+      const parser = new UvLogParser();
+
+      // First, prepare a download
+      parser.parseLine(
+        '   uv_installer::preparer::get_wheel name=numpy==2.0.0, size=Some(16277507), url="https://..."'
+      );
+
+      // Then parse the downloading message
+      const status = parser.parseLine('Downloading numpy (15.5MiB)');
+
+      expect(status.phase).toBe('downloading');
+      expect(status.currentPackage).toBe('numpy');
+      expect(status.totalPackages).toBeDefined();
+      expect(status.installedPackages).toBeDefined();
+      // Progress fields should be defined (even if 0)
+      expect(status.downloadProgress).toBeDefined();
+    });
+
+    it('should include progress in HTTP/2 data frames', () => {
+      const parser = new UvLogParser();
+
+      // Setup a download
+      parser.parseLine('Resolved 3 packages in 1.00s');
+      parser.parseLine(
+        '   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1000000), url="https://..."'
+      );
+      parser.parseLine('Downloading package1 (976.6KiB)');
+
+      // Parse HTTP/2 data frame
+      const status = parser.parseLine(
+        '2.100000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }'
+      );
+
+      expect(status.currentPackage).toBeDefined();
+      expect(status.totalPackages).toBe(3);
+      expect(status.downloadProgress).toBeDefined();
+      expect(status.downloadProgress).toBeGreaterThanOrEqual(0);
+      expect(status.downloadProgress).toBeLessThanOrEqual(100);
+    });
+
+    it('should mark as complete in installed phase', () => {
+      const parser = new UvLogParser();
+
+      parser.parseLine('Resolved 5 packages in 1.00s');
+      const status = parser.parseLine('Installed 5 packages in 10ms');
+
+      expect(status.phase).toBe('installed');
+      expect(status.isComplete).toBe(true);
+      expect(status.totalPackages).toBe(5);
+      expect(status.installedPackages).toBe(5);
+    });
+
+    it('should calculate download progress percentage correctly', () => {
+      const parser = new UvLogParser();
+
+      // Setup a download with known size
+      parser.parseLine('   uv_installer::preparer::get_wheel name=test==1.0.0, size=Some(1000000), url="https://..."');
+      parser.parseLine('Downloading test (976.6KiB)');
+
+      // Simulate receiving data frames
+      for (let i = 0; i < 10; i++) {
+        parser.parseLine(`2.${i}00000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`);
+      }
+
+      const progress = parser.getDownloadProgress('test');
+      expect(progress).toBeDefined();
+      expect(progress?.percentComplete).toBeGreaterThan(0);
+      expect(progress?.percentComplete).toBeLessThanOrEqual(100);
+    });
+
+    it('should handle END_STREAM with 100% completion', () => {
+      const parser = new UvLogParser();
+
+      // Setup a download
+      parser.parseLine(
+        '   uv_installer::preparer::get_wheel name=complete==1.0.0, size=Some(500000), url="https://..."'
+      );
+      parser.parseLine('Downloading complete (488.3KiB)');
+
+      // Parse END_STREAM
+      const status = parser.parseLine(
+        '2.500000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1), flags: (0x1: END_STREAM) }'
+      );
+
+      expect(status.streamCompleted).toBe(true);
+      expect(status.downloadProgress).toBe(100);
+    });
+
+    it('should provide transfer rate and ETA when available', () => {
+      const parser = new UvLogParser();
+
+      // Setup a large download
+      parser.parseLine(
+        '   uv_installer::preparer::get_wheel name=tensorflow==2.16.0, size=Some(104857600), url="https://..."'
+      );
+      parser.parseLine('Downloading tensorflow (100.0MiB)');
+
+      // Simulate multiple data frames over time
+      for (let i = 0; i < 20; i++) {
+        const timestamp = (2 + i * 0.1).toFixed(6);
+        parser.parseLine(`${timestamp}s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`);
+      }
+
+      const progress = parser.getDownloadProgress('tensorflow');
+      expect(progress).toBeDefined();
+      expect(progress?.transferRateSamples.length).toBeGreaterThan(0);
+
+      // The parser should calculate average transfer rate
+      const avgRate = parser.calculateAverageTransferRate(progress!);
+      expect(avgRate).toBeGreaterThanOrEqual(0);
+
+      // Should be able to estimate time remaining for known sizes
+      if (progress!.totalBytes > 0 && avgRate > 0) {
+        const eta = parser.estimateTimeRemaining(progress!, avgRate);
+        expect(eta).toBeDefined();
+        expect(eta).toBeGreaterThanOrEqual(0);
+      }
+    });
+  });
 });
