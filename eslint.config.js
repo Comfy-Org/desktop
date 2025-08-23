@@ -56,6 +56,7 @@ export default tseslint.config(
       'unicorn/consistent-function-scoping': 'off',
       'unicorn/prefer-event-target': 'off',
       'unicorn/prefer-ternary': ['error', 'only-single-line'],
+      'unicorn/no-nested-ternary': 'off',
     },
   },
 
