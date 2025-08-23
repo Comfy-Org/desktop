@@ -41,6 +41,12 @@ export interface UvStatus {
   installedPackages?: number;
   totalWheels?: number;
 
+  // Download progress info
+  downloadProgress?: number; // 0-100 percentage
+  transferRate?: number; // bytes per second
+  etaSeconds?: number; // estimated time remaining
+  isComplete?: boolean;
+
   // Timing info
   resolutionTime?: number;
   preparationTime?: number;
@@ -280,6 +286,7 @@ export class UvLogParser implements IUvLogParser {
         phase: 'resolved',
         message: `Resolved ${this.totalPackages} packages in ${resolutionTime.toFixed(2)}s`,
         totalPackages: this.totalPackages,
+        installedPackages: this.installedPackages,
         resolutionTime,
         rawLine: line,
       };
@@ -405,11 +412,19 @@ export class UvLogParser implements IUvLogParser {
 
       this.setPhase('downloading');
 
+      // Get download progress if available
+      const progress = this.downloadProgress.get(packageName);
+
       return {
         phase: 'downloading',
         message: `Downloading ${packageName} (${sizeFormatted})`,
         currentPackage: packageName,
         packageSizeFormatted: sizeFormatted,
+        totalPackages: this.totalPackages,
+        installedPackages: this.installedPackages,
+        downloadProgress: progress?.percentComplete,
+        transferRate: progress?.averageTransferRate,
+        etaSeconds: progress?.estimatedTimeRemaining,
         rawLine: line,
       };
     }
@@ -632,24 +647,44 @@ export class UvLogParser implements IUvLogParser {
 
       if (isEndStream) {
         // Clean up completed transfer
+        const packageName = this.streamToPackage.get(streamId);
         this.transfers.delete(streamId);
         this.streamToPackage.delete(streamId);
 
         // Clean up old downloads if we have too many
         this.cleanupOldDownloads();
 
+        // Get final progress for completed download
+        const progress = packageName ? this.downloadProgress.get(packageName) : undefined;
+
         return {
           phase: this.currentPhase,
           message: '',
+          currentPackage: packageName,
+          totalPackages: this.totalPackages,
+          installedPackages: this.installedPackages,
+          downloadProgress: progress?.percentComplete,
+          transferRate: progress?.averageTransferRate,
+          etaSeconds: progress?.estimatedTimeRemaining,
           streamId,
           streamCompleted: true,
           rawLine: line,
         };
       }
 
+      // Get package name and progress for ongoing download
+      const packageName = this.streamToPackage.get(streamId);
+      const progress = packageName ? this.downloadProgress.get(packageName) : undefined;
+
       return {
         phase: this.currentPhase,
         message: '',
+        currentPackage: packageName,
+        totalPackages: this.totalPackages,
+        installedPackages: this.installedPackages,
+        downloadProgress: progress?.percentComplete,
+        transferRate: progress?.averageTransferRate,
+        etaSeconds: progress?.estimatedTimeRemaining,
         streamId,
         streamCompleted: false,
         rawLine: line,
@@ -697,7 +732,9 @@ export class UvLogParser implements IUvLogParser {
       return {
         phase: 'installed',
         message: `Installed ${this.installedPackages} ${packageText} in ${installationTime}ms`,
+        totalPackages: this.totalPackages,
         installedPackages: this.installedPackages,
+        isComplete: true,
         installationTime,
         rawLine: line,
       };

@@ -81,12 +81,11 @@ export class Troubleshooting implements Disposable {
           totalPackages: status.totalPackages,
           installedPackages: status.installedPackages,
           currentPackage: status.currentPackage,
+          downloadProgress: status.downloadProgress,
+          transferRate: status.transferRate,
+          etaSeconds: status.etaSeconds,
           error: status.error,
-          isComplete: status.phase === 'installed' || (status.phase === 'error' && !!status.error),
-          // Map additional fields if available
-          downloadProgress: undefined, // TODO: Calculate from package download info
-          transferRate: undefined, // TODO: Calculate from transfer rate samples
-          etaSeconds: undefined, // TODO: Calculate from estimated time remaining
+          isComplete: status.isComplete || status.phase === 'installed' || (status.phase === 'error' && !!status.error),
         };
 
         // Log when sending IPC message (not the raw output)
