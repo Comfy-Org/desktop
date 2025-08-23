@@ -52,12 +52,12 @@ describe('UvLogParser Integration Tests', () => {
         { time: 5200, line: 'Installed 1 package in 10ms' },
       ];
 
-      logStream.forEach(({ line }) => {
+      for (const { line } of logStream) {
         const status = parser.parseLine(line);
         if (status.phase !== 'unknown') {
           statusUpdates.push(status);
         }
-      });
+      }
 
       // Verify the progression of phases
       const phases = statusUpdates.map((s) => s.phase);
@@ -93,12 +93,14 @@ describe('UvLogParser Integration Tests', () => {
         '2.300000s   1s  DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(5) }',
       ];
 
-      logLines.forEach((line) => parser.parseLine(line));
+      for (const line of logLines) {
+        parser.parseLine(line);
+      }
 
       const downloads = parser.getActiveDownloads();
       expect(downloads).toHaveLength(3);
       expect(downloads.map((d) => d.package)).toEqual(['package1', 'package2', 'package3']);
-      expect(downloads.map((d) => d.totalBytes)).toEqual([1000000, 2000000, 3000000]);
+      expect(downloads.map((d) => d.totalBytes)).toEqual([1_000_000, 2_000_000, 3_000_000]);
 
       const transfers = parser.getActiveTransfers();
       expect(Object.keys(transfers)).toHaveLength(3);
@@ -126,7 +128,7 @@ describe('UvLogParser Integration Tests', () => {
       const progress = parser.getDownloadProgress('tensorflow');
       expect(progress).toBeDefined();
       expect(progress!.package).toBe('tensorflow');
-      expect(progress!.totalBytes).toBe(104857600);
+      expect(progress!.totalBytes).toBe(104_857_600);
       expect(progress!.percentComplete).toBeGreaterThan(0);
       expect(progress!.transferRateSamples.length).toBeGreaterThan(0);
     });
@@ -145,11 +147,11 @@ describe('UvLogParser Integration Tests', () => {
         { time: 5000, frames: 13 }, // Stabilize
       ];
 
-      samples.forEach(({ time, frames }) => {
+      for (const { time, frames } of samples) {
         for (let i = 0; i < frames; i++) {
           parser.parseLine(`${time}ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`);
         }
-      });
+      }
 
       const progress = parser.getDownloadProgress('pytorch');
       expect(progress).toBeDefined();
@@ -185,7 +187,9 @@ describe('UvLogParser Integration Tests', () => {
         'Installed 0 packages in 0ms',
       ];
 
-      logLines.forEach((line) => parser.parseLine(line));
+      for (const line of logLines) {
+        parser.parseLine(line);
+      }
 
       const state = parser.getOverallState();
       expect(state.totalPackages).toBe(3);
@@ -211,7 +215,9 @@ describe('UvLogParser Integration Tests', () => {
         'Installed 5 packages in 7ms',
       ];
 
-      perfLog.forEach((line) => parser.parseLine(line));
+      for (const line of perfLog) {
+        parser.parseLine(line);
+      }
 
       const state = parser.getOverallState();
       expect(state.phases).toContain('resolved');
@@ -231,12 +237,12 @@ describe('UvLogParser Integration Tests', () => {
         '    0.001000s DEBUG uv uv 1.0.0-beta.1 (abc12345 2025-09-01)',
       ];
 
-      variations.forEach((line) => {
+      for (const line of variations) {
         parser.reset();
         const status = parser.parseLine(line);
         expect(status.phase).toBe('started');
         expect(status.uvVersion).toMatch(/\d+\.\d+/);
-      });
+      }
     });
 
     it('should handle different package size formats', () => {
@@ -247,17 +253,17 @@ describe('UvLogParser Integration Tests', () => {
         { line: 'Downloading huge-pkg (2.5GiB)', expected: '2.5GiB' },
       ];
 
-      sizeFormats.forEach(({ line, expected }) => {
+      for (const { line, expected } of sizeFormats) {
         const status = parser.parseLine(line);
         expect(status.packageSizeFormatted).toBe(expected);
-      });
+      }
     });
   });
 
   describe('HTTP/2 Frame Size Dynamics', () => {
     it('should update max frame size from SETTINGS frames', () => {
       // Initial download with default frame size
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(10000000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(10_000_000), url="..."');
       parser.parseLine(
         '1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(3), flags: (0x5: END_HEADERS | END_STREAM) }'
       );
@@ -277,7 +283,7 @@ describe('UvLogParser Integration Tests', () => {
 
     it('should calculate partial final frames correctly', () => {
       // Download with known exact size
-      parser.parseLine('   uv_installer::preparer::get_wheel name=small==1.0.0, size=Some(50000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=small==1.0.0, size=Some(50_000), url="..."');
       parser.parseLine(
         '1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(5), flags: (0x5: END_HEADERS | END_STREAM) }'
       );
@@ -292,12 +298,12 @@ describe('UvLogParser Integration Tests', () => {
       );
 
       const progress = parser.getDownloadProgress('small');
-      expect(progress?.bytesReceived).toBe(50000); // Exact size
+      expect(progress?.bytesReceived).toBe(50_000); // Exact size
       expect(progress?.percentComplete).toBe(100);
     });
 
     it('should handle frame size changes mid-download', () => {
-      parser.parseLine('   uv_installer::preparer::get_wheel name=dynamic==1.0.0, size=Some(1000000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=dynamic==1.0.0, size=Some(1_000_000), url="..."');
       parser.parseLine(
         '1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(7), flags: (0x5: END_HEADERS | END_STREAM) }'
       );
@@ -318,27 +324,27 @@ describe('UvLogParser Integration Tests', () => {
       const bytesAfterSecond = progress?.estimatedBytesReceived || 0;
 
       // Second frame should add more bytes due to larger frame size
-      expect(bytesAfterSecond - bytesAfterFirst).toBeGreaterThan(16384);
+      expect(bytesAfterSecond - bytesAfterFirst).toBeGreaterThan(16_384);
     });
   });
 
   describe('Download Time Estimation', () => {
     it('should calculate ETA based on smoothed transfer rate', () => {
       // Start download
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(10485760), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(10_485_760), url="..."');
 
       // Create progress with known state
       const progress: DownloadProgress = {
         package: 'package',
-        totalBytes: 10485760, // 10MB
-        bytesReceived: 5242880, // 5MB received
+        totalBytes: 10_485_760, // 10MB
+        bytesReceived: 5_242_880, // 5MB received
         percentComplete: 50,
         startTime: Date.now() - 5000,
         currentTime: Date.now(),
         transferRateSamples: [
-          { timestamp: Date.now() - 1000, bytesPerSecond: 1048576 }, // 1MB/s
+          { timestamp: Date.now() - 1000, bytesPerSecond: 1_048_576 }, // 1MB/s
         ],
-        averageTransferRate: 1048576, // 1MB/s
+        averageTransferRate: 1_048_576, // 1MB/s
       };
 
       const eta = parser.estimateTimeRemaining(progress, progress.averageTransferRate!);
@@ -349,41 +355,41 @@ describe('UvLogParser Integration Tests', () => {
       parser.parseLine('   uv_installer::preparer::get_wheel name=unknown==1.0.0, size=None, url="..."');
 
       const progress = parser.getDownloadProgress('unknown');
-      const eta = progress ? parser.estimateTimeRemaining(progress, 1000000) : undefined;
+      const eta = progress ? parser.estimateTimeRemaining(progress, 1_000_000) : undefined;
       expect(eta).toBeUndefined();
     });
 
     it('should update ETA as transfer rate changes', () => {
       const progress: DownloadProgress = {
         package: 'package',
-        totalBytes: 10000000,
-        bytesReceived: 2000000,
+        totalBytes: 10_000_000,
+        bytesReceived: 2_000_000,
         percentComplete: 20,
-        startTime: Date.now() - 10000,
+        startTime: Date.now() - 10_000,
         currentTime: Date.now(),
         transferRateSamples: [],
         averageTransferRate: 0,
       };
 
       // Slow rate initially
-      let eta = parser.estimateTimeRemaining(progress, 100000); // 100KB/s
+      let eta = parser.estimateTimeRemaining(progress, 100_000); // 100KB/s
       expect(eta).toBe(80); // 8MB at 100KB/s = 80 seconds
 
       // Rate increases
-      eta = parser.estimateTimeRemaining(progress, 1000000); // 1MB/s
+      eta = parser.estimateTimeRemaining(progress, 1_000_000); // 1MB/s
       expect(eta).toBe(8); // 8MB at 1MB/s = 8 seconds
     });
 
     it('should clear ETA when download completes', () => {
       const progress: DownloadProgress = {
         package: 'package',
-        totalBytes: 1000000,
-        bytesReceived: 1000000, // Complete
+        totalBytes: 1_000_000,
+        bytesReceived: 1_000_000, // Complete
         percentComplete: 100,
         startTime: Date.now() - 5000,
         currentTime: Date.now(),
         transferRateSamples: [],
-        averageTransferRate: 200000,
+        averageTransferRate: 200_000,
       };
 
       const eta = parser.estimateTimeRemaining(progress, progress.averageTransferRate!);
@@ -417,9 +423,9 @@ describe('UvLogParser Integration Tests', () => {
 
     it('should include queue counts when packages are waiting', () => {
       // Parse multiple packages
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1000000), url="..."');
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==1.0.0, size=Some(2000000), url="..."');
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package3==1.0.0, size=Some(3000000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1_000_000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==1.0.0, size=Some(2_000_000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package3==1.0.0, size=Some(3_000_000), url="..."');
 
       // Mock status message generation with queue info
       const downloads = parser.getActiveDownloads();
@@ -472,19 +478,18 @@ describe('UvLogParser Integration Tests', () => {
   describe('Stream ID Conflict Resolution', () => {
     it('should handle duplicate stream ID assignment gracefully', () => {
       // First package uses stream ID 3
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1_000), url="..."');
       parser.parseLine(
         '1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(3), flags: (0x5: END_HEADERS | END_STREAM) }'
       );
 
       // Attempt to assign same stream ID to different package (shouldn't happen in HTTP/2, but test robustness)
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==2.0.0, size=Some(2000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==2.0.0, size=Some(2_000), url="..."');
       parser.parseLine(
         '1.100000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(3), flags: (0x5: END_HEADERS | END_STREAM) }'
       );
 
       // Parser should handle this gracefully - either error or reassign
-      const transfers = parser.getActiveTransfers();
       const downloads = parser.getActiveDownloads();
 
       // Should have both packages tracked somehow
@@ -512,7 +517,7 @@ describe('UvLogParser Integration Tests', () => {
 
     it('should clean up stream IDs after END_STREAM', () => {
       // Start and complete a download
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1_000), url="..."');
       parser.parseLine(
         '1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(7), flags: (0x5: END_HEADERS | END_STREAM) }'
       );
@@ -525,7 +530,7 @@ describe('UvLogParser Integration Tests', () => {
       expect(transfers['7']).toBeUndefined();
 
       // Stream 7 can be reused for new download
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==2.0.0, size=Some(2000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==2.0.0, size=Some(2_000), url="..."');
       parser.parseLine(
         '2.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(7), flags: (0x5: END_HEADERS | END_STREAM) }'
       );
@@ -540,14 +545,14 @@ describe('UvLogParser Integration Tests', () => {
     it('should calculate overall progress weighted by package sizes', () => {
       // Add packages with different sizes
       const packages = [
-        { name: 'small==1.0.0', size: 100000 }, // 100KB
-        { name: 'medium==1.0.0', size: 1000000 }, // 1MB
-        { name: 'large==1.0.0', size: 10000000 }, // 10MB
+        { name: 'small==1.0.0', size: 100_000 }, // 100KB
+        { name: 'medium==1.0.0', size: 1_000_000 }, // 1MB
+        { name: 'large==1.0.0', size: 10_000_000 }, // 10MB
       ];
 
-      packages.forEach((pkg) => {
+      for (const pkg of packages) {
         parser.parseLine(`   uv_installer::preparer::get_wheel name=${pkg.name}, size=Some(${pkg.size}), url="..."`);
-      });
+      }
 
       // Mock progress for each package
       // Small: 100% complete (100KB of 100KB)
@@ -557,7 +562,7 @@ describe('UvLogParser Integration Tests', () => {
 
       // This would be calculated by the parser
       const totalBytes = packages.reduce((sum, p) => sum + p.size, 0);
-      const receivedBytes = 100000 + 500000 + 1000000;
+      const receivedBytes = 100_000 + 500_000 + 1_000_000;
       const overallProgress = (receivedBytes / totalBytes) * 100;
 
       expect(overallProgress).toBeCloseTo(14.4, 1);
@@ -565,9 +570,9 @@ describe('UvLogParser Integration Tests', () => {
 
     it('should handle mix of known and unknown package sizes', () => {
       // Some packages have size, some don't
-      parser.parseLine('   uv_installer::preparer::get_wheel name=known1==1.0.0, size=Some(1000000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=known1==1.0.0, size=Some(1_000_000), url="..."');
       parser.parseLine('   uv_installer::preparer::get_wheel name=unknown==1.0.0, size=None, url="..."');
-      parser.parseLine('   uv_installer::preparer::get_wheel name=known2==1.0.0, size=Some(2000000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=known2==1.0.0, size=Some(2_000_000), url="..."');
 
       const downloads = parser.getActiveDownloads();
       const knownSizes = downloads.filter((d) => d.totalBytes > 0);
@@ -582,8 +587,8 @@ describe('UvLogParser Integration Tests', () => {
 
     it('should update dynamically as packages complete', () => {
       // Start multiple downloads
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1000000), url="..."');
-      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==1.0.0, size=Some(1000000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1_000_000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==1.0.0, size=Some(1_000_000), url="..."');
 
       let downloads = parser.getActiveDownloads();
       expect(downloads.filter((d) => d.status === 'completed').length).toBe(0);
@@ -625,12 +630,12 @@ describe('UvLogParser Integration Tests', () => {
         'installed',
       ];
 
-      completeFlow.forEach((line, index) => {
+      for (const [index, line] of completeFlow.entries()) {
         const status = parser.parseLine(line);
         if (status.phase !== 'unknown') {
           expect(status.phase).toBe(expectedPhases[index]);
         }
-      });
+      }
 
       const finalState = parser.getOverallState();
       expect(finalState.isComplete).toBe(true);
@@ -649,12 +654,12 @@ describe('UvLogParser Integration Tests', () => {
         'Installed 1 package in 5ms',
       ];
 
-      logSequence.forEach((line) => {
+      for (const line of logSequence) {
         const status = parser.parseLine(line);
         if (status.phase !== 'unknown') {
           phases.push(status.phase);
         }
-      });
+      }
 
       // Verify no regression from 'prepared' back to 'resolving'
       const preparedIndex = phases.indexOf('prepared');
