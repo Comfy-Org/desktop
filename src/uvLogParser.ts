@@ -316,11 +316,8 @@ export class UvLogParser implements IUvLogParser {
       };
       this.downloadProgress.set(packageName, progress);
 
-      // Mark package as downloading when it has size
-      if (size > 0) {
-        downloadInfo.status = 'downloading';
-        this.setPhase('downloading');
-      }
+      // Mark package as pending initially, will be updated to downloading later
+      // Keep as pending until we see the actual Downloading message
 
       const sizeFormatted = this.formatBytes(size);
       return {
@@ -466,7 +463,12 @@ export class UvLogParser implements IUvLogParser {
         if (!this.streamToPackage.has(streamId)) {
           const assignedPackages = new Set(this.streamToPackage.values());
           const unassignedDownloads = [...this.downloads.values()]
-            .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package) && d.totalBytes > 0)
+            .filter(
+              (d) =>
+                (d.status === 'downloading' || d.status === 'pending') &&
+                !assignedPackages.has(d.package) &&
+                d.totalBytes > 0
+            )
             .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
           if (unassignedDownloads.length > 0) {
@@ -518,7 +520,9 @@ export class UvLogParser implements IUvLogParser {
               this.streamToPackage.set(streamId, download.package);
             } else if (unassignedDownloads.length === 0) {
               // If no unassigned downloads, try to find any download that matches
-              const activeDownloads = [...this.downloads.values()].filter((d) => d.status === 'downloading');
+              const activeDownloads = [...this.downloads.values()].filter(
+                (d) => d.status === 'downloading' || d.status === 'pending'
+              );
               if (activeDownloads.length === 1) {
                 transfer.associatedPackage = activeDownloads[0].package;
                 this.streamToPackage.set(streamId, activeDownloads[0].package);
