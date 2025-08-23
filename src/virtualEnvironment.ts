@@ -373,12 +373,19 @@ export class VirtualEnvironment implements HasTelemetry {
    * @returns
    */
   private async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
-    const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
-    const command = `${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`;
-    log.info('Running uv command:', command);
-
     // Check if this is a pip install command
     const isPipInstall = args.length >= 2 && args[0] === 'pip' && args[1] === 'install';
+
+    // Add debug environment variables for pip install commands if UV status callback is present
+    let envPrefix = '';
+    if (isPipInstall && callbacks?.onUvStatus) {
+      // Set environment variables for verbose UV logging
+      envPrefix = os.platform() === 'win32' ? '$env:UV_LOG_CONTEXT=1; $env:RUST_LOG="debug"; ' : 'UV_LOG_CONTEXT=1 RUST_LOG=debug ';
+    }
+
+    const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
+    const command = `${envPrefix}${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`;
+    log.info('Running uv command:', command);
 
     // Create parser for pip install commands
     let parser: UvLogParser | undefined;
