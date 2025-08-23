@@ -72,12 +72,12 @@ describe('UvLogParser', () => {
         '   uv_installer::preparer::get_wheel name=aiohttp==3.12.15, size=Some(469787), url="https://files.pythonhosted.org/packages/3a/1d/aiohttp-3.12.15-cp312-cp312-macosx_11_0_arm64.whl"';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('preparing_download');
+      expect(status.phase).toBe('downloading');
       expect(status.currentPackage).toBe('aiohttp');
       expect(status.packageVersion).toBe('3.12.15');
       expect(status.packageSize).toBe(469_787);
       expect(status.downloadUrl).toContain('aiohttp-3.12.15');
-      expect(status.message).toBe('Preparing to download aiohttp==3.12.15 (459.2 KB)');
+      expect(status.message).toBe('Downloading aiohttp==3.12.15 (459.2 KB)');
     });
 
     it('should detect when package download starts', () => {

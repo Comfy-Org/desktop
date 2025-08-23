@@ -290,17 +290,20 @@ export class UvLogParser implements IUvLogParser {
       const size = sizeStr === 'None' ? 0 : Number.parseInt(match![4], 10);
       const url = match![5];
 
+      // Only transition to downloading if we have a valid size
+      const hasValidSize = size > 0;
+
       const downloadInfo: PackageDownloadInfo = {
         package: packageName,
         version,
         totalBytes: size,
         url,
-        status: 'downloading', // get_wheel means download has started
+        status: hasValidSize ? 'downloading' : 'pending', // Only downloading if size is known
         startTime: Date.now(),
       };
 
       this.downloads.set(packageName, downloadInfo);
-      this.setPhase('downloading');
+      this.setPhase(hasValidSize ? 'downloading' : 'preparing_download');
 
       // Initialize progress tracking
       const progress: DownloadProgress = {
@@ -316,12 +319,14 @@ export class UvLogParser implements IUvLogParser {
       };
       this.downloadProgress.set(packageName, progress);
 
-      // get_wheel indicates the actual download has started
+      // get_wheel with valid size indicates download has started
 
       const sizeFormatted = this.formatBytes(size);
       return {
-        phase: 'downloading',
-        message: `Downloading ${packageName}==${version} (${sizeFormatted})`,
+        phase: hasValidSize ? 'downloading' : 'preparing_download',
+        message: hasValidSize
+          ? `Downloading ${packageName}==${version} (${sizeFormatted})`
+          : `Preparing to download ${packageName}==${version}`,
         currentPackage: packageName,
         packageVersion: version,
         packageSize: size,
