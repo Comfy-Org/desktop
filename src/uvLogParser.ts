@@ -295,7 +295,7 @@ export class UvLogParser implements IUvLogParser {
         version,
         totalBytes: size,
         url,
-        status: size === 0 ? 'pending' : 'downloading',
+        status: 'pending', // Always start as pending until actually downloading
         startTime: Date.now(),
       };
 
@@ -303,23 +303,22 @@ export class UvLogParser implements IUvLogParser {
       this.setPhase('preparing_download');
 
       // Initialize progress tracking
-      if (size > 0) {
-        const progress: DownloadProgress = {
-          package: packageName,
-          totalBytes: size,
-          bytesReceived: 0,
-          estimatedBytesReceived: 0,
-          percentComplete: 0,
-          startTime: Date.now(),
-          currentTime: Date.now(),
-          transferRateSamples: [],
-          averageTransferRate: 0,
-        };
-        this.downloadProgress.set(packageName, progress);
-      }
+      const progress: DownloadProgress = {
+        package: packageName,
+        totalBytes: size,
+        bytesReceived: 0,
+        estimatedBytesReceived: 0,
+        percentComplete: 0, // Start at 0 for all packages
+        startTime: Date.now(),
+        currentTime: Date.now(),
+        transferRateSamples: [],
+        averageTransferRate: 0,
+      };
+      this.downloadProgress.set(packageName, progress);
 
-      // Change to downloading phase since get_wheel indicates download start
+      // Mark package as downloading when it has size
       if (size > 0) {
+        downloadInfo.status = 'downloading';
         this.setPhase('downloading');
       }
 
@@ -394,7 +393,7 @@ export class UvLogParser implements IUvLogParser {
         // Try to associate with the next unassigned download
         const assignedPackages = new Set(this.streamToPackage.values());
         const unassignedDownloads = [...this.downloads.values()]
-          .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package))
+          .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package) && d.totalBytes > 0) // Only packages with size need downloading
           .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
         if (unassignedDownloads.length > 0) {
@@ -443,7 +442,7 @@ export class UvLogParser implements IUvLogParser {
         if (!this.streamToPackage.has(streamId)) {
           const assignedPackages = new Set(this.streamToPackage.values());
           const unassignedDownloads = [...this.downloads.values()]
-            .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package))
+            .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package) && d.totalBytes > 0)
             .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
           if (unassignedDownloads.length > 0) {
@@ -465,11 +464,10 @@ export class UvLogParser implements IUvLogParser {
         // Update progress immediately for new transfer
         if (associatedPackage) {
           const progress = this.downloadProgress.get(associatedPackage);
-          if (progress) {
+          if (progress && progress.totalBytes > 0) {
             const estimatedBytes = transfer.frameCount * this.maxFrameSize;
             progress.estimatedBytesReceived = Math.min(estimatedBytes, progress.totalBytes);
-            progress.percentComplete =
-              progress.totalBytes > 0 ? (progress.estimatedBytesReceived / progress.totalBytes) * 100 : 0;
+            progress.percentComplete = (progress.estimatedBytesReceived / progress.totalBytes) * 100;
             progress.currentTime = Date.now();
             this.updateTransferRate(progress);
           }
@@ -484,11 +482,23 @@ export class UvLogParser implements IUvLogParser {
           if (this.streamToPackage.has(streamId)) {
             transfer.associatedPackage = this.streamToPackage.get(streamId);
           } else {
-            // Try to associate with any active download if only one exists
-            const activeDownloads = [...this.downloads.values()].filter((d) => d.status === 'downloading');
-            if (activeDownloads.length === 1) {
-              transfer.associatedPackage = activeDownloads[0].package;
-              this.streamToPackage.set(streamId, activeDownloads[0].package);
+            // Try to associate with any active download
+            const assignedPackages = new Set(this.streamToPackage.values());
+            const unassignedDownloads = [...this.downloads.values()]
+              .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package) && d.totalBytes > 0)
+              .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+
+            if (unassignedDownloads.length > 0) {
+              const download = unassignedDownloads[0];
+              transfer.associatedPackage = download.package;
+              this.streamToPackage.set(streamId, download.package);
+            } else if (unassignedDownloads.length === 0) {
+              // If no unassigned downloads, try to find any download that matches
+              const activeDownloads = [...this.downloads.values()].filter((d) => d.status === 'downloading');
+              if (activeDownloads.length === 1) {
+                transfer.associatedPackage = activeDownloads[0].package;
+                this.streamToPackage.set(streamId, activeDownloads[0].package);
+              }
             }
           }
         }
@@ -650,13 +660,13 @@ export class UvLogParser implements IUvLogParser {
       // Check if package exists but no progress yet
       const download = this.downloads.get(packageName);
       if (download) {
-        // Create initial progress for package with unknown size
+        // Create initial progress for package
         const newProgress: DownloadProgress = {
           package: packageName,
           totalBytes: download.totalBytes || 0,
           bytesReceived: 0,
           estimatedBytesReceived: 0,
-          percentComplete: download.totalBytes === 0 ? 0 : 0,
+          percentComplete: download.status === 'completed' ? 100 : 0,
           startTime: download.startTime || Date.now(),
           currentTime: Date.now(),
           transferRateSamples: [],
@@ -664,7 +674,7 @@ export class UvLogParser implements IUvLogParser {
         };
 
         if (download.totalBytes === 0) {
-          // Unknown size
+          // Unknown size - can't calculate ETA
           newProgress.estimatedTimeRemaining = undefined;
         }
 
@@ -773,8 +783,20 @@ export class UvLogParser implements IUvLogParser {
       return;
     }
 
-    // Only progress forward (or stay in same phase)
-    if (newIndex >= currentIndex && this.currentPhase !== newPhase) {
+    // Allow certain phase transitions that can repeat
+    const allowedRepeats: Partial<Record<Phase, Phase[]>> = {
+      downloading: ['preparing_download'], // Can prepare another download while downloading
+      preparing_download: ['downloading'], // Can continue downloading
+    };
+
+    const canRepeat = allowedRepeats[this.currentPhase]?.includes(newPhase);
+
+    // Only progress forward (or stay in same phase, or allow specific repeats)
+    // Don't allow regression from phases after 'prepared'
+    const blockedRegressions = ['prepared', 'installing', 'installed'];
+    const isBlockedRegression = blockedRegressions.includes(this.currentPhase) && newIndex < currentIndex;
+
+    if (!isBlockedRegression && (newIndex >= currentIndex || canRepeat) && this.currentPhase !== newPhase) {
       this.currentPhase = newPhase;
       if (!this.phases.includes(newPhase)) {
         this.phases.push(newPhase);
@@ -825,10 +847,12 @@ export class UvLogParser implements IUvLogParser {
     const now = Date.now();
     const elapsed = (now - progress.startTime) / 1000; // seconds
 
-    if (elapsed > 0 && progress.estimatedBytesReceived! > 0) {
-      const bytesPerSecond = progress.estimatedBytesReceived! / elapsed;
+    if (elapsed > 0) {
+      const estimatedBytes = progress.estimatedBytesReceived || 0;
+      const bytesPerSecond = estimatedBytes / elapsed;
 
-      // Add new sample
+      // Always add a sample when updateTransferRate is called
+      // This ensures we track progress even when starting from 0
       const sample: TransferRateSample = {
         timestamp: now,
         bytesPerSecond,
