@@ -121,8 +121,8 @@ describe('UvLogParser Integration Tests', () => {
       const totalFrames = 50; // 5 seconds of data
 
       for (let i = 0; i < totalFrames; i++) {
-        const timestamp = 2000 + i * frameInterval;
-        parser.parseLine(`${timestamp}ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`);
+        const timestamp = (2 + (i * frameInterval) / 1000).toFixed(6);
+        parser.parseLine(`${timestamp}s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`);
       }
 
       const progress = parser.getDownloadProgress('tensorflow');
@@ -149,7 +149,10 @@ describe('UvLogParser Integration Tests', () => {
 
       for (const { time, frames } of samples) {
         for (let i = 0; i < frames; i++) {
-          parser.parseLine(`${time}ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`);
+          const timestamp = (time / 1000).toFixed(6);
+          parser.parseLine(
+            `${timestamp}s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }`
+          );
         }
       }
 
