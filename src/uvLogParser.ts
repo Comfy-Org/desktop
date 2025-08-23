@@ -507,6 +507,20 @@ export class UvLogParser implements IUvLogParser {
             progress.currentTime = Date.now();
             this.updateTransferRate(progress);
           }
+
+          // Handle END_STREAM on first frame (immediate completion)
+          if (isEndStream) {
+            if (progress) {
+              progress.bytesReceived = progress.totalBytes;
+              progress.percentComplete = 100;
+            }
+
+            const download = this.downloads.get(associatedPackage);
+            if (download) {
+              download.status = 'completed';
+              download.endTime = Date.now();
+            }
+          }
         }
       } else {
         const transfer = this.transfers.get(streamId)!;
