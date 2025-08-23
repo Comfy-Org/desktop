@@ -61,7 +61,7 @@ describe('UvLogParser', () => {
 
       expect(status.phase).toBe('resolved');
       expect(status.totalPackages).toBe(60);
-      expect(status.resolutionTime).toBe(2.0);
+      expect(status.resolutionTime).toBe(2);
       expect(status.message).toBe('Resolved 60 packages in 2.00s');
     });
   });
@@ -75,7 +75,7 @@ describe('UvLogParser', () => {
       expect(status.phase).toBe('preparing_download');
       expect(status.currentPackage).toBe('aiohttp');
       expect(status.packageVersion).toBe('3.12.15');
-      expect(status.packageSize).toBe(469787);
+      expect(status.packageSize).toBe(469_787);
       expect(status.downloadUrl).toContain('aiohttp-3.12.15');
       expect(status.message).toBe('Preparing to download aiohttp==3.12.15 (459.2 KB)');
     });
@@ -97,17 +97,19 @@ describe('UvLogParser', () => {
         '   uv_installer::preparer::get_wheel name=alembic==1.16.4, size=Some(247026), url="..."',
       ];
 
-      lines.forEach((line) => parser.parseLine(line));
+      for (const line of lines) {
+        parser.parseLine(line);
+      }
       const downloads = parser.getActiveDownloads();
 
       expect(downloads).toHaveLength(3);
       expect(downloads[0].package).toBe('sentencepiece');
       expect(downloads[0].version).toBe('0.2.1');
-      expect(downloads[0].totalBytes).toBe(1253645);
+      expect(downloads[0].totalBytes).toBe(1_253_645);
 
       expect(downloads[1].package).toBe('pydantic');
       expect(downloads[1].version).toBe('2.11.7');
-      expect(downloads[1].totalBytes).toBe(444782);
+      expect(downloads[1].totalBytes).toBe(444_782);
     });
 
     it('should detect when downloads are prepared', () => {
@@ -129,7 +131,9 @@ describe('UvLogParser', () => {
         '2.155123s   1s  DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(15) }',
       ];
 
-      lines.forEach((line) => parser.parseLine(line));
+      for (const line of lines) {
+        parser.parseLine(line);
+      }
       const transfers = parser.getActiveTransfers();
 
       expect(transfers).toHaveProperty('15');
@@ -166,7 +170,7 @@ describe('UvLogParser', () => {
 
       expect(progress).toBeDefined();
       expect(progress!.package).toBe('numpy');
-      expect(progress!.totalBytes).toBe(10485760);
+      expect(progress!.totalBytes).toBe(10_485_760);
       expect(progress!.estimatedBytesReceived).toBeGreaterThan(0);
       expect(progress!.percentComplete).toBeGreaterThanOrEqual(0);
       expect(progress!.percentComplete).toBeLessThanOrEqual(100);
@@ -175,17 +179,17 @@ describe('UvLogParser', () => {
     it('should calculate transfer rate over sliding window', () => {
       const progress: DownloadProgress = {
         package: 'test-package',
-        totalBytes: 1048576, // 1MB
-        bytesReceived: 524288, // 512KB
+        totalBytes: 1_048_576, // 1MB
+        bytesReceived: 524_288, // 512KB
         percentComplete: 50,
         startTime: Date.now() - 5000, // Started 5 seconds ago
         currentTime: Date.now(),
         transferRateSamples: [
-          { timestamp: Date.now() - 5000, bytesPerSecond: 50000 },
-          { timestamp: Date.now() - 4000, bytesPerSecond: 100000 },
-          { timestamp: Date.now() - 3000, bytesPerSecond: 150000 },
-          { timestamp: Date.now() - 2000, bytesPerSecond: 120000 },
-          { timestamp: Date.now() - 1000, bytesPerSecond: 104857 }, // ~100KB/s
+          { timestamp: Date.now() - 5000, bytesPerSecond: 50_000 },
+          { timestamp: Date.now() - 4000, bytesPerSecond: 100_000 },
+          { timestamp: Date.now() - 3000, bytesPerSecond: 150_000 },
+          { timestamp: Date.now() - 2000, bytesPerSecond: 120_000 },
+          { timestamp: Date.now() - 1000, bytesPerSecond: 104_857 }, // ~100KB/s
         ],
       };
 
@@ -258,7 +262,9 @@ describe('UvLogParser', () => {
         'Installed 1 package in 3ms',
       ];
 
-      lines.forEach((line) => parser.parseLine(line));
+      for (const line of lines) {
+        parser.parseLine(line);
+      }
       const state = parser.getOverallState();
 
       expect(state.phases).toEqual(['started', 'resolving', 'resolved', 'downloading', 'prepared', 'installed']);
@@ -292,7 +298,7 @@ describe('UvLogParser', () => {
       // Should use exact size from get_wheel, not the approximation
       const downloads = parser.getActiveDownloads();
       const sentencepiece = downloads.find((d) => d.package === 'sentencepiece');
-      expect(sentencepiece?.totalBytes).toBe(1253645); // Exact bytes, not 1.2 * 1024 * 1024
+      expect(sentencepiece?.totalBytes).toBe(1_253_645); // Exact bytes, not 1.2 * 1024 * 1024
     });
 
     it('should handle get_wheel with size=None for unknown sizes', () => {
@@ -338,25 +344,25 @@ describe('UvLogParser', () => {
       const testCases = [
         {
           line: '   uv_installer::preparer::get_wheel name=pydantic==2.11.7, size=Some(444782), url="https://files.pythonhosted.org/packages/..."',
-          expected: { package: 'pydantic', version: '2.11.7', totalBytes: 444782 },
+          expected: { package: 'pydantic', version: '2.11.7', totalBytes: 444_782 },
         },
         {
           line: '   uv_installer::preparer::get_wheel name=alembic==1.16.4, size=Some(247026), url="https://..."',
-          expected: { package: 'alembic', version: '1.16.4', totalBytes: 247026 },
+          expected: { package: 'alembic', version: '1.16.4', totalBytes: 247_026 },
         },
         {
           line: '   uv_installer::preparer::get_wheel name=cffi==1.17.1, size=Some(178840), url="https://..."',
-          expected: { package: 'cffi', version: '1.17.1', totalBytes: 178840 },
+          expected: { package: 'cffi', version: '1.17.1', totalBytes: 178_840 },
         },
       ];
 
-      testCases.forEach(({ line, expected }) => {
+      for (const { line, expected } of testCases) {
         parser.parseLine(line);
         const downloads = parser.getActiveDownloads();
         const pkg = downloads.find((d) => d.package === expected.package);
         expect(pkg?.version).toBe(expected.version);
         expect(pkg?.totalBytes).toBe(expected.totalBytes);
-      });
+      }
     });
 
     it('should prioritize get_wheel for phase detection over user messages', () => {
@@ -377,12 +383,14 @@ describe('UvLogParser', () => {
   describe('Transfer Rate Smoothing', () => {
     it('should calculate smoothed rate over 5-second sliding window', () => {
       // Start a download
-      parser.parseLine('   uv_installer::preparer::get_wheel name=largepackage==1.0.0, size=Some(10485760), url="..."');
+      parser.parseLine(
+        '   uv_installer::preparer::get_wheel name=largepackage==1.0.0, size=Some(10_485_760), url="..."'
+      );
 
       // Simulate transfer rate samples over time
       const progress: DownloadProgress = {
         package: 'largepackage',
-        totalBytes: 10485760,
+        totalBytes: 10_485_760,
         bytesReceived: 0,
         percentComplete: 0,
         startTime: Date.now(),
@@ -394,13 +402,13 @@ describe('UvLogParser', () => {
       // Add samples over 7 seconds
       const now = Date.now();
       const samples: TransferRateSample[] = [
-        { timestamp: now - 7000, bytesPerSecond: 100000 }, // 7s ago - should be excluded
-        { timestamp: now - 6000, bytesPerSecond: 150000 }, // 6s ago - should be excluded
-        { timestamp: now - 4500, bytesPerSecond: 200000 }, // 4.5s ago - included
-        { timestamp: now - 3000, bytesPerSecond: 250000 }, // 3s ago - included
-        { timestamp: now - 2000, bytesPerSecond: 300000 }, // 2s ago - included
-        { timestamp: now - 1000, bytesPerSecond: 350000 }, // 1s ago - included
-        { timestamp: now - 500, bytesPerSecond: 400000 }, // 0.5s ago - included
+        { timestamp: now - 7000, bytesPerSecond: 100_000 }, // 7s ago - should be excluded
+        { timestamp: now - 6000, bytesPerSecond: 150_000 }, // 6s ago - should be excluded
+        { timestamp: now - 4500, bytesPerSecond: 200_000 }, // 4.5s ago - included
+        { timestamp: now - 3000, bytesPerSecond: 250_000 }, // 3s ago - included
+        { timestamp: now - 2000, bytesPerSecond: 300_000 }, // 2s ago - included
+        { timestamp: now - 1000, bytesPerSecond: 350_000 }, // 1s ago - included
+        { timestamp: now - 500, bytesPerSecond: 400_000 }, // 0.5s ago - included
       ];
 
       progress.transferRateSamples = samples;
@@ -410,16 +418,16 @@ describe('UvLogParser', () => {
       const avgRate = parser.calculateAverageTransferRate(progress);
 
       // Expected: (200000 + 250000 + 300000 + 350000 + 400000) / 5 = 300000
-      expect(avgRate).toBe(300000);
+      expect(avgRate).toBe(300_000);
     });
 
     it('should discard samples older than 5 seconds', () => {
       const progress: DownloadProgress = {
         package: 'package',
-        totalBytes: 1000000,
-        bytesReceived: 500000,
+        totalBytes: 1_000_000,
+        bytesReceived: 500_000,
         percentComplete: 50,
-        startTime: Date.now() - 10000,
+        startTime: Date.now() - 10_000,
         currentTime: Date.now(),
         transferRateSamples: [],
         averageTransferRate: 0,
@@ -428,9 +436,9 @@ describe('UvLogParser', () => {
       const now = Date.now();
       // All samples are old
       progress.transferRateSamples = [
-        { timestamp: now - 10000, bytesPerSecond: 100000 },
-        { timestamp: now - 8000, bytesPerSecond: 150000 },
-        { timestamp: now - 6000, bytesPerSecond: 200000 },
+        { timestamp: now - 10_000, bytesPerSecond: 100_000 },
+        { timestamp: now - 8000, bytesPerSecond: 150_000 },
+        { timestamp: now - 6000, bytesPerSecond: 200_000 },
       ];
 
       const avgRate = parser.calculateAverageTransferRate(progress);
@@ -440,8 +448,8 @@ describe('UvLogParser', () => {
     it('should weight recent samples more heavily', () => {
       const progress: DownloadProgress = {
         package: 'package',
-        totalBytes: 1000000,
-        bytesReceived: 500000,
+        totalBytes: 1_000_000,
+        bytesReceived: 500_000,
         percentComplete: 50,
         startTime: Date.now() - 5000,
         currentTime: Date.now(),
@@ -452,33 +460,33 @@ describe('UvLogParser', () => {
       const now = Date.now();
       // Recent samples should have more weight
       progress.transferRateSamples = [
-        { timestamp: now - 4000, bytesPerSecond: 100000 }, // Older
-        { timestamp: now - 3000, bytesPerSecond: 100000 },
-        { timestamp: now - 2000, bytesPerSecond: 100000 },
-        { timestamp: now - 1000, bytesPerSecond: 500000 }, // Recent spike
-        { timestamp: now - 100, bytesPerSecond: 600000 }, // Very recent
+        { timestamp: now - 4000, bytesPerSecond: 100_000 }, // Older
+        { timestamp: now - 3000, bytesPerSecond: 100_000 },
+        { timestamp: now - 2000, bytesPerSecond: 100_000 },
+        { timestamp: now - 1000, bytesPerSecond: 500_000 }, // Recent spike
+        { timestamp: now - 100, bytesPerSecond: 600_000 }, // Very recent
       ];
 
       const avgRate = parser.calculateAverageTransferRate(progress);
       // Should be weighted toward recent values
-      expect(avgRate).toBeGreaterThan(200000); // More than simple average
-      expect(avgRate).toBeLessThan(600000); // Less than max
+      expect(avgRate).toBeGreaterThan(200_000); // More than simple average
+      expect(avgRate).toBeLessThan(600_000); // Less than max
     });
 
     it('should handle sparse samples gracefully', () => {
       const progress: DownloadProgress = {
         package: 'package',
-        totalBytes: 1000000,
-        bytesReceived: 100000,
+        totalBytes: 1_000_000,
+        bytesReceived: 100_000,
         percentComplete: 10,
         startTime: Date.now() - 2000,
         currentTime: Date.now(),
-        transferRateSamples: [{ timestamp: Date.now() - 1000, bytesPerSecond: 100000 }],
+        transferRateSamples: [{ timestamp: Date.now() - 1000, bytesPerSecond: 100_000 }],
         averageTransferRate: 0,
       };
 
       const avgRate = parser.calculateAverageTransferRate(progress);
-      expect(avgRate).toBe(100000); // Single sample should work
+      expect(avgRate).toBe(100_000); // Single sample should work
     });
 
     it('should update transfer rate as new data frames arrive', () => {
@@ -502,9 +510,9 @@ describe('UvLogParser', () => {
         '2.000000s',
       ];
 
-      frameTimestamps.forEach((timestamp) => {
+      for (const timestamp of frameTimestamps) {
         parser.parseLine(`${timestamp} DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(3) }`);
-      });
+      }
 
       const progress = parser.getDownloadProgress('package');
       expect(progress?.transferRateSamples.length).toBeGreaterThan(0);
@@ -577,17 +585,17 @@ describe('UvLogParser', () => {
     it('should correlate multiple concurrent streams to their packages', () => {
       // Start multiple downloads with different stream IDs
       const downloads = [
-        { pkg: 'sentencepiece==0.2.1', size: 1253645, streamId: 3 },
-        { pkg: 'pydantic==2.11.7', size: 444782, streamId: 7 },
-        { pkg: 'alembic==1.16.4', size: 247026, streamId: 11 },
+        { pkg: 'sentencepiece==0.2.1', size: 1_253_645, streamId: 3 },
+        { pkg: 'pydantic==2.11.7', size: 444_782, streamId: 7 },
+        { pkg: 'alembic==1.16.4', size: 247_026, streamId: 11 },
       ];
 
-      downloads.forEach(({ pkg, size, streamId }) => {
+      for (const { pkg, size, streamId } of downloads) {
         parser.parseLine(`   uv_installer::preparer::get_wheel name=${pkg}, size=Some(${size}), url="..."`);
         parser.parseLine(
           `1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(${streamId}), flags: (0x5: END_HEADERS | END_STREAM) }`
         );
-      });
+      }
 
       const transfers = parser.getActiveTransfers();
       expect(Object.keys(transfers).length).toBe(3);
@@ -606,12 +614,12 @@ describe('UvLogParser', () => {
 
   describe('Phase Change Events', () => {
     it('should emit events on phase transitions', () => {
-      const phaseEvents: Array<{ from: Phase | undefined; to: Phase }> = [];
+      // const phaseEvents: Array<{ from: Phase | undefined; to: Phase }> = [];
 
       // Mock event listener
-      const onPhaseChange = (from: Phase | undefined, to: Phase) => {
-        phaseEvents.push({ from, to });
-      };
+      // const onPhaseChange = (from: Phase | undefined, to: Phase) => {
+      //   phaseEvents.push({ from, to });
+      // };
 
       // Simulate parser with event support
       // parser.onPhaseChange(onPhaseChange);
@@ -646,7 +654,7 @@ describe('UvLogParser', () => {
       };
 
       // Test that only valid transitions occur
-      let currentPhase: Phase = 'idle';
+      const currentPhase: Phase = 'idle';
 
       const testTransition = (to: Phase): boolean => {
         return validTransitions[currentPhase].includes(to);
@@ -820,7 +828,9 @@ describe('UvLogParser', () => {
         .trim()
         .split('\n');
 
-      mockSinglePackageLog.forEach((line) => parser.parseLine(line.trim()));
+      for (const line of mockSinglePackageLog) {
+        parser.parseLine(line.trim());
+      }
       const state = parser.getOverallState();
 
       expect(state.isComplete).toBe(true);
@@ -841,7 +851,9 @@ describe('UvLogParser', () => {
         .trim()
         .split('\n');
 
-      mockMultiPackageLog.forEach((line) => parser.parseLine(line.trim()));
+      for (const line of mockMultiPackageLog) {
+        parser.parseLine(line.trim());
+      }
       const state = parser.getOverallState();
 
       expect(state.isComplete).toBe(true);

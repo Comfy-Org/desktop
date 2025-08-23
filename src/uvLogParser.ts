@@ -132,7 +132,7 @@ export const UV_LOG_PATTERNS = {
 
   // Resolution phase
   SOLVING_PYTHON: /Solving with installed Python version: ([\d.]+)/,
-  ADDING_DEPENDENCY: /Adding direct dependency: ([^>=<]+)(.*)/,
+  ADDING_DEPENDENCY: /Adding direct dependency: ([^<=>]+)(.*)/,
   RESOLVED_PACKAGES: /Resolved (\d+) packages in ([\d.]+)s/,
 
   // Download preparation
@@ -141,7 +141,7 @@ export const UV_LOG_PATTERNS = {
 
   // HTTP/2 transfer
   H2_DATA_FRAME:
-    /([\d.]+)s.*h2::codec::framed_read received, frame=Data \{ stream_id: StreamId\((\d+)\)(?:, flags: \(0x1: END_STREAM\))?\s*\}/,
+    /([\d.]+)s.*h2::codec::framed_read received, frame=Data { stream_id: StreamId\((\d+)\)(?:, flags: \(0x1: END_STREAM\))?\s*}/,
 
   // Completion phases
   PREPARED_PACKAGES: /Prepared (\d+) packages? in (\d+)ms/,
@@ -191,15 +191,18 @@ export class UvLogParser implements IUvLogParser {
     return {};
   }
 
-  getDownloadProgress(_packageName: string): DownloadProgress | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getDownloadProgress(packageName: string): DownloadProgress | undefined {
     return undefined;
   }
 
-  calculateAverageTransferRate(_progress: DownloadProgress): number {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  calculateAverageTransferRate(progress: DownloadProgress): number {
     return 0;
   }
 
-  estimateTimeRemaining(_progress: DownloadProgress, _avgRate: number): number {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  estimateTimeRemaining(progress: DownloadProgress, avgRate: number): number {
     return 0;
   }
 

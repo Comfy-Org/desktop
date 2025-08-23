@@ -18,7 +18,7 @@ describe('UvLogParser Performance Tests', () => {
   describe('Large Log Volume Handling', () => {
     it('should efficiently parse thousands of log lines', () => {
       const startTime = Date.now();
-      const lineCount = 10000;
+      const lineCount = 10_000;
 
       // Generate a large volume of mixed log lines
       for (let i = 0; i < lineCount; i++) {
@@ -118,7 +118,7 @@ describe('UvLogParser Performance Tests', () => {
       }
 
       const transfers = parser.getActiveTransfers();
-      const activeStreamIds = Object.keys(transfers).map((id) => parseInt(id));
+      const activeStreamIds = Object.keys(transfers).map((id) => Number.parseInt(id));
 
       // Should only have uncompleted transfers
       expect(activeStreamIds).not.toContain(1);
@@ -186,7 +186,7 @@ describe('UvLogParser Performance Tests', () => {
       // Start all downloads
       for (let i = 1; i <= concurrentDownloads; i++) {
         parser.parseLine(
-          `   uv_installer::preparer::get_wheel name=concurrent${i}==1.0.0, size=Some(${1048576 * i}), url="..."`
+          `   uv_installer::preparer::get_wheel name=concurrent${i}==1.0.0, size=Some(${1_048_576 * i}), url="..."`
         );
         parser.parseLine(`Downloading concurrent${i} (${i}.0MiB)`);
       }
@@ -204,11 +204,11 @@ describe('UvLogParser Performance Tests', () => {
       expect(downloads).toHaveLength(concurrentDownloads);
 
       // Check that all downloads have progress
-      downloads.forEach((download) => {
+      for (const download of downloads) {
         const progress = parser.getDownloadProgress(download.package);
         expect(progress).toBeDefined();
         expect(progress!.percentComplete).toBeGreaterThan(0);
-      });
+      }
     });
 
     it('should accurately track overlapping phase transitions', () => {
@@ -225,7 +225,9 @@ describe('UvLogParser Performance Tests', () => {
         'Installed 2 packages in 10ms',
       ];
 
-      complexSequence.forEach((line) => parser.parseLine(line));
+      for (const line of complexSequence) {
+        parser.parseLine(line);
+      }
 
       const state = parser.getOverallState();
       expect(state.totalPackages).toBe(100);
@@ -247,7 +249,7 @@ describe('UvLogParser Performance Tests', () => {
     });
 
     it('should handle extremely large package sizes', () => {
-      const hugeSize = 10737418240; // 10GB
+      const hugeSize = 10_737_418_240; // 10GB
       parser.parseLine(`   uv_installer::preparer::get_wheel name=huge==1.0.0, size=Some(${hugeSize}), url="..."`);
       parser.parseLine('Downloading huge (10.0GiB)');
 
@@ -263,9 +265,9 @@ describe('UvLogParser Performance Tests', () => {
         '-100s DEBUG some::module Test',
       ];
 
-      malformedLines.forEach((line) => {
+      for (const line of malformedLines) {
         expect(() => parser.parseLine(line)).not.toThrow();
-      });
+      }
     });
 
     it('should handle incomplete log lines', () => {
@@ -277,11 +279,11 @@ describe('UvLogParser Performance Tests', () => {
         'DEBUG h2::codec::framed_read received, frame=Data',
       ];
 
-      incompleteLines.forEach((line) => {
+      for (const line of incompleteLines) {
         const status = parser.parseLine(line);
         expect(status.phase).toBe('unknown');
         expect(status.rawLine).toBe(line);
-      });
+      }
     });
   });
 
