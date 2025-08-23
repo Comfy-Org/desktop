@@ -417,9 +417,9 @@ export class VirtualEnvironment implements HasTelemetry {
             }
           }
 
-          // Debug log to track parsing activity
-          if (lines.length > 0) {
-            log.debug(`UV parser processed ${lines.length} lines, sent ${meaningfulUpdates} status updates`);
+          // Only log when we actually send updates to frontend
+          if (meaningfulUpdates > 0) {
+            log.debug(`UV parser sent ${meaningfulUpdates} status updates to frontend`);
           }
 
           // Don't forward raw stdout when parsing - we're sending structured updates instead
@@ -445,8 +445,9 @@ export class VirtualEnvironment implements HasTelemetry {
             }
           }
 
-          if (lines.length > 0) {
-            log.debug(`UV parser processed ${lines.length} stderr lines, sent ${meaningfulUpdates} status updates`);
+          // Only log when we actually send updates to frontend
+          if (meaningfulUpdates > 0) {
+            log.debug(`UV parser sent ${meaningfulUpdates} status updates from stderr to frontend`);
           }
         }
 
