@@ -348,6 +348,22 @@ export class UvLogParser implements IUvLogParser {
         if (!existingDownload.startTime) {
           existingDownload.startTime = Date.now();
         }
+
+        // Ensure progress is initialized for existing download
+        if (!this.downloadProgress.has(packageName)) {
+          const progress: DownloadProgress = {
+            package: packageName,
+            totalBytes: existingDownload.totalBytes,
+            bytesReceived: 0,
+            estimatedBytesReceived: 0,
+            percentComplete: 0,
+            startTime: existingDownload.startTime || Date.now(),
+            currentTime: Date.now(),
+            transferRateSamples: [],
+            averageTransferRate: 0,
+          };
+          this.downloadProgress.set(packageName, progress);
+        }
       } else {
         // Create new download if it doesn't exist
         // Parse size string to bytes (approximate since get_wheel has exact)
