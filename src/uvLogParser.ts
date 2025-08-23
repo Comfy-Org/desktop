@@ -414,7 +414,7 @@ export class UvLogParser implements IUvLogParser {
         // Try to associate with the next unassigned download
         const assignedPackages = new Set(this.streamToPackage.values());
         const unassignedDownloads = [...this.downloads.values()]
-          .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package) && d.totalBytes > 0) // Only packages with size need downloading
+          .filter((d) => d.status === 'pending' && !assignedPackages.has(d.package) && d.totalBytes > 0) // Only packages with size need downloading
           .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
         if (unassignedDownloads.length > 0) {
