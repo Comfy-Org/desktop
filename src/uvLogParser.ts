@@ -1,10 +1,10 @@
 /**
  * Type definitions for UV log parser
- * 
+ *
  * These interfaces define the structure of data extracted from uv pip install logs
  */
 
-export type Phase = 
+export type Phase =
   | 'idle'
   | 'started'
   | 'reading_requirements'
@@ -22,34 +22,34 @@ export interface UvStatus {
   phase: Phase;
   message: string;
   timestamp?: number;
-  
+
   // Process info
   uvVersion?: string;
   pythonVersion?: string;
   requirementsFile?: string;
-  
+
   // Package info
   currentPackage?: string;
   packageVersion?: string;
   packageSize?: number;
   packageSizeFormatted?: string;
   downloadUrl?: string;
-  
+
   // Progress info
   totalPackages?: number;
   preparedPackages?: number;
   installedPackages?: number;
   totalWheels?: number;
-  
+
   // Timing info
   resolutionTime?: number;
   preparationTime?: number;
   installationTime?: number;
-  
+
   // Stream info (for HTTP/2 tracking)
   streamId?: string;
   streamCompleted?: boolean;
-  
+
   // Error info
   error?: string;
   rawLine?: string;
@@ -107,17 +107,17 @@ export interface IUvLogParser {
   // Core parsing
   parseLine(line: string): UvStatus;
   parseLines(lines: string[]): UvStatus[];
-  
+
   // State queries
   getOverallState(): OverallState;
   getActiveDownloads(): PackageDownloadInfo[];
   getActiveTransfers(): Record<string, HttpTransferInfo>;
   getDownloadProgress(packageName: string): DownloadProgress | undefined;
-  
+
   // Progress calculation
   calculateAverageTransferRate(progress: DownloadProgress): number;
   estimateTimeRemaining(progress: DownloadProgress, avgRate: number): number;
-  
+
   // State management
   reset(): void;
 }
@@ -129,24 +129,25 @@ export const UV_LOG_PATTERNS = {
   // Process start
   UV_VERSION: /DEBUG uv uv (\d+\.\d+\.\d+)/,
   REQUIREMENTS_FILE: /from_source source=(.+\.txt)/,
-  
+
   // Resolution phase
   SOLVING_PYTHON: /Solving with installed Python version: ([\d.]+)/,
   ADDING_DEPENDENCY: /Adding direct dependency: ([^>=<]+)(.*)/,
   RESOLVED_PACKAGES: /Resolved (\d+) packages in ([\d.]+)s/,
-  
+
   // Download preparation
   GET_WHEEL: /preparer::get_wheel name=([^=]+)==([\d.]+), size=Some\((\d+)\), url="([^"]+)"/,
   DOWNLOADING: /Downloading (\S+) \(([^)]+)\)/,
-  
+
   // HTTP/2 transfer
-  H2_DATA_FRAME: /([\d.]+)s.*h2::codec::framed_read received, frame=Data \{ stream_id: StreamId\((\d+)\)(?:, flags: \(0x1: END_STREAM\))?\s*\}/,
-  
+  H2_DATA_FRAME:
+    /([\d.]+)s.*h2::codec::framed_read received, frame=Data \{ stream_id: StreamId\((\d+)\)(?:, flags: \(0x1: END_STREAM\))?\s*\}/,
+
   // Completion phases
   PREPARED_PACKAGES: /Prepared (\d+) packages? in (\d+)ms/,
   INSTALL_BLOCKING: /install_blocking num_wheels=(\d+)/,
   INSTALLED_PACKAGES: /Installed (\d+) packages? in (\d+)ms/,
-  
+
   // Errors
   ERROR: /ERROR: (.+)/,
   WARN: /WARN[^:]*: (.+)/,
