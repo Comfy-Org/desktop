@@ -8,6 +8,7 @@ import type { ComfyInstallation } from '@/main-process/comfyInstallation';
 import type { InstallValidation } from '@/preload';
 import { getTelemetry } from '@/services/telemetry';
 import { useDesktopConfig } from '@/store/desktopConfig';
+import type { UvStatus } from '@/uvLogParser';
 
 /**
  * IPC handler for troubleshooting / maintenance tasks.
@@ -65,7 +66,23 @@ export class Troubleshooting implements Disposable {
     // Install python packages
     ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, async () => {
       getTelemetry().track('installation_manager:uv_requirements_install');
-      const result = await installation.virtualEnvironment.reinstallRequirements(sendLogIpc);
+
+      // Enhanced callback that also tracks installation progress
+      const onStatus = (status: UvStatus) => {
+        // Log significant phase changes
+        if (status.phase !== 'unknown' && status.message) {
+          log.debug(`UV Install Status: [${status.phase}] ${status.message}`);
+
+          // Send structured progress updates to renderer if needed
+          if (status.phase === 'downloading' && status.currentPackage) {
+            this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `📦 ${status.message}`);
+          } else if (status.phase === 'installed') {
+            this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `✅ ${status.message}`);
+          }
+        }
+      };
+
+      const result = await installation.virtualEnvironment.reinstallRequirements(sendLogIpc, onStatus);
 
       if (result) await this.onInstallFix?.();
       return result;

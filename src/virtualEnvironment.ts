@@ -554,6 +554,22 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   /**
+   * Creates process callbacks with UV log parsing support.
+   * @param onData Callback for raw stdout data
+   * @param onStatus Optional callback for parsed UV status updates
+   * @returns ProcessCallbacks with parsing support
+   */
+  public createCallbacksWithParsing(
+    onData?: (data: string) => void,
+    onStatus?: (status: UvStatus) => void
+  ): ProcessCallbacks {
+    return {
+      onStdout: onData,
+      onUvStatus: onStatus,
+    };
+  }
+
+  /**
    * Checks if the virtual environment has all the required packages of ComfyUI core.
    *
    * Parses the text output of `uv pip install --dry-run -r requirements.txt`.
@@ -668,8 +684,11 @@ export class VirtualEnvironment implements HasTelemetry {
   /**
    * Reinstalls the required packages for ComfyUI core.
    */
-  async reinstallRequirements(onData: (data: string) => void) {
-    const callbacks = { onStdout: onData };
+  async reinstallRequirements(onData: (data: string) => void, onStatus?: (status: UvStatus) => void) {
+    const callbacks: ProcessCallbacks = {
+      onStdout: onData,
+      onUvStatus: onStatus,
+    };
 
     try {
       await this.#using(() => this.manualInstall(callbacks));
