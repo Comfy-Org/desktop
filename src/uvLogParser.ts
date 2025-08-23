@@ -437,11 +437,25 @@ export class UvLogParser implements IUvLogParser {
       const isEndStream = trimmedLine.includes('END_STREAM');
 
       if (!this.transfers.has(streamId)) {
+        // Try to associate with an active download if not already mapped
+        if (!this.streamToPackage.has(streamId)) {
+          const assignedPackages = new Set(this.streamToPackage.values());
+          const unassignedDownloads = [...this.downloads.values()]
+            .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package))
+            .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+
+          if (unassignedDownloads.length > 0) {
+            const download = unassignedDownloads[0];
+            this.streamToPackage.set(streamId, download.package);
+          }
+        }
+
         // Create transfer if not exists
         const transfer: HttpTransferInfo = {
           streamId,
           frameCount: 1,
           lastFrameTime: Date.now(),
+          associatedPackage: this.streamToPackage.get(streamId),
         };
         this.transfers.set(streamId, transfer);
       } else {
