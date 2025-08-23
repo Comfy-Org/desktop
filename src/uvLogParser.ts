@@ -136,7 +136,7 @@ export const UV_LOG_PATTERNS = {
   RESOLVED_PACKAGES: /Resolved (\d+) packages in ([\d.]+)s/,
 
   // Download preparation
-  GET_WHEEL: /preparer::get_wheel name=([^=]+)==([\d.]+), size=(Some\((\d+)\)|None), url="([^"]+)"/,
+  GET_WHEEL: /preparer::get_wheel name=([^=]+)==([\d.]+), size=(Some\(([\d_]+)\)|None), url="([^"]+)"/,
   DOWNLOADING: /Downloading (\S+) \(([^)]+)\)/,
 
   // HTTP/2 transfer
@@ -287,7 +287,7 @@ export class UvLogParser implements IUvLogParser {
       const packageName = match![1];
       const version = match![2];
       const sizeStr = match![3];
-      const size = sizeStr === 'None' ? 0 : Number.parseInt(match![4], 10);
+      const size = sizeStr === 'None' ? 0 : Number.parseInt(match![4].replaceAll('_', ''), 10);
       const url = match![5];
 
       // Only transition to downloading if we have a valid size
