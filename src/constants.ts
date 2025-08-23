@@ -46,6 +46,7 @@ export const IPC_CHANNELS = {
   INCREMENT_USER_PROPERTY: 'increment-user-property',
   UV_CLEAR_CACHE: 'uv-clear-cache',
   UV_RESET_VENV: 'uv-delete-venv',
+  UV_INSTALL_STATUS: 'uv-install-status',
   CAN_ACCESS_URL: 'can-access-url',
   START_TROUBLESHOOTING: 'start-troubleshooting',
   DISABLE_CUSTOM_NODES: 'disable-custom-nodes',

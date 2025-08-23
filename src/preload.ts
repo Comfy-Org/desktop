@@ -109,6 +109,45 @@ export interface InstallValidation {
   upgradePackages?: ValidationIssueState;
 }
 
+/**
+ * UV installation status update sent to the frontend during pip install operations.
+ * This provides real-time progress tracking for package installations.
+ */
+export interface UvInstallStatus {
+  /** Current installation phase */
+  phase:
+    | 'idle'
+    | 'started'
+    | 'reading_requirements'
+    | 'resolving'
+    | 'resolved'
+    | 'preparing_download'
+    | 'downloading'
+    | 'prepared'
+    | 'installing'
+    | 'installed'
+    | 'error'
+    | 'unknown';
+  /** Human-readable status message */
+  message?: string;
+  /** Total number of packages to install */
+  totalPackages?: number;
+  /** Number of packages successfully installed */
+  installedPackages?: number;
+  /** Currently downloading package name */
+  currentPackage?: string;
+  /** Download progress for current package (0-100) */
+  downloadProgress?: number;
+  /** Estimated time remaining in seconds */
+  etaSeconds?: number;
+  /** Transfer rate in bytes per second */
+  transferRate?: number;
+  /** Error message if phase is 'error' */
+  error?: string;
+  /** Whether the installation is complete */
+  isComplete?: boolean;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -451,6 +490,42 @@ const electronAPI = {
      * @returns `true` if the virtual environment was reset successfully, otherwise `false`
      */
     resetVenv: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.UV_RESET_VENV),
+
+    /**
+     * Registers a callback to receive real-time UV installation status updates.
+     * These updates provide detailed progress information during package installations.
+     *
+     * @param callback Function called with UV installation status updates
+     * @returns A cleanup function to remove the listener
+     *
+     * @example
+     * ```typescript
+     * // Register listener
+     * const cleanup = electronAPI.uv.onInstallStatus((status) => {
+     *   console.log(`Phase: ${status.phase}`);
+     *   if (status.currentPackage) {
+     *     console.log(`Downloading: ${status.currentPackage} (${status.downloadProgress}%)`);
+     *   }
+     *   if (status.isComplete) {
+     *     console.log('Installation complete!');
+     *   }
+     * });
+     *
+     * // Later, cleanup when done
+     * cleanup();
+     * ```
+     */
+    onInstallStatus: (callback: (status: UvInstallStatus) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, status: UvInstallStatus) => {
+        callback(status);
+      };
+      ipcRenderer.on(IPC_CHANNELS.UV_INSTALL_STATUS, handler);
+
+      // Return cleanup function
+      return () => {
+        ipcRenderer.off(IPC_CHANNELS.UV_INSTALL_STATUS, handler);
+      };
+    },
   },
 
   /**

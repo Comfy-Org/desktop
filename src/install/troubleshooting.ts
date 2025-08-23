@@ -5,7 +5,7 @@ import { ComfyServerConfig } from '@/config/comfyServerConfig';
 import { IPC_CHANNELS } from '@/constants';
 import type { AppWindow } from '@/main-process/appWindow';
 import type { ComfyInstallation } from '@/main-process/comfyInstallation';
-import type { InstallValidation } from '@/preload';
+import type { InstallValidation, UvInstallStatus } from '@/preload';
 import { getTelemetry } from '@/services/telemetry';
 import { useDesktopConfig } from '@/store/desktopConfig';
 import type { UvStatus } from '@/uvLogParser';
@@ -80,6 +80,20 @@ export class Troubleshooting implements Disposable {
             this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `✅ ${status.message}`);
           }
         }
+
+        // Convert UvStatus to UvInstallStatus for frontend
+        const installStatus: UvInstallStatus = {
+          phase: status.phase,
+          message: status.message,
+          totalPackages: status.totalPackages,
+          installedPackages: status.installedPackages,
+          currentPackage: status.currentPackage,
+          error: status.error,
+          isComplete: status.phase === 'installed' || (status.phase === 'error' && !!status.error),
+        };
+
+        // Send UV installation status to frontend
+        this.appWindow.send(IPC_CHANNELS.UV_INSTALL_STATUS, installStatus);
       };
 
       const result = await installation.virtualEnvironment.reinstallRequirements(sendLogIpc, onStatus);
