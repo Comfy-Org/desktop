@@ -295,7 +295,8 @@ export class UvLogParser implements IUvLogParser {
       const url = match![5];
 
       // Only transition to downloading if we have a valid size
-      const hasValidSize = size > 0;
+      const hasValidSize = sizeStr !== 'None' && size > 0;
+      const isUnknownSize = sizeStr === 'None';
 
       const downloadInfo: PackageDownloadInfo = {
         package: packageName,
@@ -315,7 +316,7 @@ export class UvLogParser implements IUvLogParser {
         totalBytes: size,
         bytesReceived: 0,
         estimatedBytesReceived: 0,
-        percentComplete: size === 0 ? 100 : 0, // Zero-size packages are instantly complete
+        percentComplete: isUnknownSize ? 0 : (size === 0 ? 100 : 0), // Unknown size: 0%, Known empty: 100%
         startTime: Date.now(),
         currentTime: Date.now(),
         transferRateSamples: [],
@@ -715,7 +716,8 @@ export class UvLogParser implements IUvLogParser {
   }
 
   getActiveDownloads(): PackageDownloadInfo[] {
-    return [...this.downloads.values()];
+    // Return only non-completed downloads
+    return [...this.downloads.values()].filter((d) => d.status !== 'completed');
   }
 
   getActiveTransfers(): Record<string, HttpTransferInfo> {
