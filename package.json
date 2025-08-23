@@ -11,11 +11,11 @@
   "type": "module",
   "config": {
     "frontend": {
-      "version": "1.25.9",
+      "version": "1.25.10",
       "optionalBranch": ""
     },
     "comfyUI": {
-      "version": "0.3.51",
+      "version": "0.3.52",
       "optionalBranch": ""
     },
     "managerCommit": "330c4657b1dc067f2cc54e8be7ab0c9ade5888d8",
