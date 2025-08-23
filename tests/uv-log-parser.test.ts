@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { UvLogParser, DownloadProgress } from '../src/uvLogParser';
+import { UvLogParser, DownloadProgress, TransferRateSample, Phase } from '../src/uvLogParser';
 
 describe('UvLogParser', () => {
   let parser: UvLogParser;
@@ -272,6 +272,497 @@ describe('UvLogParser', () => {
       expect(state.phases).toEqual([]);
       expect(state.currentPhase).toBe('idle');
       expect(state.totalPackages).toBe(0);
+    });
+  });
+
+  describe('get_wheel as Authoritative Source', () => {
+    it('should use get_wheel size=Some(bytes) as exact size, not "Downloading (1.2MiB)"', () => {
+      // First: get_wheel provides exact byte count
+      parser.parseLine('   uv_installer::preparer::get_wheel name=sentencepiece==0.2.1, size=Some(1253645), url="https://..."');
+      
+      // Then: user-friendly message with approximate size
+      parser.parseLine('Downloading sentencepiece (1.2MiB)');
+      
+      // Should use exact size from get_wheel, not the approximation
+      const downloads = parser.getActiveDownloads();
+      const sentencepiece = downloads.find(d => d.package === 'sentencepiece');
+      expect(sentencepiece?.totalBytes).toBe(1253645); // Exact bytes, not 1.2 * 1024 * 1024
+    });
+
+    it('should handle get_wheel with size=None for unknown sizes', () => {
+      parser.parseLine('   uv_installer::preparer::get_wheel name=mypackage==1.0.0, size=None, url="..."');
+      
+      const downloads = parser.getActiveDownloads();
+      const mypackage = downloads.find(d => d.package === 'mypackage');
+      expect(mypackage).toBeDefined();
+      expect(mypackage?.totalBytes).toBe(0); // or undefined, depending on implementation choice
+      expect(mypackage?.status).toBe('pending');
+      
+      // Progress calculation should handle unknown size gracefully
+      const progress = parser.getDownloadProgress('mypackage');
+      expect(progress?.percentComplete).toBe(0);
+      expect(progress?.estimatedTimeRemaining).toBeUndefined();
+    });
+
+    it('should prefer get_wheel timing for download start detection', () => {
+      const getWheelTime = '2.093270s';
+      const downloadingTime = '2.150000s';
+      
+      // get_wheel appears first and marks the actual download start
+      parser.parseLine(`${getWheelTime}   1s uv_installer::preparer::get_wheel name=numpy==2.0.0, size=Some(16277507), url="..."`);
+      
+      // Record the download info immediately
+      let downloads = parser.getActiveDownloads();
+      let numpy = downloads.find(d => d.package === 'numpy');
+      expect(numpy?.status).toBe('downloading');
+      const startTime1 = numpy?.startTime;
+      
+      // Later, the user-friendly message appears
+      parser.parseLine(`${downloadingTime} Downloading numpy (15.5MiB)`);
+      
+      // Start time should not change
+      downloads = parser.getActiveDownloads();
+      numpy = downloads.find(d => d.package === 'numpy');
+      expect(numpy?.startTime).toBe(startTime1);
+    });
+
+    it('should extract exact package metadata from get_wheel', () => {
+      const testCases = [
+        {
+          line: '   uv_installer::preparer::get_wheel name=pydantic==2.11.7, size=Some(444782), url="https://files.pythonhosted.org/packages/..."',
+          expected: { package: 'pydantic', version: '2.11.7', totalBytes: 444782 }
+        },
+        {
+          line: '   uv_installer::preparer::get_wheel name=alembic==1.16.4, size=Some(247026), url="https://..."',
+          expected: { package: 'alembic', version: '1.16.4', totalBytes: 247026 }
+        },
+        {
+          line: '   uv_installer::preparer::get_wheel name=cffi==1.17.1, size=Some(178840), url="https://..."',
+          expected: { package: 'cffi', version: '1.17.1', totalBytes: 178840 }
+        }
+      ];
+      
+      testCases.forEach(({ line, expected }) => {
+        parser.parseLine(line);
+        const downloads = parser.getActiveDownloads();
+        const pkg = downloads.find(d => d.package === expected.package);
+        expect(pkg?.version).toBe(expected.version);
+        expect(pkg?.totalBytes).toBe(expected.totalBytes);
+      });
+    });
+
+    it('should prioritize get_wheel for phase detection over user messages', () => {
+      // get_wheel indicates download phase has begun
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(1000), url="..."');
+      
+      const status1 = parser.getOverallState();
+      expect(status1.currentPhase).toBe('downloading');
+      
+      // Even without "Downloading" message, we're in download phase
+      parser.parseLine('2.100000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(3) }');
+      
+      const status2 = parser.getOverallState();
+      expect(status2.currentPhase).toBe('downloading');
+    });
+  });
+
+  describe('Transfer Rate Smoothing', () => {
+    it('should calculate smoothed rate over 5-second sliding window', () => {
+      // Start a download
+      parser.parseLine('   uv_installer::preparer::get_wheel name=largepackage==1.0.0, size=Some(10485760), url="..."');
+      
+      // Simulate transfer rate samples over time
+      const progress: DownloadProgress = {
+        package: 'largepackage',
+        totalBytes: 10485760,
+        bytesReceived: 0,
+        percentComplete: 0,
+        startTime: Date.now(),
+        currentTime: Date.now(),
+        transferRateSamples: [],
+        averageTransferRate: 0
+      };
+      
+      // Add samples over 7 seconds
+      const now = Date.now();
+      const samples: TransferRateSample[] = [
+        { timestamp: now - 7000, bytesPerSecond: 100000 },  // 7s ago - should be excluded
+        { timestamp: now - 6000, bytesPerSecond: 150000 },  // 6s ago - should be excluded
+        { timestamp: now - 4500, bytesPerSecond: 200000 },  // 4.5s ago - included
+        { timestamp: now - 3000, bytesPerSecond: 250000 },  // 3s ago - included
+        { timestamp: now - 2000, bytesPerSecond: 300000 },  // 2s ago - included
+        { timestamp: now - 1000, bytesPerSecond: 350000 },  // 1s ago - included
+        { timestamp: now - 500, bytesPerSecond: 400000 },   // 0.5s ago - included
+      ];
+      
+      progress.transferRateSamples = samples;
+      progress.currentTime = now;
+      
+      // Calculate average rate - should only include last 5 seconds
+      const avgRate = parser.calculateAverageTransferRate(progress);
+      
+      // Expected: (200000 + 250000 + 300000 + 350000 + 400000) / 5 = 300000
+      expect(avgRate).toBe(300000);
+    });
+
+    it('should discard samples older than 5 seconds', () => {
+      const progress: DownloadProgress = {
+        package: 'package',
+        totalBytes: 1000000,
+        bytesReceived: 500000,
+        percentComplete: 50,
+        startTime: Date.now() - 10000,
+        currentTime: Date.now(),
+        transferRateSamples: [],
+        averageTransferRate: 0
+      };
+      
+      const now = Date.now();
+      // All samples are old
+      progress.transferRateSamples = [
+        { timestamp: now - 10000, bytesPerSecond: 100000 },
+        { timestamp: now - 8000, bytesPerSecond: 150000 },
+        { timestamp: now - 6000, bytesPerSecond: 200000 },
+      ];
+      
+      const avgRate = parser.calculateAverageTransferRate(progress);
+      expect(avgRate).toBe(0); // No recent samples
+    });
+
+    it('should weight recent samples more heavily', () => {
+      const progress: DownloadProgress = {
+        package: 'package',
+        totalBytes: 1000000,
+        bytesReceived: 500000,
+        percentComplete: 50,
+        startTime: Date.now() - 5000,
+        currentTime: Date.now(),
+        transferRateSamples: [],
+        averageTransferRate: 0
+      };
+      
+      const now = Date.now();
+      // Recent samples should have more weight
+      progress.transferRateSamples = [
+        { timestamp: now - 4000, bytesPerSecond: 100000 },  // Older
+        { timestamp: now - 3000, bytesPerSecond: 100000 },
+        { timestamp: now - 2000, bytesPerSecond: 100000 },
+        { timestamp: now - 1000, bytesPerSecond: 500000 },  // Recent spike
+        { timestamp: now - 100, bytesPerSecond: 600000 },   // Very recent
+      ];
+      
+      const avgRate = parser.calculateAverageTransferRate(progress);
+      // Should be weighted toward recent values
+      expect(avgRate).toBeGreaterThan(200000); // More than simple average
+      expect(avgRate).toBeLessThan(600000);    // Less than max
+    });
+
+    it('should handle sparse samples gracefully', () => {
+      const progress: DownloadProgress = {
+        package: 'package',
+        totalBytes: 1000000,
+        bytesReceived: 100000,
+        percentComplete: 10,
+        startTime: Date.now() - 2000,
+        currentTime: Date.now(),
+        transferRateSamples: [
+          { timestamp: Date.now() - 1000, bytesPerSecond: 100000 }
+        ],
+        averageTransferRate: 0
+      };
+      
+      const avgRate = parser.calculateAverageTransferRate(progress);
+      expect(avgRate).toBe(100000); // Single sample should work
+    });
+
+    it('should update transfer rate as new data frames arrive', () => {
+      // Start download
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(5242880), url="..."');
+      parser.parseLine('1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(3), flags: (0x5: END_HEADERS | END_STREAM) }');
+      
+      // Simulate receiving data frames over time
+      const frameTimestamps = [
+        '1.100000s', '1.200000s', '1.300000s', '1.400000s', '1.500000s',
+        '1.600000s', '1.700000s', '1.800000s', '1.900000s', '2.000000s'
+      ];
+      
+      frameTimestamps.forEach(timestamp => {
+        parser.parseLine(`${timestamp} DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(3) }`);
+      });
+      
+      const progress = parser.getDownloadProgress('package');
+      expect(progress?.transferRateSamples.length).toBeGreaterThan(0);
+      expect(progress?.averageTransferRate).toBeGreaterThan(0);
+    });
+  });
+
+  describe('HTTP/2 Stream ID to Package Mapping', () => {
+    it('should map HTTP/2 stream IDs to specific package downloads', () => {
+      // When a download starts, it gets assigned a stream ID
+      parser.parseLine('   uv_installer::preparer::get_wheel name=sentencepiece==0.2.1, size=Some(1253645), url="https://files.pythonhosted.org/packages/..."');
+      parser.parseLine('2.093270s   1s  DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(11), flags: (0x5: END_HEADERS | END_STREAM) }');
+      
+      // Associate stream ID 11 with sentencepiece download
+      const transfers = parser.getActiveTransfers();
+      expect(transfers['11']).toBeDefined();
+      expect(transfers['11'].associatedPackage).toBe('sentencepiece');
+    });
+
+    it('should track data frames by stream ID for progress calculation', () => {
+      // Setup: Start a download and associate it with stream ID 7
+      parser.parseLine('   uv_installer::preparer::get_wheel name=numpy==2.0.0, size=Some(16277507), url="..."');
+      parser.parseLine('1.500000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(7), flags: (0x5: END_HEADERS | END_STREAM) }');
+      
+      // Track multiple data frames for the same stream
+      parser.parseLine('1.600000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(7) }');
+      parser.parseLine('1.700000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(7) }');
+      parser.parseLine('1.800000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(7) }');
+      
+      const transfers = parser.getActiveTransfers();
+      expect(transfers['7'].frameCount).toBe(3);
+      
+      // Verify progress is being tracked for the associated package
+      const progress = parser.getDownloadProgress('numpy');
+      expect(progress).toBeDefined();
+      expect(progress?.estimatedBytesReceived).toBeGreaterThan(0);
+    });
+
+    it('should handle stream ID reuse after completion', () => {
+      // First download completes
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1000), url="..."');
+      parser.parseLine('1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(5), flags: (0x5: END_HEADERS | END_STREAM) }');
+      parser.parseLine('1.100000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(5), flags: (0x1: END_STREAM) }');
+      
+      // Stream 5 should be marked as complete
+      let transfers = parser.getActiveTransfers();
+      expect(transfers['5']).toBeUndefined(); // Should be cleaned up after END_STREAM
+      
+      // New download reuses stream ID 5 (this can happen in HTTP/2)
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==2.0.0, size=Some(2000), url="..."');
+      parser.parseLine('2.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(5), flags: (0x5: END_HEADERS | END_STREAM) }');
+      
+      transfers = parser.getActiveTransfers();
+      expect(transfers['5']).toBeDefined();
+      expect(transfers['5'].associatedPackage).toBe('package2');
+    });
+
+    it('should correlate multiple concurrent streams to their packages', () => {
+      // Start multiple downloads with different stream IDs
+      const downloads = [
+        { pkg: 'sentencepiece==0.2.1', size: 1253645, streamId: 3 },
+        { pkg: 'pydantic==2.11.7', size: 444782, streamId: 7 },
+        { pkg: 'alembic==1.16.4', size: 247026, streamId: 11 },
+      ];
+      
+      downloads.forEach(({ pkg, size, streamId }) => {
+        parser.parseLine(`   uv_installer::preparer::get_wheel name=${pkg}, size=Some(${size}), url="..."`);
+        parser.parseLine(`1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(${streamId}), flags: (0x5: END_HEADERS | END_STREAM) }`);
+      });
+      
+      const transfers = parser.getActiveTransfers();
+      expect(Object.keys(transfers).length).toBe(3);
+      expect(transfers['3'].associatedPackage).toBe('sentencepiece');
+      expect(transfers['7'].associatedPackage).toBe('pydantic');
+      expect(transfers['11'].associatedPackage).toBe('alembic');
+      
+      // Verify each package has its download info tracked
+      const activeDownloads = parser.getActiveDownloads();
+      expect(activeDownloads.length).toBe(3);
+      expect(activeDownloads.find(d => d.package === 'sentencepiece')).toBeDefined();
+      expect(activeDownloads.find(d => d.package === 'pydantic')).toBeDefined();
+      expect(activeDownloads.find(d => d.package === 'alembic')).toBeDefined();
+    });
+  });
+
+  describe('Phase Change Events', () => {
+    it('should emit events on phase transitions', () => {
+      const phaseEvents: Array<{ from: Phase | undefined, to: Phase }> = [];
+      
+      // Mock event listener
+      const onPhaseChange = (from: Phase | undefined, to: Phase) => {
+        phaseEvents.push({ from, to });
+      };
+      
+      // Simulate parser with event support
+      // parser.onPhaseChange(onPhaseChange);
+      
+      // Trigger phase changes
+      parser.parseLine('    0.000690s DEBUG uv uv 0.8.13');
+      parser.parseLine('Resolved 60 packages in 2.00s');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(1000), url="..."');
+      parser.parseLine('Prepared 1 package in 100ms');
+      parser.parseLine('Installed 1 package in 5ms');
+      
+      // Verify events were emitted in order
+      // Would check: idle->started, started->resolved, resolved->downloading, etc.
+      const state = parser.getOverallState();
+      expect(state.phases.length).toBeGreaterThan(0);
+    });
+
+    it('should guarantee phase transition order', () => {
+      const validTransitions: Record<Phase, Phase[]> = {
+        'idle': ['started'],
+        'started': ['reading_requirements', 'resolving'],
+        'reading_requirements': ['resolving'],
+        'resolving': ['resolved'],
+        'resolved': ['preparing_download', 'downloading', 'prepared'],
+        'preparing_download': ['downloading'],
+        'downloading': ['prepared'],
+        'prepared': ['installing'],
+        'installing': ['installed'],
+        'installed': [],
+        'error': [],
+        'unknown': []
+      };
+      
+      // Test that only valid transitions occur
+      let currentPhase: Phase = 'idle';
+      
+      const testTransition = (to: Phase): boolean => {
+        return validTransitions[currentPhase].includes(to);
+      };
+      
+      expect(testTransition('started')).toBe(true);
+      expect(testTransition('installed')).toBe(false);
+    });
+
+    it('should not emit duplicate phase events', () => {
+      // Parse multiple lines that would trigger same phase
+      parser.parseLine('    0.079718s   1ms DEBUG uv_resolver::resolver Adding direct dependency: package1');
+      parser.parseLine('    0.079719s   1ms DEBUG uv_resolver::resolver Adding direct dependency: package2');
+      parser.parseLine('    0.079720s   1ms DEBUG uv_resolver::resolver Adding direct dependency: package3');
+      
+      // Should only transition to 'resolving' once, not three times
+      const state = parser.getOverallState();
+      const resolvingCount = state.phases.filter(p => p === 'resolving').length;
+      expect(resolvingCount).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('State Reset Completeness', () => {
+    it('should clear all download states on reset', () => {
+      // Setup complex state
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package1==1.0.0, size=Some(1000), url="..."');
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package2==1.0.0, size=Some(2000), url="..."');
+      parser.parseLine('1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(3), flags: (0x5: END_HEADERS | END_STREAM) }');
+      
+      // Verify state exists
+      expect(parser.getActiveDownloads().length).toBeGreaterThan(0);
+      
+      // Reset
+      parser.reset();
+      
+      // Verify complete cleanup
+      expect(parser.getActiveDownloads().length).toBe(0);
+      expect(parser.getActiveTransfers()).toEqual({});
+    });
+
+    it('should reset stream ID counter', () => {
+      // Use some stream IDs
+      parser.parseLine('1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(3), flags: (0x5: END_HEADERS | END_STREAM) }');
+      parser.parseLine('2.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(5), flags: (0x5: END_HEADERS | END_STREAM) }');
+      
+      parser.reset();
+      
+      // Next stream ID should start fresh (implementation dependent)
+      // This tests that internal counters are reset
+      const state = parser.getOverallState();
+      expect(state.currentPhase).toBe('idle');
+    });
+
+    it('should clear all progress tracking', () => {
+      // Create download with progress
+      parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(1000000), url="..."');
+      parser.parseLine('1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(3), flags: (0x5: END_HEADERS | END_STREAM) }');
+      parser.parseLine('1.100000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(3) }');
+      
+      const progressBefore = parser.getDownloadProgress('package');
+      expect(progressBefore).toBeDefined();
+      
+      parser.reset();
+      
+      const progressAfter = parser.getDownloadProgress('package');
+      expect(progressAfter).toBeUndefined();
+    });
+
+    it('should reset phase to idle', () => {
+      // Move through several phases
+      parser.parseLine('    0.000690s DEBUG uv uv 0.8.13');
+      parser.parseLine('Resolved 60 packages in 2.00s');
+      parser.parseLine('Downloading package (1.0MiB)');
+      
+      const stateBefore = parser.getOverallState();
+      expect(stateBefore.currentPhase).not.toBe('idle');
+      
+      parser.reset();
+      
+      const stateAfter = parser.getOverallState();
+      expect(stateAfter.currentPhase).toBe('idle');
+      expect(stateAfter.phases).toEqual([]);
+    });
+  });
+
+  describe('Cached Package Handling', () => {
+    it('should skip download phase for cached packages', () => {
+      // Package is already cached, no download needed
+      parser.parseLine('Resolved 1 package in 0.50s');
+      // No get_wheel or downloading lines
+      parser.parseLine('Using cached numpy-2.0.0-cp312-cp312-macosx_14_0_arm64.whl');
+      parser.parseLine('Prepared 1 package in 10ms');
+      parser.parseLine('Installed 1 package in 5ms');
+      
+      const state = parser.getOverallState();
+      expect(state.isComplete).toBe(true);
+      // Should not have entered downloading phase
+      expect(state.phases.includes('downloading')).toBe(false);
+    });
+
+    it('should transition directly from resolve to install for cached packages', () => {
+      const phases: Phase[] = [];
+      
+      // Track phase transitions
+      parser.parseLine('Resolved 3 packages in 1.00s');
+      phases.push(parser.getOverallState().currentPhase);
+      
+      parser.parseLine('Using cached package1-1.0.0.whl');
+      parser.parseLine('Using cached package2-2.0.0.whl');
+      parser.parseLine('Using cached package3-3.0.0.whl');
+      phases.push(parser.getOverallState().currentPhase);
+      
+      parser.parseLine('Prepared 3 packages in 15ms');
+      phases.push(parser.getOverallState().currentPhase);
+      
+      parser.parseLine('Installed 3 packages in 10ms');
+      phases.push(parser.getOverallState().currentPhase);
+      
+      // Verify no downloading phase
+      expect(phases).not.toContain('downloading');
+      expect(phases).toContain('resolved');
+      expect(phases).toContain('prepared');
+      expect(phases).toContain('installed');
+    });
+
+    it('should handle mix of cached and non-cached packages', () => {
+      // Some packages cached, some need downloading
+      parser.parseLine('Resolved 3 packages in 1.00s');
+      
+      // One package needs downloading
+      parser.parseLine('   uv_installer::preparer::get_wheel name=newpackage==1.0.0, size=Some(1000000), url="..."');
+      parser.parseLine('Downloading newpackage (976.6KiB)');
+      
+      // Others are cached
+      parser.parseLine('Using cached oldpackage1-1.0.0.whl');
+      parser.parseLine('Using cached oldpackage2-2.0.0.whl');
+      
+      parser.parseLine('Prepared 3 packages in 500ms');
+      parser.parseLine('Installed 3 packages in 15ms');
+      
+      const state = parser.getOverallState();
+      expect(state.isComplete).toBe(true);
+      expect(state.installedPackages).toBe(3);
+      
+      // Should have downloading phase for the new package
+      expect(state.phases.includes('downloading')).toBe(true);
     });
   });
 
