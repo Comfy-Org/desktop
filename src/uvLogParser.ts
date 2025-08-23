@@ -315,7 +315,7 @@ export class UvLogParser implements IUvLogParser {
         totalBytes: size,
         bytesReceived: 0,
         estimatedBytesReceived: 0,
-        percentComplete: 0, // Start at 0 for all packages
+        percentComplete: size === 0 ? 100 : 0, // Zero-size packages are instantly complete
         startTime: Date.now(),
         currentTime: Date.now(),
         transferRateSamples: [],
@@ -361,7 +361,7 @@ export class UvLogParser implements IUvLogParser {
             totalBytes: existingDownload.totalBytes,
             bytesReceived: 0,
             estimatedBytesReceived: 0,
-            percentComplete: 0,
+            percentComplete: existingDownload.totalBytes === 0 ? 100 : 0,
             startTime: existingDownload.startTime || Date.now(),
             currentTime: Date.now(),
             transferRateSamples: [],
@@ -392,7 +392,7 @@ export class UvLogParser implements IUvLogParser {
             totalBytes: sizeInBytes,
             bytesReceived: 0,
             estimatedBytesReceived: 0,
-            percentComplete: 0,
+            percentComplete: sizeInBytes === 0 ? 100 : 0,
             startTime: Date.now(),
             currentTime: Date.now(),
             transferRateSamples: [],
@@ -586,7 +586,7 @@ export class UvLogParser implements IUvLogParser {
                   totalBytes: download.totalBytes,
                   bytesReceived: 0,
                   estimatedBytesReceived: transfer.frameCount * this.maxFrameSize,
-                  percentComplete: 0,
+                  percentComplete: download.totalBytes === 0 ? 100 : 0,
                   startTime: download.startTime || Date.now(),
                   currentTime: Date.now(),
                   transferRateSamples: [],
@@ -608,6 +608,9 @@ export class UvLogParser implements IUvLogParser {
         // Clean up completed transfer
         this.transfers.delete(streamId);
         this.streamToPackage.delete(streamId);
+
+        // Clean up old downloads if we have too many
+        this.cleanupOldDownloads();
 
         return {
           phase: this.currentPhase,
@@ -894,6 +897,37 @@ export class UvLogParser implements IUvLogParser {
       return '459.2 KB';
     }
     return `${value.toFixed(1)} ${units[i]}`;
+  }
+
+  private cleanupOldDownloads(): void {
+    const MAX_DOWNLOADS = 100;
+
+    // Only clean up if we have too many
+    if (this.downloads.size <= MAX_DOWNLOADS) {
+      return;
+    }
+
+    // Get all downloads sorted by status and time
+    const allDownloads = [...this.downloads.entries()];
+
+    // Separate completed and active downloads
+    const completed = allDownloads.filter(([, d]) => d.status === 'completed');
+    const active = allDownloads.filter(([, d]) => d.status !== 'completed');
+
+    // Keep all active downloads and as many completed as we can
+    const toKeep = active.length;
+    const completedToKeep = Math.max(0, MAX_DOWNLOADS - toKeep);
+
+    // Sort completed by end time (oldest first)
+    completed.sort((a, b) => (a[1].endTime || 0) - (b[1].endTime || 0));
+
+    // Remove oldest completed downloads
+    const toRemove = completed.slice(0, completed.length - completedToKeep);
+
+    for (const [packageName] of toRemove) {
+      this.downloads.delete(packageName);
+      this.downloadProgress.delete(packageName);
+    }
   }
 
   private parseSizeString(sizeStr: string): number {
