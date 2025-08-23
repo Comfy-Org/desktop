@@ -340,8 +340,16 @@ export class UvLogParser implements IUvLogParser {
       const packageName = match![1];
       const sizeFormatted = match![2];
 
-      // Don't override existing download info from get_wheel
-      if (!this.downloads.has(packageName)) {
+      // Check if download already exists from get_wheel
+      if (this.downloads.has(packageName)) {
+        // Update existing download status to 'downloading'
+        const existingDownload = this.downloads.get(packageName)!;
+        existingDownload.status = 'downloading';
+        if (!existingDownload.startTime) {
+          existingDownload.startTime = Date.now();
+        }
+      } else {
+        // Create new download if it doesn't exist
         // Parse size string to bytes (approximate since get_wheel has exact)
         const sizeInBytes = this.parseSizeString(sizeFormatted);
 
