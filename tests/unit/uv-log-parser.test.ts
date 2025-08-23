@@ -488,6 +488,9 @@ describe('UvLogParser', () => {
     });
 
     it('should update transfer rate as new data frames arrive', () => {
+      // Verify parser is fresh
+      expect(parser.getActiveDownloads()).toHaveLength(0);
+
       // Start download
       parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(5242880), url="..."');
       parser.parseLine(

@@ -875,23 +875,22 @@ export class UvLogParser implements IUvLogParser {
     const now = Date.now();
     const elapsed = (now - progress.startTime) / 1000; // seconds
 
-    if (elapsed > 0) {
-      const estimatedBytes = progress.estimatedBytesReceived || 0;
-      const bytesPerSecond = estimatedBytes / elapsed;
+    // Always add a sample, even if elapsed time is 0 (for fast-running tests)
+    // Use a minimum elapsed time of 0.001 seconds to avoid division by zero
+    const effectiveElapsed = Math.max(elapsed, 0.001);
+    const estimatedBytes = progress.estimatedBytesReceived || 0;
+    const bytesPerSecond = estimatedBytes / effectiveElapsed;
 
-      // Always add a sample when updateTransferRate is called
-      // This ensures we track progress even when starting from 0
-      const sample: TransferRateSample = {
-        timestamp: now,
-        bytesPerSecond,
-      };
+    const sample: TransferRateSample = {
+      timestamp: now,
+      bytesPerSecond,
+    };
 
-      progress.transferRateSamples.push(sample);
+    progress.transferRateSamples.push(sample);
 
-      // Limit sample history (keep last 20)
-      if (progress.transferRateSamples.length > 20) {
-        progress.transferRateSamples = progress.transferRateSamples.slice(-20);
-      }
+    // Limit sample history (keep last 20)
+    if (progress.transferRateSamples.length > 20) {
+      progress.transferRateSamples = progress.transferRateSamples.slice(-20);
     }
   }
 }
