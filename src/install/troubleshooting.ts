@@ -69,9 +69,9 @@ export class Troubleshooting implements Disposable {
 
       // Enhanced callback that tracks installation progress
       const onStatus = (status: UvStatus) => {
-        // Log significant phase changes to debug log (not sent to frontend)
-        if (status.phase !== 'unknown' && status.message) {
-          log.debug(`UV Install Status: [${status.phase}] ${status.message}`);
+        // Only process and send meaningful status updates
+        if (status.phase === 'unknown') {
+          return; // Skip unknown phases entirely
         }
 
         // Convert UvStatus to UvInstallStatus for frontend
@@ -85,11 +85,21 @@ export class Troubleshooting implements Disposable {
           isComplete: status.phase === 'installed' || (status.phase === 'error' && !!status.error),
         };
 
+        // Log when sending IPC message (not the raw output)
+        log.debug(
+          `Sending UV IPC status: phase=${status.phase}, package=${status.currentPackage || 'N/A'}, progress=${status.installedPackages || 0}/${status.totalPackages || 0}`
+        );
+
         // Send UV installation status to frontend
         this.appWindow.send(IPC_CHANNELS.UV_INSTALL_STATUS, installStatus);
       };
 
-      const result = await installation.virtualEnvironment.reinstallRequirements(sendLogIpc, onStatus);
+      // Don't send raw logs when we have UV status parsing
+      const logCallback = (data: string) => {
+        log.info(data); // Still log to file, but don't send to frontend
+      };
+
+      const result = await installation.virtualEnvironment.reinstallRequirements(logCallback, onStatus);
 
       if (result) await this.onInstallFix?.();
       return result;

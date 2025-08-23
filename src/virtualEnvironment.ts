@@ -413,12 +413,12 @@ export class VirtualEnvironment implements HasTelemetry {
               }
             }
           }
+          // Don't forward raw stdout when parsing - we're sending structured updates instead
+          return;
         }
 
-        // Only forward stdout if not parsing or if explicitly requested
-        if (!parser || !callbacks?.onUvStatus) {
-          callbacks?.onStdout?.(data);
-        }
+        // Only forward stdout if not parsing
+        callbacks?.onStdout?.(data);
       },
       onStderr: callbacks?.onStderr,
     };
@@ -486,12 +486,10 @@ export class VirtualEnvironment implements HasTelemetry {
 
     if (callbacks) {
       childProcess.stdout.on('data', (data: Buffer) => {
-        console.log(data.toString());
         callbacks.onStdout?.(data.toString());
       });
 
       childProcess.stderr.on('data', (data: Buffer) => {
-        console.log(data.toString());
         callbacks.onStderr?.(data.toString());
       });
     }
