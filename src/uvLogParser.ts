@@ -316,7 +316,7 @@ export class UvLogParser implements IUvLogParser {
         totalBytes: size,
         bytesReceived: 0,
         estimatedBytesReceived: 0,
-        percentComplete: isUnknownSize ? 0 : (size === 0 ? 100 : 0), // Unknown size: 0%, Known empty: 100%
+        percentComplete: isUnknownSize ? 0 : size === 0 ? 100 : 0, // Unknown size: 0%, Known empty: 100%
         startTime: Date.now(),
         currentTime: Date.now(),
         transferRateSamples: [],
