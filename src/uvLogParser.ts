@@ -463,6 +463,11 @@ export class UvLogParser implements IUvLogParser {
         transfer.frameCount++;
         transfer.lastFrameTime = Date.now();
 
+        // Ensure transfer has associated package
+        if (!transfer.associatedPackage && this.streamToPackage.has(streamId)) {
+          transfer.associatedPackage = this.streamToPackage.get(streamId);
+        }
+
         // Update progress for associated package
         if (transfer.associatedPackage) {
           const progress = this.downloadProgress.get(transfer.associatedPackage);
