@@ -116,7 +116,7 @@ export interface IUvLogParser {
 
   // Progress calculation
   calculateAverageTransferRate(progress: DownloadProgress): number;
-  estimateTimeRemaining(progress: DownloadProgress, avgRate: number): number;
+  estimateTimeRemaining(progress: DownloadProgress, avgRate: number): number | undefined;
 
   // State management
   reset(): void;
@@ -774,8 +774,14 @@ export class UvLogParser implements IUvLogParser {
     return sum / recentSamples.length;
   }
 
-  estimateTimeRemaining(progress: DownloadProgress, avgRate: number): number {
-    if (avgRate <= 0 || progress.totalBytes <= 0) {
+  estimateTimeRemaining(progress: DownloadProgress, avgRate: number): number | undefined {
+    // Return undefined for unknown file sizes
+    if (progress.totalBytes <= 0) {
+      return undefined;
+    }
+
+    // Return 0 if no transfer rate
+    if (avgRate <= 0) {
       return 0;
     }
 
