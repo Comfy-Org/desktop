@@ -26,6 +26,7 @@ export class UvInstallationState extends EventEmitter {
   private currentState: UvInstallStatus | null = null;
   private uvLogParser: UvLogParser | null = null;
   private lastPhaseUpdateTime = 0;
+  private lastDownloadProgressTime = 0;
   private readonly options: Required<UvInstallationStateOptions>;
 
   constructor(options: UvInstallationStateOptions = {}) {
@@ -79,6 +80,7 @@ export class UvInstallationState extends EventEmitter {
     this.currentState = null;
     this.uvLogParser = null;
     this.lastPhaseUpdateTime = 0;
+    this.lastDownloadProgressTime = 0;
   }
 
   /**
@@ -123,6 +125,33 @@ export class UvInstallationState extends EventEmitter {
     }
 
     return { totalBytes, downloadedBytes };
+  }
+
+  /**
+   * Checks if this update is only a download progress change (bytes only).
+   * Used to apply stricter rate limiting to prevent IPC spam.
+   */
+  private isDownloadProgressOnlyUpdate(prev: UvInstallStatus, newState: UvInstallStatus): boolean {
+    // Must be in downloading phase
+    if (newState.phase !== 'downloading' || prev.phase !== 'downloading') {
+      return false;
+    }
+
+    // Check that only download-related fields changed
+    return (
+      prev.phase === newState.phase &&
+      prev.message === newState.message &&
+      prev.currentPackage === newState.currentPackage &&
+      prev.totalPackages === newState.totalPackages &&
+      prev.installedPackages === newState.installedPackages &&
+      prev.totalBytes === newState.totalBytes &&
+      prev.isComplete === newState.isComplete &&
+      prev.error === newState.error &&
+      // Allow downloadedBytes, transferRate, and etaSeconds to differ
+      (prev.downloadedBytes !== newState.downloadedBytes ||
+        prev.transferRate !== newState.transferRate ||
+        prev.etaSeconds !== newState.etaSeconds)
+    );
   }
 
   /**
@@ -197,11 +226,33 @@ export class UvInstallationState extends EventEmitter {
       return true;
     }
 
-    // Download progress changes (use byte threshold for accuracy)
+    // Check if this is a download-progress-only update
+    const isDownloadProgressOnly = this.isDownloadProgressOnlyUpdate(prev, newState);
+
+    // Download progress changes (with rate limiting for progress-only updates)
     const prevBytes = prev.downloadedBytes || 0;
     const newBytes = newState.downloadedBytes || 0;
-    if (Math.abs(newBytes - prevBytes) >= this.options.bytesThreshold) {
-      return true;
+    const byteDifference = Math.abs(newBytes - prevBytes);
+
+    if (byteDifference > 0) {
+      // If this is a progress-only update, apply rate limiting (40/sec = 25ms minimum)
+      if (isDownloadProgressOnly) {
+        const timeSinceLastProgress = now - this.lastDownloadProgressTime;
+        if (timeSinceLastProgress < 25) {
+          return false; // Rate limit: max 40 updates per second
+        }
+        // Also require minimum byte change for progress-only updates
+        if (byteDifference < this.options.bytesThreshold) {
+          return false;
+        }
+        this.lastDownloadProgressTime = now;
+        return true;
+      }
+
+      // For non-progress-only updates with byte changes, use normal threshold
+      if (byteDifference >= this.options.bytesThreshold) {
+        return true;
+      }
     }
 
     // Transfer rate changes (significant if > 10% change or crosses zero threshold)

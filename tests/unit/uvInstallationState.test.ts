@@ -389,6 +389,84 @@ describe('UvInstallationState', () => {
         })
       );
     });
+
+    it('should rate limit download-progress-only updates to 40 per second', () => {
+      vi.useFakeTimers();
+
+      // Initial download state
+      state.updateFromUvStatus({
+        phase: 'downloading',
+        message: 'Downloading torch',
+        currentPackage: 'torch',
+        totalBytes: 100_000_000,
+        downloadedBytes: 0,
+      });
+
+      expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+      statusChangeHandler.mockClear();
+
+      // Rapid progress updates (simulating thousands of IPC events)
+      for (let i = 1; i <= 100; i++) {
+        state.updateFromUvStatus({
+          phase: 'downloading',
+          message: 'Downloading torch',
+          currentPackage: 'torch',
+          totalBytes: 100_000_000,
+          downloadedBytes: i * 1_000_000, // 1MB increments
+        });
+
+        // Advance time by 10ms (100 updates/sec without rate limiting)
+        vi.advanceTimersByTime(10);
+      }
+
+      // With rate limiting at 40/sec (25ms minimum), over 1 second we should get ~40 updates
+      // The actual count may be slightly less due to the byte threshold requirement
+      const callCount = statusChangeHandler.mock.calls.length;
+      expect(callCount).toBeGreaterThanOrEqual(30); // Allow some variance for timing
+      expect(callCount).toBeLessThanOrEqual(45); // But should be close to 40
+
+      vi.useRealTimers();
+    });
+
+    it('should not rate limit when non-progress fields change', () => {
+      vi.useFakeTimers();
+
+      // Initial download state
+      state.updateFromUvStatus({
+        phase: 'downloading',
+        message: 'Downloading torch',
+        currentPackage: 'torch',
+        totalBytes: 100_000_000,
+        downloadedBytes: 10_000_000,
+      });
+
+      statusChangeHandler.mockClear();
+
+      // Quick succession of updates with different packages (not progress-only)
+      vi.advanceTimersByTime(5); // Only 5ms later
+      state.updateFromUvStatus({
+        phase: 'downloading',
+        message: 'Downloading numpy',
+        currentPackage: 'numpy', // Different package
+        totalBytes: 50_000_000,
+        downloadedBytes: 5_000_000,
+      });
+
+      vi.advanceTimersByTime(5); // Another 5ms
+      state.updateFromUvStatus({
+        phase: 'downloading',
+        message: 'Downloading pandas',
+        currentPackage: 'pandas', // Different package again
+        totalBytes: 30_000_000,
+        downloadedBytes: 3_000_000,
+      });
+
+      // Should emit both updates despite being within 25ms window
+      // because package changes are not rate limited
+      expect(statusChangeHandler).toHaveBeenCalledTimes(2);
+
+      vi.useRealTimers();
+    });
   });
 
   describe('Transfer Rate and ETA Changes', () => {
