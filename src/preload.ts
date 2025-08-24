@@ -150,6 +150,44 @@ export interface UvInstallStatus {
   isComplete?: boolean;
 }
 
+/**
+ * Installation task information for orchestration
+ */
+export interface InstallationTask {
+  /** Unique identifier for the task */
+  id: string;
+  /** Human-readable task name */
+  name: string;
+  /** Task description shown to user */
+  description: string;
+  /** Whether this task is optional */
+  optional?: boolean;
+  /** Estimated duration in seconds */
+  estimatedDuration?: number;
+}
+
+/**
+ * Overall orchestration status for multi-step installations
+ */
+export interface OrchestrationStatus {
+  /** Current task being executed */
+  currentTask: InstallationTask;
+  /** List of all tasks in the orchestration */
+  allTasks: InstallationTask[];
+  /** Index of current task (0-based) */
+  currentTaskIndex: number;
+  /** Total number of tasks */
+  totalTasks: number;
+  /** Overall progress percentage (0-100) */
+  overallProgress: number;
+  /** Current task progress (from UV status) */
+  taskProgress?: UvInstallStatus;
+  /** Whether the entire orchestration is complete */
+  isComplete: boolean;
+  /** Error if orchestration failed */
+  error?: string;
+}
+
 const electronAPI = {
   /**
    * Callback for progress updates from the main process for starting ComfyUI.
@@ -526,6 +564,38 @@ const electronAPI = {
       // Return cleanup function
       return () => {
         ipcRenderer.off(IPC_CHANNELS.UV_INSTALL_STATUS, handler);
+      };
+    },
+
+    /**
+     * Listens for orchestration status updates during multi-step installations.
+     * 
+     * Provides high-level context about current task and overall progress
+     * across multiple UV installation commands.
+     * 
+     * @param callback Function to handle orchestration status updates
+     * @returns Cleanup function to stop listening
+     * 
+     * @example
+     * ```typescript
+     * const cleanup = window.electronAPI.installation.onOrchestrationStatus((status) => {
+     *   console.log(`Task ${status.currentTaskIndex + 1}/${status.totalTasks}: ${status.currentTask.name}`);
+     *   console.log(`Overall progress: ${status.overallProgress}%`);
+     * });
+     * 
+     * // Later, cleanup when done
+     * cleanup();
+     * ```
+     */
+    onOrchestrationStatus: (callback: (status: OrchestrationStatus) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, status: OrchestrationStatus) => {
+        callback(status);
+      };
+      ipcRenderer.on(IPC_CHANNELS.UV_ORCHESTRATION_STATUS, handler);
+
+      // Return cleanup function
+      return () => {
+        ipcRenderer.off(IPC_CHANNELS.UV_ORCHESTRATION_STATUS, handler);
       };
     },
   },

@@ -2,6 +2,7 @@ import { Notification, app, dialog, ipcMain, shell } from 'electron';
 import log from 'electron-log/main';
 
 import { IPC_CHANNELS, ProgressStatus } from '../constants';
+import { createComfyUIInstallationOrchestrator, type OrchestrationStatus } from '../installationTaskOrchestrator';
 import type { AppWindow } from '../main-process/appWindow';
 import { ComfyInstallation } from '../main-process/comfyInstallation';
 import type { InstallOptions, InstallValidation } from '../preload';
@@ -9,6 +10,7 @@ import { CmCli } from '../services/cmCli';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { canExecuteShellCommand, validateHardware } from '../utils';
+import { UvInstallationState } from '../uvInstallationState';
 import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
@@ -280,19 +282,51 @@ export class InstallationManager implements HasTelemetry {
     };
     await this.appWindow.loadPage('desktop-update');
 
-    // Using requirements.txt again here ensures that uv installs the expected packages from the previous step (--dry-run)
-    const callbacks: ProcessCallbacks = {
-      onStdout: sendLogIpc,
-      onStderr: sendLogIpc,
-    };
     try {
-      await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
-      await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
+      await this.runOrchestratedInstallation(installation, sendLogIpc);
       await installation.validate();
     } catch (error) {
       log.error('Error auto-updating packages:', error);
       await this.appWindow.loadPage('server-start');
     }
+  }
+
+  /**
+   * Runs orchestrated installation with task progress tracking.
+   * This provides the frontend with context about current and upcoming tasks.
+   */
+  private async runOrchestratedInstallation(
+    installation: ComfyInstallation, 
+    _sendLogIpc: (data: string) => void
+  ): Promise<void> {
+    // Create UV installation state manager for detailed progress tracking
+    const uvState = new UvInstallationState({
+      downloadProgressThreshold: 5,  // 5% progress updates
+      bytesThreshold: 50 * 1024,     // 50KB minimum change
+      phaseUpdateCooldown: 500,      // 500ms between identical phase updates
+    });
+
+    // Forward UV status updates to frontend
+    uvState.on('statusChange', (status) => {
+      this.appWindow.send(IPC_CHANNELS.UV_INSTALL_STATUS, status);
+    });
+
+    // Create task orchestrator
+    const orchestrator = createComfyUIInstallationOrchestrator(installation.virtualEnvironment);
+    orchestrator.setUvInstallationState(uvState);
+
+    // Forward orchestration status updates to frontend
+    orchestrator.on('orchestrationStatus', (status: OrchestrationStatus) => {
+      log.info(`Orchestration: ${status.currentTask.name} (${status.currentTaskIndex + 1}/${status.totalTasks}) - ${status.overallProgress}%`);
+      this.appWindow.send(IPC_CHANNELS.UV_ORCHESTRATION_STATUS, status);
+    });
+
+    log.info('Starting orchestrated installation of ComfyUI requirements');
+    
+    // Execute all tasks in sequence with proper progress tracking
+    await orchestrator.execute();
+    
+    log.info('Orchestrated installation completed successfully');
   }
 
   static setReinstallHandler(installation: ComfyInstallation) {
