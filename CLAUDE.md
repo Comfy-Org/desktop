@@ -8,15 +8,15 @@
 
 ## Key Technologies
 
-- **Electron** - Desktop app framework
-- **TypeScript** - Primary language
-- **Vite** - Build tool and bundler
-- **Node.js** - Runtime (use nvm)
-- **Yarn** - Package manager
-- **Vitest** - Unit testing
-- **Playwright** - E2E testing
-- **ESLint** - Linting
-- **Prettier** - Formatting
+- **Electron**: Desktop app framework
+- **TypeScript**: Primary language
+- **Vite**: Build tool and bundler
+- **Node.js**: Runtime (use nvm)
+- **Yarn**: Package manager
+- **Vitest**: Unit testing
+- **Playwright**: E2E testing
+- **ESLint**: Linting
+- **Prettier**: Formatting
 
 ## Development Commands
 
@@ -62,24 +62,24 @@ We have testing configured with Vitest. Use vitest to create any tests you need.
 
 ### Source Code (`/src/`)
 
-- **`main.ts`** - Main Electron process entry point
-- **`desktopApp.ts`** - Core application logic
-- **`preload.ts`** - Electron preload script
-- **`main-process/`** - Main process modules
+- **`main.ts`**: Main Electron process entry point
+- **`desktopApp.ts`**: Core application logic
+- **`preload.ts`**: Electron preload script
+- **`main-process/`**: Main process modules
   - `comfyDesktopApp.ts` - ComfyUI server management
   - `appWindow.ts` - Window management
   - `comfyServer.ts` - Server lifecycle
-- **`install/`** - Installation & setup logic
-- **`handlers/`** - IPC message handlers
-- **`services/`** - Core services (telemetry, Sentry)
-- **`config/`** - Configuration management
-- **`store/`** - Persistent storage
-- **`utils.ts`** - Utility functions
+- **`install/`**: Installation & setup logic
+- **`handlers/`**: IPC message handlers
+- **`services/`**: Core services (telemetry, Sentry)
+- **`config/`**: Configuration management
+- **`store/`**: Persistent storage
+- **`utils.ts`**: Utility functions
 
 ### Tests (`/tests/`)
 
-- **`unit/`** - Vitest-based component tests
-- **`integration/`** - Playwright E2E tests
+- **`unit/`**: Vitest-based component tests
+- **`integration/`**: Playwright E2E tests
   - `install/` - Fresh installation testing
   - `post-install/` - Tests after app setup
   - `shared/` - Common test functionality
@@ -93,26 +93,26 @@ We have testing configured with Vitest. Use vitest to create any tests you need.
 
 ## Important Files & Configuration
 
-- **`package.json`** - Defines ComfyUI versions and dependencies
-- **`assets/requirements/`** - Pre-compiled Python requirements by platform
-- **`todesktop.json`** - Cloud build and distribution config
-- **`builder-debug.config.ts`** - Local development build settings
+- **`package.json`**: Defines ComfyUI versions and dependencies
+- **`assets/requirements/`**: Pre-compiled Python requirements by platform
+- **`todesktop.json`**: Cloud build and distribution config
+- **`builder-debug.config.ts`**: Local development build settings
 - **Multi-config Vite setup** with separate configs for main, preload, and types
 
 ## Bundled Components
 
 The app packages these components:
 
-- **ComfyUI** - AI diffusion model GUI
-- **ComfyUI_frontend** - Modern web frontend
-- **ComfyUI-Manager** - Plugin/extension manager
-- **uv** - Fast Python package manager
+- **ComfyUI**: AI diffusion model GUI
+- **ComfyUI_frontend**: Modern web frontend
+- **ComfyUI-Manager**: Plugin/extension manager
+- **uv**: Fast Python package manager
 
 ## Development Environment Variables
 
-- **`--dev-mode`** - Flag for packaged apps in development
-- **`COMFY_HOST`/`COMFY_PORT`** - External server for development
-- **`VUE_DEVTOOLS_PATH`** - Frontend debugging support
+- **`--dev-mode`**: Flag for packaged apps in development
+- **`COMFY_HOST`/`COMFY_PORT`**: External server for development
+- **`VUE_DEVTOOLS_PATH`**: Frontend debugging support
 
 ## Platform-Specific Paths
 
