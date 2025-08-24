@@ -153,9 +153,10 @@ export const UV_LOG_PATTERNS = {
     /([\d.]+)m?s.*h2::codec::framed_read received, frame=Data { stream_id: StreamId\((\d+)\)(?:, flags: \(0x1: END_STREAM\))?\s*}/,
 
   // Completion phases
-  PREPARED_PACKAGES: /Prepared (\d+) packages? in (\d+)ms/,
+  PREPARED_PACKAGES: /Prepared (\d+) packages? in ([\d.]+)(ms|s)/,
+  UNINSTALLED_PACKAGES: /Uninstalled (\d+) packages? in ([\d.]+)(ms|s)/,
   INSTALL_BLOCKING: /install_blocking num_wheels=(\d+)/,
-  INSTALLED_PACKAGES: /Installed (\d+) packages? in (\d+)ms/,
+  INSTALLED_PACKAGES: /Installed (\d+) packages? in ([\d.]+)(ms|s)/,
 
   // Errors
   ERROR: /ERROR: (.+)/,
@@ -702,7 +703,9 @@ export class UvLogParser implements IUvLogParser {
     if (UV_LOG_PATTERNS.PREPARED_PACKAGES.test(trimmedLine)) {
       const match = trimmedLine.match(UV_LOG_PATTERNS.PREPARED_PACKAGES);
       this.preparedPackages = Number.parseInt(match![1], 10);
-      const preparationTime = Number.parseInt(match![2], 10);
+      const timeValue = Number.parseFloat(match![2]);
+      const timeUnit = match![3];
+      const preparationTime = timeUnit === 's' ? Math.round(timeValue * 1000) : Math.round(timeValue);
       this.setPhase('prepared');
 
       return {
@@ -710,6 +713,21 @@ export class UvLogParser implements IUvLogParser {
         message: `Prepared ${this.preparedPackages} packages in ${preparationTime}ms`,
         preparedPackages: this.preparedPackages,
         preparationTime,
+        rawLine: line,
+      };
+    }
+
+    // Uninstalled packages (happens before installation)
+    if (UV_LOG_PATTERNS.UNINSTALLED_PACKAGES.test(trimmedLine)) {
+      const match = trimmedLine.match(UV_LOG_PATTERNS.UNINSTALLED_PACKAGES);
+      const uninstalledCount = Number.parseInt(match![1], 10);
+      const timeValue = Number.parseFloat(match![2]);
+      const timeUnit = match![3];
+      const uninstallTime = timeUnit === 's' ? Math.round(timeValue * 1000) : Math.round(timeValue);
+
+      return {
+        phase: 'installing',
+        message: `Uninstalled ${uninstalledCount} packages in ${uninstallTime}ms`,
         rawLine: line,
       };
     }
@@ -731,7 +749,9 @@ export class UvLogParser implements IUvLogParser {
     if (UV_LOG_PATTERNS.INSTALLED_PACKAGES.test(trimmedLine)) {
       const match = trimmedLine.match(UV_LOG_PATTERNS.INSTALLED_PACKAGES);
       this.installedPackages = Number.parseInt(match![1], 10);
-      const installationTime = Number.parseInt(match![2], 10);
+      const timeValue = Number.parseFloat(match![2]);
+      const timeUnit = match![3];
+      const installationTime = timeUnit === 's' ? Math.round(timeValue * 1000) : Math.round(timeValue);
       this.setPhase('installed');
       this.endTime = Date.now();
 
