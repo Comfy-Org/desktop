@@ -281,6 +281,27 @@ describe('UvInstallationState', () => {
       );
     });
 
+    it('should use byte values directly from status when available', () => {
+      // Test the fix for commit 8185b56ec regression
+      // Status now provides totalBytes and downloadedBytes directly
+      state.updateFromUvStatus({
+        phase: 'downloading',
+        message: 'Downloading numpy',
+        currentPackage: 'numpy',
+        totalBytes: 16_277_507,
+        downloadedBytes: 8_138_753,
+      });
+
+      expect(statusChangeHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          phase: 'downloading',
+          currentPackage: 'numpy',
+          totalBytes: 16_277_507,
+          downloadedBytes: 8_138_753,
+        })
+      );
+    });
+
     it('should emit on significant download progress changes', () => {
       // Initial download
       state.updateFromUvStatus({
@@ -337,6 +358,36 @@ describe('UvInstallationState', () => {
 
       // Should not emit second event due to small change
       expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it('should emit progress updates when using direct byte values', () => {
+      // Test for regression fix - ensure progress updates work with direct byte values
+      state.updateFromUvStatus({
+        phase: 'downloading',
+        message: 'Downloading torch',
+        currentPackage: 'torch',
+        totalBytes: 100_000_000,
+        downloadedBytes: 10_000_000,
+      });
+
+      expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+
+      // Significant progress update (more than bytesThreshold of 50KB)
+      state.updateFromUvStatus({
+        phase: 'downloading',
+        message: 'Downloading torch',
+        currentPackage: 'torch',
+        totalBytes: 100_000_000,
+        downloadedBytes: 20_000_000, // 10MB more
+      });
+
+      expect(statusChangeHandler).toHaveBeenCalledTimes(2);
+      expect(statusChangeHandler).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          downloadedBytes: 20_000_000,
+        })
+      );
     });
   });
 

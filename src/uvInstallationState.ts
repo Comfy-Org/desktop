@@ -106,14 +106,19 @@ export class UvInstallationState extends EventEmitter {
    * Calculates download bytes from UV status and parser state.
    */
   private calculateDownloadBytes(status: UvStatus): { totalBytes: number; downloadedBytes: number } {
-    let totalBytes = 0;
-    let downloadedBytes = 0;
+    // Use byte values directly from status (added in commit 8185b56ec)
+    let totalBytes = status.totalBytes || 0;
+    let downloadedBytes = status.downloadedBytes || 0;
 
-    if (status.currentPackage && this.uvLogParser) {
+    // Fallback to parser progress if status doesn't have byte values
+    if (!totalBytes && status.currentPackage && this.uvLogParser) {
       const progress = this.uvLogParser.getDownloadProgress(status.currentPackage);
       if (progress) {
         totalBytes = progress.totalBytes;
-        downloadedBytes = Math.round((progress.percentComplete / 100) * progress.totalBytes);
+        // Use bytesReceived if available, otherwise estimate from percentage
+        downloadedBytes =
+          progress.bytesReceived ||
+          (progress.percentComplete ? Math.round((progress.percentComplete / 100) * progress.totalBytes) : 0);
       }
     }
 
