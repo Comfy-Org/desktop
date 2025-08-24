@@ -82,6 +82,7 @@ describe('ComfySettings', () => {
       const mockSettings: ComfySettingsData = {
         'Comfy-Desktop.AutoUpdate': false,
         'Comfy-Desktop.SendStatistics': false,
+        'Comfy-Desktop.RunInBackgroundOnClose': true,
         'Comfy.ColorPalette': 'dark',
         'Comfy.UseNewMenu': 'Top',
         'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
