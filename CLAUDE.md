@@ -54,6 +54,10 @@ yarn make:nvidia       # Build with NVIDIA GPU support
 yarn vite:compile      # Compile with Vite
 ```
 
+### Troubleshooting
+
+- If you encounter errors regarding `NODE_MODULE_VERSION`, try running `npx electron-rebuild` before other troubleshooting steps.
+
 ## Custom testing
 
 We have testing configured with Vitest. Use vitest to create any tests you need. Do not attempt to custom code your own testing infrastructure, as that is pointless and will do nothing but derail you.
