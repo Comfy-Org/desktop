@@ -2,7 +2,7 @@ Please update the version of ComfyUI to the latest:
 
 1. Reference this PR as an example. https://github.com/Comfy-Org/desktop/commit/7cba9c25b95b30050dfd6864088ca91493bfd00b
 2. Go to [ComfyUI](https://github.com/comfyanonymous/ComfyUI/) Github repo and see what the latest Github Release is
-   - If there is a `prerelease` or a draft release that is newer than the release marked as `latest`, AND this new version is a either a single major, minor, or patch version increment on the `latest` release, use that version instead of latest.
+   - If there is {a semver tag (prefixed with `v`) without a release} OR {a `prerelease`} OR {a draft release} that is newer than the release marked as `latest`, AND this new version is a either a single major, minor, or patch version increment on the `latest` release, use that version instead of latest.
 3. Read the `requirements.txt` file from that release
 4. Update the ComfyUI version version in @package.json based on what is in the latest Github Release. If config.ComfyUI.optionalBranch is set in @package.json, change it to an empty string ("").
 5. Update the frontend version in @package.json (`frontendVersion`) to the version specified in `requirements.txt`
