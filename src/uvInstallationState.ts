@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
-import type { UvLogParser, UvStatus } from './uvLogParser';
+
 import type { UvInstallStatus } from './preload';
+import type { UvLogParser, UvStatus } from './uvLogParser';
 
 /**
  * Configuration options for UvInstallationState
@@ -16,7 +17,7 @@ export interface UvInstallationStateOptions {
 
 /**
  * Intelligent state manager for UV installation progress.
- * 
+ *
  * This class receives UV log parser updates and maintains internal state,
  * only emitting 'statusChange' events when meaningful changes occur.
  * This prevents IPC spam while ensuring all important updates reach the frontend.
@@ -29,7 +30,7 @@ export class UvInstallationState extends EventEmitter {
 
   constructor(options: UvInstallationStateOptions = {}) {
     super();
-    
+
     this.options = {
       downloadProgressThreshold: 5, // 5% minimum change
       bytesThreshold: 100 * 1024, // 100KB minimum change
@@ -57,7 +58,7 @@ export class UvInstallationState extends EventEmitter {
     }
 
     const newState = this.convertUvStatusToInstallStatus(status);
-    
+
     if (this.hasStateChanged(newState)) {
       this.currentState = { ...newState };
       this.emit('statusChange', this.currentState);
@@ -136,14 +137,39 @@ export class UvInstallationState extends EventEmitter {
       return true;
     }
 
-    // Package changes are always significant
+    // Special handling for resolving phase to reduce spam
+    if (newState.phase === 'resolving') {
+      // During resolution, only care about:
+      // 1. First entry into resolving phase (handled above)
+      // 2. Total package count changes (when resolution completes)
+      if (prev.totalPackages !== newState.totalPackages && (newState.totalPackages ?? 0) > 0) {
+        return true;
+      }
+
+      // 3. Apply aggressive cooldown for resolving phase updates
+      if (now - this.lastPhaseUpdateTime < 1000) {
+        // 1 second cooldown for resolving
+        return false;
+      }
+
+      // 4. Don't treat package changes as significant during resolution
+      // 5. Don't treat empty message changes as significant
+      if (!newState.message || newState.message.startsWith('Resolving')) {
+        return false;
+      }
+
+      // Allow update if cooldown has passed for general status
+      this.lastPhaseUpdateTime = now;
+      return true;
+    }
+
+    // Package changes are significant (except during resolving, handled above)
     if (prev.currentPackage !== newState.currentPackage) {
       return true;
     }
 
     // Counter changes (total/installed packages) are always significant
-    if (prev.totalPackages !== newState.totalPackages || 
-        prev.installedPackages !== newState.installedPackages) {
+    if (prev.totalPackages !== newState.totalPackages || prev.installedPackages !== newState.installedPackages) {
       return true;
     }
 
@@ -159,6 +185,10 @@ export class UvInstallationState extends EventEmitter {
 
     // Message changes are significant if non-empty and different
     if (newState.message && prev.message !== newState.message) {
+      // Skip repetitive resolving messages
+      if (newState.message.startsWith('Resolving dependency:')) {
+        return false;
+      }
       return true;
     }
 
@@ -184,8 +214,7 @@ export class UvInstallationState extends EventEmitter {
     }
 
     // Prevent phase spam with cooldown for identical phases
-    if (prev.phase === newState.phase && 
-        (now - this.lastPhaseUpdateTime) < this.options.phaseUpdateCooldown) {
+    if (prev.phase === newState.phase && now - this.lastPhaseUpdateTime < this.options.phaseUpdateCooldown) {
       return false;
     }
 

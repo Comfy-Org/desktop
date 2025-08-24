@@ -8,8 +8,8 @@ import type { ComfyInstallation } from '@/main-process/comfyInstallation';
 import type { InstallValidation, UvInstallStatus } from '@/preload';
 import { getTelemetry } from '@/services/telemetry';
 import { useDesktopConfig } from '@/store/desktopConfig';
-import type { UvStatus } from '@/uvLogParser';
 import { UvInstallationState } from '@/uvInstallationState';
+import type { UvStatus } from '@/uvLogParser';
 
 /**
  * IPC handler for troubleshooting / maintenance tasks.

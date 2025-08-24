@@ -12,8 +12,8 @@ import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
-import { UvLogParser, type UvStatus } from './uvLogParser';
 import type { UvInstallationState } from './uvInstallationState';
+import { UvLogParser, type UvStatus } from './uvLogParser';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -381,10 +381,10 @@ export class VirtualEnvironment implements HasTelemetry {
     // Create parser for pip install commands
     let parser: UvLogParser | undefined;
     const hasStatusTracking = isPipInstall && (callbacks?.onUvStatus || callbacks?.uvInstallationState);
-    
+
     if (hasStatusTracking) {
       parser = new UvLogParser();
-      
+
       // Associate parser with state manager if provided
       if (callbacks?.uvInstallationState) {
         callbacks.uvInstallationState.setParser(parser);
@@ -416,7 +416,7 @@ export class VirtualEnvironment implements HasTelemetry {
           for (const line of lines) {
             if (line.trim()) {
               const status = parser.parseLine(line);
-              
+
               // Use intelligent state management if provided, otherwise fall back to direct callback
               if (callbacks?.uvInstallationState) {
                 callbacks.uvInstallationState.updateFromUvStatus(status);
@@ -440,7 +440,7 @@ export class VirtualEnvironment implements HasTelemetry {
           for (const line of lines) {
             if (line.trim()) {
               const status = parser.parseLine(line);
-              
+
               // Use intelligent state management if provided, otherwise fall back to direct callback
               if (callbacks?.uvInstallationState) {
                 callbacks.uvInstallationState.updateFromUvStatus(status);
