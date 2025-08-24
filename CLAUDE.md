@@ -54,6 +54,10 @@ yarn make:nvidia       # Build with NVIDIA GPU support
 yarn vite:compile      # Compile with Vite
 ```
 
+## Custom testing
+
+We have testing configured with Vitest. Use vitest to create any tests you need. Do not attempt to custom code your own testing infrastructure, as that is pointless and will do nothing but derail you.
+
 ## Project Structure
 
 ### Source Code (`/src/`)
