@@ -548,6 +548,79 @@ describe('UvInstallationState', () => {
     });
   });
 
+  describe('Real-world Scenario', () => {
+    it('should handle complete installation flow with minimal IPC', () => {
+      const emittedStatuses: any[] = [];
+      statusChangeHandler.mockImplementation((status) => {
+        emittedStatuses.push(status);
+      });
+
+      // 1. Start resolution
+      state.updateFromUvStatus({
+        phase: 'resolving',
+        message: 'Resolving dependencies',
+      });
+
+      // 2. Many resolution updates (should be filtered)
+      for (let i = 0; i < 50; i++) {
+        state.updateFromUvStatus({
+          phase: 'resolving',
+          message: `Resolving dependency: package-${i}`,
+          currentPackage: `package-${i}`,
+        });
+      }
+
+      // 3. Resolution complete with total packages
+      state.updateFromUvStatus({
+        phase: 'resolved',
+        message: 'Resolution complete',
+        totalPackages: 50,
+        installedPackages: 0,
+      });
+
+      // 4. Download packages (meaningful updates)
+      for (let i = 0; i < 5; i++) {
+        // Mock significant progress for each package
+        mockParser.getDownloadProgress = vi.fn().mockReturnValue({
+          totalBytes: 1_000_000,
+          percentComplete: (i + 1) * 20, // 20%, 40%, 60%, 80%, 100%
+          bytesReceived: (i + 1) * 200_000,
+          estimatedBytesReceived: (i + 1) * 200_000,
+        });
+
+        state.updateFromUvStatus({
+          phase: 'downloading',
+          message: `Downloading package-${i}`,
+          currentPackage: `package-${i}`,
+          totalPackages: 50,
+          installedPackages: i,
+          transferRate: 1_000_000,
+          etaSeconds: 120 - i * 20,
+        });
+      }
+
+      // 5. Installation complete
+      state.updateFromUvStatus({
+        phase: 'installed',
+        message: 'All packages installed successfully',
+        totalPackages: 50,
+        installedPackages: 50,
+        isComplete: true,
+      });
+
+      // Verify minimal IPC messages were sent
+      // Should have: 1 resolving + 1 resolved + 5 downloads + 1 installed = 8 total
+      expect(emittedStatuses).toHaveLength(8);
+
+      // Verify the flow
+      expect(emittedStatuses[0].phase).toBe('resolving');
+      expect(emittedStatuses[1].phase).toBe('resolved');
+      expect(emittedStatuses[2].phase).toBe('downloading');
+      expect(emittedStatuses.at(-1).phase).toBe('installed');
+      expect(emittedStatuses.at(-1).isComplete).toBe(true);
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle undefined/null values gracefully', () => {
       state.updateFromUvStatus({
