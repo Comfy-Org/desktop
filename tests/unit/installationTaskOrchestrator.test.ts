@@ -1,13 +1,15 @@
 /**
  * Test suite for InstallationTaskOrchestrator
- * 
+ *
  * Tests the orchestration of multi-step installation processes with proper
  * progress tracking and frontend communication.
  */
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-import { InstallationTaskOrchestrator, createComfyUIInstallationOrchestrator } from '../../src/installationTaskOrchestrator';
+import {
+  InstallationTaskOrchestrator,
+  createComfyUIInstallationOrchestrator,
+} from '../../src/installationTaskOrchestrator';
 import type { InstallationTask, OrchestrationStatus } from '../../src/preload';
 import { UvInstallationState } from '../../src/uvInstallationState';
 
@@ -30,7 +32,7 @@ describe('InstallationTaskOrchestrator', () => {
           execute: vi.fn().mockResolvedValue(undefined),
         },
         {
-          id: 'task2', 
+          id: 'task2',
           name: 'Second Task',
           description: 'Second task description',
           execute: vi.fn().mockResolvedValue(undefined),
@@ -40,7 +42,7 @@ describe('InstallationTaskOrchestrator', () => {
       ];
 
       orchestrator.setTasks(tasks);
-      
+
       const status = orchestrator.getCurrentStatus();
       expect(status).toBeNull(); // No current task before execution
     });
@@ -51,18 +53,18 @@ describe('InstallationTaskOrchestrator', () => {
           id: 'task1',
           name: 'Task 1',
           description: 'Description',
-          execute: vi.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100))),
+          execute: vi.fn().mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100))),
         },
       ];
 
       orchestrator.setTasks(tasks);
-      
+
       // Start execution (don't await to test concurrent access)
       const executionPromise = orchestrator.execute();
-      
+
       // Try to set tasks during execution
       expect(() => orchestrator.setTasks([])).toThrow('Cannot set tasks while orchestration is running');
-      
+
       await executionPromise;
     });
 
@@ -85,17 +87,17 @@ describe('InstallationTaskOrchestrator', () => {
 
       orchestrator.setTasks(tasks);
       orchestrator.setUvInstallationState(mockUvState);
-      
+
       // Verify state is connected by triggering a status change during execution
       const statusUpdateSpy = vi.fn();
       orchestrator.on('orchestrationStatus', statusUpdateSpy);
-      
+
       // Start execution to enable status updates
       const executionPromise = orchestrator.execute();
-      
+
       // Brief delay to let execution start
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Simulate UV status change
       mockUvState.updateFromUvStatus({
         phase: 'downloading',
@@ -117,9 +119,9 @@ describe('InstallationTaskOrchestrator', () => {
             message: 'Downloading numpy',
             currentPackage: 'numpy',
           });
-          
-          await new Promise(resolve => setTimeout(resolve, 50));
-          
+
+          await new Promise((resolve) => setTimeout(resolve, 50));
+
           callbacks.uvInstallationState.updateFromUvStatus({
             phase: 'installed',
             message: 'Installation complete',
@@ -138,7 +140,7 @@ describe('InstallationTaskOrchestrator', () => {
 
       orchestrator.setTasks(tasks);
       orchestrator.setUvInstallationState(mockUvState);
-      
+
       const statusUpdates: OrchestrationStatus[] = [];
       orchestrator.on('orchestrationStatus', (status) => {
         statusUpdates.push({ ...status });
@@ -153,30 +155,30 @@ describe('InstallationTaskOrchestrator', () => {
       });
 
       expect(statusUpdates.length).toBeGreaterThan(0);
-      expect(statusUpdates.some(s => s.taskProgress?.phase === 'downloading')).toBe(true);
+      expect(statusUpdates.some((s) => s.taskProgress?.phase === 'downloading')).toBe(true);
     });
   });
 
   describe('Task Execution', () => {
     it('should execute tasks in sequence', async () => {
       const executionOrder: string[] = [];
-      
+
       const tasks: InstallationTask[] = [
         {
           id: 'task1',
           name: 'First Task',
           description: 'First task',
           execute: vi.fn().mockImplementation(async () => {
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 50));
             executionOrder.push('task1');
           }),
         },
         {
           id: 'task2',
-          name: 'Second Task', 
+          name: 'Second Task',
           description: 'Second task',
           execute: vi.fn().mockImplementation(async () => {
-            await new Promise(resolve => setTimeout(resolve, 30));
+            await new Promise((resolve) => setTimeout(resolve, 30));
             executionOrder.push('task2');
           }),
         },
@@ -184,7 +186,7 @@ describe('InstallationTaskOrchestrator', () => {
 
       orchestrator.setTasks(tasks);
       orchestrator.setUvInstallationState(mockUvState);
-      
+
       await orchestrator.execute();
 
       expect(executionOrder).toEqual(['task1', 'task2']);
@@ -196,7 +198,7 @@ describe('InstallationTaskOrchestrator', () => {
           id: 'task1',
           name: 'Test Task',
           description: 'Test description',
-          execute: vi.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100))),
+          execute: vi.fn().mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100))),
         },
       ];
 
@@ -212,10 +214,10 @@ describe('InstallationTaskOrchestrator', () => {
 
       // Should have at least task start and completion status
       expect(statusUpdates.length).toBeGreaterThanOrEqual(2);
-      
-      const finalStatus = statusUpdates[statusUpdates.length - 1];
-      expect(finalStatus.isComplete).toBe(true);
-      expect(finalStatus.overallProgress).toBe(100);
+
+      const finalStatus = statusUpdates.at(-1);
+      expect(finalStatus?.isComplete).toBe(true);
+      expect(finalStatus?.overallProgress).toBe(100);
     });
 
     it('should handle task execution errors', async () => {
@@ -236,7 +238,7 @@ describe('InstallationTaskOrchestrator', () => {
 
     it('should reset UV state for each task', async () => {
       const resetSpy = vi.spyOn(mockUvState, 'reset');
-      
+
       const tasks: InstallationTask[] = [
         {
           id: 'task1',
@@ -247,7 +249,7 @@ describe('InstallationTaskOrchestrator', () => {
         {
           id: 'task2',
           name: 'Second Task',
-          description: 'Second', 
+          description: 'Second',
           execute: vi.fn().mockResolvedValue(undefined),
         },
       ];
@@ -276,7 +278,7 @@ describe('InstallationTaskOrchestrator', () => {
                 message: 'Downloading...',
               });
             }
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 50));
           }),
         },
         {
@@ -292,14 +294,16 @@ describe('InstallationTaskOrchestrator', () => {
 
       const progressValues: number[] = [];
       orchestrator.on('orchestrationStatus', (status) => {
-        progressValues.push(status.overallProgress);
+        if (status.overallProgress !== undefined) {
+          progressValues.push(status.overallProgress);
+        }
       });
 
       await orchestrator.execute();
 
       // Progress should increase and end at 100%
       expect(Math.max(...progressValues)).toBe(100);
-      expect(progressValues[0]).toBeLessThan(progressValues[progressValues.length - 1]);
+      expect(progressValues[0]).toBeLessThan(progressValues.at(-1)!);
     });
 
     it('should map UV phases to task progress correctly', async () => {
@@ -309,14 +313,14 @@ describe('InstallationTaskOrchestrator', () => {
         description: 'Test',
         execute: vi.fn().mockImplementation(async (callbacks) => {
           if (!callbacks?.uvInstallationState) return;
-          
+
           const phases = ['started', 'resolving', 'downloading', 'installing', 'installed'];
           for (const phase of phases) {
             callbacks.uvInstallationState.updateFromUvStatus({
               phase: phase as any,
               message: `Phase: ${phase}`,
             });
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise((resolve) => setTimeout(resolve, 10));
           }
         }),
       };
@@ -332,7 +336,7 @@ describe('InstallationTaskOrchestrator', () => {
       await orchestrator.execute();
 
       // Verify progress increases with each phase
-      const progressValues = statusUpdates.map(s => s.overallProgress);
+      const progressValues = statusUpdates.map((s) => s.overallProgress);
       const uniqueProgress = [...new Set(progressValues)];
       expect(uniqueProgress.length).toBeGreaterThan(1);
     });
@@ -345,7 +349,7 @@ describe('InstallationTaskOrchestrator', () => {
           id: 'slow-task',
           name: 'Slow Task',
           description: 'Takes time',
-          execute: vi.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 200))),
+          execute: vi.fn().mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 200))),
         },
       ];
 
@@ -354,13 +358,13 @@ describe('InstallationTaskOrchestrator', () => {
 
       // Start first execution
       const firstExecution = orchestrator.execute();
-      
+
       // Try to start second execution
       await expect(orchestrator.execute()).rejects.toThrow('Orchestration already in progress');
 
       // Wait for first to complete
       await firstExecution;
-      
+
       // Now second execution should work
       await expect(orchestrator.execute()).resolves.not.toThrow();
     });
@@ -372,7 +376,7 @@ describe('createComfyUIInstallationOrchestrator', () => {
 
   beforeEach(() => {
     mockVirtualEnvironment = {
-      installTorch: vi.fn().mockResolvedValue(undefined),
+      installPytorch: vi.fn().mockResolvedValue(undefined),
       installComfyUIRequirements: vi.fn().mockResolvedValue(undefined),
       installComfyUIManagerRequirements: vi.fn().mockResolvedValue(undefined),
     };
@@ -380,7 +384,7 @@ describe('createComfyUIInstallationOrchestrator', () => {
 
   it('should create orchestrator with correct tasks', () => {
     const orchestrator = createComfyUIInstallationOrchestrator(mockVirtualEnvironment);
-    
+
     const status = orchestrator.getCurrentStatus();
     expect(status).toBeNull(); // No current task before execution
   });
@@ -398,14 +402,14 @@ describe('createComfyUIInstallationOrchestrator', () => {
     await orchestrator.execute();
 
     // Verify all methods were called
-    expect(mockVirtualEnvironment.installTorch).toHaveBeenCalled();
+    expect(mockVirtualEnvironment.installPytorch).toHaveBeenCalled();
     expect(mockVirtualEnvironment.installComfyUIRequirements).toHaveBeenCalled();
     expect(mockVirtualEnvironment.installComfyUIManagerRequirements).toHaveBeenCalled();
 
     // Verify task sequence
-    const taskNames = statusUpdates.map(s => s.currentTask?.name).filter(Boolean);
+    const taskNames = statusUpdates.map((s) => s.currentTask?.name).filter(Boolean);
     const uniqueTaskNames = [...new Set(taskNames)];
-    
+
     expect(uniqueTaskNames).toContain('PyTorch Dependencies');
     expect(uniqueTaskNames).toContain('ComfyUI Requirements');
     expect(uniqueTaskNames).toContain('Manager Requirements');
@@ -419,7 +423,7 @@ describe('createComfyUIInstallationOrchestrator', () => {
     await orchestrator.execute();
 
     // Verify each method received proper callbacks
-    expect(mockVirtualEnvironment.installTorch).toHaveBeenCalledWith({
+    expect(mockVirtualEnvironment.installPytorch).toHaveBeenCalledWith({
       onStdout: expect.any(Function),
       onStderr: expect.any(Function),
       uvInstallationState: uvState,
@@ -449,11 +453,11 @@ describe('createComfyUIInstallationOrchestrator', () => {
     await expect(orchestrator.execute()).rejects.toThrow('ComfyUI Requirements');
 
     // First task should have been called
-    expect(mockVirtualEnvironment.installTorch).toHaveBeenCalled();
-    
+    expect(mockVirtualEnvironment.installPytorch).toHaveBeenCalled();
+
     // Failed task should have been called
     expect(mockVirtualEnvironment.installComfyUIRequirements).toHaveBeenCalled();
-    
+
     // Third task should NOT have been called
     expect(mockVirtualEnvironment.installComfyUIManagerRequirements).not.toHaveBeenCalled();
   });

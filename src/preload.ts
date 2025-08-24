@@ -164,6 +164,8 @@ export interface InstallationTask {
   optional?: boolean;
   /** Estimated duration in seconds */
   estimatedDuration?: number;
+  /** Task execution function */
+  execute: (callbacks?: import('./virtualEnvironment').ProcessCallbacks) => Promise<void>;
 }
 
 /**
@@ -569,20 +571,20 @@ const electronAPI = {
 
     /**
      * Listens for orchestration status updates during multi-step installations.
-     * 
+     *
      * Provides high-level context about current task and overall progress
      * across multiple UV installation commands.
-     * 
+     *
      * @param callback Function to handle orchestration status updates
      * @returns Cleanup function to stop listening
-     * 
+     *
      * @example
      * ```typescript
      * const cleanup = window.electronAPI.installation.onOrchestrationStatus((status) => {
      *   console.log(`Task ${status.currentTaskIndex + 1}/${status.totalTasks}: ${status.currentTask.name}`);
      *   console.log(`Overall progress: ${status.overallProgress}%`);
      * });
-     * 
+     *
      * // Later, cleanup when done
      * cleanup();
      * ```
