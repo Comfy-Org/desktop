@@ -128,6 +128,9 @@ The app packages these components:
 - Follow Electron security best practices
 - Use the existing store patterns for configuration management
 - Test changes with both unit tests (Vitest) and E2E tests (Playwright)
+- Use JSDoc format to write documentation for methods
+  - Common tags are `@param`, and `@return` (do not use for `void` return type)
+  - Use `{@link }` to reference symbols
 
 ## Before Committing
 
