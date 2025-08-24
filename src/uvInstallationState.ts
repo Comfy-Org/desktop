@@ -1,0 +1,216 @@
+import { EventEmitter } from 'node:events';
+import type { UvLogParser, UvStatus } from './uvLogParser';
+import type { UvInstallStatus } from './preload';
+
+/**
+ * Configuration options for UvInstallationState
+ */
+export interface UvInstallationStateOptions {
+  /** Minimum download progress change (%) to trigger state update */
+  downloadProgressThreshold?: number;
+  /** Minimum download bytes change to trigger state update */
+  bytesThreshold?: number;
+  /** Minimum time between identical phase updates (ms) */
+  phaseUpdateCooldown?: number;
+}
+
+/**
+ * Intelligent state manager for UV installation progress.
+ * 
+ * This class receives UV log parser updates and maintains internal state,
+ * only emitting 'statusChange' events when meaningful changes occur.
+ * This prevents IPC spam while ensuring all important updates reach the frontend.
+ */
+export class UvInstallationState extends EventEmitter {
+  private currentState: UvInstallStatus | null = null;
+  private uvLogParser: UvLogParser | null = null;
+  private lastPhaseUpdateTime = 0;
+  private readonly options: Required<UvInstallationStateOptions>;
+
+  constructor(options: UvInstallationStateOptions = {}) {
+    super();
+    
+    this.options = {
+      downloadProgressThreshold: 5, // 5% minimum change
+      bytesThreshold: 100 * 1024, // 100KB minimum change
+      phaseUpdateCooldown: 100, // 100ms cooldown for identical phases
+      ...options,
+    };
+  }
+
+  /**
+   * Associates a UV log parser with this state manager.
+   * Used for accessing download progress information.
+   */
+  setParser(parser: UvLogParser): void {
+    this.uvLogParser = parser;
+  }
+
+  /**
+   * Updates state based on UV log parser output.
+   * Only emits statusChange events when meaningful changes are detected.
+   */
+  updateFromUvStatus(status: UvStatus): void {
+    // Skip unknown phases
+    if (status.phase === 'unknown') {
+      return;
+    }
+
+    const newState = this.convertUvStatusToInstallStatus(status);
+    
+    if (this.hasStateChanged(newState)) {
+      this.currentState = { ...newState };
+      this.emit('statusChange', this.currentState);
+    }
+  }
+
+  /**
+   * Gets the current installation state.
+   */
+  getCurrentState(): UvInstallStatus | null {
+    return this.currentState ? { ...this.currentState } : null;
+  }
+
+  /**
+   * Resets the state manager to initial state.
+   */
+  reset(): void {
+    this.currentState = null;
+    this.uvLogParser = null;
+    this.lastPhaseUpdateTime = 0;
+  }
+
+  /**
+   * Converts UvStatus to UvInstallStatus with proper field mapping.
+   */
+  private convertUvStatusToInstallStatus(status: UvStatus): UvInstallStatus {
+    const { totalBytes, downloadedBytes } = this.calculateDownloadBytes(status);
+
+    return {
+      phase: status.phase,
+      message: status.message || '',
+      totalPackages: status.totalPackages,
+      installedPackages: status.installedPackages,
+      currentPackage: status.currentPackage,
+      totalBytes,
+      downloadedBytes,
+      transferRate: status.transferRate,
+      etaSeconds: status.etaSeconds,
+      error: status.error,
+      isComplete: status.isComplete || status.phase === 'installed' || (status.phase === 'error' && !!status.error),
+    };
+  }
+
+  /**
+   * Calculates download bytes from UV status and parser state.
+   */
+  private calculateDownloadBytes(status: UvStatus): { totalBytes: number; downloadedBytes: number } {
+    let totalBytes = 0;
+    let downloadedBytes = 0;
+
+    if (status.currentPackage && this.uvLogParser) {
+      const progress = this.uvLogParser.getDownloadProgress(status.currentPackage);
+      if (progress) {
+        totalBytes = progress.totalBytes;
+        downloadedBytes = Math.round((progress.percentComplete / 100) * progress.totalBytes);
+      }
+    }
+
+    return { totalBytes, downloadedBytes };
+  }
+
+  /**
+   * Intelligently determines if the new state represents a meaningful change.
+   */
+  private hasStateChanged(newState: UvInstallStatus): boolean {
+    if (!this.currentState) {
+      return true; // First state is always significant
+    }
+
+    const prev = this.currentState;
+    const now = Date.now();
+
+    // Phase changes are always significant
+    if (prev.phase !== newState.phase) {
+      this.lastPhaseUpdateTime = now;
+      return true;
+    }
+
+    // Package changes are always significant
+    if (prev.currentPackage !== newState.currentPackage) {
+      return true;
+    }
+
+    // Counter changes (total/installed packages) are always significant
+    if (prev.totalPackages !== newState.totalPackages || 
+        prev.installedPackages !== newState.installedPackages) {
+      return true;
+    }
+
+    // Completion status changes are always significant
+    if (prev.isComplete !== newState.isComplete) {
+      return true;
+    }
+
+    // Error changes are always significant
+    if (prev.error !== newState.error) {
+      return true;
+    }
+
+    // Message changes are significant if non-empty and different
+    if (newState.message && prev.message !== newState.message) {
+      return true;
+    }
+
+    // Download progress changes (use byte threshold for accuracy)
+    const prevBytes = prev.downloadedBytes || 0;
+    const newBytes = newState.downloadedBytes || 0;
+    if (Math.abs(newBytes - prevBytes) >= this.options.bytesThreshold) {
+      return true;
+    }
+
+    // Transfer rate changes (significant if > 10% change or crosses zero threshold)
+    const prevRate = prev.transferRate || 0;
+    const newRate = newState.transferRate || 0;
+    if (prevRate === 0 && newRate > 0) return true; // Started transferring
+    if (prevRate > 0 && newRate === 0) return true; // Stopped transferring
+    if (prevRate > 0 && Math.abs(newRate - prevRate) / prevRate > 0.1) return true; // 10% change
+
+    // ETA changes (significant if > 5 second change)
+    const prevEta = prev.etaSeconds || 0;
+    const newEta = newState.etaSeconds || 0;
+    if (Math.abs(newEta - prevEta) > 5) {
+      return true;
+    }
+
+    // Prevent phase spam with cooldown for identical phases
+    if (prev.phase === newState.phase && 
+        (now - this.lastPhaseUpdateTime) < this.options.phaseUpdateCooldown) {
+      return false;
+    }
+
+    // No significant change detected
+    return false;
+  }
+
+  /**
+   * Type-safe event emission for statusChange events.
+   */
+  emit(event: 'statusChange', status: UvInstallStatus): boolean {
+    return super.emit(event, status);
+  }
+
+  /**
+   * Type-safe event listener for statusChange events.
+   */
+  on(event: 'statusChange', listener: (status: UvInstallStatus) => void): this {
+    return super.on(event, listener);
+  }
+
+  /**
+   * Type-safe event listener removal for statusChange events.
+   */
+  off(event: 'statusChange', listener: (status: UvInstallStatus) => void): this {
+    return super.off(event, listener);
+  }
+}

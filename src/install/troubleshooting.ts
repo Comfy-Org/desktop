@@ -9,6 +9,7 @@ import type { InstallValidation, UvInstallStatus } from '@/preload';
 import { getTelemetry } from '@/services/telemetry';
 import { useDesktopConfig } from '@/store/desktopConfig';
 import type { UvStatus } from '@/uvLogParser';
+import { UvInstallationState } from '@/uvInstallationState';
 
 /**
  * IPC handler for troubleshooting / maintenance tasks.
@@ -67,43 +68,38 @@ export class Troubleshooting implements Disposable {
     ipcMain.handle(IPC_CHANNELS.UV_INSTALL_REQUIREMENTS, async () => {
       getTelemetry().track('installation_manager:uv_requirements_install');
 
-      // Enhanced callback that tracks installation progress
-      const onStatus = (status: UvStatus) => {
-        // Only process and send meaningful status updates
-        if (status.phase === 'unknown') {
-          return; // Skip unknown phases entirely
-        }
+      // Create intelligent state management for UV installation
+      const installationState = new UvInstallationState({
+        downloadProgressThreshold: 5, // 5% minimum change
+        bytesThreshold: 100 * 1024, // 100KB minimum change
+        phaseUpdateCooldown: 200, // 200ms cooldown for identical phases
+      });
 
-        // Convert UvStatus to UvInstallStatus for frontend
-        const installStatus: UvInstallStatus = {
-          phase: status.phase,
-          message: status.message,
-          totalPackages: status.totalPackages,
-          installedPackages: status.installedPackages,
-          currentPackage: status.currentPackage,
-          totalBytes: status.totalBytes,
-          downloadedBytes: status.downloadedBytes,
-          transferRate: status.transferRate,
-          etaSeconds: status.etaSeconds,
-          error: status.error,
-          isComplete: status.isComplete || status.phase === 'installed' || (status.phase === 'error' && !!status.error),
-        };
-
-        // Log when sending IPC message (not the raw output)
+      // Subscribe to state changes and send IPC messages
+      installationState.on('statusChange', (status: UvInstallStatus) => {
+        // Log when sending IPC message
         log.debug(
           `Sending UV IPC status: phase=${status.phase}, package=${status.currentPackage || 'N/A'}, progress=${status.installedPackages || 0}/${status.totalPackages || 0}`
         );
 
         // Send UV installation status to frontend
-        this.appWindow.send(IPC_CHANNELS.UV_INSTALL_STATUS, installStatus);
-      };
+        this.appWindow.send(IPC_CHANNELS.UV_INSTALL_STATUS, status);
+      });
 
-      // Don't send raw logs when we have UV status parsing
+      // Don't send raw logs when we have intelligent state management
       const logCallback = (data: string) => {
         log.info(data); // Still log to file, but don't send to frontend
       };
 
-      const result = await installation.virtualEnvironment.reinstallRequirements(logCallback, onStatus);
+      // Use a wrapper to pass the state via onStatus for now (backwards compatibility)
+      const onStatusWrapper = (status: UvStatus) => {
+        installationState.updateFromUvStatus(status);
+      };
+
+      const result = await installation.virtualEnvironment.reinstallRequirements(logCallback, onStatusWrapper);
+
+      // Clean up event listeners
+      installationState.removeAllListeners();
 
       if (result) await this.onInstallFix?.();
       return result;

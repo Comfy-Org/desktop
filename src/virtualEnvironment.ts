@@ -13,11 +13,13 @@ import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
 import { UvLogParser, type UvStatus } from './uvLogParser';
+import type { UvInstallationState } from './uvInstallationState';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
   onStderr?: (data: string) => void;
   onUvStatus?: (status: UvStatus) => void;
+  uvInstallationState?: UvInstallationState; // Intelligent state management for UV installations
 };
 
 interface PipInstallConfig {
@@ -378,8 +380,15 @@ export class VirtualEnvironment implements HasTelemetry {
 
     // Create parser for pip install commands
     let parser: UvLogParser | undefined;
-    if (isPipInstall && callbacks?.onUvStatus) {
+    const hasStatusTracking = isPipInstall && (callbacks?.onUvStatus || callbacks?.uvInstallationState);
+    
+    if (hasStatusTracking) {
       parser = new UvLogParser();
+      
+      // Associate parser with state manager if provided
+      if (callbacks?.uvInstallationState) {
+        callbacks.uvInstallationState.setParser(parser);
+      }
     }
 
     // Build environment variables
@@ -389,11 +398,11 @@ export class VirtualEnvironment implements HasTelemetry {
       ...(this.pythonMirror ? { UV_PYTHON_INSTALL_MIRROR: this.pythonMirror } : {}),
     };
 
-    // Add debug environment variables for pip install commands if UV status callback is present
-    if (isPipInstall && callbacks?.onUvStatus) {
+    // Add debug environment variables for pip install commands if status tracking is enabled
+    if (hasStatusTracking) {
       env.UV_LOG_CONTEXT = '1';
       env.RUST_LOG = 'debug';
-      log.debug('UV debug logging enabled for pip install with status callback');
+      log.debug('UV debug logging enabled for pip install with status tracking');
     }
 
     log.info(`Running uv command: ${this.uvPath} ${args.join(' ')}`);
@@ -402,24 +411,19 @@ export class VirtualEnvironment implements HasTelemetry {
     const enhancedCallbacks: ProcessCallbacks = {
       onStdout: (data: string) => {
         // Parse with UvLogParser if available
-        if (parser && callbacks?.onUvStatus) {
-          // Log that we're receiving data for debugging
+        if (parser && hasStatusTracking) {
           const lines = data.split(/\r?\n/);
-          let meaningfulUpdates = 0;
           for (const line of lines) {
             if (line.trim()) {
               const status = parser.parseLine(line);
-              // Only send meaningful status updates, not raw log lines
-              if (status.phase !== 'unknown') {
+              
+              // Use intelligent state management if provided, otherwise fall back to direct callback
+              if (callbacks?.uvInstallationState) {
+                callbacks.uvInstallationState.updateFromUvStatus(status);
+              } else if (callbacks?.onUvStatus && status.phase !== 'unknown') {
                 callbacks.onUvStatus(status);
-                meaningfulUpdates++;
               }
             }
-          }
-
-          // Only log when we actually send updates to frontend
-          if (meaningfulUpdates > 0) {
-            log.debug(`UV parser sent ${meaningfulUpdates} status updates to frontend`);
           }
 
           // Don't forward raw stdout when parsing - we're sending structured updates instead
@@ -431,23 +435,19 @@ export class VirtualEnvironment implements HasTelemetry {
       },
       onStderr: (data: string) => {
         // UV debug output might come through stderr
-        if (parser && callbacks?.onUvStatus) {
-          // Try parsing stderr as well for UV debug output
+        if (parser && hasStatusTracking) {
           const lines = data.split(/\r?\n/);
-          let meaningfulUpdates = 0;
           for (const line of lines) {
             if (line.trim()) {
               const status = parser.parseLine(line);
-              if (status.phase !== 'unknown') {
+              
+              // Use intelligent state management if provided, otherwise fall back to direct callback
+              if (callbacks?.uvInstallationState) {
+                callbacks.uvInstallationState.updateFromUvStatus(status);
+              } else if (callbacks?.onUvStatus && status.phase !== 'unknown') {
                 callbacks.onUvStatus(status);
-                meaningfulUpdates++;
               }
             }
-          }
-
-          // Only log when we actually send updates to frontend
-          if (meaningfulUpdates > 0) {
-            log.debug(`UV parser sent ${meaningfulUpdates} status updates from stderr to frontend`);
           }
         }
 
