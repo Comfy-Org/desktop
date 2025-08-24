@@ -1,18 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { UvLogParser } from '@/uvLogParser';
 import { UvInstallationState } from '@/uvInstallationState';
+import type { UvLogParser } from '@/uvLogParser';
 
 describe('UvInstallationState', () => {
   let state: UvInstallationState;
   let mockParser: Partial<UvLogParser>;
-  let statusChangeHandler: vi.Mock;
+  let statusChangeHandler: Mock;
 
   beforeEach(() => {
     // Create mock parser
     mockParser = {
       getDownloadProgress: vi.fn().mockReturnValue({
-        totalBytes: 1000000,
+        totalBytes: 1_000_000,
         percentComplete: 0,
         bytesReceived: 0,
         estimatedBytesReceived: 0,
@@ -22,7 +22,7 @@ describe('UvInstallationState', () => {
     // Create state with test-friendly thresholds
     state = new UvInstallationState({
       downloadProgressThreshold: 10, // 10% minimum change
-      bytesThreshold: 50000, // 50KB minimum change
+      bytesThreshold: 50_000, // 50KB minimum change
       phaseUpdateCooldown: 50, // 50ms cooldown
     });
 
@@ -74,7 +74,8 @@ describe('UvInstallationState', () => {
       });
 
       expect(statusChangeHandler).toHaveBeenCalledTimes(2);
-      expect(statusChangeHandler).toHaveBeenNthCalledWith(2,
+      expect(statusChangeHandler).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
           phase: 'resolved',
           message: 'Dependencies resolved',
@@ -96,7 +97,8 @@ describe('UvInstallationState', () => {
       });
 
       expect(statusChangeHandler).toHaveBeenCalledTimes(2);
-      expect(statusChangeHandler).toHaveBeenNthCalledWith(2,
+      expect(statusChangeHandler).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
           currentPackage: 'package2',
         })
@@ -119,7 +121,8 @@ describe('UvInstallationState', () => {
       });
 
       expect(statusChangeHandler).toHaveBeenCalledTimes(2);
-      expect(statusChangeHandler).toHaveBeenNthCalledWith(2,
+      expect(statusChangeHandler).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
           installedPackages: 2,
         })
@@ -140,7 +143,8 @@ describe('UvInstallationState', () => {
       });
 
       expect(statusChangeHandler).toHaveBeenCalledTimes(2);
-      expect(statusChangeHandler).toHaveBeenNthCalledWith(2,
+      expect(statusChangeHandler).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
           phase: 'installed',
           isComplete: true,
@@ -161,7 +165,8 @@ describe('UvInstallationState', () => {
       });
 
       expect(statusChangeHandler).toHaveBeenCalledTimes(2);
-      expect(statusChangeHandler).toHaveBeenNthCalledWith(2,
+      expect(statusChangeHandler).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
           phase: 'error',
           error: 'Network timeout',
@@ -206,7 +211,7 @@ describe('UvInstallationState', () => {
       expect(statusChangeHandler).toHaveBeenCalledTimes(1);
 
       // Wait for cooldown to expire
-      await new Promise(resolve => setTimeout(resolve, 60));
+      await new Promise((resolve) => setTimeout(resolve, 60));
 
       // Third update (after cooldown)
       state.updateFromUvStatus(status);
@@ -251,10 +256,10 @@ describe('UvInstallationState', () => {
       mockParser.getDownloadProgress = vi.fn().mockImplementation((packageName: string) => {
         if (packageName === 'test-package') {
           return {
-            totalBytes: 1000000, // 1MB
+            totalBytes: 1_000_000, // 1MB
             percentComplete: 25, // 25% complete
-            bytesReceived: 250000,
-            estimatedBytesReceived: 250000,
+            bytesReceived: 250_000,
+            estimatedBytesReceived: 250_000,
           };
         }
         return undefined;
@@ -270,8 +275,8 @@ describe('UvInstallationState', () => {
 
       expect(statusChangeHandler).toHaveBeenCalledWith(
         expect.objectContaining({
-          totalBytes: 1000000,
-          downloadedBytes: 250000,
+          totalBytes: 1_000_000,
+          downloadedBytes: 250_000,
         })
       );
     });
@@ -286,10 +291,10 @@ describe('UvInstallationState', () => {
 
       // Update mock to show more progress (75%)
       mockParser.getDownloadProgress = vi.fn().mockReturnValue({
-        totalBytes: 1000000,
+        totalBytes: 1_000_000,
         percentComplete: 75,
-        bytesReceived: 750000,
-        estimatedBytesReceived: 750000,
+        bytesReceived: 750_000,
+        estimatedBytesReceived: 750_000,
       });
 
       // Same status but with updated progress
@@ -300,9 +305,10 @@ describe('UvInstallationState', () => {
       });
 
       expect(statusChangeHandler).toHaveBeenCalledTimes(2);
-      expect(statusChangeHandler).toHaveBeenNthCalledWith(2,
+      expect(statusChangeHandler).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
-          downloadedBytes: 750000,
+          downloadedBytes: 750_000,
         })
       );
     });
@@ -317,10 +323,10 @@ describe('UvInstallationState', () => {
 
       // Small progress change (within threshold)
       mockParser.getDownloadProgress = vi.fn().mockReturnValue({
-        totalBytes: 1000000,
+        totalBytes: 1_000_000,
         percentComplete: 27, // Only 2% more
-        bytesReceived: 270000, // Only 20KB more (below 50KB threshold)
-        estimatedBytesReceived: 270000,
+        bytesReceived: 270_000, // Only 20KB more (below 50KB threshold)
+        estimatedBytesReceived: 270_000,
       });
 
       state.updateFromUvStatus({
@@ -340,14 +346,14 @@ describe('UvInstallationState', () => {
       state.updateFromUvStatus({
         phase: 'downloading',
         message: 'Downloading package',
-        transferRate: 1000000, // 1MB/s
+        transferRate: 1_000_000, // 1MB/s
       });
 
       // Significant rate change (> 10%)
       state.updateFromUvStatus({
         phase: 'downloading',
         message: 'Downloading package',
-        transferRate: 500000, // 0.5MB/s (50% decrease)
+        transferRate: 500_000, // 0.5MB/s (50% decrease)
       });
 
       expect(statusChangeHandler).toHaveBeenCalledTimes(2);
@@ -429,6 +435,116 @@ describe('UvInstallationState', () => {
 
       expect(handler1).toHaveBeenCalledTimes(1); // Still 1
       expect(handler2).toHaveBeenCalledTimes(2); // Incremented
+    });
+  });
+
+  describe('Resolution Phase Spam Prevention', () => {
+    it('should prevent spam during resolution phase with package changes', () => {
+      // Initial resolution phase
+      state.updateFromUvStatus({
+        phase: 'resolving',
+        message: 'Resolving dependencies',
+      });
+
+      expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+
+      // Rapid package changes during resolution (simulating the spam issue)
+      const packages = ['numpy', 'pandas', 'scipy', 'matplotlib', 'scikit-learn'];
+      for (const pkg of packages) {
+        state.updateFromUvStatus({
+          phase: 'resolving',
+          message: `Resolving dependency: ${pkg}`,
+          currentPackage: pkg,
+        });
+      }
+
+      // Should NOT emit for package changes during resolution
+      expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it('should allow total package count updates during resolution', () => {
+      // Initial resolution
+      state.updateFromUvStatus({
+        phase: 'resolving',
+        message: 'Resolving dependencies',
+        totalPackages: 0,
+      });
+
+      expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+
+      // Total package count discovered (resolution complete)
+      state.updateFromUvStatus({
+        phase: 'resolving',
+        message: 'Resolution complete',
+        totalPackages: 50,
+      });
+
+      // Should emit for total package count change
+      expect(statusChangeHandler).toHaveBeenCalledTimes(2);
+      expect(statusChangeHandler).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          totalPackages: 50,
+        })
+      );
+    });
+
+    it('should apply aggressive cooldown for resolution phase', async () => {
+      // Initial resolution
+      state.updateFromUvStatus({
+        phase: 'resolving',
+        message: 'Starting resolution',
+      });
+
+      // Rapid updates within 1 second cooldown
+      for (let i = 0; i < 5; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        state.updateFromUvStatus({
+          phase: 'resolving',
+          message: `Resolving package ${i}`,
+        });
+      }
+
+      // Should only have initial emit due to cooldown
+      expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+
+      // Wait for cooldown to expire
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Update after cooldown with meaningful change
+      state.updateFromUvStatus({
+        phase: 'resolving',
+        message: 'Found incompatibility',
+      });
+
+      // Should emit after cooldown
+      expect(statusChangeHandler).toHaveBeenCalledTimes(2);
+    });
+
+    it('should ignore repetitive resolving messages', () => {
+      state.updateFromUvStatus({
+        phase: 'resolving',
+        message: 'Starting resolution',
+      });
+
+      // Repetitive resolving messages
+      const repetitiveMessages = [
+        'Resolving dependency: torch',
+        'Resolving dependency: torchvision',
+        'Resolving dependency: torchaudio',
+        'Resolving',
+        'Resolving dependencies',
+      ];
+
+      for (const msg of repetitiveMessages) {
+        state.updateFromUvStatus({
+          phase: 'resolving',
+          message: msg,
+        });
+      }
+
+      // Should only have initial emit
+      expect(statusChangeHandler).toHaveBeenCalledTimes(1);
     });
   });
 
