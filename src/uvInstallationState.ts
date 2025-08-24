@@ -241,10 +241,6 @@ export class UvInstallationState extends EventEmitter {
         if (timeSinceLastProgress < 25) {
           return false; // Rate limit: max 40 updates per second
         }
-        // Also require minimum byte change for progress-only updates
-        if (byteDifference < this.options.bytesThreshold) {
-          return false;
-        }
         this.lastDownloadProgressTime = now;
         return true;
       }

@@ -334,30 +334,47 @@ describe('UvInstallationState', () => {
       );
     });
 
-    it('should not emit for small download progress changes', () => {
-      // Initial download
+    it('should emit all progress updates for progress-only changes after rate limiting', () => {
+      vi.useFakeTimers();
+
+      // Initial download with direct byte values
       state.updateFromUvStatus({
         phase: 'downloading',
         message: 'Downloading test-package',
         currentPackage: 'test-package',
-      });
-
-      // Small progress change (within threshold)
-      mockParser.getDownloadProgress = vi.fn().mockReturnValue({
         totalBytes: 1_000_000,
-        percentComplete: 27, // Only 2% more
-        bytesReceived: 270_000, // Only 20KB more (below 50KB threshold)
-        estimatedBytesReceived: 270_000,
+        downloadedBytes: 250_000,
       });
 
+      statusChangeHandler.mockClear();
+
+      // Small progress-only change (no rate limit applied yet)
+      vi.advanceTimersByTime(30); // Ensure enough time has passed
+      state.updateFromUvStatus({
+        phase: 'downloading',
+        message: 'Downloading test-package', // Same message
+        currentPackage: 'test-package',
+        totalBytes: 1_000_000,
+        downloadedBytes: 251_000, // Only 1KB more - but should emit for progress-only
+      });
+
+      // Should emit because it's progress-only and rate limit passed
+      expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+
+      // Too soon for another update
+      vi.advanceTimersByTime(10); // Only 10ms later
       state.updateFromUvStatus({
         phase: 'downloading',
         message: 'Downloading test-package',
         currentPackage: 'test-package',
+        totalBytes: 1_000_000,
+        downloadedBytes: 252_000,
       });
 
-      // Should not emit second event due to small change
+      // Should still be 1 due to rate limiting
       expect(statusChangeHandler).toHaveBeenCalledTimes(1);
+
+      vi.useRealTimers();
     });
 
     it('should emit progress updates when using direct byte values', () => {
@@ -420,10 +437,12 @@ describe('UvInstallationState', () => {
       }
 
       // With rate limiting at 40/sec (25ms minimum), over 1 second we should get ~40 updates
-      // The actual count may be slightly less due to the byte threshold requirement
+      // Since we advance 10ms per iteration for 100 iterations = 1000ms total
+      // Every 25ms we can emit, so we should get approximately 1000/25 = 40 updates
+      // But the first update is immediate, then we need to wait 25ms for the next
       const callCount = statusChangeHandler.mock.calls.length;
-      expect(callCount).toBeGreaterThanOrEqual(30); // Allow some variance for timing
-      expect(callCount).toBeLessThanOrEqual(45); // But should be close to 40
+      expect(callCount).toBeGreaterThanOrEqual(30); // Allow variance for timing logic
+      expect(callCount).toBeLessThanOrEqual(45); // But should be around 40
 
       vi.useRealTimers();
     });
