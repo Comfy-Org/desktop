@@ -349,7 +349,7 @@ describe('UvInstallationState', () => {
       statusChangeHandler.mockClear();
 
       // Small progress-only change (no rate limit applied yet)
-      vi.advanceTimersByTime(30); // Ensure enough time has passed
+      vi.advanceTimersByTime(300); // Ensure enough time has passed (> 250ms)
       state.updateFromUvStatus({
         phase: 'downloading',
         message: 'Downloading test-package', // Same message
@@ -362,7 +362,7 @@ describe('UvInstallationState', () => {
       expect(statusChangeHandler).toHaveBeenCalledTimes(1);
 
       // Too soon for another update
-      vi.advanceTimersByTime(10); // Only 10ms later
+      vi.advanceTimersByTime(100); // Only 100ms later (< 250ms)
       state.updateFromUvStatus({
         phase: 'downloading',
         message: 'Downloading test-package',
@@ -407,7 +407,7 @@ describe('UvInstallationState', () => {
       );
     });
 
-    it('should rate limit download-progress-only updates to 40 per second', () => {
+    it('should rate limit download-progress-only updates to 4 per second', () => {
       vi.useFakeTimers();
 
       // Initial download state
@@ -436,13 +436,12 @@ describe('UvInstallationState', () => {
         vi.advanceTimersByTime(10);
       }
 
-      // With rate limiting at 40/sec (25ms minimum), over 1 second we should get ~40 updates
+      // With rate limiting at 4/sec (250ms minimum), over 1 second we should get ~4 updates
       // Since we advance 10ms per iteration for 100 iterations = 1000ms total
-      // Every 25ms we can emit, so we should get approximately 1000/25 = 40 updates
-      // But the first update is immediate, then we need to wait 25ms for the next
+      // Every 250ms we can emit, so we should get approximately 1000/250 = 4 updates
       const callCount = statusChangeHandler.mock.calls.length;
-      expect(callCount).toBeGreaterThanOrEqual(30); // Allow variance for timing logic
-      expect(callCount).toBeLessThanOrEqual(45); // But should be around 40
+      expect(callCount).toBeGreaterThanOrEqual(3); // Allow some variance
+      expect(callCount).toBeLessThanOrEqual(5); // But should be around 4
 
       vi.useRealTimers();
     });
@@ -480,7 +479,7 @@ describe('UvInstallationState', () => {
         downloadedBytes: 3_000_000,
       });
 
-      // Should emit both updates despite being within 25ms window
+      // Should emit both updates despite being within 250ms window
       // because package changes are not rate limited
       expect(statusChangeHandler).toHaveBeenCalledTimes(2);
 

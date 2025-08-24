@@ -235,11 +235,11 @@ export class UvInstallationState extends EventEmitter {
     const byteDifference = Math.abs(newBytes - prevBytes);
 
     if (byteDifference > 0) {
-      // If this is a progress-only update, apply rate limiting (40/sec = 25ms minimum)
+      // If this is a progress-only update, apply rate limiting (4/sec = 250ms minimum)
       if (isDownloadProgressOnly) {
         const timeSinceLastProgress = now - this.lastDownloadProgressTime;
-        if (timeSinceLastProgress < 25) {
-          return false; // Rate limit: max 40 updates per second
+        if (timeSinceLastProgress < 250) {
+          return false; // Rate limit: max 4 updates per second
         }
         this.lastDownloadProgressTime = now;
         return true;
