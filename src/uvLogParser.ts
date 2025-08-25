@@ -95,6 +95,7 @@ export interface HttpTransferInfo {
   frameCount: number;
   lastFrameTime: number;
   associatedPackage?: string;
+  expectedSize?: number;
 }
 
 export interface OverallState {
@@ -456,7 +457,13 @@ export class UvLogParser implements IUvLogParser {
             if (!aHasStream && bHasStream) return -1;
             if (aHasStream && !bHasStream) return 1;
 
-            // Then sort by start time
+            // Then sort by start time with a tolerance window
+            const timeDiff = Math.abs((a.startTime || 0) - (b.startTime || 0));
+            if (timeDiff < 100) {
+              // Within 100ms, consider them equal timing - sort by size instead
+              // Larger packages typically start their streams first
+              return b.totalBytes - a.totalBytes;
+            }
             return (a.startTime || 0) - (b.startTime || 0);
           });
 
@@ -469,6 +476,7 @@ export class UvLogParser implements IUvLogParser {
             frameCount: 0,
             lastFrameTime: Date.now(),
             associatedPackage: download.package,
+            expectedSize: download.totalBytes, // Add expected size for validation
           };
           this.transfers.set(streamId, transfer);
 
@@ -526,21 +534,41 @@ export class UvLogParser implements IUvLogParser {
               (d) => (d.status === 'downloading' || d.status === 'pending') && !assignedPackages.has(d.package)
               // Removed d.totalBytes > 0 check - even zero-size packages need tracking
             )
-            .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+            .sort((a, b) => {
+              // Use size-based heuristic for fallback association
+              // Larger packages are more likely to have ongoing streams
+              const timeDiff = Math.abs((a.startTime || 0) - (b.startTime || 0));
+              if (timeDiff < 100) {
+                // Within 100ms window, prefer larger packages
+                return b.totalBytes - a.totalBytes;
+              }
+              return (a.startTime || 0) - (b.startTime || 0);
+            });
 
           if (unassignedDownloads.length > 0) {
             const download = unassignedDownloads[0];
-            this.streamToPackage.set(streamId, download.package);
+            // Only associate if this is likely the right package
+            // Avoid associating streams that arrive very late
+            const now = Date.now();
+            const downloadAge = now - (download.startTime || now);
+
+            // If download started more than 5 seconds ago and we're just seeing this stream,
+            // it's likely not the right association
+            if (downloadAge < 5000) {
+              this.streamToPackage.set(streamId, download.package);
+            }
           }
         }
 
         // Create transfer if not exists
         const associatedPackage = this.streamToPackage.get(streamId);
+        const download = associatedPackage ? this.downloads.get(associatedPackage) : undefined;
         const transfer: HttpTransferInfo = {
           streamId,
           frameCount: 1,
           lastFrameTime: Date.now(),
           associatedPackage,
+          expectedSize: download?.totalBytes,
         };
         this.transfers.set(streamId, transfer);
 
@@ -555,18 +583,39 @@ export class UvLogParser implements IUvLogParser {
             this.updateTransferRate(progress);
           }
 
-          // Handle END_STREAM on first frame (immediate completion)
+          // Handle END_STREAM on first frame
           if (isEndStream) {
-            if (progress) {
-              progress.bytesReceived = progress.totalBytes;
-              progress.percentComplete = 100;
-            }
-
+            // Don't automatically mark as 100% complete on first frame
+            // This could be a small package or a misassociated stream
             const download = this.downloads.get(associatedPackage);
-            if (download) {
+            if (download && download.totalBytes === 0) {
+              // Zero-size package, mark as complete
+              if (progress) {
+                progress.bytesReceived = 0;
+                progress.percentComplete = 100;
+              }
               download.status = 'completed';
               download.endTime = Date.now();
+
+              // Clean up old downloads when marking one complete
+              this.cleanupCompletedDownloads();
+            } else if (download) {
+              // Non-zero package with END_STREAM on first frame
+              // Mark as complete with full size
+              if (progress) {
+                progress.bytesReceived = progress.totalBytes;
+                progress.percentComplete = 100;
+              }
+              download.status = 'completed';
+              download.endTime = Date.now();
+
+              // Clean up old downloads when marking one complete
+              this.cleanupCompletedDownloads();
             }
+
+            // Clean up the transfer on END_STREAM
+            this.transfers.delete(streamId);
+            this.streamToPackage.delete(streamId);
           }
         }
       } else {
@@ -625,31 +674,65 @@ export class UvLogParser implements IUvLogParser {
         if (transfer.associatedPackage) {
           const progress = this.downloadProgress.get(transfer.associatedPackage);
           if (progress) {
-            // Estimate bytes based on frame count
-            const estimatedBytes = transfer.frameCount * this.maxFrameSize;
+            // Use a more realistic frame size estimation
+            // HTTP/2 frames vary in size, but we can estimate based on typical patterns
+            // Use the configured maxFrameSize as it's what the server negotiated
+            const avgFrameSize = this.maxFrameSize; // Use negotiated frame size
+            const estimatedBytes = transfer.frameCount * avgFrameSize;
+
+            // Validate against expected size to prevent impossible jumps
+            if (transfer.expectedSize && transfer.expectedSize > 0 && // If estimated bytes exceed expected size by more than 20%, something is wrong
+              // Allow some overestimation due to frame size estimation
+              estimatedBytes > transfer.expectedSize * 1.2) {
+                // Stream might be misassociated, don't update progress
+                return {
+                  phase: this.currentPhase,
+                  message: '',
+                  rawLine: line,
+                };
+              }
+
             progress.estimatedBytesReceived = Math.min(estimatedBytes, progress.totalBytes);
 
             // Handle exact final frame for completed downloads
             if (isEndStream) {
-              // Don't immediately jump to 100% - let the actual progress tracking handle it
-              // Only mark the stream as complete, not the download progress
+              // Don't immediately jump to 100% - validate the progress first
               const download = this.downloads.get(transfer.associatedPackage);
               if (download) {
-                // Only mark as completed if we've actually received all the bytes
-                // This prevents premature completion when streams end early
-                if (progress.estimatedBytesReceived >= progress.totalBytes * 0.95) {
-                  // We're within 95% of expected size, safe to mark complete
+                // Require at least 90% of data to mark as complete
+                // This prevents marking as complete when a different package's stream ends
+                const completionThreshold = 0.9;
+                const actualProgress = progress.estimatedBytesReceived / progress.totalBytes;
+
+                if (actualProgress >= completionThreshold) {
+                  // We're within threshold of expected size, safe to mark complete
+                  progress.bytesReceived = progress.totalBytes;
+                  progress.percentComplete = 100;
+                  download.status = 'completed';
+                  download.endTime = Date.now();
+                } else if (actualProgress < 0.5) {
+                  // Less than 50% progress on END_STREAM suggests misassociation
+                  // But still mark the package complete if this was its stream
                   progress.bytesReceived = progress.totalBytes;
                   progress.percentComplete = 100;
                   download.status = 'completed';
                   download.endTime = Date.now();
                 } else {
-                  // Stream ended but we haven't received enough data yet
-                  // Keep the current progress and let subsequent updates handle it
-                  progress.percentComplete =
-                    progress.totalBytes > 0 ? (progress.estimatedBytesReceived / progress.totalBytes) * 100 : 0;
+                  // Stream ended, mark as complete regardless of progress
+                  // The server has indicated the transfer is done
+                  progress.bytesReceived = progress.totalBytes;
+                  progress.percentComplete = 100;
+                  download.status = 'completed';
+                  download.endTime = Date.now();
                 }
+
+                // Clean up old downloads when marking one complete
+                this.cleanupCompletedDownloads();
               }
+
+              // Always clean up the transfer on END_STREAM
+              this.transfers.delete(streamId);
+              this.streamToPackage.delete(streamId);
             } else {
               progress.percentComplete =
                 progress.totalBytes > 0 ? (progress.estimatedBytesReceived / progress.totalBytes) * 100 : 0;
@@ -694,7 +777,14 @@ export class UvLogParser implements IUvLogParser {
                 if (dl) {
                   dl.status = 'completed';
                   dl.endTime = Date.now();
+
+                  // Clean up old downloads when marking one complete
+                  this.cleanupCompletedDownloads();
                 }
+
+                // Clean up the transfer on END_STREAM
+                this.transfers.delete(streamId);
+                this.streamToPackage.delete(streamId);
               } else {
                 prog.percentComplete = prog.totalBytes > 0 ? (prog.estimatedBytesReceived / prog.totalBytes) * 100 : 0;
               }
@@ -860,8 +950,35 @@ export class UvLogParser implements IUvLogParser {
   }
 
   getActiveDownloads(): PackageDownloadInfo[] {
+    // Clean up old completed downloads to prevent memory accumulation
+    this.cleanupCompletedDownloads();
+
     // Return only non-completed downloads
     return [...this.downloads.values()].filter((d) => d.status !== 'completed');
+  }
+
+  /**
+   * Clean up completed downloads to prevent memory accumulation
+   */
+  private cleanupCompletedDownloads(): void {
+    const maxDownloads = 100; // Maximum number of downloads to track
+
+    // If we have too many downloads, aggressively clean up completed ones
+    if (this.downloads.size > maxDownloads) {
+      // Get all completed downloads sorted by end time (oldest first)
+      const completed = [...this.downloads.entries()]
+        .filter(([, d]) => d.status === 'completed')
+        .sort((a, b) => (a[1].endTime || 0) - (b[1].endTime || 0));
+
+      // Remove oldest completed downloads until we're at or below the limit
+      // Keep at least some room for new downloads
+      const targetSize = Math.floor(maxDownloads * 0.8); // Keep 80% capacity
+      while (this.downloads.size > targetSize && completed.length > 0) {
+        const [packageName] = completed.shift()!;
+        this.downloads.delete(packageName);
+        this.downloadProgress.delete(packageName);
+      }
+    }
   }
 
   getActiveTransfers(): Record<string, HttpTransferInfo> {

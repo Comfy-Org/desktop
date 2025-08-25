@@ -106,9 +106,35 @@ export class UvInstallationState extends EventEmitter {
 
   /**
    * Calculates download bytes from UV status and parser state.
+   * For concurrent downloads, aggregates progress across all active downloads.
    */
   private calculateDownloadBytes(status: UvStatus): { totalBytes: number; downloadedBytes: number } {
-    // Use byte values directly from status (added in commit 8185b56ec)
+    // During downloading phase, aggregate across ALL active downloads
+    if (status.phase === 'downloading' && this.uvLogParser) {
+      const activeDownloads = this.uvLogParser.getActiveDownloads();
+
+      // If we have multiple downloads, aggregate their progress
+      if (activeDownloads.length > 1) {
+        let totalBytes = 0;
+        let downloadedBytes = 0;
+
+        for (const download of activeDownloads) {
+          const progress = this.uvLogParser.getDownloadProgress(download.package);
+          if (progress) {
+            totalBytes += progress.totalBytes;
+            const packageBytes = progress.bytesReceived || progress.estimatedBytesReceived || 0;
+            downloadedBytes += packageBytes;
+          }
+        }
+
+        // If we have aggregated data, use it
+        if (totalBytes > 0) {
+          return { totalBytes, downloadedBytes };
+        }
+      }
+    }
+
+    // Fallback to single package tracking for non-concurrent scenarios
     let totalBytes = status.totalBytes || 0;
     let downloadedBytes = status.downloadedBytes || 0;
 
