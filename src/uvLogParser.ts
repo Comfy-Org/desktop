@@ -39,6 +39,7 @@ export interface UvStatus {
   totalPackages?: number;
   preparedPackages?: number;
   installedPackages?: number;
+  completedDownloads?: number;
   totalWheels?: number;
 
   // Download progress info
@@ -119,6 +120,7 @@ export interface IUvLogParser {
   // State queries
   getOverallState(): OverallState;
   getActiveDownloads(): PackageDownloadInfo[];
+  getCompletedDownloadsCount(): number;
   getActiveTransfers(): Record<string, HttpTransferInfo>;
   getDownloadProgress(packageName: string): DownloadProgress | undefined;
 
@@ -358,7 +360,9 @@ export class UvLogParser implements IUvLogParser {
       const packageName = match![1];
       const sizeFormatted = match![2];
 
-      // Check if download already exists from get_wheel
+      // Only update status if download already exists from get_wheel
+      // We should NOT create new downloads from "Downloading" lines as these
+      // are just informational messages, not actual download data
       if (this.downloads.has(packageName)) {
         // Update existing download status to 'downloading'
         const existingDownload = this.downloads.get(packageName)!;
@@ -382,38 +386,10 @@ export class UvLogParser implements IUvLogParser {
           };
           this.downloadProgress.set(packageName, progress);
         }
-      } else {
-        // Create new download if it doesn't exist
-        // Parse size string to bytes (approximate since get_wheel has exact)
-        const sizeInBytes = this.parseSizeString(sizeFormatted);
-
-        const downloadInfo: PackageDownloadInfo = {
-          package: packageName,
-          version: '',
-          totalBytes: sizeInBytes,
-          url: '',
-          status: 'downloading',
-          startTime: Date.now(),
-        };
-
-        this.downloads.set(packageName, downloadInfo);
-
-        // Initialize progress if not already present
-        if (!this.downloadProgress.has(packageName)) {
-          const progress: DownloadProgress = {
-            package: packageName,
-            totalBytes: sizeInBytes,
-            bytesReceived: 0,
-            estimatedBytesReceived: 0,
-            percentComplete: sizeInBytes === 0 ? 100 : 0,
-            startTime: Date.now(),
-            currentTime: Date.now(),
-            transferRateSamples: [],
-            averageTransferRate: 0,
-          };
-          this.downloadProgress.set(packageName, progress);
-        }
       }
+      // else: Do NOT create new downloads from "Downloading" lines
+      // These are just informational messages. Real downloads come from get_wheel lines.
+      // Skip packages that don't have a get_wheel entry - they're likely already cached
 
       this.setPhase('downloading');
 
@@ -421,19 +397,34 @@ export class UvLogParser implements IUvLogParser {
       const progress = this.downloadProgress.get(packageName);
       const download = this.downloads.get(packageName);
 
-      return {
-        phase: 'downloading',
-        message: `Downloading ${packageName} (${sizeFormatted})`,
-        currentPackage: packageName,
-        packageSizeFormatted: sizeFormatted,
-        totalPackages: this.totalPackages,
-        installedPackages: this.installedPackages,
-        totalBytes: download?.totalBytes || progress?.totalBytes,
-        downloadedBytes: progress?.bytesReceived || progress?.estimatedBytesReceived || 0,
-        transferRate: progress?.averageTransferRate,
-        etaSeconds: progress?.estimatedTimeRemaining,
-        rawLine: line,
-      };
+      // Only return download data if we have a real download entry
+      if (download) {
+        return {
+          phase: 'downloading',
+          message: `Downloading ${packageName} (${sizeFormatted})`,
+          currentPackage: packageName,
+          packageSizeFormatted: sizeFormatted,
+          totalPackages: this.totalPackages,
+          installedPackages: this.installedPackages,
+          completedDownloads: this.getCompletedDownloadsCount(),
+          totalBytes: download.totalBytes,
+          downloadedBytes: progress?.bytesReceived || progress?.estimatedBytesReceived || 0,
+          transferRate: progress?.averageTransferRate,
+          etaSeconds: progress?.estimatedTimeRemaining,
+          rawLine: line,
+        };
+      } else {
+        // For cached packages, just return a simple status
+        return {
+          phase: 'downloading',
+          message: `Downloading ${packageName} (${sizeFormatted})`,
+          currentPackage: packageName,
+          totalPackages: this.totalPackages,
+          installedPackages: this.installedPackages,
+          completedDownloads: this.getCompletedDownloadsCount(),
+          rawLine: line,
+        };
+      }
     }
 
     // HTTP/2 frame tracking
@@ -1020,6 +1011,14 @@ export class UvLogParser implements IUvLogParser {
 
     // Return only non-completed downloads
     return [...this.downloads.values()].filter((d) => d.status !== 'completed');
+  }
+
+  /**
+   * Gets the count of completed downloads.
+   * This is used for progress tracking during the download phase.
+   */
+  getCompletedDownloadsCount(): number {
+    return [...this.downloads.values()].filter((d) => d.status === 'completed').length;
   }
 
   /**
