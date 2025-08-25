@@ -205,7 +205,8 @@ export class DownloadManager implements IDownloadManager {
     const now = Date.now();
     const toDelete: string[] = [];
 
-    for (const [packageName, download] of this.downloads) {
+    const entries = [...this.downloads.entries()];
+    for (const [packageName, download] of entries) {
       const isFinished = download.status === 'completed' || download.status === 'failed';
       const isOld = now - download.lastUpdateTime > maxAge;
 

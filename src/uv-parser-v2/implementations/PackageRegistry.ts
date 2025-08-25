@@ -122,7 +122,8 @@ export class PackageRegistry implements IPackageRegistry {
       failed: 0,
     };
 
-    for (const pkg of this.packages.values()) {
+    const packages = [...this.packages.values()];
+    for (const pkg of packages) {
       stats.total++;
       stats[pkg.status]++;
     }
