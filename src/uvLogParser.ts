@@ -741,9 +741,21 @@ export class UvLogParser implements IUvLogParser {
               // Allow some overestimation due to frame size estimation
               estimatedBytes > transfer.expectedSize * 1.2
             ) {
-              // Stream might be misassociated, don't update progress
-              // But still clean up on END_STREAM
+              // Stream might be misassociated, don't update progress normally
+              // But on END_STREAM, mark as complete anyway since server says it's done
               if (isEndStream) {
+                // Server says transfer is complete, so set to total bytes
+                progress.bytesReceived = progress.totalBytes;
+                progress.percentComplete = 100;
+
+                // Mark download as complete
+                const download = this.downloads.get(transfer.associatedPackage);
+                if (download) {
+                  download.status = 'completed';
+                  download.endTime = Date.now();
+                }
+
+                // Clean up
                 this.transfers.delete(streamId);
                 this.streamToPackage.delete(streamId);
               }
