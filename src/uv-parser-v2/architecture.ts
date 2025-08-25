@@ -552,20 +552,6 @@ export interface IStateAggregator {
 }
 
 /**
- * Configuration for the event dispatcher
- */
-export interface IEventDispatcherConfig {
-  /** Minimum time between progress updates (ms) */
-  progressThrottleMs?: number;
-
-  /** Minimum progress change to trigger update (%) */
-  progressThresholdPercent?: number;
-
-  /** Whether to emit debug events */
-  emitDebugEvents?: boolean;
-}
-
-/**
  * Dispatches meaningful status change events.
  * Implements intelligent throttling to prevent event spam.
  */
@@ -597,12 +583,6 @@ export interface IEventDispatcher {
    * @returns Unsubscribe function
    */
   onComplete(listener: (success: boolean) => void): () => void;
-
-  /**
-   * Updates dispatcher configuration.
-   * @param config New configuration
-   */
-  updateConfig(config: IEventDispatcherConfig): void;
 
   /**
    * Removes all listeners
@@ -677,33 +657,15 @@ export interface IUvParser {
 // ============================================================================
 
 /**
- * Configuration for creating a UV parser instance
- */
-export interface IUvParserConfig {
-  /** Event dispatcher configuration */
-  eventConfig?: IEventDispatcherConfig;
-
-  /** Maximum number of downloads to track */
-  maxDownloads?: number;
-
-  /** Maximum age for completed downloads (ms) */
-  downloadMaxAge?: number;
-
-  /** Whether to enable debug logging */
-  debug?: boolean;
-}
-
-/**
  * Factory for creating UV parser instances.
  * Handles dependency injection and configuration.
  */
 export interface IUvParserFactory {
   /**
    * Creates a new UV parser instance.
-   * @param config Optional configuration
    * @returns Configured parser instance
    */
-  createParser(config?: IUvParserConfig): IUvParser;
+  createParser(): IUvParser;
 
   /**
    * Creates individual components for testing or custom usage.
