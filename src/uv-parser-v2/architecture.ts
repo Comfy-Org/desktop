@@ -215,12 +215,12 @@ export interface IDownload {
  */
 export interface IDownloadManager {
   /**
-   * Starts tracking a new download.
+   * Begins tracking a download operation.
    * @param packageName Package being downloaded
    * @param totalBytes Total size in bytes
    * @param url Download URL
    */
-  startDownload(packageName: string, totalBytes: number, url: string): void;
+  trackDownload(packageName: string, totalBytes: number, url: string): void;
 
   /**
    * Updates download progress.

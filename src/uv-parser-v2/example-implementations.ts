@@ -407,7 +407,7 @@ export class DownloadManager implements IDownloadManager {
     this.maxDownloads = maxDownloads;
   }
 
-  startDownload(packageName: string, totalBytes: number, url: string): void {
+  trackDownload(packageName: string, totalBytes: number, url: string): void {
     const download: IDownload = {
       packageName,
       totalBytes,

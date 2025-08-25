@@ -93,7 +93,7 @@ class StateAggregator {
             this.streamTracker.getMaxFrameSize()
           );
           
-          this.downloadManager.updateEstimatedProgress(
+          this.downloadManager.updateProgress(
             packageName,
             progress.estimatedBytes
           );
@@ -265,7 +265,7 @@ const aggregator = new StateAggregator({
 // Test specific interaction:
 aggregator.processEvent(downloadPrepareEvent);
 expect(mockRegistry.registerPackage).toHaveBeenCalledWith(/* ... */);
-expect(mockDownloadManager.startDownload).toHaveBeenCalledWith(/* ... */);
+expect(mockDownloadManager.trackDownload).toHaveBeenCalledWith(/* ... */);
 ```
 
 ## Performance Considerations

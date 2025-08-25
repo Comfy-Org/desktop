@@ -97,7 +97,7 @@ export class StateAggregator implements IStateAggregator {
           url: event.data.url,
         });
 
-        this.downloadManager.startDownload(event.data.packageName, event.data.size, event.data.url);
+        this.downloadManager.trackDownload(event.data.packageName, event.data.size, event.data.url);
 
         this.phaseManager.transitionTo('preparing_download');
         break;
@@ -223,7 +223,7 @@ export class StateAggregator implements IStateAggregator {
       event.type === 'download_prepare'
     ) {
       // Now TypeScript knows the exact type
-      this.downloadManager.startDownload(event.data.packageName, event.data.size, event.data.url);
+      this.downloadManager.trackDownload(event.data.packageName, event.data.size, event.data.url);
     }
 
     // Use HTTP/2 type guard

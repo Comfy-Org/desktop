@@ -151,8 +151,8 @@ describe('DownloadManager', () => {
   it('should track download progress', () => {
     const manager = new DownloadManager();
     
-    manager.startDownload('torch', 66492975, 'https://...');
-    manager.updateEstimatedProgress('torch', 1000000);
+    manager.trackDownload('torch', 66492975, 'https://...');
+    manager.updateProgress('torch', 1000000);
     
     const download = manager.getDownload('torch');
     expect(download?.estimatedBytes).toBe(1000000);
