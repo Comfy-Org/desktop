@@ -412,7 +412,6 @@ export class DownloadManager implements IDownloadManager {
       packageName,
       totalBytes,
       bytesReceived: 0,
-      estimatedBytes: 0,
       startTime: Date.now(),
       lastUpdateTime: Date.now(),
       status: 'pending',
@@ -434,18 +433,6 @@ export class DownloadManager implements IDownloadManager {
     const download = this.downloads.get(packageName);
     if (download) {
       download.bytesReceived = bytesReceived;
-      download.lastUpdateTime = Date.now();
-
-      if (download.status === 'pending') {
-        download.status = 'downloading';
-      }
-    }
-  }
-
-  updateEstimatedProgress(packageName: string, estimatedBytes: number): void {
-    const download = this.downloads.get(packageName);
-    if (download) {
-      download.estimatedBytes = Math.min(estimatedBytes, download.totalBytes);
       download.lastUpdateTime = Date.now();
 
       if (download.status === 'pending') {
@@ -655,29 +642,29 @@ export class ProgressCalculator implements IProgressCalculator {
     const now = Date.now();
     const elapsedMs = now - download.startTime;
 
-    // Calculate bytes received (prefer actual, fallback to estimated)
-    const bytesReceived = download.bytesReceived;
-    let estimatedBytes = download.estimatedBytes;
+    // Calculate bytes received
+    // Implementation note: When actual bytes aren't available,
+    // estimate based on HTTP/2 frame count
+    let bytesReceived = download.bytesReceived;
 
-    if (stream && !bytesReceived) {
-      estimatedBytes = Math.min(stream.frameCount * maxFrameSize, download.totalBytes);
+    if (!bytesReceived && stream) {
+      // Estimate based on frame count when actual bytes not available
+      bytesReceived = Math.min(stream.frameCount * maxFrameSize, download.totalBytes);
     }
 
-    const effectiveBytes = bytesReceived || estimatedBytes;
-    const percentComplete = download.totalBytes > 0 ? (effectiveBytes / download.totalBytes) * 100 : 0;
+    const percentComplete = download.totalBytes > 0 ? (bytesReceived / download.totalBytes) * 100 : 0;
 
     // Calculate transfer rate
-    const transferRate = this.calculateCurrentTransferRate(download.packageName, effectiveBytes, elapsedMs);
+    const transferRate = this.calculateCurrentTransferRate(download.packageName, bytesReceived, elapsedMs);
 
     // Estimate time remaining
-    const bytesRemaining = download.totalBytes - effectiveBytes;
+    const bytesRemaining = download.totalBytes - bytesReceived;
     const etaSeconds = this.estimateTimeRemaining(bytesRemaining, transferRate);
 
     return {
       packageName: download.packageName,
       totalBytes: download.totalBytes,
       bytesReceived,
-      estimatedBytes,
       percentComplete: Math.min(100, percentComplete),
       transferRate,
       etaSeconds,

@@ -133,7 +133,7 @@ export class StateAggregator implements IStateAggregator {
               this.streamTracker.getMaxFrameSize()
             );
 
-            this.downloadManager.updateEstimatedProgress(packageName, progress.estimatedBytes);
+            this.downloadManager.updateProgress(packageName, progress.bytesReceived);
 
             if (event.data.isEndStream) {
               this.downloadManager.completeDownload(packageName);
@@ -218,11 +218,13 @@ export class StateAggregator implements IStateAggregator {
     }
 
     // Use category type guard for related events
-    if (isDownloadEvent(event) && // TypeScript knows this is either download_prepare or download_info
-      event.type === 'download_prepare') {
-        // Now TypeScript knows the exact type
-        this.downloadManager.startDownload(event.data.packageName, event.data.size, event.data.url);
-      }
+    if (
+      isDownloadEvent(event) && // TypeScript knows this is either download_prepare or download_info
+      event.type === 'download_prepare'
+    ) {
+      // Now TypeScript knows the exact type
+      this.downloadManager.startDownload(event.data.packageName, event.data.size, event.data.url);
+    }
 
     // Use HTTP/2 type guard
     if (isHttp2Event(event)) {
@@ -250,41 +252,41 @@ export class StateAggregator implements IStateAggregator {
     let currentOperation: IInstallationState['currentOperation'];
 
     switch (phase) {
-    case 'resolving': {
-      currentOperation = { type: 'resolving' };
-    
-    break;
-    }
-    case 'downloading': 
-    case 'preparing_download': {
-      const activeDownloads = this.downloadManager.getActiveDownloads();
-      if (activeDownloads.length > 0) {
-        const download = activeDownloads[0];
-        const stream = [...this.streamTracker.getActiveStreams().values()].find(
-          (s) => s.packageName === download.packageName
-        );
+      case 'resolving': {
+        currentOperation = { type: 'resolving' };
 
-        const progress = this.progressCalculator.calculateProgress(
-          download,
-          stream,
-          this.streamTracker.getMaxFrameSize()
-        );
-
-        currentOperation = {
-          type: 'downloading',
-          packageName: download.packageName,
-          progress,
-        };
+        break;
       }
-    
-    break;
-    }
-    case 'installing': {
-      currentOperation = { type: 'installing' };
-    
-    break;
-    }
-    // No default
+      case 'downloading':
+      case 'preparing_download': {
+        const activeDownloads = this.downloadManager.getActiveDownloads();
+        if (activeDownloads.length > 0) {
+          const download = activeDownloads[0];
+          const stream = [...this.streamTracker.getActiveStreams().values()].find(
+            (s) => s.packageName === download.packageName
+          );
+
+          const progress = this.progressCalculator.calculateProgress(
+            download,
+            stream,
+            this.streamTracker.getMaxFrameSize()
+          );
+
+          currentOperation = {
+            type: 'downloading',
+            packageName: download.packageName,
+            progress,
+          };
+        }
+
+        break;
+      }
+      case 'installing': {
+        currentOperation = { type: 'installing' };
+
+        break;
+      }
+      // No default
     }
 
     // Calculate phase durations

@@ -196,9 +196,6 @@ export interface IDownload {
   /** Bytes received so far */
   bytesReceived: number;
 
-  /** Estimated bytes based on frame count */
-  estimatedBytes: number;
-
   /** Download start time */
   startTime: number;
 
@@ -231,13 +228,6 @@ export interface IDownloadManager {
    * @param bytesReceived New bytes received count
    */
   updateProgress(packageName: string, bytesReceived: number): void;
-
-  /**
-   * Updates estimated progress based on frame count.
-   * @param packageName Package name
-   * @param estimatedBytes Estimated bytes received
-   */
-  updateEstimatedProgress(packageName: string, estimatedBytes: number): void;
 
   /**
    * Marks a download as completed.
@@ -401,11 +391,8 @@ export interface IDownloadProgress {
   /** Total bytes to download */
   totalBytes: number;
 
-  /** Actual bytes received */
+  /** Bytes received */
   bytesReceived: number;
-
-  /** Estimated bytes (from frame count) */
-  estimatedBytes: number;
 
   /** Percentage complete (0-100) */
   percentComplete: number;
