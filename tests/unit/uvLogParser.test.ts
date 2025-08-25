@@ -9,19 +9,30 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     parser = new UvLogParser();
   });
 
-  it('should not create download entries from "Downloading" informational lines', () => {
-    // These are just informational lines, not actual download starts
+  it('should completely ignore "Downloading" informational lines', () => {
+    // These are just informational lines that should be ignored completely
     let status = parser.parseLine('Downloading torch-2.5.1-cp312-cp312-macosx_11_0_arm64.whl (63.4 MB)');
+
+    // Status should have empty message and no package info
+    expect(status.message).toBe('');
+    expect(status.currentPackage).toBeUndefined();
+    expect(status.totalBytes).toBeUndefined();
+    expect(status.downloadedBytes).toBeUndefined();
+
     status = parser.parseLine('Downloading numpy-1.26.4-cp312-cp312-macosx_11_0_arm64.whl (14.1 MB)');
 
-    // Should not have created any downloads yet
+    // Still should have empty message and no package info
+    expect(status.message).toBe('');
+    expect(status.currentPackage).toBeUndefined();
+
+    // Should not have created any downloads
     const torchProgress = parser.getDownloadProgress('torch');
     const numpyProgress = parser.getDownloadProgress('numpy');
 
     expect(torchProgress).toBeUndefined();
     expect(numpyProgress).toBeUndefined();
 
-    expect(status.completedDownloads).toBe(0);
+    expect(status.completedDownloads).toBeUndefined();
   });
 
   it('should only create downloads from get_wheel HTTP/2 requests', () => {
