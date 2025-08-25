@@ -54,9 +54,10 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     // Need to establish stream associations first
     parser.parseLine('  ↪ https://files.pythonhosted.org/packages/torch-2.5.1.whl');
     parser.parseLine('    stream: 1');
-    parser.parseLine('    frame: DATA stream=1 len=1000000 flags=');
-    parser.parseLine('    bytes_received: 66492975');
-    status = parser.parseLine('    frame: DATA stream=1 len=0 flags=END_STREAM');
+    // Use the actual format from logs
+    status = parser.parseLine(
+      '0.1s 10ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1), flags: (0x1: END_STREAM) }'
+    );
 
     // Now torch should be complete
     expect(status.completedDownloads).toBe(1);
@@ -64,9 +65,9 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     // Simulate numpy download completion
     parser.parseLine('  ↪ https://files.pythonhosted.org/packages/numpy-1.26.4.whl');
     parser.parseLine('    stream: 3');
-    parser.parseLine('    frame: DATA stream=3 len=500000 flags=');
-    parser.parseLine('    bytes_received: 14795386');
-    status = parser.parseLine('    frame: DATA stream=3 len=0 flags=END_STREAM');
+    status = parser.parseLine(
+      '0.2s 20ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(3), flags: (0x1: END_STREAM) }'
+    );
 
     // Both downloads should be complete
     expect(status.completedDownloads).toBe(2);
@@ -115,21 +116,27 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     parser.parseLine('    stream: 1');
 
     // Complete torch download
-    status = parser.parseLine('    frame: DATA stream=1 len=0 flags=END_STREAM');
+    status = parser.parseLine(
+      '0.1s 10ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1), flags: (0x1: END_STREAM) }'
+    );
     expect(status.completedDownloads).toBe(1);
 
     parser.parseLine('  ↪ https://files.pythonhosted.org/packages/torchvision-0.20.1.whl');
     parser.parseLine('    stream: 3');
 
     // Complete torchvision download
-    status = parser.parseLine('    frame: DATA stream=3 len=0 flags=END_STREAM');
+    status = parser.parseLine(
+      '0.2s 20ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(3), flags: (0x1: END_STREAM) }'
+    );
     expect(status.completedDownloads).toBe(2);
 
     parser.parseLine('  ↪ https://files.pythonhosted.org/packages/torchaudio-2.5.1.whl');
     parser.parseLine('    stream: 5');
 
     // Complete torchaudio download
-    status = parser.parseLine('    frame: DATA stream=5 len=0 flags=END_STREAM');
+    status = parser.parseLine(
+      '0.3s 30ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(5), flags: (0x1: END_STREAM) }'
+    );
     expect(status.completedDownloads).toBe(3);
   });
 });
