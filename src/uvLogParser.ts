@@ -355,77 +355,17 @@ export class UvLogParser implements IUvLogParser {
       };
     }
 
-    // User-friendly download message
+    // User-friendly download message - IGNORE COMPLETELY
+    // These are just informational lines, not actual download data
     if (UV_LOG_PATTERNS.DOWNLOADING.test(trimmedLine)) {
-      const match = trimmedLine.match(UV_LOG_PATTERNS.DOWNLOADING);
-      const packageName = match![1];
-      const sizeFormatted = match![2];
-
-      // Only update status if download already exists from get_wheel
-      // We should NOT create new downloads from "Downloading" lines as these
-      // are just informational messages, not actual download data
-      if (this.downloads.has(packageName)) {
-        // Update existing download status to 'downloading'
-        const existingDownload = this.downloads.get(packageName)!;
-        existingDownload.status = 'downloading';
-        if (!existingDownload.startTime) {
-          existingDownload.startTime = Date.now();
-        }
-
-        // Ensure progress is initialized for existing download
-        if (!this.downloadProgress.has(packageName)) {
-          const progress: DownloadProgress = {
-            package: packageName,
-            totalBytes: existingDownload.totalBytes,
-            bytesReceived: 0,
-            estimatedBytesReceived: 0,
-            percentComplete: existingDownload.totalBytes === 0 ? 100 : 0,
-            startTime: existingDownload.startTime || Date.now(),
-            currentTime: Date.now(),
-            transferRateSamples: [],
-            averageTransferRate: 0,
-          };
-          this.downloadProgress.set(packageName, progress);
-        }
-      }
-      // else: Do NOT create new downloads from "Downloading" lines
-      // These are just informational messages. Real downloads come from get_wheel lines.
-      // Skip packages that don't have a get_wheel entry - they're likely already cached
-
-      this.setPhase('downloading');
-
-      // Get download progress if available
-      const progress = this.downloadProgress.get(packageName);
-      const download = this.downloads.get(packageName);
-
-      // Only return download data if we have a real download entry
-      if (download) {
-        return {
-          phase: 'downloading',
-          message: `Downloading ${packageName} (${sizeFormatted})`,
-          currentPackage: packageName,
-          packageSizeFormatted: sizeFormatted,
-          totalPackages: this.totalPackages,
-          installedPackages: this.installedPackages,
-          completedDownloads: this.getCompletedDownloadsCount(),
-          totalBytes: download.totalBytes,
-          downloadedBytes: progress?.bytesReceived || progress?.estimatedBytesReceived || 0,
-          transferRate: progress?.averageTransferRate,
-          etaSeconds: progress?.estimatedTimeRemaining,
-          rawLine: line,
-        };
-      } else {
-        // For cached packages, just return a simple status
-        return {
-          phase: 'downloading',
-          message: `Downloading ${packageName} (${sizeFormatted})`,
-          currentPackage: packageName,
-          totalPackages: this.totalPackages,
-          installedPackages: this.installedPackages,
-          completedDownloads: this.getCompletedDownloadsCount(),
-          rawLine: line,
-        };
-      }
+      // These "Downloading" lines are purely informational and should be ignored
+      // Real download tracking comes from get_wheel and HTTP/2 frames
+      // DO NOT return any status update - just continue processing
+      return {
+        phase: this.currentPhase,
+        message: '',
+        rawLine: line,
+      };
     }
 
     // HTTP/2 frame tracking
