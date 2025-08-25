@@ -568,6 +568,7 @@ export class UvLogParser implements IUvLogParser {
             downloadedBytes: progress?.totalBytes, // If END_STREAM on first frame, assume complete
             streamId,
             streamCompleted: true,
+            completedDownloads: this.getCompletedDownloadsCount(),
             rawLine: line,
           };
         }
@@ -871,6 +872,7 @@ export class UvLogParser implements IUvLogParser {
           currentPackage: packageName,
           totalPackages: this.totalPackages,
           installedPackages: this.installedPackages,
+          completedDownloads: this.getCompletedDownloadsCount(),
           totalBytes: progress?.totalBytes,
           downloadedBytes: progress?.bytesReceived || progress?.totalBytes, // Complete = total bytes
           transferRate: progress?.averageTransferRate,
