@@ -526,6 +526,18 @@ export class UvLogParser implements IUvLogParser {
       const isEndStream = trimmedLine.includes('END_STREAM');
 
       if (!this.transfers.has(streamId)) {
+        // If END_STREAM on first frame, don't create a transfer
+        if (isEndStream) {
+          // Handle END_STREAM without creating a transfer
+          return {
+            phase: this.currentPhase,
+            message: '',
+            streamId,
+            streamCompleted: true,
+            rawLine: line,
+          };
+        }
+
         // Try to associate with an active download if not already mapped
         if (!this.streamToPackage.has(streamId)) {
           const assignedPackages = new Set(this.streamToPackage.values());
@@ -681,16 +693,19 @@ export class UvLogParser implements IUvLogParser {
             const estimatedBytes = transfer.frameCount * avgFrameSize;
 
             // Validate against expected size to prevent impossible jumps
-            if (transfer.expectedSize && transfer.expectedSize > 0 && // If estimated bytes exceed expected size by more than 20%, something is wrong
+            if (
+              transfer.expectedSize &&
+              transfer.expectedSize > 0 && // If estimated bytes exceed expected size by more than 20%, something is wrong
               // Allow some overestimation due to frame size estimation
-              estimatedBytes > transfer.expectedSize * 1.2) {
-                // Stream might be misassociated, don't update progress
-                return {
-                  phase: this.currentPhase,
-                  message: '',
-                  rawLine: line,
-                };
-              }
+              estimatedBytes > transfer.expectedSize * 1.2
+            ) {
+              // Stream might be misassociated, don't update progress
+              return {
+                phase: this.currentPhase,
+                message: '',
+                rawLine: line,
+              };
+            }
 
             progress.estimatedBytesReceived = Math.min(estimatedBytes, progress.totalBytes);
 
@@ -710,24 +725,15 @@ export class UvLogParser implements IUvLogParser {
                   progress.percentComplete = 100;
                   download.status = 'completed';
                   download.endTime = Date.now();
-                } else if (actualProgress < 0.5) {
-                  // Less than 50% progress on END_STREAM suggests misassociation
-                  // But still mark the package complete if this was its stream
-                  progress.bytesReceived = progress.totalBytes;
-                  progress.percentComplete = 100;
-                  download.status = 'completed';
-                  download.endTime = Date.now();
-                } else {
-                  // Stream ended, mark as complete regardless of progress
-                  // The server has indicated the transfer is done
-                  progress.bytesReceived = progress.totalBytes;
-                  progress.percentComplete = 100;
-                  download.status = 'completed';
-                  download.endTime = Date.now();
-                }
 
-                // Clean up old downloads when marking one complete
-                this.cleanupCompletedDownloads();
+                  // Clean up old downloads when marking one complete
+                  this.cleanupCompletedDownloads();
+                } else {
+                  // Not enough data received, don't mark as complete
+                  // This could be a misassociated stream
+                  // Keep the current progress but don't jump to 100%
+                  progress.percentComplete = Math.min(actualProgress * 100, 99);
+                }
               }
 
               // Always clean up the transfer on END_STREAM
@@ -797,16 +803,16 @@ export class UvLogParser implements IUvLogParser {
       }
 
       if (isEndStream) {
-        // Clean up completed transfer
+        // Get package name and progress BEFORE cleaning up
         const packageName = this.streamToPackage.get(streamId);
+        const progress = packageName ? this.downloadProgress.get(packageName) : undefined;
+
+        // Clean up completed transfer
         this.transfers.delete(streamId);
         this.streamToPackage.delete(streamId);
 
         // Clean up old downloads if we have too many
         this.cleanupOldDownloads();
-
-        // Get final progress for completed download
-        const progress = packageName ? this.downloadProgress.get(packageName) : undefined;
 
         return {
           phase: this.currentPhase,

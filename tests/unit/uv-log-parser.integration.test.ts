@@ -287,6 +287,7 @@ describe('UvLogParser Integration Tests', () => {
     it('should calculate partial final frames correctly', () => {
       // Download with known exact size
       parser.parseLine('   uv_installer::preparer::get_wheel name=small==1.0.0, size=Some(50_000), url="..."');
+      parser.parseLine('Downloading small (48.8KiB)');
       parser.parseLine(
         '1.000000s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(5), flags: (0x5: END_HEADERS | END_STREAM) }'
       );
