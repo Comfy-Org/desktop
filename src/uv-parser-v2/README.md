@@ -18,36 +18,43 @@ This is a complete architectural design for a modular UV (ultraviolet) process o
 ### Core Components
 
 1. **LineParser** (`ILineParser`)
+
    - Stateless parsing of log lines into structured events
    - No state management or side effects
    - Pure transformation function
 
 2. **PhaseManager** (`IPhaseManager`)
+
    - Manages installation phase state machine
    - Enforces valid phase transitions
    - Tracks phase history and timing
 
 3. **PackageRegistry** (`IPackageRegistry`)
+
    - Central registry for all packages
    - Single source of truth for package metadata
    - Tracks package status throughout lifecycle
 
 4. **DownloadManager** (`IDownloadManager`)
+
    - Manages individual package downloads
    - Tracks progress and transfer statistics
    - Handles download lifecycle (start → complete/fail)
 
 5. **StreamTracker** (`IStreamTracker`)
+
    - Tracks HTTP/2 streams
    - Associates streams with package downloads
    - Manages stream-to-package matching logic
 
 6. **ProgressCalculator** (`IProgressCalculator`)
+
    - Calculates download progress and ETAs
    - Computes transfer rates
    - Formats bytes and durations
 
 7. **StateAggregator** (`IStateAggregator`)
+
    - Orchestrates all components
    - Builds unified installation state
    - Processes events and updates components
@@ -62,20 +69,24 @@ This is a complete architectural design for a modular UV (ultraviolet) process o
 ### Current Issues Addressed
 
 1. **Monolithic Class (1261 lines)** → **8 Focused Components**
+
    - Each component is typically 100-200 lines
    - Clear, single responsibilities
 
 2. **Mixed Responsibilities** → **Separation of Concerns**
+
    - Parsing separated from state management
    - Progress calculation independent of download tracking
    - Event dispatching decoupled from state aggregation
 
 3. **Complex Stream Association** → **Dedicated StreamTracker**
+
    - Isolated complex logic in one component
    - Clear association strategies
    - Testable matching algorithms
 
 4. **Direct State Mutation** → **Immutable State Updates**
+
    - State aggregator builds new state snapshots
    - Components don't directly modify shared state
    - Predictable state transitions
@@ -100,10 +111,10 @@ const factory = new UvParserFactory();
 const parser = factory.createParser({
   eventConfig: {
     progressThrottleMs: 100,
-    progressThresholdPercent: 5
+    progressThresholdPercent: 5,
   },
   maxDownloads: 100,
-  downloadMaxAge: 300000 // 5 minutes
+  downloadMaxAge: 300000, // 5 minutes
 });
 
 // Subscribe to events
@@ -127,7 +138,7 @@ parser.onComplete((success) => {
 // Process UV output
 uvProcess.stdout.on('data', (chunk) => {
   const lines = chunk.toString().split('\n');
-  lines.forEach(line => parser.processLine(line));
+  lines.forEach((line) => parser.processLine(line));
 });
 ```
 
@@ -140,7 +151,7 @@ Each component can be tested independently:
 describe('PhaseManager', () => {
   it('should enforce valid transitions', () => {
     const manager = new PhaseManager();
-    
+
     expect(manager.transitionTo('started')).toBe(true);
     expect(manager.transitionTo('installed')).toBe(false); // Invalid
     expect(manager.transitionTo('reading_requirements')).toBe(true);
@@ -150,10 +161,10 @@ describe('PhaseManager', () => {
 describe('DownloadManager', () => {
   it('should track download progress', () => {
     const manager = new DownloadManager();
-    
+
     manager.trackDownload('torch', 66492975, 'https://...');
     manager.updateProgress('torch', 1000000);
-    
+
     const download = manager.getDownload('torch');
     expect(download?.estimatedBytes).toBe(1000000);
     expect(download?.status).toBe('downloading');

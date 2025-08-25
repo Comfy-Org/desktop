@@ -58,31 +58,23 @@ class StateAggregator {
           name: event.data.packageName,
           version: event.data.version,
           sizeBytes: event.data.size,
-          url: event.data.url
+          url: event.data.url,
         });
-        
+
         // 2. Start tracking download
-        this.downloadManager.startDownload(
-          event.data.packageName,
-          event.data.size,
-          event.data.url
-        );
-        
+        this.downloadManager.startDownload(event.data.packageName, event.data.size, event.data.url);
+
         // 3. Transition phase if needed
         this.phaseManager.transitionTo('preparing_download');
         break;
-        
+
       case 'http2_data':
         // 1. Update stream tracker
-        this.streamTracker.recordDataFrame(
-          event.data.streamId,
-          event.timestamp,
-          event.data.isEndStream
-        );
-        
+        this.streamTracker.recordDataFrame(event.data.streamId, event.timestamp, event.data.isEndStream);
+
         // 2. Find associated package
         const packageName = this.streamTracker.getPackageForStream(event.data.streamId);
-        
+
         // 3. Calculate and update progress
         if (packageName) {
           const download = this.downloadManager.getDownload(packageName);
@@ -92,11 +84,8 @@ class StateAggregator {
             stream,
             this.streamTracker.getMaxFrameSize()
           );
-          
-          this.downloadManager.updateProgress(
-            packageName,
-            progress.estimatedBytes
-          );
+
+          this.downloadManager.updateProgress(packageName, progress.estimatedBytes);
         }
         break;
     }
@@ -169,12 +158,12 @@ The `EventDispatcher` implements intelligent throttling to prevent UI spam:
 class EventDispatcher {
   private lastEmitTime = 0;
   private lastProgress = 0;
-  
+
   processStateChange(newState: IInstallationState) {
     const now = Date.now();
     const timeSinceLastEmit = now - this.lastEmitTime;
     const progressDelta = Math.abs(newState.overallProgress - this.lastProgress);
-    
+
     // Emit if:
     // 1. Phase changed
     // 2. Error occurred
@@ -198,10 +187,10 @@ Components coordinate to prevent memory leaks:
 cleanup() {
   // 1. Remove old completed downloads
   this.downloadManager.cleanupOldDownloads(300000); // 5 minutes
-  
+
   // 2. Remove completed streams
   this.streamTracker.cleanupCompletedStreams();
-  
+
   // 3. Limit total tracked items
   if (this.downloadManager.getActiveDownloads().length > 100) {
     // Keep only most recent
@@ -284,10 +273,10 @@ const factory = new UvParserFactory();
 const parser = factory.createParser({
   eventConfig: {
     progressThrottleMs: 100,
-    progressThresholdPercent: 5
+    progressThresholdPercent: 5,
   },
   maxDownloads: 100,
-  downloadMaxAge: 300000
+  downloadMaxAge: 300000,
 });
 
 // Subscribe to events
@@ -306,6 +295,6 @@ parser.onComplete((success) => {
 // Process UV output
 uvProcess.stdout.on('data', (chunk) => {
   const lines = chunk.toString().split('\n');
-  lines.forEach(line => parser.processLine(line));
+  lines.forEach((line) => parser.processLine(line));
 });
 ```
