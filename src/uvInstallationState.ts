@@ -106,47 +106,37 @@ export class UvInstallationState extends EventEmitter {
 
   /**
    * Calculates download bytes from UV status and parser state.
-   * For concurrent downloads, aggregates progress across all active downloads.
+   * Tracks individual package progress, not aggregated totals.
    */
   private calculateDownloadBytes(status: UvStatus): { totalBytes: number; downloadedBytes: number } {
-    // During downloading phase, aggregate across ALL active downloads
-    if (status.phase === 'downloading' && this.uvLogParser) {
-      const activeDownloads = this.uvLogParser.getActiveDownloads();
+    // Track individual package progress, not aggregated totals
+    // Aggregation causes progress corruption when packages have different sizes
 
-      // If we have multiple downloads, aggregate their progress
-      if (activeDownloads.length > 1) {
-        let totalBytes = 0;
-        let downloadedBytes = 0;
-
-        for (const download of activeDownloads) {
-          const progress = this.uvLogParser.getDownloadProgress(download.package);
-          if (progress) {
-            totalBytes += progress.totalBytes;
-            const packageBytes = progress.bytesReceived || progress.estimatedBytesReceived || 0;
-            downloadedBytes += packageBytes;
-          }
-        }
-
-        // If we have aggregated data, use it
-        if (totalBytes > 0) {
-          return { totalBytes, downloadedBytes };
-        }
+    // First try to get progress for the current package
+    if (status.currentPackage && this.uvLogParser) {
+      const progress = this.uvLogParser.getDownloadProgress(status.currentPackage);
+      if (progress && progress.totalBytes > 0) {
+        // Use actual bytes if available, otherwise use estimated bytes
+        const downloadedBytes = progress.bytesReceived || progress.estimatedBytesReceived || 0;
+        return {
+          totalBytes: progress.totalBytes,
+          downloadedBytes,
+        };
       }
     }
 
-    // Fallback to single package tracking for non-concurrent scenarios
-    let totalBytes = status.totalBytes || 0;
-    let downloadedBytes = status.downloadedBytes || 0;
+    // Fallback to status values if available
+    const totalBytes = status.totalBytes || 0;
+    const downloadedBytes = status.downloadedBytes || 0;
 
-    // Fallback to parser progress if status doesn't have byte values
+    // Final fallback: try to get progress from parser if status is incomplete
     if (!totalBytes && status.currentPackage && this.uvLogParser) {
       const progress = this.uvLogParser.getDownloadProgress(status.currentPackage);
       if (progress) {
-        totalBytes = progress.totalBytes;
-        // Use bytesReceived if available, otherwise estimate from percentage
-        downloadedBytes =
-          progress.bytesReceived ||
-          (progress.percentComplete ? Math.round((progress.percentComplete / 100) * progress.totalBytes) : 0);
+        return {
+          totalBytes: progress.totalBytes,
+          downloadedBytes: progress.bytesReceived || progress.estimatedBytesReceived || 0,
+        };
       }
     }
 
@@ -261,12 +251,29 @@ export class UvInstallationState extends EventEmitter {
     const byteDifference = Math.abs(newBytes - prevBytes);
 
     if (byteDifference > 0) {
-      // If this is a progress-only update, apply rate limiting (4/sec = 250ms minimum)
+      // If this is a progress-only update, apply intelligent rate limiting
       if (isDownloadProgressOnly) {
         const timeSinceLastProgress = now - this.lastDownloadProgressTime;
-        if (timeSinceLastProgress < 250) {
-          return false; // Rate limit: max 4 updates per second
-        }
+
+        // For large downloads (>10MB), ensure regular updates to prevent UI stalling
+        const totalBytes = newState.totalBytes || 0;
+        const isLargeDownload = totalBytes > 10 * 1024 * 1024; // 10MB
+
+        // Adaptive rate limiting based on download size
+        // Large downloads need more frequent updates to show progress
+        const minInterval = isLargeDownload
+          ? 100 // Large downloads: allow updates every 100ms (10/sec)
+          : 250; // Small downloads: max 4 updates per second
+
+        // Force update if it's been too long (prevent silent periods)
+        const forceUpdateInterval = isLargeDownload ? 500 : 1000; // 500ms for large, 1s for small
+
+        // Send update if enough time has passed OR if we're forcing due to timeout
+        if (timeSinceLastProgress < minInterval && // Check if we should force an update anyway
+          timeSinceLastProgress < forceUpdateInterval) {
+            return false; // Still within acceptable silent period
+          }
+
         this.lastDownloadProgressTime = now;
         return true;
       }
