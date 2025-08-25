@@ -314,7 +314,7 @@ export class UvLogParser implements IUvLogParser {
         version,
         totalBytes: size,
         url,
-        status: 'pending', // Always pending until "Downloading" message
+        status: hasValidSize ? 'downloading' : 'pending', // Start downloading if we have valid size
         startTime: Date.now(),
       };
 
@@ -444,6 +444,11 @@ export class UvLogParser implements IUvLogParser {
       const match = trimmedLine.match(UV_LOG_PATTERNS.H2_DATA_FRAME);
       const streamId = match![2];
       const isEndStream = trimmedLine.includes('END_STREAM');
+
+      // Transition to downloading phase when we see the first data frame
+      if (this.currentPhase === 'preparing_download' || this.currentPhase === 'resolved') {
+        this.setPhase('downloading');
+      }
 
       if (!this.transfers.has(streamId)) {
         // If END_STREAM on first frame, don't create a transfer but handle completion
@@ -810,18 +815,38 @@ export class UvLogParser implements IUvLogParser {
       const packageName = this.streamToPackage.get(streamId);
       const progress = packageName ? this.downloadProgress.get(packageName) : undefined;
 
+      // Only return progress updates periodically to avoid spam
+      // Return updates every 10th frame or if progress has advanced significantly
+      const transfer = this.transfers.get(streamId);
+      const shouldReportProgress =
+        !transfer ||
+        transfer.frameCount % 10 === 0 ||
+        (progress && progress.percentComplete > 0 && progress.percentComplete % 10 < 1);
+
+      if (shouldReportProgress) {
+        return {
+          phase: this.currentPhase,
+          message: packageName ? `Downloading ${packageName}` : 'Downloading',
+          currentPackage: packageName,
+          totalPackages: this.totalPackages,
+          installedPackages: this.installedPackages,
+          completedDownloads: this.getCompletedDownloadsCount(),
+          totalBytes: progress?.totalBytes,
+          downloadedBytes: progress?.bytesReceived || progress?.estimatedBytesReceived || 0,
+          transferRate: progress?.averageTransferRate,
+          etaSeconds: progress?.estimatedTimeRemaining,
+          streamId,
+          streamCompleted: false,
+          rawLine: line,
+        };
+      }
+
+      // Don't return undefined - always return something to keep the progress flowing
       return {
         phase: this.currentPhase,
         message: '',
         currentPackage: packageName,
-        totalPackages: this.totalPackages,
-        installedPackages: this.installedPackages,
-        totalBytes: progress?.totalBytes,
-        downloadedBytes: progress?.bytesReceived || progress?.estimatedBytesReceived || 0,
-        transferRate: progress?.averageTransferRate,
-        etaSeconds: progress?.estimatedTimeRemaining,
-        streamId,
-        streamCompleted: false,
+        completedDownloads: this.getCompletedDownloadsCount(),
         rawLine: line,
       };
     }
