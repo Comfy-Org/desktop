@@ -204,7 +204,7 @@ export class UvLogParser implements IUvLogParser {
 
       // Mark any active downloads as failed
       for (const download of this.downloads.values()) {
-        if (download.status === 'downloading') {
+        if (download.status === 'downloading' || download.status === 'pending') {
           download.status = 'failed';
         }
       }
@@ -314,7 +314,7 @@ export class UvLogParser implements IUvLogParser {
         version,
         totalBytes: size,
         url,
-        status: hasValidSize ? 'downloading' : 'pending', // Start downloading if we have valid size
+        status: 'pending', // Always start as pending, transition to downloading when frames arrive
         startTime: Date.now(),
       };
 
@@ -397,6 +397,9 @@ export class UvLogParser implements IUvLogParser {
         if (unassignedDownloads.length > 0) {
           const download = unassignedDownloads[0];
           this.streamToPackage.set(streamId, download.package);
+
+          // Transition download to downloading status
+          download.status = 'downloading';
 
           // Create a transfer to track this stream
           const transfer: HttpTransferInfo = {
@@ -535,6 +538,8 @@ export class UvLogParser implements IUvLogParser {
             // it's likely not the right association
             if (downloadAge < 5000) {
               this.streamToPackage.set(streamId, download.package);
+              // Transition download to downloading status
+              download.status = 'downloading';
             }
           }
         }
@@ -627,6 +632,8 @@ export class UvLogParser implements IUvLogParser {
               const download = unassignedDownloads[0];
               transfer.associatedPackage = download.package;
               this.streamToPackage.set(streamId, download.package);
+              // Transition download to downloading status
+              download.status = 'downloading';
             } else if (unassignedDownloads.length === 0) {
               // If no unassigned downloads, try to find any download that matches
               const activeDownloads = [...this.downloads.values()].filter(
@@ -639,11 +646,17 @@ export class UvLogParser implements IUvLogParser {
               );
 
               if (downloadsWithoutStreams.length > 0) {
-                transfer.associatedPackage = downloadsWithoutStreams[0].package;
-                this.streamToPackage.set(streamId, downloadsWithoutStreams[0].package);
+                const download = downloadsWithoutStreams[0];
+                transfer.associatedPackage = download.package;
+                this.streamToPackage.set(streamId, download.package);
+                // Transition download to downloading status
+                download.status = 'downloading';
               } else if (activeDownloads.length === 1) {
-                transfer.associatedPackage = activeDownloads[0].package;
-                this.streamToPackage.set(streamId, activeDownloads[0].package);
+                const download = activeDownloads[0];
+                transfer.associatedPackage = download.package;
+                this.streamToPackage.set(streamId, download.package);
+                // Transition download to downloading status
+                download.status = 'downloading';
               }
             }
           }
@@ -846,7 +859,11 @@ export class UvLogParser implements IUvLogParser {
         phase: this.currentPhase,
         message: '',
         currentPackage: packageName,
+        totalPackages: this.totalPackages,
+        installedPackages: this.installedPackages,
         completedDownloads: this.getCompletedDownloadsCount(),
+        totalBytes: progress?.totalBytes,
+        downloadedBytes: progress?.bytesReceived || progress?.estimatedBytesReceived || 0,
         rawLine: line,
       };
     }

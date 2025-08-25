@@ -808,6 +808,13 @@ describe('UvLogParser', () => {
       parser.parseLine('   uv_installer::preparer::get_wheel name=newpackage==1.0.0, size=Some(1000000), url="..."');
       parser.parseLine('Downloading newpackage (976.6KiB)');
 
+      // Simulate actual HTTP/2 download frames to trigger downloading phase
+      parser.parseLine('0.107875s DEBUG h2::codec::framed_write send, frame=Headers { stream_id: StreamId(1) }');
+      parser.parseLine('0.144175s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }');
+      parser.parseLine(
+        '0.148175s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1), flags: (0x1: END_STREAM) }'
+      );
+
       // Others are cached
       parser.parseLine('Using cached oldpackage1-1.0.0.whl');
       parser.parseLine('Using cached oldpackage2-2.0.0.whl');
