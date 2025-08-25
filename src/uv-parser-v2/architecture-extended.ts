@@ -4,14 +4,7 @@
  * Additional granular interfaces that provide better separation of concerns
  * and address the requirement that "everything that can be broken down should be"
  */
-import type {
-  IDownload,
-  IDownloadProgress,
-  IHttpStream,
-  IInstallationState,
-  ILogEvent,
-  InstallationPhase,
-} from './architecture';
+import type { IDownload, IHttpStream, IInstallationState, ILogEvent, InstallationPhase } from './architecture';
 
 // ============================================================================
 // Error Management Interfaces
@@ -468,116 +461,6 @@ export interface IProgressTracker {
    * Resets progress tracking.
    */
   reset(): void;
-}
-
-// ============================================================================
-// Validation Interfaces
-// ============================================================================
-
-/**
- * Validates phase transitions according to business rules.
- *
- * Interactions:
- * - Used by IPhaseManager before allowing transitions
- * - Can query other components to validate preconditions
- */
-export interface IPhaseTransitionValidator {
-  /**
-   * Validates a phase transition.
-   * Called by IPhaseManager before transitioning.
-   *
-   * @param from Current phase
-   * @param to Target phase
-   * @param context Current system context
-   * @returns Validation result with reason if invalid
-   */
-  validateTransition(from: InstallationPhase, to: InstallationPhase, context: IValidationContext): IValidationResult;
-
-  /**
-   * Gets allowed transitions from a phase.
-   * Used by IPhaseManager for available options.
-   *
-   * @param from Current phase
-   * @returns Array of valid target phases
-   */
-  getAllowedTransitions(from: InstallationPhase): InstallationPhase[];
-
-  /**
-   * Checks if a phase can be re-entered.
-   * Some phases like downloading can cycle.
-   *
-   * @param phase Phase to check
-   * @returns true if phase can be re-entered
-   */
-  isReentrantPhase(phase: InstallationPhase): boolean;
-}
-
-/**
- * Context provided for validation
- */
-export interface IValidationContext {
-  /** Current package counts */
-  packageCounts: {
-    total: number;
-    resolved: number;
-    downloaded: number;
-    installed: number;
-  };
-  /** Whether errors have occurred */
-  hasErrors: boolean;
-  /** Current phase timestamp */
-  phaseStartTime: number;
-}
-
-/**
- * Result of a validation check
- */
-export interface IValidationResult {
-  /** Whether validation passed */
-  isValid: boolean;
-  /** Reason if validation failed */
-  reason?: string;
-  /** Suggested alternative if available */
-  suggestion?: string;
-}
-
-/**
- * Validates download progress and stream associations.
- *
- * Interactions:
- * - Used by IDownloadManager to validate progress updates
- * - Used by IStreamTracker to validate associations
- */
-export interface IDownloadProgressValidator {
-  /**
-   * Validates a progress update.
-   * Ensures progress doesn't go backwards or exceed limits.
-   *
-   * @param current Current progress
-   * @param update Proposed update
-   * @returns Validation result
-   */
-  validateProgressUpdate(current: IDownloadProgress, update: Partial<IDownloadProgress>): IValidationResult;
-
-  /**
-   * Validates stream-to-download association.
-   * Checks if stream metrics match expected download size.
-   *
-   * @param stream Stream information
-   * @param download Download information
-   * @param frameSize Current max frame size
-   * @returns Validation result
-   */
-  validateStreamAssociation(stream: IHttpStream, download: IDownload, frameSize: number): IValidationResult;
-
-  /**
-   * Validates download completion.
-   * Ensures download actually received expected bytes.
-   *
-   * @param download Download to validate
-   * @returns Validation result
-   */
-  validateCompletion(download: IDownload): IValidationResult;
 }
 
 // ============================================================================

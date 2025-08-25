@@ -14,11 +14,9 @@ import type {
   IStreamTracker,
 } from './architecture';
 import type {
-  IDownloadProgressValidator,
   IErrorCollector,
   IEventProcessor,
   IMetricsCollector,
-  IPhaseTransitionValidator,
   IProgressTracker,
   IStateBuilder,
   IStreamAssociationStrategy,
@@ -77,7 +75,6 @@ export interface ICompleteUvParser {
    * Manages installation phase transitions.
    *
    * UPDATED BY: IEventProcessor on phase-related events
-   * VALIDATES WITH: IPhaseTransitionValidator before transitions
    * NOTIFIES: IMetricsCollector on phase changes
    * QUERIED BY: IStateBuilder, IProgressTracker
    */
@@ -97,7 +94,6 @@ export interface ICompleteUvParser {
    * Manages individual package downloads.
    *
    * UPDATED BY: IEventProcessor on download events
-   * VALIDATES WITH: IDownloadProgressValidator for progress updates
    * NOTIFIES: ITransferRateTracker with rate samples
    * ASSOCIATES WITH: IStreamTracker for HTTP/2 streams
    * QUERIED BY: IStateBuilder, IProgressTracker
@@ -109,7 +105,6 @@ export interface ICompleteUvParser {
    *
    * UPDATED BY: IEventProcessor on HTTP/2 frame events
    * USES: IStreamAssociationStrategy to match streams to downloads
-   * VALIDATES WITH: IDownloadProgressValidator for associations
    * NOTIFIES: IDownloadManager of stream associations
    * PROVIDES: Frame counts to IProgressCalculator
    */
@@ -194,27 +189,7 @@ export interface ICompleteUvParser {
    */
   readonly eventDispatcher: IEventDispatcher;
 
-  // ==================== Validation Components ====================
-
-  /**
-   * Validates phase transitions.
-   *
-   * USED BY: IPhaseManager before transitions
-   * QUERIES: IPackageRegistry for preconditions
-   * QUERIES: IErrorCollector for error state
-   * RETURNS: Validation results with reasons
-   */
-  readonly phaseValidator: IPhaseTransitionValidator;
-
-  /**
-   * Validates download progress updates.
-   *
-   * USED BY: IDownloadManager for progress validation
-   * USED BY: IStreamTracker for association validation
-   * VALIDATES: Progress doesn't go backwards
-   * VALIDATES: Stream associations are reasonable
-   */
-  readonly downloadValidator: IDownloadProgressValidator;
+  // ==================== Strategy Components ====================
 
   /**
    * Strategy for associating streams with downloads.
@@ -337,14 +312,6 @@ export interface ICompleteParserConfig {
     cleanupInterval?: number;
   };
 
-  /** Validation configuration */
-  validation?: {
-    /** Enable strict validation */
-    strict?: boolean;
-    /** Allow phase re-entry */
-    allowPhaseReentry?: boolean;
-  };
-
   /** Debug configuration */
   debug?: {
     /** Enable debug logging */
@@ -373,8 +340,6 @@ export interface ComponentOverrides {
   progressTracker?: IProgressTracker;
   stateBuilder?: IStateBuilder;
   eventDispatcher?: IEventDispatcher;
-  phaseValidator?: IPhaseTransitionValidator;
-  downloadValidator?: IDownloadProgressValidator;
   associationStrategy?: IStreamAssociationStrategy;
 }
 
