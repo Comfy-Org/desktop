@@ -448,7 +448,17 @@ export class UvLogParser implements IUvLogParser {
             (d) => (d.status === 'downloading' || d.status === 'pending') && !assignedPackages.has(d.package)
             // All packages need downloading, even zero-size ones
           )
-          .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+          .sort((a, b) => {
+            // Prioritize packages that don't have any streams yet
+            const aHasStream = [...this.transfers.values()].some((t) => t.associatedPackage === a.package);
+            const bHasStream = [...this.transfers.values()].some((t) => t.associatedPackage === b.package);
+
+            if (!aHasStream && bHasStream) return -1;
+            if (aHasStream && !bHasStream) return 1;
+
+            // Then sort by start time
+            return (a.startTime || 0) - (b.startTime || 0);
+          });
 
         if (unassignedDownloads.length > 0) {
           const download = unassignedDownloads[0];
@@ -461,6 +471,22 @@ export class UvLogParser implements IUvLogParser {
             associatedPackage: download.package,
           };
           this.transfers.set(streamId, transfer);
+
+          // Ensure progress is tracked for this package
+          if (!this.downloadProgress.has(download.package)) {
+            const progress: DownloadProgress = {
+              package: download.package,
+              totalBytes: download.totalBytes,
+              bytesReceived: 0,
+              estimatedBytesReceived: 0,
+              percentComplete: download.totalBytes === 0 ? 100 : 0,
+              startTime: download.startTime || Date.now(),
+              currentTime: Date.now(),
+              transferRateSamples: [],
+              averageTransferRate: 0,
+            };
+            this.downloadProgress.set(download.package, progress);
+          }
         }
       }
 
@@ -557,7 +583,17 @@ export class UvLogParser implements IUvLogParser {
             const assignedPackages = new Set(this.streamToPackage.values());
             const unassignedDownloads = [...this.downloads.values()]
               .filter((d) => d.status === 'downloading' && !assignedPackages.has(d.package))
-              .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+              .sort((a, b) => {
+                // Prioritize packages that don't have any streams yet
+                const aHasStream = [...this.transfers.values()].some((t) => t.associatedPackage === a.package);
+                const bHasStream = [...this.transfers.values()].some((t) => t.associatedPackage === b.package);
+
+                if (!aHasStream && bHasStream) return -1;
+                if (aHasStream && !bHasStream) return 1;
+
+                // Then sort by start time
+                return (a.startTime || 0) - (b.startTime || 0);
+              });
 
             if (unassignedDownloads.length > 0) {
               const download = unassignedDownloads[0];
@@ -568,7 +604,16 @@ export class UvLogParser implements IUvLogParser {
               const activeDownloads = [...this.downloads.values()].filter(
                 (d) => d.status === 'downloading' || d.status === 'pending'
               );
-              if (activeDownloads.length === 1) {
+
+              // Prefer downloads that don't have any active streams
+              const downloadsWithoutStreams = activeDownloads.filter(
+                (d) => ![...this.transfers.values()].some((t) => t.associatedPackage === d.package)
+              );
+
+              if (downloadsWithoutStreams.length > 0) {
+                transfer.associatedPackage = downloadsWithoutStreams[0].package;
+                this.streamToPackage.set(streamId, downloadsWithoutStreams[0].package);
+              } else if (activeDownloads.length === 1) {
                 transfer.associatedPackage = activeDownloads[0].package;
                 this.streamToPackage.set(streamId, activeDownloads[0].package);
               }
@@ -586,14 +631,24 @@ export class UvLogParser implements IUvLogParser {
 
             // Handle exact final frame for completed downloads
             if (isEndStream) {
-              progress.bytesReceived = progress.totalBytes;
-              progress.percentComplete = 100;
-
-              // Mark download as complete
+              // Don't immediately jump to 100% - let the actual progress tracking handle it
+              // Only mark the stream as complete, not the download progress
               const download = this.downloads.get(transfer.associatedPackage);
               if (download) {
-                download.status = 'completed';
-                download.endTime = Date.now();
+                // Only mark as completed if we've actually received all the bytes
+                // This prevents premature completion when streams end early
+                if (progress.estimatedBytesReceived >= progress.totalBytes * 0.95) {
+                  // We're within 95% of expected size, safe to mark complete
+                  progress.bytesReceived = progress.totalBytes;
+                  progress.percentComplete = 100;
+                  download.status = 'completed';
+                  download.endTime = Date.now();
+                } else {
+                  // Stream ended but we haven't received enough data yet
+                  // Keep the current progress and let subsequent updates handle it
+                  progress.percentComplete =
+                    progress.totalBytes > 0 ? (progress.estimatedBytesReceived / progress.totalBytes) * 100 : 0;
+                }
               }
             } else {
               progress.percentComplete =
