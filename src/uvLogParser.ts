@@ -441,7 +441,6 @@ export class UvLogParser implements IUvLogParser {
       const match = trimmedLine.match(UV_LOG_PATTERNS.H2_HEADERS_FRAME);
       if (match) {
         const streamId = match[2];
-        const isEndStream = trimmedLine.includes('END_STREAM');
 
         // Try to associate with the next unassigned download
         const assignedPackages = new Set(this.streamToPackage.values());
@@ -472,17 +471,15 @@ export class UvLogParser implements IUvLogParser {
           const download = unassignedDownloads[0];
           this.streamToPackage.set(streamId, download.package);
 
-          // Don't create a transfer if END_STREAM is present (request with no body)
-          if (!isEndStream) {
-            const transfer: HttpTransferInfo = {
-              streamId,
-              frameCount: 0,
-              lastFrameTime: Date.now(),
-              associatedPackage: download.package,
-              expectedSize: download.totalBytes, // Add expected size for validation
-            };
-            this.transfers.set(streamId, transfer);
-          }
+          // Create a transfer to track this stream
+          const transfer: HttpTransferInfo = {
+            streamId,
+            frameCount: 0,
+            lastFrameTime: Date.now(),
+            associatedPackage: download.package,
+            expectedSize: download.totalBytes, // Add expected size for validation
+          };
+          this.transfers.set(streamId, transfer);
 
           // Ensure progress is tracked for this package
           if (!this.downloadProgress.has(download.package)) {
@@ -530,10 +527,24 @@ export class UvLogParser implements IUvLogParser {
       const isEndStream = trimmedLine.includes('END_STREAM');
 
       if (!this.transfers.has(streamId)) {
-        // If END_STREAM on first frame, don't create a transfer
+        // If END_STREAM on first frame, don't create a transfer but handle completion
         if (isEndStream) {
-          // But we may need to clean up stream-to-package mapping
-          const packageName = this.streamToPackage.get(streamId);
+          // Try to find the package for this stream
+          let packageName = this.streamToPackage.get(streamId);
+
+          // If no mapping exists, try to associate with an active download
+          if (!packageName) {
+            const assignedPackages = new Set(this.streamToPackage.values());
+            const unassignedDownloads = [...this.downloads.values()]
+              .filter((d) => (d.status === 'downloading' || d.status === 'pending') && !assignedPackages.has(d.package))
+              .sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+
+            if (unassignedDownloads.length > 0) {
+              packageName = unassignedDownloads[0].package;
+              // Don't add to streamToPackage since we'll clean it up immediately
+            }
+          }
+
           const progress = packageName ? this.downloadProgress.get(packageName) : undefined;
 
           // Mark the download as complete if we have a package associated
