@@ -350,6 +350,7 @@ export class UvLogParser implements IUvLogParser {
         totalBytes: size, // Include total bytes for the package
         downloadedBytes: 0, // Not started downloading yet
         downloadUrl: url,
+        completedDownloads: this.getCompletedDownloadsCount(),
         rawLine: line,
       };
     }
