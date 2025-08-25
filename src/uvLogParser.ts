@@ -742,6 +742,11 @@ export class UvLogParser implements IUvLogParser {
               estimatedBytes > transfer.expectedSize * 1.2
             ) {
               // Stream might be misassociated, don't update progress
+              // But still clean up on END_STREAM
+              if (isEndStream) {
+                this.transfers.delete(streamId);
+                this.streamToPackage.delete(streamId);
+              }
               return {
                 phase: this.currentPhase,
                 message: '',
