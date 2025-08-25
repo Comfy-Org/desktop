@@ -94,6 +94,7 @@ export class UvInstallationState extends EventEmitter {
       message: status.message || '',
       totalPackages: status.totalPackages,
       installedPackages: status.installedPackages,
+      completedDownloads: status.completedDownloads,
       currentPackage: status.currentPackage,
       totalBytes,
       downloadedBytes,

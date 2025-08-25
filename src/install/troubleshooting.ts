@@ -78,8 +78,14 @@ export class Troubleshooting implements Disposable {
       // Subscribe to state changes and send IPC messages
       installationState.on('statusChange', (status: UvInstallStatus) => {
         // Log when sending IPC message
+        // Use completedDownloads for download phase, installedPackages for install phase
+        const progressCount =
+          status.phase === 'downloading' || status.phase === 'preparing_download'
+            ? status.completedDownloads || 0
+            : status.installedPackages || 0;
+
         log.debug(
-          `Sending UV IPC status: phase=${status.phase}, package=${status.currentPackage || 'N/A'}, progress=${status.installedPackages || 0}/${status.totalPackages || 0}`
+          `Sending UV IPC status: phase=${status.phase}, package=${status.currentPackage || 'N/A'}, progress=${progressCount}/${status.totalPackages || 0}`
         );
 
         // Send UV installation status to frontend

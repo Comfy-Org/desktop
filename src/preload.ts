@@ -134,6 +134,8 @@ export interface UvInstallStatus {
   totalPackages?: number;
   /** Number of packages successfully installed */
   installedPackages?: number;
+  /** Number of packages successfully downloaded */
+  completedDownloads?: number;
   /** Currently downloading package name */
   currentPackage?: string;
   /** Total bytes to download for current package */
