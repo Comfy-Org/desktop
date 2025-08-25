@@ -441,6 +441,7 @@ export class UvLogParser implements IUvLogParser {
       const match = trimmedLine.match(UV_LOG_PATTERNS.H2_HEADERS_FRAME);
       if (match) {
         const streamId = match[2];
+        const isEndStream = trimmedLine.includes('END_STREAM');
 
         // Try to associate with the next unassigned download
         const assignedPackages = new Set(this.streamToPackage.values());
@@ -471,14 +472,17 @@ export class UvLogParser implements IUvLogParser {
           const download = unassignedDownloads[0];
           this.streamToPackage.set(streamId, download.package);
 
-          const transfer: HttpTransferInfo = {
-            streamId,
-            frameCount: 0,
-            lastFrameTime: Date.now(),
-            associatedPackage: download.package,
-            expectedSize: download.totalBytes, // Add expected size for validation
-          };
-          this.transfers.set(streamId, transfer);
+          // Don't create a transfer if END_STREAM is present (request with no body)
+          if (!isEndStream) {
+            const transfer: HttpTransferInfo = {
+              streamId,
+              frameCount: 0,
+              lastFrameTime: Date.now(),
+              associatedPackage: download.package,
+              expectedSize: download.totalBytes, // Add expected size for validation
+            };
+            this.transfers.set(streamId, transfer);
+          }
 
           // Ensure progress is tracked for this package
           if (!this.downloadProgress.has(download.package)) {
@@ -528,10 +532,37 @@ export class UvLogParser implements IUvLogParser {
       if (!this.transfers.has(streamId)) {
         // If END_STREAM on first frame, don't create a transfer
         if (isEndStream) {
+          // But we may need to clean up stream-to-package mapping
+          const packageName = this.streamToPackage.get(streamId);
+          const progress = packageName ? this.downloadProgress.get(packageName) : undefined;
+
+          // Mark the download as complete if we have a package associated
+          if (packageName) {
+            const download = this.downloads.get(packageName);
+            if (download) {
+              download.status = 'completed';
+              download.endTime = Date.now();
+
+              if (progress) {
+                progress.bytesReceived = progress.totalBytes;
+                progress.percentComplete = 100;
+              }
+
+              // Clean up old downloads when marking one complete
+              this.cleanupCompletedDownloads();
+            }
+          }
+
+          // Clean up any mappings
+          this.streamToPackage.delete(streamId);
+
           // Handle END_STREAM without creating a transfer
           return {
             phase: this.currentPhase,
             message: '',
+            currentPackage: packageName,
+            totalBytes: progress?.totalBytes,
+            downloadedBytes: progress?.totalBytes, // If END_STREAM on first frame, assume complete
             streamId,
             streamCompleted: true,
             rawLine: line,
