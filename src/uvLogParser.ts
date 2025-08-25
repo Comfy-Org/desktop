@@ -115,7 +115,6 @@ export interface OverallState {
 export interface IUvLogParser {
   // Core parsing
   parseLine(line: string): UvStatus;
-  parseLines(lines: string[]): UvStatus[];
 
   // State queries
   getOverallState(): OverallState;
@@ -927,10 +926,6 @@ export class UvLogParser implements IUvLogParser {
       message: '',
       rawLine: line,
     };
-  }
-
-  parseLines(lines: string[]): UvStatus[] {
-    return lines.map((line) => this.parseLine(line));
   }
 
   getOverallState(): OverallState {
