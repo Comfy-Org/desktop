@@ -4,6 +4,11 @@
  * This architecture provides a clean separation of concerns for parsing UV process output.
  * Each component has a single responsibility and communicates through well-defined interfaces.
  */
+// Import and re-export strongly-typed event definitions
+import type { ILogEvent } from './event-types';
+
+export type { ILogEvent, EventType, EventData, EventDataMap } from './event-types';
+export { isEventType, isErrorEvent, isDownloadEvent, isHttp2Event, createLogEvent } from './event-types';
 
 // ============================================================================
 // Core Data Types
@@ -30,40 +35,6 @@ export type InstallationPhase =
  */
 export type DownloadStatus = 'pending' | 'downloading' | 'completed' | 'failed';
 
-/**
- * Represents a parsed event from a UV log line
- */
-export interface ILogEvent {
-  /** Type of event parsed from the log line */
-  type:
-    | 'process_start'
-    | 'requirements_file'
-    | 'python_version'
-    | 'dependency_added'
-    | 'resolution_complete'
-    | 'download_prepare'
-    | 'download_info'
-    | 'http2_headers'
-    | 'http2_data'
-    | 'http2_settings'
-    | 'packages_prepared'
-    | 'packages_uninstalled'
-    | 'installation_start'
-    | 'installation_complete'
-    | 'error'
-    | 'warning'
-    | 'unknown';
-
-  /** Timestamp when the event was parsed */
-  timestamp: number;
-
-  /** Event-specific data */
-  data: Record<string, unknown>;
-
-  /** Original log line that generated this event */
-  rawLine: string;
-}
-
 // ============================================================================
 // Component Interfaces
 // ============================================================================
@@ -71,6 +42,10 @@ export interface ILogEvent {
 /**
  * Parses individual UV log lines into structured events.
  * This is a pure function with no state management.
+ *
+ * The returned ILogEvent is a discriminated union with strongly-typed
+ * data for each event type. Use type guards like isEventType() to
+ * narrow the type and access event-specific data safely.
  */
 export interface ILineParser {
   /**

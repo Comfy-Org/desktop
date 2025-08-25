@@ -22,6 +22,23 @@ import type {
   IUvParser,
   InstallationPhase,
 } from './architecture';
+import { createLogEvent } from './architecture';
+import type {
+  DependencyAddedData,
+  DownloadPrepareData,
+  ErrorData,
+  Http2DataData,
+  Http2HeadersData,
+  Http2SettingsData,
+  InstallationCompleteData,
+  InstallationStartData,
+  PackagesPreparedData,
+  ProcessStartData,
+  PythonVersionData,
+  RequirementsFileData,
+  ResolutionCompleteData,
+  UnknownData,
+} from './event-types';
 
 // ============================================================================
 // LineParser Implementation Example
@@ -83,132 +100,140 @@ export class LineParser implements ILineParser {
   }
 
   private createEvent(patternKey: string, match: RegExpMatchArray, rawLine: string): ILogEvent {
-    const timestamp = Date.now();
-
     switch (patternKey) {
       case 'uvVersion':
-        return {
-          type: 'process_start',
-          timestamp,
-          data: { version: match[1] },
-          rawLine,
-        };
+        return createLogEvent(
+          'process_start',
+          {
+            version: match[1],
+          } as ProcessStartData,
+          rawLine
+        );
 
       case 'requirementsFile':
-        return {
-          type: 'requirements_file',
-          timestamp,
-          data: { file: match[1] },
-          rawLine,
-        };
+        return createLogEvent(
+          'requirements_file',
+          {
+            file: match[1],
+          } as RequirementsFileData,
+          rawLine
+        );
 
       case 'pythonVersion':
-        return {
-          type: 'python_version',
-          timestamp,
-          data: { version: match[1] },
-          rawLine,
-        };
+        return createLogEvent(
+          'python_version',
+          {
+            version: match[1],
+          } as PythonVersionData,
+          rawLine
+        );
 
       case 'dependencyAdded':
-        return {
-          type: 'dependency_added',
-          timestamp,
-          data: {
+        return createLogEvent(
+          'dependency_added',
+          {
             packageName: match[1].trim(),
             versionSpec: match[2].trim(),
-          },
-          rawLine,
-        };
+          } as DependencyAddedData,
+          rawLine
+        );
 
       case 'resolutionComplete':
-        return {
-          type: 'resolution_complete',
-          timestamp,
-          data: {
+        return createLogEvent(
+          'resolution_complete',
+          {
             packageCount: Number.parseInt(match[1]),
             duration: Number.parseFloat(match[2]),
-          },
-          rawLine,
-        };
+          } as ResolutionCompleteData,
+          rawLine
+        );
 
       case 'downloadPrepare':
-        return {
-          type: 'download_prepare',
-          timestamp,
-          data: {
+        return createLogEvent(
+          'download_prepare',
+          {
             packageName: match[1],
             version: match[2],
             size: match[3] === 'None' ? 0 : Number.parseInt(match[4].replaceAll('_', '')),
             url: match[5],
-          },
-          rawLine,
-        };
+          } as DownloadPrepareData,
+          rawLine
+        );
 
       case 'http2Headers':
-        return {
-          type: 'http2_headers',
-          timestamp,
-          data: { streamId: match[1] },
-          rawLine,
-        };
+        return createLogEvent(
+          'http2_headers',
+          {
+            streamId: match[1],
+          } as Http2HeadersData,
+          rawLine
+        );
 
       case 'http2Data':
-        return {
-          type: 'http2_data',
-          timestamp,
-          data: {
+        return createLogEvent(
+          'http2_data',
+          {
             streamId: match[1],
             isEndStream: rawLine.includes('END_STREAM'),
-          },
-          rawLine,
-        };
+          } as Http2DataData,
+          rawLine
+        );
 
       case 'http2Settings':
-        return {
-          type: 'http2_settings',
-          timestamp,
-          data: { maxFrameSize: Number.parseInt(match[1]) },
-          rawLine,
-        };
+        return createLogEvent(
+          'http2_settings',
+          {
+            maxFrameSize: Number.parseInt(match[1]),
+          } as Http2SettingsData,
+          rawLine
+        );
 
       case 'packagesPrepared':
-        return {
-          type: 'packages_prepared',
-          timestamp,
-          data: {
+        return createLogEvent(
+          'packages_prepared',
+          {
             count: Number.parseInt(match[1]),
             duration: match[3] === 's' ? Number.parseFloat(match[2]) * 1000 : Number.parseFloat(match[2]),
-          },
-          rawLine,
-        };
+          } as PackagesPreparedData,
+          rawLine
+        );
+
+      case 'installationStart':
+        return createLogEvent(
+          'installation_start',
+          {
+            wheelCount: Number.parseInt(match[1]),
+          } as InstallationStartData,
+          rawLine
+        );
 
       case 'installationComplete':
-        return {
-          type: 'installation_complete',
-          timestamp,
-          data: {
+        return createLogEvent(
+          'installation_complete',
+          {
             count: Number.parseInt(match[1]),
             duration: match[3] === 's' ? Number.parseFloat(match[2]) * 1000 : Number.parseFloat(match[2]),
-          },
-          rawLine,
-        };
+          } as InstallationCompleteData,
+          rawLine
+        );
 
       case 'error':
-        return {
-          type: 'error',
-          timestamp,
-          data: { message: match[1] },
-          rawLine,
-        };
+        return createLogEvent(
+          'error',
+          {
+            message: match[1],
+          } as ErrorData,
+          rawLine
+        );
 
       default:
-        return {
-          type: 'unknown',
-          timestamp,
-          data: { match },
-          rawLine,
-        };
+        return createLogEvent(
+          'unknown',
+          {
+            match,
+          } as UnknownData,
+          rawLine
+        );
     }
   }
 }
