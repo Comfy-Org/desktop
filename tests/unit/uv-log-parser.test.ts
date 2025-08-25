@@ -20,18 +20,20 @@ describe('UvLogParser', () => {
       const logLine = '    0.000690s DEBUG uv uv 0.8.13 (ede75fe62 2025-08-21)';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('started');
-      expect(status.uvVersion).toBe('0.8.13');
-      expect(status.message).toBe('uv has started');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('started');
+      expect(status?.uvVersion).toBe('0.8.13');
+      expect(status?.message).toBe('uv has started');
     });
 
     it('should extract requirements file being processed', () => {
       const logLine = ' uv_requirements::specification::from_source source=assets/ComfyUI/requirements.txt';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('reading_requirements');
-      expect(status.requirementsFile).toBe('assets/ComfyUI/requirements.txt');
-      expect(status.message).toBe('Reading requirements from assets/ComfyUI/requirements.txt');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('reading_requirements');
+      expect(status?.requirementsFile).toBe('assets/ComfyUI/requirements.txt');
+      expect(status?.message).toBe('Reading requirements from assets/ComfyUI/requirements.txt');
     });
   });
 
@@ -40,29 +42,32 @@ describe('UvLogParser', () => {
       const logLine = '    0.078373s   0ms DEBUG uv_resolver::resolver Solving with installed Python version: 3.12.9';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('resolving');
-      expect(status.pythonVersion).toBe('3.12.9');
-      expect(status.message).toBe('Resolving dependencies with Python 3.12.9');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('resolving');
+      expect(status?.pythonVersion).toBe('3.12.9');
+      expect(status?.message).toBe('Resolving dependencies with Python 3.12.9');
     });
 
     it('should track packages being added for resolution', () => {
       const logLine = '    0.079718s   1ms DEBUG uv_resolver::resolver Adding direct dependency: aiohttp>=3.11.8';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('resolving');
-      expect(status.currentPackage).toBe('aiohttp');
-      expect(status.packageVersion).toBe('>=3.11.8');
-      expect(status.message).toBe('Resolving dependency: aiohttp>=3.11.8');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('resolving');
+      expect(status?.currentPackage).toBe('aiohttp');
+      expect(status?.packageVersion).toBe('>=3.11.8');
+      expect(status?.message).toBe('Resolving dependency: aiohttp>=3.11.8');
     });
 
     it('should detect when resolution completes', () => {
       const logLine = 'Resolved 60 packages in 2.00s';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('resolved');
-      expect(status.totalPackages).toBe(60);
-      expect(status.resolutionTime).toBe(2);
-      expect(status.message).toBe('Resolved 60 packages in 2.00s');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('resolved');
+      expect(status?.totalPackages).toBe(60);
+      expect(status?.resolutionTime).toBe(2);
+      expect(status?.message).toBe('Resolved 60 packages in 2.00s');
     });
   });
 
@@ -72,22 +77,21 @@ describe('UvLogParser', () => {
         '   uv_installer::preparer::get_wheel name=aiohttp==3.12.15, size=Some(469787), url="https://files.pythonhosted.org/packages/3a/1d/aiohttp-3.12.15-cp312-cp312-macosx_11_0_arm64.whl"';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('preparing_download');
-      expect(status.currentPackage).toBe('aiohttp');
-      expect(status.packageVersion).toBe('3.12.15');
-      expect(status.packageSize).toBe(469_787);
-      expect(status.downloadUrl).toContain('aiohttp-3.12.15');
-      expect(status.message).toBe('Preparing to download aiohttp==3.12.15 (459.2 KB)');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('preparing_download');
+      expect(status?.currentPackage).toBe('aiohttp');
+      expect(status?.packageVersion).toBe('3.12.15');
+      expect(status?.packageSize).toBe(469_787);
+      expect(status?.downloadUrl).toContain('aiohttp-3.12.15');
+      expect(status?.message).toBe('Preparing to download aiohttp==3.12.15 (459.2 KB)');
     });
 
-    it('should detect when package download starts', () => {
+    it('should ignore "Downloading" informational lines', () => {
       const logLine = 'Downloading sentencepiece (1.2MiB)';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('downloading');
-      expect(status.currentPackage).toBe('sentencepiece');
-      expect(status.packageSizeFormatted).toBe('1.2MiB');
-      expect(status.message).toBe('Downloading sentencepiece (1.2MiB)');
+      // "Downloading" lines should now return undefined
+      expect(status).toBeUndefined();
     });
 
     it('should track multiple package downloads', () => {
@@ -116,10 +120,11 @@ describe('UvLogParser', () => {
       const logLine = 'Prepared 5 packages in 515ms';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('prepared');
-      expect(status.preparedPackages).toBe(5);
-      expect(status.preparationTime).toBe(515);
-      expect(status.message).toBe('Prepared 5 packages in 515ms');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('prepared');
+      expect(status?.preparedPackages).toBe(5);
+      expect(status?.preparationTime).toBe(515);
+      expect(status?.message).toBe('Prepared 5 packages in 515ms');
     });
   });
 
@@ -147,8 +152,9 @@ describe('UvLogParser', () => {
         '2.603342s   2s  DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(11), flags: (0x1: END_STREAM) }';
       const status = parser.parseLine(logLine);
 
-      expect(status.streamCompleted).toBe(true);
-      expect(status.streamId).toBe('11');
+      expect(status).toBeDefined();
+      expect(status?.streamCompleted).toBe(true);
+      expect(status?.streamId).toBe('11');
     });
   });
 
@@ -205,47 +211,51 @@ describe('UvLogParser', () => {
       const logLine = ' uv_installer::installer::install_blocking num_wheels=5';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('installing');
-      expect(status.totalWheels).toBe(5);
-      expect(status.message).toBe('Installing 5 packages');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('installing');
+      expect(status?.totalWheels).toBe(5);
+      expect(status?.message).toBe('Installing 5 packages');
     });
 
     it('should detect when installation completes', () => {
       const logLine = 'Installed 5 packages in 7ms';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('installed');
-      expect(status.installedPackages).toBe(5);
-      expect(status.installationTime).toBe(7);
-      expect(status.message).toBe('Installed 5 packages in 7ms');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('installed');
+      expect(status?.installedPackages).toBe(5);
+      expect(status?.installationTime).toBe(7);
+      expect(status?.message).toBe('Installed 5 packages in 7ms');
     });
 
     it('should handle single package installation', () => {
       const logLine = 'Installed 1 package in 3ms';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('installed');
-      expect(status.installedPackages).toBe(1);
-      expect(status.installationTime).toBe(3);
-      expect(status.message).toBe('Installed 1 package in 3ms');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('installed');
+      expect(status?.installedPackages).toBe(1);
+      expect(status?.installationTime).toBe(3);
+      expect(status?.message).toBe('Installed 1 package in 3ms');
     });
   });
 
   describe('Error Handling', () => {
-    it('should handle malformed log lines gracefully', () => {
+    it('should ignore malformed log lines', () => {
       const logLine = 'Some random text that does not match any pattern';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('unknown');
-      expect(status.rawLine).toBe(logLine);
+      // Malformed lines should now return undefined
+      expect(status).toBeUndefined();
     });
 
     it('should detect error conditions', () => {
       const logLine = 'ERROR: Failed to download package';
       const status = parser.parseLine(logLine);
 
-      expect(status.phase).toBe('error');
-      expect(status.error).toContain('Failed to download package');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('error');
+      expect(status?.error).toContain('Failed to download package');
     });
   });
 
@@ -255,7 +265,7 @@ describe('UvLogParser', () => {
         '    0.000690s DEBUG uv uv 0.8.13 (ede75fe62 2025-08-21)',
         '    0.078373s   0ms DEBUG uv_resolver::resolver Solving with installed Python version: 3.12.9',
         'Resolved 60 packages in 2.00s',
-        'Downloading numpy (15.5MiB)',
+        '   uv_installer::preparer::get_wheel name=numpy==2.0.0, size=Some(16277507), url="https://..."',
         'Prepared 1 package in 120ms',
         'Installed 1 package in 3ms',
       ];
@@ -265,7 +275,7 @@ describe('UvLogParser', () => {
       }
       const state = parser.getOverallState();
 
-      expect(state.phases).toEqual(['started', 'resolving', 'resolved', 'downloading', 'prepared', 'installed']);
+      expect(state.phases).toEqual(['started', 'resolving', 'resolved', 'preparing_download', 'prepared', 'installed']);
       expect(state.currentPhase).toBe('installed');
       expect(state.isComplete).toBe(true);
       expect(state.totalPackages).toBe(60);
@@ -329,13 +339,13 @@ describe('UvLogParser', () => {
       expect(numpy?.status).toBe('pending');
       const startTime1 = numpy?.startTime;
 
-      // Later, the user-friendly message appears
+      // Later, the user-friendly message appears (but is now ignored)
       parser.parseLine(`${downloadingTime} Downloading numpy (15.5MiB)`);
 
-      // Status should now be downloading, but start time should not change
+      // Status should remain pending since "Downloading" messages are ignored
       downloads = parser.getActiveDownloads();
       numpy = downloads.find((d) => d.package === 'numpy');
-      expect(numpy?.status).toBe('downloading');
+      expect(numpy?.status).toBe('pending');
       expect(numpy?.startTime).toBe(startTime1);
     });
 
@@ -364,18 +374,18 @@ describe('UvLogParser', () => {
       }
     });
 
-    it('should prioritize get_wheel for phase detection over user messages', () => {
+    it('should use get_wheel for phase detection and ignore user messages', () => {
       // get_wheel indicates preparing to download
       parser.parseLine('   uv_installer::preparer::get_wheel name=package==1.0.0, size=Some(1000), url="..."');
 
       const status1 = parser.getOverallState();
       expect(status1.currentPhase).toBe('preparing_download');
 
-      // "Downloading" message transitions to downloading phase
+      // "Downloading" message is now ignored
       parser.parseLine('Downloading package (1.0KB)');
 
       const status2 = parser.getOverallState();
-      expect(status2.currentPhase).toBe('downloading');
+      expect(status2.currentPhase).toBe('preparing_download'); // Should remain the same
     });
   });
 
@@ -869,30 +879,25 @@ describe('UvLogParser', () => {
 
       const status = parser.parseLine('Resolved 60 packages in 2.00s');
 
-      expect(status.phase).toBe('resolved');
-      expect(status.totalPackages).toBe(60);
-      expect(status.installedPackages).toBeDefined();
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('resolved');
+      expect(status?.totalPackages).toBe(60);
+      expect(status?.installedPackages).toBeDefined();
     });
 
-    it('should include download byte values when downloading', () => {
+    it('should include download byte values when preparing download', () => {
       const parser = new UvLogParser();
 
-      // First, prepare a download
-      parser.parseLine(
+      // Parse the get_wheel message which now handles download preparation
+      const status = parser.parseLine(
         '   uv_installer::preparer::get_wheel name=numpy==2.0.0, size=Some(16277507), url="https://..."'
       );
 
-      // Then parse the downloading message
-      const status = parser.parseLine('Downloading numpy (15.5MiB)');
-
-      expect(status.phase).toBe('downloading');
-      expect(status.currentPackage).toBe('numpy');
-      expect(status.totalPackages).toBeDefined();
-      expect(status.installedPackages).toBeDefined();
-      // Byte values should be defined
-      expect(status.totalBytes).toBe(16_277_507);
-      expect(status.downloadedBytes).toBeDefined();
-      expect(status.downloadedBytes).toBeGreaterThanOrEqual(0);
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('preparing_download');
+      expect(status?.currentPackage).toBe('numpy');
+      expect(status?.packageVersion).toBe('2.0.0');
+      expect(status?.packageSize).toBe(16_277_507);
     });
 
     it('should include byte values in HTTP/2 data frames', () => {
@@ -910,12 +915,13 @@ describe('UvLogParser', () => {
         '2.100000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1) }'
       );
 
-      expect(status.currentPackage).toBeDefined();
-      expect(status.totalPackages).toBe(3);
-      expect(status.totalBytes).toBe(1_000_000);
-      expect(status.downloadedBytes).toBeDefined();
-      expect(status.downloadedBytes).toBeGreaterThan(0);
-      expect(status.downloadedBytes).toBeLessThanOrEqual(1_000_000);
+      expect(status).toBeDefined();
+      expect(status?.currentPackage).toBeDefined();
+      expect(status?.totalPackages).toBe(3);
+      expect(status?.totalBytes).toBe(1_000_000);
+      expect(status?.downloadedBytes).toBeDefined();
+      expect(status?.downloadedBytes).toBeGreaterThan(0);
+      expect(status?.downloadedBytes).toBeLessThanOrEqual(1_000_000);
     });
 
     it('should mark as complete in installed phase', () => {
@@ -924,10 +930,11 @@ describe('UvLogParser', () => {
       parser.parseLine('Resolved 5 packages in 1.00s');
       const status = parser.parseLine('Installed 5 packages in 10ms');
 
-      expect(status.phase).toBe('installed');
-      expect(status.isComplete).toBe(true);
-      expect(status.totalPackages).toBe(5);
-      expect(status.installedPackages).toBe(5);
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('installed');
+      expect(status?.isComplete).toBe(true);
+      expect(status?.totalPackages).toBe(5);
+      expect(status?.installedPackages).toBe(5);
     });
 
     it('should calculate download progress percentage correctly', () => {
@@ -962,9 +969,10 @@ describe('UvLogParser', () => {
         '2.500000s DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1), flags: (0x1: END_STREAM) }'
       );
 
-      expect(status.streamCompleted).toBe(true);
-      expect(status.totalBytes).toBe(500_000);
-      expect(status.downloadedBytes).toBe(500_000); // Should equal total when complete
+      expect(status).toBeDefined();
+      expect(status?.streamCompleted).toBe(true);
+      expect(status?.totalBytes).toBe(500_000);
+      expect(status?.downloadedBytes).toBe(500_000); // Should equal total when complete
     });
 
     it('should provide transfer rate and ETA when available', () => {

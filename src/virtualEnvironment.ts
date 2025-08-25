@@ -417,11 +417,14 @@ export class VirtualEnvironment implements HasTelemetry {
             if (line.trim()) {
               const status = parser.parseLine(line);
 
-              // Use intelligent state management if provided, otherwise fall back to direct callback
-              if (callbacks?.uvInstallationState) {
-                callbacks.uvInstallationState.updateFromUvStatus(status);
-              } else if (callbacks?.onUvStatus && status.phase !== 'unknown') {
-                callbacks.onUvStatus(status);
+              // Only process if parseLine returned a meaningful status
+              if (status) {
+                // Use intelligent state management if provided, otherwise fall back to direct callback
+                if (callbacks?.uvInstallationState) {
+                  callbacks.uvInstallationState.updateFromUvStatus(status);
+                } else if (callbacks?.onUvStatus && status.phase !== 'unknown') {
+                  callbacks.onUvStatus(status);
+                }
               }
             }
           }
@@ -441,11 +444,14 @@ export class VirtualEnvironment implements HasTelemetry {
             if (line.trim()) {
               const status = parser.parseLine(line);
 
-              // Use intelligent state management if provided, otherwise fall back to direct callback
-              if (callbacks?.uvInstallationState) {
-                callbacks.uvInstallationState.updateFromUvStatus(status);
-              } else if (callbacks?.onUvStatus && status.phase !== 'unknown') {
-                callbacks.onUvStatus(status);
+              // Only process if parseLine returned a meaningful status
+              if (status) {
+                // Use intelligent state management if provided, otherwise fall back to direct callback
+                if (callbacks?.uvInstallationState) {
+                  callbacks.uvInstallationState.updateFromUvStatus(status);
+                } else if (callbacks?.onUvStatus && status.phase !== 'unknown') {
+                  callbacks.onUvStatus(status);
+                }
               }
             }
           }

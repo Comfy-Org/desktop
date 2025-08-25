@@ -281,8 +281,8 @@ describe('UvLogParser Performance Tests', () => {
 
       for (const line of incompleteLines) {
         const status = parser.parseLine(line);
-        expect(status.phase).toBe('unknown');
-        expect(status.rawLine).toBe(line);
+        // Incomplete lines should now return undefined
+        expect(status).toBeUndefined();
       }
     });
   });

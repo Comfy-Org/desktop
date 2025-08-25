@@ -30,7 +30,7 @@ describe('VirtualEnvironment UV Parser Integration', () => {
       // Simulate parsing lines
       for (const line of sampleOutput) {
         const status = parser.parseLine(line);
-        if (status.phase !== 'unknown') {
+        if (status && status.phase !== 'unknown') {
           statuses.push(status);
         }
       }
@@ -40,7 +40,6 @@ describe('VirtualEnvironment UV Parser Integration', () => {
       expect(phases).toContain('started');
       expect(phases).toContain('resolved');
       expect(phases).toContain('preparing_download');
-      expect(phases).toContain('downloading');
       expect(phases).toContain('prepared');
       expect(phases).toContain('installed');
 
@@ -72,25 +71,19 @@ describe('VirtualEnvironment UV Parser Integration', () => {
 
       for (const line of multiPackageOutput) {
         const status = parser.parseLine(line);
-        if (status.phase !== 'unknown') {
+        if (status && status.phase !== 'unknown') {
           statuses.push(status);
         }
       }
 
-      // Verify phases: preparing_download (from get_wheel) and downloading (from Downloading message)
+      // Verify phases: preparing_download (from get_wheel) and downloading (from HTTP/2 frames only)
       const preparingStatuses = statuses.filter((s) => s.phase === 'preparing_download');
       const downloadStatuses = statuses.filter((s) => s.phase === 'downloading');
 
       // We get 3 preparing_download from get_wheel
       expect(preparingStatuses).toHaveLength(3);
-      // We get 6 downloading phases: 3 from "Downloading" messages and 3 from HTTP/2 data frames
-      expect(downloadStatuses).toHaveLength(6);
-
-      // Check unique packages were downloaded (filter out undefined from HTTP/2 frames)
-      const downloadedPackages = [
-        ...new Set(downloadStatuses.map((s) => s.currentPackage).filter((p) => p !== undefined)),
-      ];
-      expect(downloadedPackages).toEqual(['package1', 'package2', 'package3']);
+      // We get 3 downloading phases from HTTP/2 data frames only (Downloading messages are now ignored)
+      expect(downloadStatuses).toHaveLength(3);
 
       const downloads = parser.getActiveDownloads();
       expect(downloads).toHaveLength(0); // All should be completed after END_STREAM
@@ -113,7 +106,9 @@ describe('VirtualEnvironment UV Parser Integration', () => {
 
       for (const line of errorOutput) {
         const status = parser.parseLine(line);
-        statuses.push(status);
+        if (status) {
+          statuses.push(status);
+        }
       }
 
       // Verify error was detected
@@ -168,7 +163,9 @@ describe('VirtualEnvironment UV Parser Integration', () => {
 
       // Parse and call UV status callback
       const status = parser.parseLine(testLine);
-      callbacks.onUvStatus?.(status);
+      if (status) {
+        callbacks.onUvStatus?.(status);
+      }
 
       // Verify callbacks were called
       expect(onStdout).toHaveBeenCalledWith(testLine);
@@ -199,7 +196,7 @@ describe('VirtualEnvironment UV Parser Integration', () => {
 
       for (const line of lines) {
         const status = parser.parseLine(line);
-        if (status.phase !== 'unknown') {
+        if (status && status.phase !== 'unknown') {
           callbacks.onUvStatus?.(status);
         }
       }

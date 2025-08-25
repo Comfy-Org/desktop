@@ -54,7 +54,7 @@ describe('UvLogParser Integration Tests', () => {
 
       for (const { line } of logStream) {
         const status = parser.parseLine(line);
-        if (status.phase !== 'unknown') {
+        if (status && status.phase !== 'unknown') {
           statusUpdates.push(status);
         }
       }
@@ -66,7 +66,6 @@ describe('UvLogParser Integration Tests', () => {
       expect(phases).toContain('resolving');
       expect(phases).toContain('resolved');
       expect(phases).toContain('preparing_download');
-      expect(phases).toContain('downloading');
       expect(phases).toContain('prepared');
       expect(phases).toContain('installed');
 
@@ -243,22 +242,24 @@ describe('UvLogParser Integration Tests', () => {
       for (const line of variations) {
         parser.reset();
         const status = parser.parseLine(line);
-        expect(status.phase).toBe('started');
-        expect(status.uvVersion).toMatch(/\d+\.\d+/);
+        expect(status).toBeDefined();
+        expect(status?.phase).toBe('started');
+        expect(status?.uvVersion).toMatch(/\d+\.\d+/);
       }
     });
 
-    it('should handle different package size formats', () => {
+    it('should ignore different package size formats in downloading messages', () => {
       const sizeFormats = [
-        { line: 'Downloading small-pkg (125B)', expected: '125B' },
-        { line: 'Downloading medium-pkg (45.6KiB)', expected: '45.6KiB' },
-        { line: 'Downloading large-pkg (1.2MiB)', expected: '1.2MiB' },
-        { line: 'Downloading huge-pkg (2.5GiB)', expected: '2.5GiB' },
+        'Downloading small-pkg (125B)',
+        'Downloading medium-pkg (45.6KiB)',
+        'Downloading large-pkg (1.2MiB)',
+        'Downloading huge-pkg (2.5GiB)',
       ];
 
-      for (const { line, expected } of sizeFormats) {
+      for (const line of sizeFormats) {
         const status = parser.parseLine(line);
-        expect(status.packageSizeFormatted).toBe(expected);
+        // "Downloading" messages should now return undefined
+        expect(status).toBeUndefined();
       }
     });
   });
@@ -636,7 +637,7 @@ describe('UvLogParser Integration Tests', () => {
 
       for (const [index, line] of completeFlow.entries()) {
         const status = parser.parseLine(line);
-        if (status.phase !== 'unknown') {
+        if (status && status.phase !== 'unknown') {
           expect(status.phase).toBe(expectedPhases[index]);
         }
       }
@@ -660,7 +661,7 @@ describe('UvLogParser Integration Tests', () => {
 
       for (const line of logSequence) {
         const status = parser.parseLine(line);
-        if (status.phase !== 'unknown') {
+        if (status && status.phase !== 'unknown') {
           phases.push(status.phase);
         }
       }

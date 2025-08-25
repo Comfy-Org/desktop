@@ -20,59 +20,65 @@ describe('UvLogParser - Torch Installation', () => {
       const line = 'Prepared 3 packages in 16.99s';
       const status = parser.parseLine(line);
 
-      expect(status.phase).toBe('prepared');
-      expect(status.preparedPackages).toBe(3);
-      expect(status.preparationTime).toBe(16_990); // 16.99s = 16990ms
-      expect(status.message).toBe('Prepared 3 packages in 16990ms');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('prepared');
+      expect(status?.preparedPackages).toBe(3);
+      expect(status?.preparationTime).toBe(16_990); // 16.99s = 16990ms
+      expect(status?.message).toBe('Prepared 3 packages in 16990ms');
     });
 
     it('should parse "Prepared" with seconds (from debug-torch-single.log)', () => {
       const line = 'Prepared 1 package in 16.18s';
       const status = parser.parseLine(line);
 
-      expect(status.phase).toBe('prepared');
-      expect(status.preparedPackages).toBe(1);
-      expect(status.preparationTime).toBe(16_180); // 16.18s = 16180ms
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('prepared');
+      expect(status?.preparedPackages).toBe(1);
+      expect(status?.preparationTime).toBe(16_180); // 16.18s = 16180ms
     });
 
     it('should parse "Uninstalled" with milliseconds', () => {
       const line = 'Uninstalled 2 packages in 46ms';
       const status = parser.parseLine(line);
 
-      expect(status.phase).toBe('installing');
-      expect(status.message).toBe('Uninstalled 2 packages in 46ms');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('installing');
+      expect(status?.message).toBe('Uninstalled 2 packages in 46ms');
     });
 
     it('should parse "Installed" with milliseconds and mark as complete', () => {
       const line = 'Installed 3 packages in 137ms';
       const status = parser.parseLine(line);
 
-      expect(status.phase).toBe('installed');
-      expect(status.installedPackages).toBe(3);
-      expect(status.installationTime).toBe(137);
-      expect(status.isComplete).toBe(true);
-      expect(status.message).toBe('Installed 3 packages in 137ms');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('installed');
+      expect(status?.installedPackages).toBe(3);
+      expect(status?.installationTime).toBe(137);
+      expect(status?.isComplete).toBe(true);
+      expect(status?.message).toBe('Installed 3 packages in 137ms');
     });
 
     it('should parse "Installed" singular package', () => {
       const line = 'Installed 1 package in 153ms';
       const status = parser.parseLine(line);
 
-      expect(status.phase).toBe('installed');
-      expect(status.installedPackages).toBe(1);
-      expect(status.installationTime).toBe(153);
-      expect(status.isComplete).toBe(true);
-      expect(status.message).toBe('Installed 1 package in 153ms');
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('installed');
+      expect(status?.installedPackages).toBe(1);
+      expect(status?.installationTime).toBe(153);
+      expect(status?.isComplete).toBe(true);
+      expect(status?.message).toBe('Installed 1 package in 153ms');
     });
 
     it('should handle edge case of seconds for Installed', () => {
       const line = 'Installed 5 packages in 2.5s';
       const status = parser.parseLine(line);
 
-      expect(status.phase).toBe('installed');
-      expect(status.installedPackages).toBe(5);
-      expect(status.installationTime).toBe(2500); // 2.5s = 2500ms
-      expect(status.isComplete).toBe(true);
+      expect(status).toBeDefined();
+      expect(status?.phase).toBe('installed');
+      expect(status?.installedPackages).toBe(5);
+      expect(status?.installationTime).toBe(2500); // 2.5s = 2500ms
+      expect(status?.isComplete).toBe(true);
     });
   });
 
@@ -90,7 +96,7 @@ describe('UvLogParser - Torch Installation', () => {
       let finalStatus;
       for (const line of lines) {
         const status = parser.parseLine(line);
-        if (status.phase !== 'unknown') {
+        if (status && status.phase !== 'unknown') {
           finalStatus = status;
         }
       }
@@ -110,7 +116,7 @@ describe('UvLogParser - Torch Installation', () => {
       let finalStatus;
       for (const line of lines) {
         const status = parser.parseLine(line);
-        if (status.phase !== 'unknown') {
+        if (status && status.phase !== 'unknown') {
           finalStatus = status;
         }
       }

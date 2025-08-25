@@ -13,17 +13,13 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     // These are just informational lines that should be ignored completely
     let status = parser.parseLine('Downloading torch-2.5.1-cp312-cp312-macosx_11_0_arm64.whl (63.4 MB)');
 
-    // Status should have empty message and no package info
-    expect(status.message).toBe('');
-    expect(status.currentPackage).toBeUndefined();
-    expect(status.totalBytes).toBeUndefined();
-    expect(status.downloadedBytes).toBeUndefined();
+    // Status should be undefined for ignored lines
+    expect(status).toBeUndefined();
 
     status = parser.parseLine('Downloading numpy-1.26.4-cp312-cp312-macosx_11_0_arm64.whl (14.1 MB)');
 
-    // Still should have empty message and no package info
-    expect(status.message).toBe('');
-    expect(status.currentPackage).toBeUndefined();
+    // Still should be undefined
+    expect(status).toBeUndefined();
 
     // Should not have created any downloads
     const torchProgress = parser.getDownloadProgress('torch');
@@ -31,8 +27,6 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
 
     expect(torchProgress).toBeUndefined();
     expect(numpyProgress).toBeUndefined();
-
-    expect(status.completedDownloads).toBeUndefined();
   });
 
   it('should only create downloads from get_wheel HTTP/2 requests', () => {
@@ -53,13 +47,15 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     let status = parser.parseLine(
       '  uv_installer::preparer::get_wheel name=torch==2.5.1, size=Some(66492975), url="https://files.pythonhosted.org/packages/torch-2.5.1.whl"'
     );
+    expect(status).toBeDefined();
 
     status = parser.parseLine(
       '  uv_installer::preparer::get_wheel name=numpy==1.26.4, size=Some(14795386), url="https://files.pythonhosted.org/packages/numpy-1.26.4.whl"'
     );
+    expect(status).toBeDefined();
 
     // Initially, no downloads are complete
-    expect(status.completedDownloads).toBe(0);
+    expect(status?.completedDownloads).toBe(0);
 
     // Simulate torch download completion
     // Need to establish stream associations first
@@ -71,7 +67,8 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     );
 
     // Now torch should be complete
-    expect(status.completedDownloads).toBe(1);
+    expect(status).toBeDefined();
+    expect(status?.completedDownloads).toBe(1);
 
     // Simulate numpy download completion
     parser.parseLine('  ↪ https://files.pythonhosted.org/packages/numpy-1.26.4.whl');
@@ -81,13 +78,17 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     );
 
     // Both downloads should be complete
-    expect(status.completedDownloads).toBe(2);
+    expect(status).toBeDefined();
+    expect(status?.completedDownloads).toBe(2);
   });
 
   it('should handle cached packages (no get_wheel) correctly', () => {
     // Simulating the UV log output where a package is cached
     let status = parser.parseLine('Downloading numpy-1.26.4-cp312-cp312-macosx_11_0_arm64.whl (14.1 MB)');
     // No get_wheel line follows for cached packages
+
+    // Status should be undefined for ignored "Downloading" lines
+    expect(status).toBeUndefined();
 
     // numpy should not be in downloads
     const numpyProgress = parser.getDownloadProgress('numpy');
@@ -102,7 +103,8 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     const torchProgress = parser.getDownloadProgress('torch');
     expect(torchProgress).toBeDefined();
 
-    expect(status.completedDownloads).toBe(0); // No downloads complete yet
+    expect(status).toBeDefined();
+    expect(status?.completedDownloads).toBe(0); // No downloads complete yet
   });
 
   it('should update completedDownloads count when END_STREAM is received', () => {
@@ -120,7 +122,8 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     );
 
     // Initially no downloads complete
-    expect(status.completedDownloads).toBe(0);
+    expect(status).toBeDefined();
+    expect(status?.completedDownloads).toBe(0);
 
     // Need to establish stream associations
     parser.parseLine('  ↪ https://files.pythonhosted.org/packages/torch-2.5.1.whl');
@@ -130,7 +133,8 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     status = parser.parseLine(
       '0.1s 10ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(1), flags: (0x1: END_STREAM) }'
     );
-    expect(status.completedDownloads).toBe(1);
+    expect(status).toBeDefined();
+    expect(status?.completedDownloads).toBe(1);
 
     parser.parseLine('  ↪ https://files.pythonhosted.org/packages/torchvision-0.20.1.whl');
     parser.parseLine('    stream: 3');
@@ -139,7 +143,8 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     status = parser.parseLine(
       '0.2s 20ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(3), flags: (0x1: END_STREAM) }'
     );
-    expect(status.completedDownloads).toBe(2);
+    expect(status).toBeDefined();
+    expect(status?.completedDownloads).toBe(2);
 
     parser.parseLine('  ↪ https://files.pythonhosted.org/packages/torchaudio-2.5.1.whl');
     parser.parseLine('    stream: 5');
@@ -148,6 +153,7 @@ describe('UvLogParser - Multi-package Download Tracking', () => {
     status = parser.parseLine(
       '0.3s 30ms DEBUG h2::codec::framed_read received, frame=Data { stream_id: StreamId(5), flags: (0x1: END_STREAM) }'
     );
-    expect(status.completedDownloads).toBe(3);
+    expect(status).toBeDefined();
+    expect(status?.completedDownloads).toBe(3);
   });
 });

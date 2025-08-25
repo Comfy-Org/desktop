@@ -114,7 +114,7 @@ export interface OverallState {
 
 export interface IUvLogParser {
   // Core parsing
-  parseLine(line: string): UvStatus;
+  parseLine(line: string): UvStatus | undefined;
 
   // State queries
   getOverallState(): OverallState;
@@ -194,7 +194,7 @@ export class UvLogParser implements IUvLogParser {
   private maxFrameSize = 16_384; // Default HTTP/2 frame size
   private readonly defaultFrameSize = 16_384;
 
-  parseLine(line: string): UvStatus {
+  parseLine(line: string): UvStatus | undefined {
     const trimmedLine = line.trim();
 
     // Check for errors first
@@ -360,11 +360,7 @@ export class UvLogParser implements IUvLogParser {
       // These "Downloading" lines are purely informational and should be ignored
       // Real download tracking comes from get_wheel and HTTP/2 frames
       // DO NOT return any status update - just continue processing
-      return {
-        phase: this.currentPhase,
-        message: '',
-        rawLine: line,
-      };
+      return;
     }
 
     // HTTP/2 frame tracking
@@ -430,11 +426,7 @@ export class UvLogParser implements IUvLogParser {
         }
       }
 
-      return {
-        phase: this.currentPhase,
-        message: '',
-        rawLine: line,
-      };
+      return;
     }
 
     // SETTINGS frame with max_frame_size
@@ -444,11 +436,7 @@ export class UvLogParser implements IUvLogParser {
         this.maxFrameSize = Number.parseInt(match[1], 10);
       }
 
-      return {
-        phase: this.currentPhase,
-        message: '',
-        rawLine: line,
-      };
+      return;
     }
 
     // Data frame tracking
@@ -691,11 +679,7 @@ export class UvLogParser implements IUvLogParser {
                 this.transfers.delete(streamId);
                 this.streamToPackage.delete(streamId);
               }
-              return {
-                phase: this.currentPhase,
-                message: '',
-                rawLine: line,
-              };
+              return;
             }
 
             progress.estimatedBytesReceived = Math.min(estimatedBytes, progress.totalBytes);
@@ -913,19 +897,11 @@ export class UvLogParser implements IUvLogParser {
     // Cached package handling
     if (trimmedLine.includes('Using cached')) {
       // Skip download phase for cached packages
-      return {
-        phase: this.currentPhase,
-        message: '',
-        rawLine: line,
-      };
+      return;
     }
 
-    // Unknown line
-    return {
-      phase: 'unknown',
-      message: '',
-      rawLine: line,
-    };
+    // Unknown line - return undefined
+    return;
   }
 
   getOverallState(): OverallState {
