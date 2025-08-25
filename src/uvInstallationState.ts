@@ -112,7 +112,15 @@ export class UvInstallationState extends EventEmitter {
     // Track individual package progress, not aggregated totals
     // Aggregation causes progress corruption when packages have different sizes
 
-    // First try to get progress for the current package
+    // If status has explicit byte values, prefer those (for testing and direct updates)
+    if (status.totalBytes && status.downloadedBytes !== undefined) {
+      return {
+        totalBytes: status.totalBytes,
+        downloadedBytes: status.downloadedBytes,
+      };
+    }
+
+    // Otherwise try to get progress from the parser for the current package
     if (status.currentPackage && this.uvLogParser) {
       const progress = this.uvLogParser.getDownloadProgress(status.currentPackage);
       if (progress && progress.totalBytes > 0) {
@@ -125,22 +133,11 @@ export class UvInstallationState extends EventEmitter {
       }
     }
 
-    // Fallback to status values if available
-    const totalBytes = status.totalBytes || 0;
-    const downloadedBytes = status.downloadedBytes || 0;
-
-    // Final fallback: try to get progress from parser if status is incomplete
-    if (!totalBytes && status.currentPackage && this.uvLogParser) {
-      const progress = this.uvLogParser.getDownloadProgress(status.currentPackage);
-      if (progress) {
-        return {
-          totalBytes: progress.totalBytes,
-          downloadedBytes: progress.bytesReceived || progress.estimatedBytesReceived || 0,
-        };
-      }
-    }
-
-    return { totalBytes, downloadedBytes };
+    // Final fallback
+    return {
+      totalBytes: status.totalBytes || 0,
+      downloadedBytes: status.downloadedBytes || 0,
+    };
   }
 
   /**
@@ -262,20 +259,25 @@ export class UvInstallationState extends EventEmitter {
         // Adaptive rate limiting based on download size
         // Large downloads need more frequent updates to show progress
         const minInterval = isLargeDownload
-          ? 100 // Large downloads: allow updates every 100ms (10/sec)
+          ? 200 // Large downloads: allow updates every 200ms (5/sec)
           : 250; // Small downloads: max 4 updates per second
 
         // Force update if it's been too long (prevent silent periods)
-        const forceUpdateInterval = isLargeDownload ? 500 : 1000; // 500ms for large, 1s for small
+        const forceUpdateInterval = isLargeDownload ? 1000 : 2000; // 1s for large, 2s for small
 
-        // Send update if enough time has passed OR if we're forcing due to timeout
-        if (timeSinceLastProgress < minInterval && // Check if we should force an update anyway
-          timeSinceLastProgress < forceUpdateInterval) {
-            return false; // Still within acceptable silent period
-          }
+        // Send update if enough time has passed
+        if (timeSinceLastProgress >= minInterval) {
+          this.lastDownloadProgressTime = now;
+          return true;
+        }
 
-        this.lastDownloadProgressTime = now;
-        return true;
+        // Force update if it's been too long (prevent silent periods)
+        if (timeSinceLastProgress >= forceUpdateInterval) {
+          this.lastDownloadProgressTime = now;
+          return true;
+        }
+
+        return false; // Still within rate limit
       }
 
       // For non-progress-only updates with byte changes, use normal threshold
