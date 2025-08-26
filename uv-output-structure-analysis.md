@@ -25,6 +25,11 @@ The UV package installation process follows these 11 major stages:
 - Fixed: `DEBUG uv uv` (preceded by spaces and timestamp)
 - Variable: timestamp (`0.000172s`), version (`0.7.9`), commit hash (`13a86a23b`), date (`2024-11-14`)
 
+**Regex pattern:**
+```regex
+^\s+[\d.]+\w+\s+DEBUG\s+uv\s+uv\s+[\d.]+\s+\([a-f0-9]+\s+\d{4}-\d{2}-\d{2}\)
+```
+
 ### 3. Dependency Resolution Setup (~40-50ms)
 **Output:**
 ```
@@ -40,6 +45,11 @@ The UV package installation process follows these 11 major stages:
 - Fixed: `DEBUG uv_resolver::resolver Solving with installed Python version:` (preceded by timestamps)
 - Variable: timestamps (`0.049674s   0ms`), Python version (`3.12.9`)
 
+**Regex pattern:**
+```regex
+^\s+[\d.]+\w+\s+[\d.]+\w+\s+DEBUG\s+uv_resolver::resolver\s+Solving\s+with\s+installed\s+Python\s+version:\s+[\d.]+
+```
+
 ### 4. Package Metadata Download (~50-300ms)
 **Output:**
 ```
@@ -54,6 +64,11 @@ The UV package installation process follows these 11 major stages:
 **Pattern breakdown:**
 - Fixed: `uv_client::registry_client::parse_simple_api package=` (preceded by spaces)
 - Variable: package name (`scipy`)
+
+**Regex pattern:**
+```regex
+^\s*uv_client::registry_client::parse_simple_api\s+package=\w+
+```
 
 ### 5. Dependency Resolution with PubGrub (~300-425ms)
 **Output:**
@@ -72,6 +87,11 @@ The UV package installation process follows these 11 major stages:
 - Variable: timestamps (`0.303437s 253ms`), package ID (`1`), version (`2.3.2`)
 - Note: This is the first PubGrub solver decision for a real package
 
+**Regex pattern:**
+```regex
+^\s+[\d.]+\w+\s+[\d.]+\w+\s+INFO\s+pubgrub::internal::partial_solution\s+add_decision:\s+Id::<PubGrubPackage>\(\d+\)\s+@\s+[\d.]+\s+without\s+checking\s+dependencies
+```
+
 ### 6. Resolution Summary (~425ms)
 **Output:**
 ```
@@ -88,6 +108,11 @@ Resolved 12 packages in 379ms
 - Fixed: `Resolved ` ... ` packages in ` ... (time)
 - Variable: package count (`12`), duration with flexible units (`379ms`, `2s`, `1m`, etc.)
 - Note: No leading spaces in this output
+
+**Regex pattern:**
+```regex
+^Resolved\s+\d+\s+packages?\s+in\s+[\d.]+\w+
+```
 
 ### 7. Installation Planning (~427-428ms)
 **Output:**
@@ -106,6 +131,11 @@ Resolved 12 packages in 379ms
 - Variable: timestamp (`0.427481s`), package spec (`scipy==1.16.1`)
 - Note: First appearance indicates start of installation planning
 
+**Regex pattern:**
+```regex
+^\s*[\d.]+\w+\s+DEBUG\s+uv_installer::plan\s+Identified\s+uncached\s+distribution:\s+\S+==[\d.]+
+```
+
 ### 8. Package Downloads (~428ms-21.7s)
 **Output:**
 ```
@@ -122,6 +152,11 @@ Resolved 12 packages in 379ms
 - Fixed: `uv_installer::preparer::prepare total=`
 - Variable: package count (`3`)
 
+**Regex pattern:**
+```regex
+^\s*uv_installer::preparer::prepare\s+total=\d+
+```
+
 **Download status output:**
 ```
  Downloading numpy
@@ -131,6 +166,11 @@ Resolved 12 packages in 379ms
 **Pattern breakdown:**
 - Fixed: `Downloading` (with leading space)
 - Variable: package name
+
+**Regex pattern:**
+```regex
+^\s+Downloading\s+\w+
+```
 
 ### 9. Package Preparation (~21.72s)
 **Output:**
@@ -148,6 +188,11 @@ Prepared 3 packages in 21.72s
 - Fixed: `Prepared`, `packages in`
 - Variable: package count (`3`), duration with flexible units (`21.72s`, `500ms`, `2m`, etc.)
 
+**Regex pattern:**
+```regex
+^Prepared\s+\d+\s+packages?\s+in\s+[\d.]+\w+
+```
+
 ### 10. Installation (~21.72s-21.93s)
 **Output:**
 ```
@@ -164,6 +209,11 @@ Prepared 3 packages in 21.72s
 - Fixed: `uv_installer::installer::install_blocking num_wheels=`
 - Variable: wheel count (`3`)
 
+**Regex pattern:**
+```regex
+^\s*uv_installer::installer::install_blocking\s+num_wheels=\d+
+```
+
 **Installation complete output:**
 ```
 Installed 3 packages in 215ms
@@ -171,6 +221,11 @@ Installed 3 packages in 215ms
 **Pattern breakdown:**
 - Fixed: `Installed`, `packages in`
 - Variable: package count (`3`), duration with flexible units (`215ms`, `2s`, `1m`, etc.)
+
+**Regex pattern:**
+```regex
+^Installed\s+\d+\s+packages?\s+in\s+[\d.]+\w+
+```
 
 ### 11. Final Summary (~21.93s)
 **Output:**
@@ -189,6 +244,11 @@ Installed 3 packages in 215ms
 **Pattern breakdown:**
 - Fixed: Leading space, `+` symbol, `==`
 - Variable: package name (`numpy`), version (`2.3.2`)
+
+**Regex pattern:**
+```regex
+^\s+\+\s+\S+==[\d.]+
+```
 
 ## Log Structure Observations
 
