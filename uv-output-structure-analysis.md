@@ -15,6 +15,12 @@ The UV package installation process follows these 11 major stages:
 ```
     0.000172s DEBUG uv uv 0.7.9 (13a86a23b 2024-11-14)
 ```
+**Why this marks the phase start:**
+- First actual log output after process launch
+- UV announcing its version indicates the application has successfully started
+- Precedes all environment discovery operations (Python interpreter search, venv detection)
+- Clear transition from silence (initializing) to active logging
+
 **Pattern breakdown:**
 - Fixed: `DEBUG uv uv` (preceded by spaces and timestamp)
 - Variable: timestamp (`0.000172s`), version (`0.7.9`), commit hash (`13a86a23b`), date (`2024-11-14`)
@@ -24,6 +30,12 @@ The UV package installation process follows these 11 major stages:
 ```
     0.049674s   0ms DEBUG uv_resolver::resolver Solving with installed Python version: 3.12.9
 ```
+**Why this marks the phase start:**
+- First appearance of `uv_resolver::resolver` module indicates resolver initialization
+- "Solving with" explicitly announces the start of dependency resolution preparation
+- Follows completion of environment discovery (Python found, venv validated)
+- Marks transition from environment setup to actual package resolution work
+
 **Pattern breakdown:**
 - Fixed: `DEBUG uv_resolver::resolver Solving with installed Python version:` (preceded by timestamps)
 - Variable: timestamps (`0.049674s   0ms`), Python version (`3.12.9`)
@@ -33,6 +45,12 @@ The UV package installation process follows these 11 major stages:
 ```
          uv_client::registry_client::parse_simple_api package=scipy
 ```
+**Why this marks the phase start:**
+- First `parse_simple_api` call indicates actual metadata retrieval has begun
+- Represents shift from checking caches to actively downloading package information
+- Simple API is PyPI's metadata format - parsing it means we've received data from the network
+- Previous cache misses and connection establishment were preparation; this is execution
+
 **Pattern breakdown:**
 - Fixed: `uv_client::registry_client::parse_simple_api package=` (preceded by spaces)
 - Variable: package name (`scipy`)
@@ -42,6 +60,13 @@ The UV package installation process follows these 11 major stages:
 ```
     0.303437s 253ms INFO pubgrub::internal::partial_solution add_decision: Id::<PubGrubPackage>(1) @ 2.3.2 without checking dependencies
 ```
+**Why this marks the phase start:**
+- First PubGrub solver decision for an actual package (not Python itself)
+- INFO level indicates a significant solver decision vs DEBUG preparatory work
+- "add_decision" shows the solver is now making concrete version choices
+- Metadata download phase has provided enough information for solving to begin
+- Package ID (1) indicates this is the first real package being resolved
+
 **Pattern breakdown:**
 - Fixed: `INFO pubgrub::internal::partial_solution add_decision: Id::<PubGrubPackage>(` ... `) @ ` ... ` without checking dependencies`
 - Variable: timestamps (`0.303437s 253ms`), package ID (`1`), version (`2.3.2`)
@@ -52,6 +77,13 @@ The UV package installation process follows these 11 major stages:
 ```
 Resolved 12 packages in 379ms
 ```
+**Why this marks the phase start:**
+- Clear completion message for the entire resolution process
+- Summary format ("Resolved X packages") indicates a phase boundary
+- No debug/info prefix - this is a user-facing status message
+- Provides final count and timing, signaling resolution is complete
+- Next actions will be installation-related, not resolution-related
+
 **Pattern breakdown:**
 - Fixed: `Resolved ` ... ` packages in ` ... `ms`
 - Variable: package count (`12`), duration (`379`)
@@ -62,6 +94,13 @@ Resolved 12 packages in 379ms
 ```
 0.427481s DEBUG uv_installer::plan Identified uncached distribution: scipy==1.16.1
 ```
+**Why this marks the phase start:**
+- First appearance of `uv_installer::plan` module shows installer activation
+- "Identified uncached distribution" indicates analysis of what needs downloading
+- Occurs immediately after resolution summary, showing logical progression
+- Planning phase determines what's already installed vs what needs fetching
+- Distinct from actual downloading - this is the analysis/planning step
+
 **Pattern breakdown:**
 - Fixed: `DEBUG uv_installer::plan Identified uncached distribution: `
 - Variable: timestamp (`0.427481s`), package spec (`scipy==1.16.1`)
@@ -72,6 +111,13 @@ Resolved 12 packages in 379ms
 ```
  uv_installer::preparer::prepare total=3
 ```
+**Why this marks the phase start:**
+- `preparer::prepare` explicitly indicates preparation (downloading) is starting
+- "total=3" shows the preparer knows how many packages to fetch
+- Follows immediately after planning phase identified what needs downloading
+- Distinct from planning - this begins actual network operations for wheels
+- Thousands of subsequent HTTP/2 data frames confirm active downloading
+
 **Pattern breakdown:**
 - Fixed: `uv_installer::preparer::prepare total=`
 - Variable: package count (`3`)
@@ -91,6 +137,13 @@ Resolved 12 packages in 379ms
 ```
 Prepared 3 packages in 21.72s
 ```
+**Why this marks the phase start:**
+- Summary message confirms all downloads are complete
+- "Prepared" indicates packages are ready for installation
+- Timing (21.72s) matches the download duration, confirming phase completion
+- User-facing message (no DEBUG prefix) marks significant phase boundary
+- Downloads are done, but installation hasn't started yet
+
 **Pattern breakdown:**
 - Fixed: `Prepared`, `packages in`, `s` suffix
 - Variable: package count (`3`), duration (`21.72`)
@@ -100,6 +153,13 @@ Prepared 3 packages in 21.72s
 ```
  uv_installer::installer::install_blocking num_wheels=3
 ```
+**Why this marks the phase start:**
+- `install_blocking` explicitly announces installation is beginning
+- Different module (`installer::`) from preparation (`preparer::`)
+- "num_wheels=3" confirms it's ready to install the prepared packages
+- Occurs immediately after preparation summary
+- Subsequent `install_wheel` and `link_wheel_files` confirm active installation
+
 **Pattern breakdown:**
 - Fixed: `uv_installer::installer::install_blocking num_wheels=`
 - Variable: wheel count (`3`)
@@ -119,6 +179,13 @@ Installed 3 packages in 215ms
  + scipy==1.16.1
  + torch==2.8.0
 ```
+**Why this marks the phase start:**
+- Appears immediately after "Installed X packages" summary
+- "+" prefix is UV's standard notation for newly installed packages
+- User-facing output showing final results of the operation
+- Clean format without timestamps/debug info indicates completion reporting
+- Last meaningful output before process cleanup/termination
+
 **Pattern breakdown:**
 - Fixed: Leading space, `+` symbol, `==`
 - Variable: package name (`numpy`), version (`2.3.2`)
