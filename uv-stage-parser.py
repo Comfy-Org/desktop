@@ -18,7 +18,6 @@ class UVStage(Enum):
     RESOLUTION_SUMMARY = "resolution_summary"
     INSTALLATION_PLANNING = "installation_planning"
     PACKAGE_DOWNLOADS = "package_downloads"
-    PACKAGE_PREPARATION = "package_preparation"
     INSTALLATION = "installation"
     FINAL_SUMMARY = "final_summary"
     COMPLETE = "complete"
