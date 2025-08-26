@@ -377,31 +377,15 @@ Where:
 - `max_frame_size`: The configured maximum frame size from Settings
 - `last_frame_size`: Size of the final frame (≤ max_frame_size)
 
-### Parallel Download Timeline
-
-Downloads can run concurrently using HTTP/2 stream multiplexing. In the test data:
-
-1. **StreamId 7** (70.2 MiB package)
-   - Start: Headers frame at 0.439755s (line 865)
-   - First data: 0.447906s (line 869)
-   - End: END_STREAM at 22.150391s (line 7433)
-   - Duration: ~21.71s
-
-2. **StreamId 11** (4.9 MiB package)
-   - Start: Headers frame at 0.486104s (line 881)
-   - First data: 0.486114s (line 882)
-   - End: END_STREAM at 3.751904s (line 1945)
-   - Duration: ~3.27s
-
-3. **StreamId 9** (19.9 MiB package)
-   - Start: Headers frame at 0.504245s (line 890)
-   - First data: 0.536391s (line 902)
-   - End: END_STREAM at 10.751394s (line 4131)
-   - Duration: ~10.25s
-
 ### Download Concurrency
 
-UV leverages HTTP/2 multiplexing to download multiple packages simultaneously over a single connection. The number of concurrent downloads depends on various factors including server limits, network conditions, and UV's internal scheduling.
+UV leverages HTTP/2 multiplexing to download multiple packages simultaneously over a single connection. Each package download:
+
+1. Begins when a Headers frame is received with a unique StreamId
+2. Receives multiple Data frames containing chunks of the wheel file
+3. Completes when a Data frame with the END_STREAM flag is received
+
+The number of concurrent downloads and their stream IDs are determined dynamically based on various factors including server limits, network conditions, and UV's internal scheduling.
 
 ---
 *This document represents a complete analysis of UV pip install output structure*
