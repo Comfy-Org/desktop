@@ -147,11 +147,8 @@ export interface PackageInfo {
   /** Package specification (e.g., "package==1.2.3") */
   specification?: string;
 
-  /** Size in bytes if known */
-  sizeBytes?: number;
-
-  /** Human-readable size (e.g., "15.3 MiB") */
-  sizeFormatted?: string;
+  /** Size as shown in output (e.g., "15.3 MiB") */
+  size?: string;
 }
 
 /**
@@ -182,11 +179,8 @@ export interface ResolutionSummary extends ParsedOutput {
   /** Number of packages resolved */
   packageCount: number;
 
-  /** Time taken to resolve */
+  /** Time taken to resolve as shown in output (e.g., "379ms") */
   duration: string;
-
-  /** Duration in milliseconds if parseable */
-  durationMs?: number;
 }
 
 /**
@@ -219,15 +213,6 @@ export interface DownloadProgress extends ParsedOutput {
 
   /** Download state */
   state: 'started' | 'progress' | 'completed';
-
-  /** Bytes downloaded so far */
-  bytesDownloaded?: number;
-
-  /** Total bytes to download */
-  bytesTotal?: number;
-
-  /** Progress percentage */
-  percentage?: number;
 }
 
 /**
@@ -239,11 +224,8 @@ export interface PreparationSummary extends ParsedOutput {
   /** Number of packages prepared */
   packageCount: number;
 
-  /** Time taken to prepare */
+  /** Time taken to prepare as shown in output (e.g., "21.72s") */
   duration: string;
-
-  /** Duration in seconds if parseable */
-  durationSeconds?: number;
 }
 
 /**
@@ -255,11 +237,8 @@ export interface InstallationSummary extends ParsedOutput {
   /** Number of packages installed */
   packageCount: number;
 
-  /** Time taken to install */
+  /** Time taken to install as shown in output (e.g., "215ms") */
   duration: string;
-
-  /** Duration in milliseconds if parseable */
-  durationMs?: number;
 }
 
 /**
