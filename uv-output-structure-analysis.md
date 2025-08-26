@@ -55,7 +55,7 @@ This stage handles metadata acquisition through two possible paths:
 #### Path A: Cache Hit (Fast Path)
 **Output:**
 ```
-DEBUG uv_client::cached_client Found fresh response for: https://pypi.org/simple/PACKAGE/
+          0.026451s   1ms DEBUG uv_client::cached_client Found fresh response for: https://pypi.org/simple/torch/
 ```
 
 **Pattern breakdown:**
@@ -137,12 +137,12 @@ The installer analyzes what actions are needed. Messages vary based on cache sta
 - **`Identified uncached distribution:`** - Needs to be downloaded
 - **`Unnecessary package:`** - Will be removed as not required
 
-**Output Examples:**
+**Output:**
 ```
-DEBUG uv_installer::plan Registry requirement already cached: scipy==1.16.1
-DEBUG uv_installer::plan Requirement already installed: numpy==2.3.2
-DEBUG uv_installer::plan Identified uncached distribution: torch==2.8.0
-DEBUG uv_installer::plan Unnecessary package: old-package==1.0.0
+    0.041008s DEBUG uv_installer::plan Registry requirement already cached: scipy==1.16.1
+    0.041039s DEBUG uv_installer::plan Requirement already installed: markupsafe==3.0.2
+    0.427481s DEBUG uv_installer::plan Identified uncached distribution: scipy==1.16.1
+    0.041755s DEBUG uv_installer::plan Unnecessary package: pyjwt==2.10.1
 ```
 
 **Pattern breakdown:**
