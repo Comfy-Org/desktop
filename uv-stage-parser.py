@@ -13,7 +13,6 @@ class UVStage(Enum):
     INITIALIZING = "initializing"
     STARTUP = "startup"
     RESOLUTION_SETUP = "resolution_setup"
-    CACHE_CHECKING = "cache_checking"
     METADATA_DOWNLOAD = "metadata_download"
     DEPENDENCY_RESOLUTION = "dependency_resolution"
     RESOLUTION_SUMMARY = "resolution_summary"
@@ -57,13 +56,7 @@ class UVStageParser:
             if "Adding direct dependency" in line:
                 pass  # Still in resolution setup
             elif "No cache entry for" in line and "simple" in line:
-                self.current_stage = UVStage.CACHE_CHECKING
-                
-        elif self.current_stage == UVStage.CACHE_CHECKING:
-            if "starting new connection" in line:
-                pass  # Still cache checking/network init
-            elif "connected to" in line:
-                pass  # Still establishing connections
+                pass  # Cache miss, but still in resolution setup
             elif "parse_simple_api" in line or "registry_client::parse_simple_api" in line:
                 self.current_stage = UVStage.METADATA_DOWNLOAD
                 
