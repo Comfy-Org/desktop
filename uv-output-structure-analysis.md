@@ -11,16 +11,16 @@ The UV package installation process follows these 12 major stages:
 - Represents the startup phase before UV begins processing
 
 ### 2. Startup and Environment Discovery (~0-40ms)
-**Log line:**
+**Output:**
 ```
-    0.000172s DEBUG uv uv 0.7.9 (13a86a23b 2025-05-30)
+    0.000172s DEBUG uv uv 0.7.9 (13a86a23b 2024-11-14)
 ```
 **Pattern breakdown:**
 - Fixed: `DEBUG uv uv` (preceded by spaces and timestamp)
-- Variable: timestamp (`0.000172s`), version (`0.7.9`), commit hash (`13a86a23b`), date (`2025-05-30`)
+- Variable: timestamp (`0.000172s`), version (`0.7.9`), commit hash (`13a86a23b`), date (`2024-11-14`)
 
 ### 3. Dependency Resolution Setup (~40-50ms)
-**Log line:**
+**Output:**
 ```
     0.049674s   0ms DEBUG uv_resolver::resolver Solving with installed Python version: 3.12.9
 ```
@@ -29,7 +29,7 @@ The UV package installation process follows these 12 major stages:
 - Variable: timestamps (`0.049674s   0ms`), Python version (`3.12.9`)
 
 ### 4. Cache Checking and Network Initialization (~50-120ms)
-**Log line:**
+**Output:**
 ```
           0.053982s   0ms DEBUG uv_client::cached_client No cache entry for: https://pypi.org/simple/numpy/
 ```
@@ -39,7 +39,7 @@ The UV package installation process follows these 12 major stages:
 - Note: The URL path will vary by package
 
 ### 5. Package Metadata Download (~120-300ms)
-**Log line:**
+**Output:**
 ```
          uv_client::registry_client::parse_simple_api package=scipy
 ```
@@ -48,7 +48,7 @@ The UV package installation process follows these 12 major stages:
 - Variable: package name (`scipy`)
 
 ### 6. Dependency Resolution with PubGrub (~300-425ms)
-**Log line:**
+**Output:**
 ```
     0.303437s 253ms INFO pubgrub::internal::partial_solution add_decision: Id::<PubGrubPackage>(1) @ 2.3.2 without checking dependencies
 ```
@@ -58,19 +58,19 @@ The UV package installation process follows these 12 major stages:
 - Note: This is the first PubGrub solver decision for a real package
 
 ### 7. Resolution Summary (~425ms)
-**Log line:**
+**Output:**
 ```
 Resolved 12 packages in 379ms
 ```
 **Pattern breakdown:**
 - Fixed: `Resolved ` ... ` packages in ` ... `ms`
 - Variable: package count (`12`), duration (`379`)
-- Note: No leading spaces on this line
+- Note: No leading spaces in this output
 
 ### 8. Installation Planning (~427-428ms)
-**Log line:**
+**Output:**
 ```
-    0.427481s DEBUG uv_installer::plan Identified uncached distribution: scipy==1.16.1
+0.427481s DEBUG uv_installer::plan Identified uncached distribution: scipy==1.16.1
 ```
 **Pattern breakdown:**
 - Fixed: `DEBUG uv_installer::plan Identified uncached distribution: `
@@ -78,7 +78,7 @@ Resolved 12 packages in 379ms
 - Note: First appearance indicates start of installation planning
 
 ### 9. Package Downloads (~428ms-21.7s)
-**Log line:**
+**Output:**
 ```
  uv_installer::preparer::prepare total=3
 ```
@@ -86,7 +86,7 @@ Resolved 12 packages in 379ms
 - Fixed: `uv_installer::preparer::prepare total=`
 - Variable: package count (`3`)
 
-**Download status lines:**
+**Download status output:**
 ```
  Downloading numpy
  Downloading scipy
@@ -97,7 +97,7 @@ Resolved 12 packages in 379ms
 - Variable: package name
 
 ### 10. Package Preparation (~21.72s)
-**Log line:**
+**Output:**
 ```
 Prepared 3 packages in 21.72s
 ```
@@ -106,7 +106,7 @@ Prepared 3 packages in 21.72s
 - Variable: package count (`3`), duration (`21.72`)
 
 ### 11. Installation (~21.72s-21.93s)
-**Log line:**
+**Output:**
 ```
  uv_installer::installer::install_blocking num_wheels=3
 ```
@@ -114,7 +114,7 @@ Prepared 3 packages in 21.72s
 - Fixed: `uv_installer::installer::install_blocking num_wheels=`
 - Variable: wheel count (`3`)
 
-**Installation complete line:**
+**Installation complete output:**
 ```
 Installed 3 packages in 215ms
 ```
@@ -123,7 +123,7 @@ Installed 3 packages in 215ms
 - Variable: package count (`3`), duration (`215`)
 
 ### 12. Final Summary (~21.93s)
-**Log lines:**
+**Output:**
 ```
  + numpy==2.3.2
  + scipy==1.16.1
