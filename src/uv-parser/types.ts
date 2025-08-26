@@ -116,22 +116,6 @@ export interface ParsedOutput {
 }
 
 /**
- * Stage transition event
- */
-export interface StageTransition extends ParsedOutput {
-  type: 'stage_transition';
-
-  /** Previous stage */
-  fromStage: UVStage;
-
-  /** New stage */
-  toStage: UVStage;
-
-  /** Optional trigger pattern that caused the transition */
-  trigger?: string;
-}
-
-/**
  * Log message from UV debug output
  */
 export interface LogMessage extends ParsedOutput {
@@ -346,10 +330,22 @@ export interface StatusMessage extends ParsedOutput {
 }
 
 /**
+ * Final package list item (e.g., " + numpy==2.1.0")
+ */
+export interface FinalPackageListItem extends ParsedOutput {
+  type: 'final_package_list_item';
+
+  /** Package information */
+  package: PackageInfo;
+
+  /** Operation ('+' for added, '-' for removed) */
+  operation: '+' | '-';
+}
+
+/**
  * Union type of all possible parsed output types
  */
 export type UVParsedOutput =
-  | StageTransition
   | LogMessage
   | ResolutionEvent
   | ResolutionSummary
@@ -360,17 +356,15 @@ export type UVParsedOutput =
   | CacheEvent
   | Http2Frame
   | WarningOrError
-  | StatusMessage;
+  | StatusMessage
+  | FinalPackageListItem;
 
 /**
- * Parser state tracking
+ * State tracking for UV installation process (used by state manager, not parser)
  */
-export interface ParserState {
+export interface UVState {
   /** Current stage of the installation */
   currentStage: UVStage;
-
-  /** History of stage transitions */
-  stageHistory: StageTransition[];
 
   /** Packages being tracked */
   packages: Map<string, PackageInfo>;
