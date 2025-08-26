@@ -279,19 +279,6 @@ export interface InstallationSummary extends ParsedOutput {
 }
 
 /**
- * Final package list entry
- */
-export interface FinalPackage extends ParsedOutput {
-  type: 'final_package';
-
-  /** Package installed */
-  package: PackageInfo;
-
-  /** Installation state ('+' for newly installed, '-' for removed) */
-  operation: '+' | '-';
-}
-
-/**
  * Cache operation event
  */
 export interface CacheEvent extends ParsedOutput {
@@ -370,7 +357,6 @@ export type UVParsedOutput =
   | DownloadProgress
   | PreparationSummary
   | InstallationSummary
-  | FinalPackage
   | CacheEvent
   | Http2Frame
   | WarningOrError
