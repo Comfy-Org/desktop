@@ -73,34 +73,6 @@ export interface CustomPattern {
 }
 
 /**
- * Result of parsing a single line (deprecated - use UVParsedOutput directly)
- * @deprecated The stateless parser returns UVParsedOutput directly
- */
-export interface ParseLineResult {
-  /**
-   * Parsed output object(s) from the line.
-   * Can be undefined if line is not relevant.
-   * Can be multiple outputs if line triggers multiple events.
-   */
-  outputs?: UVParsedOutput | UVParsedOutput[];
-
-  /**
-   * Whether this line caused a stage transition
-   */
-  stageChanged: boolean;
-
-  /**
-   * New stage if transition occurred
-   */
-  newStage?: UVStage;
-
-  /**
-   * Any error that occurred during parsing
-   */
-  error?: Error;
-}
-
-/**
  * Statistics and summary after parsing completion
  */
 export interface ParseSummary {
