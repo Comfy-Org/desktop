@@ -301,5 +301,114 @@ Installed 3 packages in 215ms
 - PubGrub solver provides fast dependency resolution
 - Hardlinks used for efficient disk usage
 
+## Individual Package Download Analysis
+
+### Download Stream Identification
+
+Each package download is associated with a specific HTTP/2 stream. The downloads run in parallel using HTTP/2 multiplexing.
+
+#### Stream Start Markers
+
+Each download begins with a specific sequence:
+
+1. **HTTP/2 Headers Frame Reception** (actual download start)
+   ```
+   received, frame=Headers { stream_id: StreamId(N), flags: (0x4: END_HEADERS) }
+   ```
+   - This marks the server's response to the wheel download request
+   - The StreamId uniquely identifies this download stream
+   - END_HEADERS flag (0x4) indicates all headers have been received
+
+2. **Cache File Creation**
+   ```
+   uv_client::cached_client::new_cache file=/Users/blake/.cache/uv/wheels-v5/pypi/PACKAGE/VERSION.http
+   ```
+   - Creates a cache entry for the downloading wheel
+
+3. **Wheel Database Entry**
+   ```
+   uv_distribution::distribution_database::wheel wheel=PACKAGE==VERSION
+   ```
+   - Registers the wheel in the distribution database
+
+4. **User-Friendly Download Message**
+   ```
+   Downloading PACKAGE (SIZE MiB)
+   ```
+   - Displays progress to the user with package name and size
+
+#### Stream-to-Package Mapping (from test data)
+
+- **torch**: StreamId(7) - 70.2 MiB
+- **numpy**: StreamId(11) - 4.9 MiB  
+- **scipy**: StreamId(9) - 19.9 MiB
+
+### HTTP/2 Frame Size Configuration
+
+The max frame size is configured during HTTP/2 connection setup:
+```
+Settings { flags: (0x0), enable_push: 0, initial_window_size: 2097152, max_frame_size: 16384, max_header_list_size: 16384 }
+```
+
+**Key parameter: `max_frame_size: 16384`**
+- Each data frame contains up to 16,384 bytes (16 KB)
+- All frames except the last one for a stream will be exactly 16,384 bytes
+- The last frame may be smaller and includes the END_STREAM flag
+
+### Download Progress Tracking
+
+After the Headers frame, multiple Data frames are received:
+```
+received, frame=Data { stream_id: StreamId(N) }
+```
+
+Downloads complete when a Data frame with the END_STREAM flag is received:
+```
+received, frame=Data { stream_id: StreamId(N), flags: (0x1: END_STREAM) }
+```
+
+### Calculating Downloaded Bytes
+
+To calculate total bytes downloaded for a package:
+```
+total_bytes = (number_of_data_frames - 1) * 16384 + last_frame_size
+```
+
+Where:
+- `number_of_data_frames`: Total Data frames received for the stream
+- `16384`: The max_frame_size (all frames except last are this size)
+- `last_frame_size`: Size of the final frame (≤ 16384 bytes)
+
+### Parallel Download Timeline
+
+Based on the test data analysis:
+
+1. **torch (StreamId 7)**
+   - Start: Headers frame at 0.439755s (line 865)
+   - First data: 0.447906s (line 869)
+   - End: END_STREAM at 22.150391s (line 7433)
+   - Duration: ~21.71s
+
+2. **numpy (StreamId 11)**
+   - Start: Headers frame at 0.486104s (line 881)
+   - First data: 0.486114s (line 882)
+   - End: END_STREAM at 3.751904s (line 1945)
+   - Duration: ~3.27s
+
+3. **scipy (StreamId 9)**
+   - Start: Headers frame at 0.504245s (line 890)
+   - First data: 0.536391s (line 902)
+   - End: END_STREAM at 10.751394s (line 4131)
+   - Duration: ~10.25s
+
+### Download Overlap Analysis
+
+All three downloads run concurrently:
+- **numpy & torch**: 3.27s overlap (numpy completes first)
+- **scipy & torch**: 10.25s overlap (scipy completes second)
+- **numpy & scipy**: 3.27s overlap (both running together)
+
+Maximum concurrent downloads: 3
+
 ---
 *This document represents a complete analysis of UV pip install output structure*
