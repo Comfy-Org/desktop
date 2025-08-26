@@ -330,10 +330,10 @@ export interface StatusMessage extends ParsedOutput {
 }
 
 /**
- * Final package list item (e.g., " + numpy==2.1.0")
+ * Changed package in the final summary (e.g., " + numpy==2.1.0")
  */
-export interface FinalPackageListItem extends ParsedOutput {
-  type: 'final_package_list_item';
+export interface ChangedPackage extends ParsedOutput {
+  type: 'changed_package';
 
   /** Package information */
   package: PackageInfo;
@@ -357,7 +357,7 @@ export type UVParsedOutput =
   | Http2Frame
   | WarningOrError
   | StatusMessage
-  | FinalPackageListItem;
+  | ChangedPackage;
 
 /**
  * State tracking for UV installation process (used by state manager, not parser)
