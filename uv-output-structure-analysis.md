@@ -15,7 +15,7 @@ The UV package installation process follows these major stages (some may be skip
 ```
     0.000172s DEBUG uv uv 0.7.9 (13a86a23b 2024-11-14)
 ```
-**Why this marks the phase start:**
+**Why this marks the phase:**
 - First actual log output after process launch
 - UV announcing its version indicates the application has successfully started
 - Precedes all environment discovery operations (Python interpreter search, venv detection)
@@ -34,7 +34,7 @@ The UV package installation process follows these major stages (some may be skip
 ```
     0.049674s   0ms DEBUG uv_resolver::resolver Solving with installed Python version: 3.12.9
 ```
-**Why this marks the phase start:**
+**Why this marks the phase:**
 - First appearance of `uv_resolver::resolver` module indicates resolver initialization
 - "Solving with" explicitly announces the start of dependency resolution preparation
 - Follows completion of environment discovery (Python found, venv validated)
@@ -95,7 +95,7 @@ This stage handles metadata acquisition through two possible paths:
 ```
     0.303437s 253ms INFO pubgrub::internal::partial_solution add_decision: Id::<PubGrubPackage>(1) @ 2.3.2 without checking dependencies
 ```
-**Why this marks the phase start:**
+**Why this marks the phase:**
 - First PubGrub solver decision for an actual package (not Python itself)
 - INFO level indicates a significant solver decision vs DEBUG preparatory work
 - "add_decision" shows the solver is now making concrete version choices
@@ -116,7 +116,7 @@ This stage handles metadata acquisition through two possible paths:
 ```
 Resolved 12 packages in 379ms
 ```
-**Why this marks the phase start:**
+**Why this marks the phase:**
 - Clear completion message for the entire resolution process
 - Summary format ("Resolved X packages") indicates a phase boundary
 - No debug/info prefix - this is a user-facing status message
@@ -166,7 +166,7 @@ This stage only occurs when packages need to be downloaded from the network.
 ```
  uv_installer::preparer::prepare total=3
 ```
-**Why this marks the phase start:**
+**Why this marks the phase:**
 - `preparer::prepare` indicates downloading is starting
 - "total=N" shows how many packages need to be fetched
 - Only appears when Installation Planning identified uncached distributions
@@ -201,7 +201,7 @@ This stage only occurs when packages need to be downloaded from the network.
 ```
 Prepared 3 packages in 21.72s
 ```
-**Why this marks the phase start:**
+**Why this marks the phase:**
 - Summary message confirms all downloads are complete
 - "Prepared" indicates packages are ready for installation
 - Only shown after actual downloads, not for cached packages
@@ -221,7 +221,7 @@ Prepared 3 packages in 21.72s
 ```
  uv_installer::installer::install_blocking num_wheels=3
 ```
-**Why this marks the phase start:**
+**Why this marks the phase:**
 - `install_blocking` explicitly announces installation is beginning
 - Different module (`installer::`) from preparation (`preparer::`)
 - "num_wheels=3" confirms it's ready to install the prepared packages
@@ -255,7 +255,7 @@ Installed 3 packages in 215ms
  + scipy==1.16.1
  + torch==2.8.0
 ```
-**Why this marks the phase start:**
+**Why this marks the phase:**
 - Appears immediately after "Installed X packages" summary
 - "+" prefix is UV's standard notation for newly installed packages
 - User-facing output showing final results of the operation
