@@ -6,42 +6,13 @@
 import type {
   InstallationSummary,
   PackageInfo,
-  ParserState,
   PreparationSummary,
   ResolutionSummary,
-  StageTransition,
   UVParsedOutput,
   UVStage,
+  UVState,
   WarningOrError,
 } from './types';
-
-/**
- * Configuration options for the UV parser (optional)
- */
-export interface UVParserOptions {
-  /**
-   * Custom patterns to match for specific events.
-   * Allows extending the parser without modifying core logic.
-   */
-  customPatterns?: CustomPattern[];
-}
-
-/**
- * Custom pattern for extending parser functionality
- */
-export interface CustomPattern {
-  /** Unique identifier for this pattern */
-  id: string;
-
-  /** Regular expression to match against lines */
-  pattern: RegExp;
-
-  /** Function to create parsed output from regex match */
-  handler: (match: RegExpMatchArray, line: string, lineNumber: number) => UVParsedOutput | undefined;
-
-  /** Optional stage(s) this pattern is relevant for */
-  stages?: UVStage[];
-}
 
 /**
  * Statistics and summary after parsing completion
@@ -180,14 +151,7 @@ export interface IUVStateManager {
    *
    * @returns Current state including stage, packages, and statistics
    */
-  getState(): Readonly<ParserState>;
-
-  /**
-   * Get history of stage transitions.
-   *
-   * @returns Array of stage transitions in chronological order
-   */
-  getStageHistory(): ReadonlyArray<StageTransition>;
+  getState(): Readonly<UVState>;
 
   /**
    * Get summary of the installation process.
@@ -228,26 +192,6 @@ export interface IUVStateManager {
    * @returns Array of warning objects
    */
   getWarnings(): WarningOrError[];
-}
-
-/**
- * Factory for creating UV parser instances
- */
-export interface IUVParserFactory {
-  /**
-   * Create a new UV parser instance with the given options.
-   *
-   * @param options - Configuration options for the parser
-   * @returns New parser instance
-   */
-  createParser(options?: UVParserOptions): IUVParser;
-
-  /**
-   * Get the default parser options.
-   *
-   * @returns Default configuration options
-   */
-  getDefaultOptions(): UVParserOptions;
 }
 
 /**
@@ -306,83 +250,4 @@ export interface IUVStreamProcessor {
    * @returns The state manager tracking installation progress
    */
   getStateManager(): IUVStateManager;
-}
-
-/**
- * Pattern matcher for identifying UV output patterns
- */
-export interface IPatternMatcher {
-  /**
-   * Register a pattern for a specific stage transition.
-   *
-   * @param fromStage - Stage to transition from (or '*' for any)
-   * @param toStage - Stage to transition to
-   * @param pattern - Regular expression or string to match
-   */
-  registerStagePattern(fromStage: UVStage | '*', toStage: UVStage, pattern: RegExp | string): void;
-
-  /**
-   * Register a pattern for extracting structured data.
-   *
-   * @param id - Unique identifier for this pattern
-   * @param pattern - Regular expression with capture groups
-   * @param extractor - Function to extract data from matches
-   */
-  registerDataPattern<T extends UVParsedOutput>(
-    id: string,
-    pattern: RegExp,
-    extractor: (match: RegExpMatchArray) => T | undefined
-  ): void;
-
-  /**
-   * Check if a line matches any registered patterns.
-   *
-   * @param line - Line to check
-   * @param currentStage - Current parser stage
-   * @returns Matched patterns and extracted data
-   */
-  matchLine(
-    line: string,
-    currentStage: UVStage
-  ): {
-    stageTransition?: UVStage;
-    data?: UVParsedOutput[];
-  };
-
-  /**
-   * Get all registered patterns.
-   *
-   * @returns Map of pattern IDs to patterns
-   */
-  getPatterns(): ReadonlyMap<string, RegExp>;
-}
-
-/**
- * Validator for ensuring parsed output consistency
- */
-export interface IOutputValidator {
-  /**
-   * Validate a parsed output object.
-   *
-   * @param output - Output to validate
-   * @returns True if valid, false otherwise
-   */
-  validate(output: UVParsedOutput): boolean;
-
-  /**
-   * Validate a stage transition.
-   *
-   * @param fromStage - Current stage
-   * @param toStage - Proposed new stage
-   * @returns True if transition is valid
-   */
-  validateTransition(fromStage: UVStage, toStage: UVStage): boolean;
-
-  /**
-   * Get validation errors for an output object.
-   *
-   * @param output - Output to check
-   * @returns Array of validation error messages
-   */
-  getValidationErrors(output: UVParsedOutput): string[];
 }
