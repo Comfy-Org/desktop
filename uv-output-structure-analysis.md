@@ -11,75 +11,115 @@ The UV package installation process follows these 12 major stages:
 - Represents the startup phase before UV begins processing
 
 ### 2. Startup and Environment Discovery (~0-40ms)
+**Transition indicator:** First debug line with UV version
+```
+0.000172s DEBUG uv uv 0.7.9 (13a86a23b 2025-05-30)
+```
 - UV version display
 - Requirements parsing from command line arguments
-- Python interpreter discovery in virtual environment
-- Virtual environment detection and validation
-- Lock file acquisition for `.venv`
-- Determining unsatisfied requirements
+- Python interpreter discovery: `Searching for default Python interpreter`
+- Virtual environment detection: `Using Python 3.12.8 environment at /Users/blake/Documents/ComfyUI/.venv`
+- Lock file acquisition: `Acquired lock for `/Users/blake/Documents/ComfyUI/.venv`
 
 ### 3. Dependency Resolution Setup (~40-50ms)
+**Transition indicator:** Solver initialization
+```
+0.049674s   0ms DEBUG uv_resolver::resolver Solving with installed Python version: 3.12.8
+```
 - Initializing PubGrub solver with Python version constraints
-- Adding direct dependencies to resolver
+- Adding direct dependencies: `Adding direct dependency: numpy*`
 - Setting up HTTP client with timeout configuration
-- Initiating cache checking for package metadata
 
 ### 4. Cache Checking and Network Initialization (~50-120ms)
+**Transition indicator:** First cache miss
+```
+0.053982s   0ms DEBUG uv_client::cached_client No cache entry for: https://pypi.org/simple/torch/
+```
 - Reading from local cache (`~/.cache/uv/simple-v16/pypi/*.rkyv`)
-- Detecting cache misses
-- Establishing HTTP/2 connections to PyPI
-- HTTP/2 settings negotiation and window updates
-- Parallel metadata requests initialization
+- Detecting cache misses for each package
+- Establishing HTTP/2 connections: `starting new connection: https://pypi.org:443`
+- HTTP/2 settings negotiation: `send, frame=Settings`
 
 ### 5. Package Metadata Download (~120-300ms)
+**Transition indicator:** First Simple API parsing
+```
+uv_client::registry_client::parse_simple_api package=scipy
+```
 - Downloading package Simple API metadata from PyPI
-- Parsing Simple API responses
-- Writing metadata to cache
-- Downloading wheel metadata (.metadata files)
-- Handling warnings for incompatible package files
+- Parsing Simple API responses: `parse_simple_api` for each package
+- Writing metadata to cache: `new_cache file=/Users/blake/.cache/uv/simple-v16/`
+- Downloading wheel metadata: `parse_metadata21`
+- Warnings for incompatible packages: `Skipping file for scipy==1.16.1`
 
 ### 6. Dependency Resolution with PubGrub (~300-425ms)
-- PubGrub solver making version decisions
-- Selecting package versions based on constraints
+**Transition indicator:** First PubGrub decision
+```
+0.303437s 253ms INFO pubgrub::internal::partial_solution add_decision: Id::<PubGrubPackage>=torch==2.8.0
+```
+- PubGrub solver making version decisions: `add_decision`
+- Selecting package versions: `Selecting: torch==2.8.0`
 - Processing transitive dependencies
-- Checking for installed packages
-- Prefetching additional dependency metadata
+- Checking installed packages: `Requirement already installed: torch==2.8.0`
 - Making incremental solver decisions
 
 ### 7. Resolution Summary (~425ms)
-- Final resolution summary (e.g., "Resolved 12 packages in 379ms")
+**Transition indicator:** Resolution complete message
+```
+Resolved 12 packages in 379ms
+```
+- Final count of resolved packages
+- Total resolution time
 
 ### 8. Installation Planning (~427-428ms)
-- Identifying uncached distributions to download
-- Checking already installed packages
-- Determining unnecessary packages to remove
+**Transition indicator:** First uncached distribution identified
+```
+0.427481s DEBUG uv_installer::plan Identified uncached distribution: scipy==1.16.1
+```
+- Identifying what needs downloading
+- Checking already installed packages: `Requirement already installed`
+- Determining unnecessary packages: `Unnecessary package: markupsafe==2.1.5`
 - Creating installation plan
 
 ### 9. Package Downloads (~428ms-21.7s)
+**Transition indicator:** Preparer starting downloads
+```
+uv_installer::preparer::prepare total=3
+```
 - Downloading wheel files via HTTP/2
-- Multiple concurrent downloads with progress tracking
-- Stream handling with data frames (StreamId tracking)
-- Window updates for flow control
-- Download progress indicators appear for individual packages:
-  - "Downloading numpy" (appears when numpy completes at ~10.75s)
-  - "Downloading scipy" (appears when scipy completes)
-  - "Downloading torch" (appears when torch completes at ~22.15s)
-- Extensive HTTP/2 frame activity (Data frames dominate the log)
-- Downloads complete when final END_STREAM flag received
+- Stream handling: `frame=Data { stream_id: StreamId(7) }`
+- Download progress indicators:
+  ```
+  Downloading numpy
+  Downloading scipy  
+  Downloading torch
+  ```
+- Window updates: `send, frame=WindowUpdate`
+- Downloads complete when: `frame=Data { stream_id: StreamId(7), flags: (0x1: END_STREAM) }`
 
 ### 10. Package Preparation (~21.72s)
-- Summary: "Prepared N packages in X.XXs"
+**Transition indicator:** Preparation summary
+```
+Prepared 3 packages in 21.72s
+```
 - Occurs immediately after all downloads complete
 
 ### 11. Installation (~21.72s-21.93s)
-- uv_installer::installer::install_blocking triggered
-- Installing multiple wheels concurrently:
-  - uv_install_wheel::install::install_wheel for each wheel
-  - uv_install_wheel::linker::link_wheel_files for linking
-- Installation summary (e.g., "Installed 3 packages in 215ms")
+**Transition indicator:** Installer starting
+```
+uv_installer::installer::install_blocking num_wheels=3
+```
+- Installing wheels: `uv_install_wheel::install::install_wheel wheel=numpy-2.3.2-cp312-cp312-macosx_14_0_arm64.whl`
+- Linking files: `uv_install_wheel::linker::link_wheel_files`
+- Installation complete: `Installed 3 packages in 215ms`
 
 ### 12. Final Summary (~21.93s)
-- Lists installed packages with versions using + prefix
+**Transition indicator:** Plus-prefixed package list
+```
++ numpy==2.3.2
++ scipy==1.16.1
++ torch==2.8.0
+```
+- Lists all newly installed packages
 - Format: "+ package==version"
 
 ## Log Structure Observations
