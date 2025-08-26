@@ -3,21 +3,6 @@
 ## Overview
 This document contains a comprehensive analysis of the `uv pip install` output structure based on debug-level logging with context enabled (UV_LOG_CONTEXT=1 RUST_LOG=debug).
 
-## Installation Flows
-
-UV has two distinct installation flows:
-
-### Flow A: Standard Installation (packages need to be installed or updated)
-Follows the complete 11-stage process documented below.
-
-### Flow B: Already Satisfied (all requirements already installed)
-When all packages are already installed and satisfy requirements:
-1. **Startup** - UV version announcement
-2. **Quick Audit** - Requirements are checked and found satisfied
-   - Output: `Requirement satisfied: PACKAGE` for each package
-   - Summary: `Audited N packages in Xms`
-3. **Complete** - Process ends
-
 ## Installation Stages
 The UV package installation process follows these major stages (some may be skipped based on cache state):
 
