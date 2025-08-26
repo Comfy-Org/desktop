@@ -1,9 +1,11 @@
 # Astral UV Package Manager - Comprehensive Research Document
 
 ## Overview
+
 UV is an extremely fast Python package and project manager written in Rust by Astral (creators of Ruff). It serves as "a single tool to replace pip, pip-tools, pipx, poetry, pyenv, twine, virtualenv, and more."
 
 ### Key Characteristics
+
 - **Performance**: 8-10x faster than pip without caching, 80-115x faster with warm cache
 - **Language**: Written in Rust for maximum performance, memory safety, and efficient parallel processing
 - **Scope**: Drop-in replacement for multiple Python tools (pip, pip-tools, pipx, poetry, pyenv, twine, virtualenv)
@@ -11,7 +13,9 @@ UV is an extremely fast Python package and project manager written in Rust by As
 ## Core Architecture
 
 ### PubGrub Algorithm
+
 UV uses the **PubGrub algorithm** (via pubgrub-rs) for dependency resolution:
+
 - **Incremental version solver** using techniques like:
   - Unit propagation
   - Logical resolution
@@ -19,6 +23,7 @@ UV uses the **PubGrub algorithm** (via pubgrub-rs) for dependency resolution:
 - **Forking Resolver**: Can split resolution for different environment markers (inspired by Poetry)
 
 ### Key Optimizations
+
 - **Parallel Downloads**: Downloads multiple packages simultaneously
 - **Efficient Metadata Handling**: Only downloads metadata files instead of entire wheels for dependency resolution
 - **Global Caching**: Uses Copy-on-Write and hardlinks to minimize disk usage
@@ -29,18 +34,22 @@ UV uses the **PubGrub algorithm** (via pubgrub-rs) for dependency resolution:
 ### Environment Variables
 
 #### RUST_LOG
+
 Controls log verbosity level using tracing_subscriber-compatible filters:
+
 - `RUST_LOG=trace` - Most verbose (trace-level logging)
 - `RUST_LOG=debug` - Debug-level logging
 - `RUST_LOG=uv=debug` - Debug logging for UV specifically
 - `RUST_LOG=warn,uv=debug` - Global warn, UV debug
 
 #### UV_LOG_CONTEXT
+
 - Adds additional context and structure to log messages
 - Only effective when logging is enabled (via RUST_LOG or -v)
 - Enhances debug output with contextual information
 
 #### Other Debug Variables
+
 - `RUST_BACKTRACE=1` or `RUST_BACKTRACE=full` - Stack traces on errors
 - `TRACING_DURATIONS_FILE` - Performance analysis tracing
 - `UV_STACK_SIZE` - Sets stack size for UV operations
@@ -72,12 +81,14 @@ Controls log verbosity level using tracing_subscriber-compatible filters:
 ## Integration Notes
 
 ### For ComfyUI Desktop
+
 - UV is bundled as the primary package manager
 - Replaces pip for dependency installation
 - Provides faster installation times
 - Better error messages and conflict resolution
 
 ### Command Examples
+
 ```bash
 # Basic installation with debug output
 UV_LOG_CONTEXT=1 RUST_LOG=debug uv pip install [packages]
@@ -92,6 +103,7 @@ uv pip uninstall [packages] --quiet
 ## Future Considerations
 
 When parsing UV output:
+
 1. Handle parallel operations (same timestamp, different operations)
 2. Parse structured data from debug logs for detailed insights
 3. Consider that some operations may be cached and thus instantaneous
