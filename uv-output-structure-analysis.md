@@ -4,7 +4,7 @@
 This document contains a comprehensive analysis of the `uv pip install` output structure based on debug-level logging with context enabled (UV_LOG_CONTEXT=1 RUST_LOG=debug).
 
 ## Installation Stages
-The UV package installation process follows these major stages:
+The UV package installation process follows these 12 major stages:
 
 ### 1. Initializing
 - Default state before any data has been read
@@ -58,24 +58,27 @@ The UV package installation process follows these major stages:
 ### 9. Package Downloads (~428ms-21.7s)
 - Downloading wheel files via HTTP/2
 - Multiple concurrent downloads with progress tracking
-- Stream handling with data frames
+- Stream handling with data frames (StreamId tracking)
 - Window updates for flow control
-- Download progress tracking (shown for large packages)
+- Download progress indicators appear for individual packages:
+  - "Downloading numpy" (appears when numpy completes at ~10.75s)
+  - "Downloading scipy" (appears when scipy completes)
+  - "Downloading torch" (appears when torch completes at ~22.15s)
+- Extensive HTTP/2 frame activity (Data frames dominate the log)
+- Downloads complete when final END_STREAM flag received
 
-### 10. Download Completion (~21.7s)
-- All downloads complete
-- Final progress indicator
-
-### 11. Package Preparation (~21.72s)
+### 10. Package Preparation (~21.72s)
 - Summary: "Prepared N packages in X.XXs"
+- Occurs immediately after all downloads complete
 
-### 12. Installation (~21.72s-21.93s)
-- Installing wheels to virtual environment
-- Linking wheel files
-- Creating package metadata
+### 11. Installation (~21.72s-21.93s)
+- uv_installer::installer::install_blocking triggered
+- Installing multiple wheels concurrently:
+  - uv_install_wheel::install::install_wheel for each wheel
+  - uv_install_wheel::linker::link_wheel_files for linking
 - Installation summary (e.g., "Installed 3 packages in 215ms")
 
-### 13. Final Summary (~21.93s)
+### 12. Final Summary (~21.93s)
 - Lists installed packages with versions using + prefix
 - Format: "+ package==version"
 
