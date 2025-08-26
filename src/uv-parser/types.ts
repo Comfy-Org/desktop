@@ -102,12 +102,6 @@ export interface ParsedOutput {
   /** Type discriminator for runtime type checking */
   type: string;
 
-  /** Raw line that was parsed */
-  rawLine: string;
-
-  /** Line number in the original output (1-indexed) */
-  lineNumber?: number;
-
   /** Timestamp if available (seconds from process start) */
   timestamp?: number;
 
