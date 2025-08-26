@@ -44,7 +44,7 @@ export type LogLevel =
   | 'WARN'
   | 'ERROR'
   /** User-facing messages without log level prefix. */
-  | 'USER';
+  | '';
 
 /**
  * UV modules/components that generate log messages
