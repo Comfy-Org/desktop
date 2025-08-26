@@ -337,11 +337,9 @@ Each download begins with a specific sequence:
    ```
    - Displays progress to the user with package name and size
 
-#### Stream-to-Package Mapping (from test data)
+#### Stream Assignment
 
-- **torch**: StreamId(7) - 70.2 MiB
-- **numpy**: StreamId(11) - 4.9 MiB  
-- **scipy**: StreamId(9) - 19.9 MiB
+Each package download is dynamically assigned a stream ID by the HTTP/2 connection. The stream ID is visible in the Headers frame when the download begins.
 
 ### HTTP/2 Frame Size Configuration
 
@@ -350,9 +348,9 @@ The max frame size is configured during HTTP/2 connection setup:
 Settings { flags: (0x0), enable_push: 0, initial_window_size: 2097152, max_frame_size: 16384, max_header_list_size: 16384 }
 ```
 
-**Key parameter: `max_frame_size: 16384`**
-- Each data frame contains up to 16,384 bytes (16 KB)
-- All frames except the last one for a stream will be exactly 16,384 bytes
+**Key parameter: `max_frame_size`**
+- Specifies the maximum payload size for each data frame
+- All frames except the last one for a stream will be exactly max_frame_size bytes
 - The last frame may be smaller and includes the END_STREAM flag
 
 ### Download Progress Tracking
@@ -371,44 +369,39 @@ received, frame=Data { stream_id: StreamId(N), flags: (0x1: END_STREAM) }
 
 To calculate total bytes downloaded for a package:
 ```
-total_bytes = (number_of_data_frames - 1) * 16384 + last_frame_size
+total_bytes = (number_of_data_frames - 1) * max_frame_size + last_frame_size
 ```
 
 Where:
 - `number_of_data_frames`: Total Data frames received for the stream
-- `16384`: The max_frame_size (all frames except last are this size)
-- `last_frame_size`: Size of the final frame (≤ 16384 bytes)
+- `max_frame_size`: The configured maximum frame size from Settings
+- `last_frame_size`: Size of the final frame (≤ max_frame_size)
 
 ### Parallel Download Timeline
 
-Based on the test data analysis:
+Downloads can run concurrently using HTTP/2 stream multiplexing. In the test data:
 
-1. **torch (StreamId 7)**
+1. **StreamId 7** (70.2 MiB package)
    - Start: Headers frame at 0.439755s (line 865)
    - First data: 0.447906s (line 869)
    - End: END_STREAM at 22.150391s (line 7433)
    - Duration: ~21.71s
 
-2. **numpy (StreamId 11)**
+2. **StreamId 11** (4.9 MiB package)
    - Start: Headers frame at 0.486104s (line 881)
    - First data: 0.486114s (line 882)
    - End: END_STREAM at 3.751904s (line 1945)
    - Duration: ~3.27s
 
-3. **scipy (StreamId 9)**
+3. **StreamId 9** (19.9 MiB package)
    - Start: Headers frame at 0.504245s (line 890)
    - First data: 0.536391s (line 902)
    - End: END_STREAM at 10.751394s (line 4131)
    - Duration: ~10.25s
 
-### Download Overlap Analysis
+### Download Concurrency
 
-All three downloads run concurrently:
-- **numpy & torch**: 3.27s overlap (numpy completes first)
-- **scipy & torch**: 10.25s overlap (scipy completes second)
-- **numpy & scipy**: 3.27s overlap (both running together)
-
-Maximum concurrent downloads: 3
+UV leverages HTTP/2 multiplexing to download multiple packages simultaneously over a single connection. The number of concurrent downloads depends on various factors including server limits, network conditions, and UV's internal scheduling.
 
 ---
 *This document represents a complete analysis of UV pip install output structure*

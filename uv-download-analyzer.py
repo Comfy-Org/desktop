@@ -122,19 +122,10 @@ class UVDownloadAnalyzer:
     
     def _find_stream_for_package(self, package: str, line_num: int) -> Optional[int]:
         """Find stream ID for a package based on context"""
-        # Based on our analysis:
-        # torch -> StreamId(7)
-        # numpy -> StreamId(11) 
-        # scipy -> StreamId(9)
-        
-        # This is a simplification - in production, we'd look back through recent lines
-        # to find the Headers frame with the matching URL
-        package_streams = {
-            'torch': 7,
-            'numpy': 11,
-            'scipy': 9
-        }
-        return package_streams.get(package.lower())
+        # This would need to look back through recent lines to find the
+        # Headers frame that precedes this package download
+        # For now, returning None as stream mapping is dynamic
+        return None
     
     def analyze_file(self, filename: str):
         """Analyze a UV debug output file"""
