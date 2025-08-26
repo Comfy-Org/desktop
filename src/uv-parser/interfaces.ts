@@ -73,7 +73,8 @@ export interface CustomPattern {
 }
 
 /**
- * Result of parsing a single line
+ * Result of parsing a single line (deprecated - use UVParsedOutput directly)
+ * @deprecated The stateless parser returns UVParsedOutput directly
  */
 export interface ParseLineResult {
   /**
@@ -154,40 +155,75 @@ export interface ParseSummary {
 }
 
 /**
- * Main UV output parser interface
+ * Stateless UV output parser interface.
+ * Each line is parsed independently without requiring context or state.
  */
 export interface IUVParser {
   /**
-   * Parse a single line of UV output.
+   * Parse a single line of UV output without any state context.
+   * Returns undefined if the line cannot be parsed or is not relevant.
    *
    * @param line - The line to parse
-   * @param lineNumber - Optional line number (1-indexed)
-   * @returns Parse result with output object(s) and state changes
+   * @param lineNumber - Optional line number (1-indexed) for debugging
+   * @returns Parsed output object or undefined
    */
-  parseLine(line: string, lineNumber?: number): ParseLineResult;
+  parseLine(line: string, lineNumber?: number): UVParsedOutput | undefined;
 
   /**
    * Parse multiple lines of UV output.
+   * Each line is parsed independently.
    *
    * @param lines - Array of lines to parse
-   * @returns Array of parse results
+   * @returns Array of parsed outputs (undefined entries filtered out)
    */
-  parseLines(lines: string[]): ParseLineResult[];
+  parseLines(lines: string[]): UVParsedOutput[];
 
   /**
    * Parse a complete UV output string.
+   * Splits by newlines and parses each line independently.
    *
-   * @param output - Complete output string (will be split by newlines)
-   * @returns Array of parse results
+   * @param output - Complete output string
+   * @returns Array of parsed outputs
    */
-  parseOutput(output: string): ParseLineResult[];
+  parseOutput(output: string): UVParsedOutput[];
 
   /**
-   * Get the current parser state.
+   * Check if a line can be parsed by this parser.
+   * Useful for filtering or validation.
    *
-   * @returns Current state including stage, packages, and statistics
+   * @param line - The line to check
+   * @returns True if the line matches any known pattern
    */
-  getState(): Readonly<ParserState>;
+  canParse(line: string): boolean;
+
+  /**
+   * Get the type of output a line would produce without fully parsing it.
+   * Useful for routing or filtering.
+   *
+   * @param line - The line to check
+   * @returns The output type or undefined if not parseable
+   */
+  getLineType(line: string): UVParsedOutput['type'] | undefined;
+}
+
+/**
+ * State manager for UV installation process.
+ * Maintains state based on parsed outputs from the stateless parser.
+ */
+export interface IUVStateManager {
+  /**
+   * Process a parsed output and update internal state.
+   *
+   * @param output - Parsed output from the parser
+   */
+  processOutput(output: UVParsedOutput): void;
+
+  /**
+   * Process multiple outputs.
+   *
+   * @param outputs - Array of parsed outputs
+   */
+  processOutputs(outputs: UVParsedOutput[]): void;
 
   /**
    * Get the current installation stage.
@@ -197,6 +233,13 @@ export interface IUVParser {
   getCurrentStage(): UVStage;
 
   /**
+   * Get the current state.
+   *
+   * @returns Current state including stage, packages, and statistics
+   */
+  getState(): Readonly<ParserState>;
+
+  /**
    * Get history of stage transitions.
    *
    * @returns Array of stage transitions in chronological order
@@ -204,49 +247,40 @@ export interface IUVParser {
   getStageHistory(): ReadonlyArray<StageTransition>;
 
   /**
-   * Get all parsed outputs collected so far.
-   *
-   * @param type - Optional filter by output type
-   * @returns Array of parsed outputs
-   */
-  getOutputs<T extends UVParsedOutput = UVParsedOutput>(type?: T['type']): T[];
-
-  /**
-   * Get summary of the entire parsing session.
+   * Get summary of the installation process.
    *
    * @returns Summary with statistics and key information
    */
   getSummary(): ParseSummary;
 
   /**
-   * Reset the parser to initial state.
-   * Clears all collected data and resets to initial stage.
+   * Reset the state manager to initial state.
    */
   reset(): void;
 
   /**
    * Check if the installation process is complete.
    *
-   * @returns True if stage is Complete or FinalSummary with packages listed
+   * @returns True if installation is complete
    */
   isComplete(): boolean;
 
   /**
-   * Check if the installation process encountered errors.
+   * Check if errors were encountered.
    *
-   * @returns True if any errors were encountered
+   * @returns True if any errors occurred
    */
   hasErrors(): boolean;
 
   /**
-   * Get all errors encountered during parsing.
+   * Get all errors encountered.
    *
    * @returns Array of error objects
    */
   getErrors(): WarningOrError[];
 
   /**
-   * Get all warnings encountered during parsing.
+   * Get all warnings encountered.
    *
    * @returns Array of warning objects
    */
@@ -274,9 +308,10 @@ export interface IUVParserFactory {
 }
 
 /**
- * Stream parser for processing UV output in real-time
+ * Stream processor for real-time UV output processing.
+ * Handles buffering and uses stateless parser with state manager.
  */
-export interface IUVStreamParser {
+export interface IUVStreamProcessor {
   /**
    * Process a chunk of output data.
    * Handles partial lines and buffering.
@@ -318,9 +353,16 @@ export interface IUVStreamParser {
   /**
    * Get the underlying parser instance.
    *
-   * @returns The parser being used by the stream
+   * @returns The stateless parser being used
    */
   getParser(): IUVParser;
+
+  /**
+   * Get the state manager instance.
+   *
+   * @returns The state manager tracking installation progress
+   */
+  getStateManager(): IUVStateManager;
 }
 
 /**
