@@ -10,6 +10,8 @@ The UV package installation process follows these major stages (some may be skip
 - Default state before any data has been read
 - Represents the startup phase before UV begins processing
 
+**When this stage occurs:** Always (initial state)
+
 ### 2. Startup and Environment Discovery
 **Output:**
 ```
@@ -29,6 +31,8 @@ The UV package installation process follows these major stages (some may be skip
 ^\s+[\d.]+\w+\s+DEBUG\s+uv\s+uv\s+[\d.]+\s+\([a-f0-9]+\s+\d{4}-\d{2}-\d{2}\)
 ```
 
+**When this stage occurs:** Always
+
 ### 3. Dependency Resolution Setup
 **Output:**
 ```
@@ -47,6 +51,8 @@ The UV package installation process follows these major stages (some may be skip
 ```regex
 ^\s+[\d.]+\w+\s+[\d.]+\w+\s+DEBUG\s+uv_resolver::resolver\s+Solving\s+with\s+installed\s+Python\s+version:\s+[\d.]+
 ```
+
+**When this stage occurs:** Always
 
 ### 4. Cache Checking and Metadata Retrieval
 
@@ -85,6 +91,8 @@ DEBUG uv_client::cached_client Found fresh response for: https://pypi.org/simple
 ^\s*uv_client::registry_client::parse_simple_api\s+package=\w+
 ```
 
+**When this stage occurs:** Always (either cache hit or cache miss path is taken)
+
 ### 5. Dependency Resolution with PubGrub
 **Output:**
 ```
@@ -106,6 +114,8 @@ DEBUG uv_client::cached_client Found fresh response for: https://pypi.org/simple
 ^\s+[\d.]+\w+\s+[\d.]+\w+\s+INFO\s+pubgrub::internal::partial_solution\s+add_decision:\s+Id::<PubGrubPackage>\(\d+\)\s+@\s+[\d.]+\s+without\s+checking\s+dependencies
 ```
 
+**When this stage occurs:** Always
+
 ### 6. Resolution Summary
 **Output:**
 ```
@@ -126,6 +136,8 @@ Resolved 12 packages in 379ms
 ```regex
 ^Resolved\s+\d+\s+packages?\s+in\s+[\d.]+\w+
 ```
+
+**When this stage occurs:** Always
 
 ### 7. Installation Planning
 
@@ -155,6 +167,8 @@ DEBUG uv_installer::plan Unnecessary package: old-package==1.0.0
 ^\s*[\d.]+\w+\s+DEBUG\s+uv_installer::plan\s+(Registry requirement|Requirement|Identified|Unnecessary)
 ```
 
+**When this stage occurs:** Always
+
 ### 8. Package Downloads [Only if uncached packages exist]
 
 This stage only occurs when packages need to be downloaded from the network.
@@ -177,7 +191,7 @@ This stage only occurs when packages need to be downloaded from the network.
 ^\s*uv_installer::preparer::prepare\s+total=\d+
 ```
 
-**Note:** This entire stage is skipped when all packages are cached or already installed.
+**When this stage occurs:** Only when Installation Planning identified uncached distributions
 
 **Download status output:**
 ```
@@ -214,7 +228,7 @@ Prepared 3 packages in 21.72s
 ^Prepared\s+\d+\s+packages?\s+in\s+[\d.]+\w+
 ```
 
-**Note:** Skipped entirely when using cached packages.
+**When this stage occurs:** Only after Package Downloads stage completes
 
 ### 10. Installation
 **Output:**
@@ -248,6 +262,8 @@ Installed 3 packages in 215ms
 ^Installed\s+\d+\s+packages?\s+in\s+[\d.]+\w+
 ```
 
+**When this stage occurs:** Always (when packages need to be installed)
+
 ### 11. Final Summary
 **Output:**
 ```
@@ -269,6 +285,8 @@ Installed 3 packages in 215ms
 ```regex
 ^\s+\+\s+\S+==[\d.]+
 ```
+
+**When this stage occurs:** Always (after installation)
 
 ## Log Structure Observations
 
