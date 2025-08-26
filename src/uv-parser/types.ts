@@ -1,39 +1,9 @@
 /**
  * UV Parser Type Definitions
  *
- * Core types and interfaces for parsing UV pip install output
+ * Stateless types and interfaces for parsing UV pip install output.
+ * Each type represents data extractable from a single line of output.
  */
-
-/**
- * Represents the distinct stages of a UV pip install process.
- * UV progresses through these stages sequentially, though some may be skipped
- * based on cache state and installation requirements.
- */
-export type UVStage =
-  /** Default state before any output has been processed. */
-  | 'initializing'
-  /** UV startup and environment discovery phase. */
-  | 'startup'
-  /** Dependency resolution setup with PubGrub solver. */
-  | 'resolution_setup'
-  /** Cache checking and metadata retrieval (from cache or network). */
-  | 'cache_checking'
-  /** Dependency resolution using PubGrub algorithm. */
-  | 'dependency_resolution'
-  /** Resolution complete summary. */
-  | 'resolution_summary'
-  /** Planning what needs to be installed/removed. */
-  | 'installation_planning'
-  /** Downloading packages from network (skipped if all cached). */
-  | 'package_downloads'
-  /** Package preparation complete (only after downloads). */
-  | 'package_preparation'
-  /** Installing packages to environment. */
-  | 'installation'
-  /** Final summary with list of installed packages. */
-  | 'final_summary'
-  /** Process complete. */
-  | 'complete';
 
 /**
  * Log levels found in UV debug output
@@ -331,33 +301,3 @@ export type UVParsedOutput =
   | WarningOrError
   | StatusMessage
   | ChangedPackage;
-
-/**
- * State tracking for UV installation process (used by state manager, not parser)
- */
-export interface UVState {
-  /** Current stage of the installation */
-  currentStage: UVStage;
-
-  /** Packages being tracked */
-  packages: Map<string, PackageInfo>;
-
-  /** Active download streams */
-  activeDownloads: Map<number, string>; // streamId -> packageName
-
-  /** Statistics collected during parsing */
-  statistics: {
-    packagesResolved: number;
-    packagesDownloaded: number;
-    packagesInstalled: number;
-    cacheHits: number;
-    cacheMisses: number;
-    totalDuration?: number;
-  };
-
-  /** Any errors encountered */
-  errors: WarningOrError[];
-
-  /** Any warnings encountered */
-  warnings: WarningOrError[];
-}
