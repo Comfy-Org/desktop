@@ -16,43 +16,14 @@ import type {
 } from './types';
 
 /**
- * Configuration options for the UV parser
+ * Configuration options for the UV parser (optional)
  */
 export interface UVParserOptions {
-  /**
-   * Whether to parse detailed HTTP/2 frame information.
-   * Disabled by default as it generates many events.
-   */
-  parseHttp2Frames?: boolean;
-
-  /**
-   * Whether to track all log messages or only significant ones.
-   * When false, only INFO level and above are tracked.
-   */
-  trackAllLogs?: boolean;
-
-  /**
-   * Whether to parse and track cache events.
-   */
-  trackCacheEvents?: boolean;
-
   /**
    * Custom patterns to match for specific events.
    * Allows extending the parser without modifying core logic.
    */
   customPatterns?: CustomPattern[];
-
-  /**
-   * Callback for handling parse errors gracefully.
-   * If not provided, errors are silently ignored.
-   */
-  onParseError?: (error: Error, line: string, lineNumber: number) => void;
-
-  /**
-   * Initial stage to start with.
-   * Defaults to UVStage.Initializing
-   */
-  initialStage?: UVStage;
 }
 
 /**
