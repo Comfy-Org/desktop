@@ -4,13 +4,13 @@
 This document contains a comprehensive analysis of the `uv pip install` output structure based on debug-level logging with context enabled (UV_LOG_CONTEXT=1 RUST_LOG=debug).
 
 ## Installation Stages
-The UV package installation process follows these 11 major stages:
+The UV package installation process follows these major stages (some may be skipped based on cache state):
 
 ### 1. Initializing
 - Default state before any data has been read
 - Represents the startup phase before UV begins processing
 
-### 2. Startup and Environment Discovery (~0-40ms)
+### 2. Startup and Environment Discovery
 **Output:**
 ```
     0.000172s DEBUG uv uv 0.7.9 (13a86a23b 2024-11-14)
@@ -29,7 +29,7 @@ The UV package installation process follows these 11 major stages:
 ^\s+[\d.]+\w+\s+DEBUG\s+uv\s+uv\s+[\d.]+\s+\([a-f0-9]+\s+\d{4}-\d{2}-\d{2}\)
 ```
 
-### 3. Dependency Resolution Setup (~40-50ms)
+### 3. Dependency Resolution Setup
 **Output:**
 ```
     0.049674s   0ms DEBUG uv_resolver::resolver Solving with installed Python version: 3.12.9
@@ -48,26 +48,44 @@ The UV package installation process follows these 11 major stages:
 ^\s+[\d.]+\w+\s+[\d.]+\w+\s+DEBUG\s+uv_resolver::resolver\s+Solving\s+with\s+installed\s+Python\s+version:\s+[\d.]+
 ```
 
-### 4. Package Metadata Download (~50-300ms)
+### 4. Cache Checking and Metadata Retrieval
+
+This stage handles metadata acquisition through two possible paths:
+
+#### Path A: Cache Hit (Fast Path)
+**Output:**
+```
+DEBUG uv_client::cached_client Found fresh response for: https://pypi.org/simple/PACKAGE/
+```
+
+**Pattern breakdown:**
+- Fixed: `DEBUG uv_client::cached_client Found fresh response for: https://pypi.org/simple/`
+- Variable: package name (e.g., `torch`)
+- Fixed: trailing `/`
+
+```regex
+^\s*[\d.]+\w+\s+[\d.]+\w+\s+DEBUG\s+uv_client::cached_client\s+Found\s+fresh\s+response\s+for:\s+https://pypi\.org/simple/\w+/
+```
+
+#### Path B: Cache Miss (Network Download)
 **Output:**
 ```
          uv_client::registry_client::parse_simple_api package=scipy
 ```
-**Why this marks the phase start:**
-- First `parse_simple_api` call indicates actual metadata retrieval has begun
-- Represents shift from checking caches to actively downloading package information
-- Simple API is PyPI's metadata format - parsing it means we've received data from the network
-- Previous cache misses and connection establishment were preparation; this is execution
+**Why this marks download:**
+- First `parse_simple_api` call indicates actual metadata retrieval from network
+- Simple API is PyPI's metadata format - parsing means data was received
+- Only appears when cache doesn't contain fresh metadata
 
 **Pattern breakdown:**
-- Fixed: `uv_client::registry_client::parse_simple_api package=` (preceded by spaces)
-- Variable: package name (`scipy`)
+- Fixed: `uv_client::registry_client::parse_simple_api package=`
+- Variable: package name (e.g., `scipy`)
 
 ```regex
 ^\s*uv_client::registry_client::parse_simple_api\s+package=\w+
 ```
 
-### 5. Dependency Resolution with PubGrub (~300-425ms)
+### 5. Dependency Resolution with PubGrub
 **Output:**
 ```
     0.303437s 253ms INFO pubgrub::internal::partial_solution add_decision: Id::<PubGrubPackage>(1) @ 2.3.2 without checking dependencies
@@ -88,7 +106,7 @@ The UV package installation process follows these 11 major stages:
 ^\s+[\d.]+\w+\s+[\d.]+\w+\s+INFO\s+pubgrub::internal::partial_solution\s+add_decision:\s+Id::<PubGrubPackage>\(\d+\)\s+@\s+[\d.]+\s+without\s+checking\s+dependencies
 ```
 
-### 6. Resolution Summary (~425ms)
+### 6. Resolution Summary
 **Output:**
 ```
 Resolved 12 packages in 379ms
@@ -109,38 +127,47 @@ Resolved 12 packages in 379ms
 ^Resolved\s+\d+\s+packages?\s+in\s+[\d.]+\w+
 ```
 
-### 7. Installation Planning (~427-428ms)
-**Output:**
+### 7. Installation Planning
+
+The installer analyzes what actions are needed. Messages vary based on cache state:
+
+#### Planning Messages:
+- **`Registry requirement already cached:`** - Wheel is cached locally
+- **`Requirement already installed:`** - Package already in environment  
+- **`Identified uncached distribution:`** - Needs to be downloaded
+- **`Unnecessary package:`** - Will be removed as not required
+
+**Output Examples:**
 ```
-0.427481s DEBUG uv_installer::plan Identified uncached distribution: scipy==1.16.1
+DEBUG uv_installer::plan Registry requirement already cached: scipy==1.16.1
+DEBUG uv_installer::plan Requirement already installed: numpy==2.3.2
+DEBUG uv_installer::plan Identified uncached distribution: torch==2.8.0
+DEBUG uv_installer::plan Unnecessary package: old-package==1.0.0
 ```
-**Why this marks the phase start:**
-- First appearance of `uv_installer::plan` module shows installer activation
-- "Identified uncached distribution" indicates analysis of what needs downloading
-- Occurs immediately after resolution summary, showing logical progression
-- Planning phase determines what's already installed vs what needs fetching
-- Distinct from actual downloading - this is the analysis/planning step
 
 **Pattern breakdown:**
-- Fixed: `DEBUG uv_installer::plan Identified uncached distribution: `
-- Variable: timestamp (`0.427481s`), package spec (`scipy==1.16.1`)
-- Note: First appearance indicates start of installation planning
+- Fixed: `DEBUG uv_installer::plan`
+- Variable: action type (`Registry requirement already cached`, `Requirement already installed`, `Identified uncached distribution`, `Unnecessary package`)
+- Variable: package specification (`package==version`)
 
+**Pattern for stage start (first uv_installer::plan message):**
 ```regex
-^\s*[\d.]+\w+\s+DEBUG\s+uv_installer::plan\s+Identified\s+uncached\s+distribution:\s+\S+==[\d.]+
+^\s*[\d.]+\w+\s+DEBUG\s+uv_installer::plan\s+(Registry requirement|Requirement|Identified|Unnecessary)
 ```
 
-### 8. Package Downloads (~428ms-21.7s)
+### 8. Package Downloads [Only if uncached packages exist]
+
+This stage only occurs when packages need to be downloaded from the network.
+
 **Output:**
 ```
  uv_installer::preparer::prepare total=3
 ```
 **Why this marks the phase start:**
-- `preparer::prepare` explicitly indicates preparation (downloading) is starting
-- "total=3" shows the preparer knows how many packages to fetch
-- Follows immediately after planning phase identified what needs downloading
-- Distinct from planning - this begins actual network operations for wheels
-- Thousands of subsequent HTTP/2 data frames confirm active downloading
+- `preparer::prepare` indicates downloading is starting
+- "total=N" shows how many packages need to be fetched
+- Only appears when Installation Planning identified uncached distributions
+- Followed by HTTP/2 frames for actual downloads
 
 **Pattern breakdown:**
 - Fixed: `uv_installer::preparer::prepare total=`
@@ -149,6 +176,8 @@ Resolved 12 packages in 379ms
 ```regex
 ^\s*uv_installer::preparer::prepare\s+total=\d+
 ```
+
+**Note:** This entire stage is skipped when all packages are cached or already installed.
 
 **Download status output:**
 ```
@@ -164,17 +193,18 @@ Resolved 12 packages in 379ms
 ^\s+Downloading\s+\w+
 ```
 
-### 9. Package Preparation (~21.72s)
+### 9. Package Preparation [Only after downloads]
+
+This stage only appears after packages have been downloaded.
+
 **Output:**
 ```
 Prepared 3 packages in 21.72s
 ```
-**Why this marks the phase start:**
+**Why this appears:**
 - Summary message confirms all downloads are complete
 - "Prepared" indicates packages are ready for installation
-- Timing (21.72s) matches the download duration, confirming phase completion
-- User-facing message (no DEBUG prefix) marks significant phase boundary
-- Downloads are done, but installation hasn't started yet
+- Only shown after actual downloads, not for cached packages
 
 **Pattern breakdown:**
 - Fixed: `Prepared`, `packages in`
@@ -184,7 +214,9 @@ Prepared 3 packages in 21.72s
 ^Prepared\s+\d+\s+packages?\s+in\s+[\d.]+\w+
 ```
 
-### 10. Installation (~21.72s-21.93s)
+**Note:** Skipped entirely when using cached packages.
+
+### 10. Installation
 **Output:**
 ```
  uv_installer::installer::install_blocking num_wheels=3
@@ -216,7 +248,7 @@ Installed 3 packages in 215ms
 ^Installed\s+\d+\s+packages?\s+in\s+[\d.]+\w+
 ```
 
-### 11. Final Summary (~21.93s)
+### 11. Final Summary
 **Output:**
 ```
  + numpy==2.3.2
@@ -289,11 +321,11 @@ Installed 3 packages in 215ms
 
 ## Performance Characteristics
 
-### Phase Durations (typical)
-1. **Startup**: ~40ms
-2. **Resolution**: ~300-400ms
+### Phase Durations
+1. **Startup**: Fast (milliseconds)
+2. **Resolution**: Fast to moderate (depends on package complexity)
 3. **Downloads**: Variable (depends on package sizes and network)
-4. **Installation**: ~200-300ms
+4. **Installation**: Fast (milliseconds to seconds)
 
 ### Optimization Points
 - Extensive caching reduces subsequent install times
