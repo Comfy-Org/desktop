@@ -85,8 +85,8 @@ Resolved 12 packages in 379ms
 - Next actions will be installation-related, not resolution-related
 
 **Pattern breakdown:**
-- Fixed: `Resolved ` ... ` packages in ` ... `ms`
-- Variable: package count (`12`), duration (`379`)
+- Fixed: `Resolved ` ... ` packages in ` ... (time)
+- Variable: package count (`12`), duration with flexible units (`379ms`, `2s`, `1m`, etc.)
 - Note: No leading spaces in this output
 
 ### 7. Installation Planning (~427-428ms)
@@ -145,8 +145,8 @@ Prepared 3 packages in 21.72s
 - Downloads are done, but installation hasn't started yet
 
 **Pattern breakdown:**
-- Fixed: `Prepared`, `packages in`, `s` suffix
-- Variable: package count (`3`), duration (`21.72`)
+- Fixed: `Prepared`, `packages in`
+- Variable: package count (`3`), duration with flexible units (`21.72s`, `500ms`, `2m`, etc.)
 
 ### 10. Installation (~21.72s-21.93s)
 **Output:**
@@ -169,8 +169,8 @@ Prepared 3 packages in 21.72s
 Installed 3 packages in 215ms
 ```
 **Pattern breakdown:**
-- Fixed: `Installed`, `packages in`, `ms`
-- Variable: package count (`3`), duration (`215`)
+- Fixed: `Installed`, `packages in`
+- Variable: package count (`3`), duration with flexible units (`215ms`, `2s`, `1m`, etc.)
 
 ### 11. Final Summary (~21.93s)
 **Output:**

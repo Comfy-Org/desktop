@@ -13,6 +13,7 @@ class UVStage(Enum):
     INITIALIZING = "initializing"
     STARTUP = "startup"
     RESOLUTION_SETUP = "resolution_setup"
+    CACHE_CHECKING = "cache_checking"
     METADATA_DOWNLOAD = "metadata_download"
     DEPENDENCY_RESOLUTION = "dependency_resolution"
     RESOLUTION_SUMMARY = "resolution_summary"
@@ -55,10 +56,16 @@ class UVStageParser:
         elif self.current_stage == UVStage.RESOLUTION_SETUP:
             if "Adding direct dependency" in line:
                 pass  # Still in resolution setup
+            elif "No cache entry for" in line and "simple" in line:
+                self.current_stage = UVStage.CACHE_CHECKING
+                
+        elif self.current_stage == UVStage.CACHE_CHECKING:
+            if "starting new connection" in line:
+                pass  # Still cache checking/network init
+            elif "connected to" in line:
+                pass  # Still establishing connections
             elif "parse_simple_api" in line or "registry_client::parse_simple_api" in line:
                 self.current_stage = UVStage.METADATA_DOWNLOAD
-            elif "No cache entry for" in line:
-                pass  # Cache miss, but still in resolution setup
                 
         elif self.current_stage == UVStage.METADATA_DOWNLOAD:
             if "parse_simple_api" in line:
@@ -73,7 +80,7 @@ class UVStageParser:
                 pass  # Still resolving
             elif "Selecting:" in line:
                 pass  # Still resolving
-            elif re.search(r"Resolved \d+ packages in \d+ms", line):
+            elif re.search(r"Resolved \d+ packages in \d+\w+", line):
                 match = re.search(r"Resolved (\d+) packages", line)
                 if match:
                     self.packages_resolved = int(match.group(1))
@@ -96,7 +103,7 @@ class UVStageParser:
         elif self.current_stage == UVStage.PACKAGE_DOWNLOADS:
             if "frame=Data { stream_id" in line or "Downloading" in line:
                 pass  # Still downloading (including download status messages)
-            elif re.search(r"Prepared \d+ packages? in [\d.]+s", line):
+            elif re.search(r"Prepared \d+ packages? in [\d.]+\w+", line):
                 match = re.search(r"Prepared (\d+) packages?", line)
                 if match:
                     self.packages_prepared = int(match.group(1))
@@ -109,7 +116,7 @@ class UVStageParser:
         elif self.current_stage == UVStage.INSTALLATION:
             if "install_wheel wheel=" in line:
                 pass  # Still installing
-            elif re.search(r"Installed \d+ packages? in \d+ms", line):
+            elif re.search(r"Installed \d+ packages? in \d+\w+", line):
                 match = re.search(r"Installed (\d+) packages?", line)
                 if match:
                     self.packages_installed = int(match.group(1))
