@@ -19,7 +19,6 @@ class UVStage(Enum):
     RESOLUTION_SUMMARY = "resolution_summary"
     INSTALLATION_PLANNING = "installation_planning"
     PACKAGE_DOWNLOADS = "package_downloads"
-    DOWNLOAD_COMPLETION = "download_completion"
     PACKAGE_PREPARATION = "package_preparation"
     INSTALLATION = "installation"
     FINAL_SUMMARY = "final_summary"
@@ -102,8 +101,8 @@ class UVStageParser:
                 self.current_stage = UVStage.PACKAGE_DOWNLOADS
                 
         elif self.current_stage == UVStage.PACKAGE_DOWNLOADS:
-            if "frame=Data { stream_id" in line:
-                pass  # Still downloading
+            if "frame=Data { stream_id" in line or "Downloading" in line:
+                pass  # Still downloading (including download status messages)
             elif re.search(r"Prepared \d+ packages? in [\d.]+s", line):
                 match = re.search(r"Prepared (\d+) packages?", line)
                 if match:
@@ -111,7 +110,7 @@ class UVStageParser:
                 self.current_stage = UVStage.PACKAGE_PREPARATION
                 
         elif self.current_stage == UVStage.PACKAGE_PREPARATION:
-            if "installer::install" in line:
+            if "installer::install" in line or "uv_installer::installer::install" in line:
                 self.current_stage = UVStage.INSTALLATION
                 
         elif self.current_stage == UVStage.INSTALLATION:
