@@ -3,6 +3,21 @@
 ## Overview
 This document contains a comprehensive analysis of the `uv pip install` output structure based on debug-level logging with context enabled (UV_LOG_CONTEXT=1 RUST_LOG=debug).
 
+## Installation Flows
+
+UV has two distinct installation flows:
+
+### Flow A: Standard Installation (packages need to be installed or updated)
+Follows the complete 11-stage process documented below.
+
+### Flow B: Already Satisfied (all requirements already installed)
+When all packages are already installed and satisfy requirements:
+1. **Startup** - UV version announcement
+2. **Quick Audit** - Requirements are checked and found satisfied
+   - Output: `Requirement satisfied: PACKAGE` for each package
+   - Summary: `Audited N packages in Xms`
+3. **Complete** - Process ends
+
 ## Installation Stages
 The UV package installation process follows these major stages (some may be skipped based on cache state):
 
@@ -57,11 +72,13 @@ This stage handles metadata acquisition through two possible paths:
 ```
           0.026451s   1ms DEBUG uv_client::cached_client Found fresh response for: https://pypi.org/simple/torch/
 ```
+**Why this marks the phase:**
+- Cache contains fresh metadata, no network download needed
+- Significantly faster than network retrieval
 
 **Pattern breakdown:**
 - Fixed: `DEBUG uv_client::cached_client Found fresh response for: https://pypi.org/simple/`
 - Variable: package name (e.g., `torch`)
-- Fixed: trailing `/`
 
 ```regex
 ^\s*[\d.]+\w+\s+[\d.]+\w+\s+DEBUG\s+uv_client::cached_client\s+Found\s+fresh\s+response\s+for:\s+https://pypi\.org/simple/\w+/
@@ -72,10 +89,11 @@ This stage handles metadata acquisition through two possible paths:
 ```
          uv_client::registry_client::parse_simple_api package=scipy
 ```
-**Why this marks download:**
+**Why this marks the phase:**
 - First `parse_simple_api` call indicates actual metadata retrieval from network
 - Simple API is PyPI's metadata format - parsing means data was received
 - Only appears when cache doesn't contain fresh metadata
+- Preceded by cache miss messages and HTTP connection establishment
 
 **Pattern breakdown:**
 - Fixed: `uv_client::registry_client::parse_simple_api package=`
@@ -84,6 +102,8 @@ This stage handles metadata acquisition through two possible paths:
 ```regex
 ^\s*uv_client::registry_client::parse_simple_api\s+package=\w+
 ```
+
+**Note:** Both paths lead to the same stage - the difference is whether metadata comes from cache or network.
 
 ### 5. Dependency Resolution with PubGrub
 **Output:**
@@ -121,7 +141,6 @@ Resolved 12 packages in 379ms
 **Pattern breakdown:**
 - Fixed: `Resolved ` ... ` packages in ` ... (time)
 - Variable: package count (`12`), duration with flexible units (`379ms`, `2s`, `1m`, etc.)
-- Note: No leading spaces in this output
 
 ```regex
 ^Resolved\s+\d+\s+packages?\s+in\s+[\d.]+\w+
@@ -150,7 +169,6 @@ The installer analyzes what actions are needed. Messages vary based on cache sta
 - Variable: action type (`Registry requirement already cached`, `Requirement already installed`, `Identified uncached distribution`, `Unnecessary package`)
 - Variable: package specification (`package==version`)
 
-**Pattern for stage start (first uv_installer::plan message):**
 ```regex
 ^\s*[\d.]+\w+\s+DEBUG\s+uv_installer::plan\s+(Registry requirement|Requirement|Identified|Unnecessary)
 ```
