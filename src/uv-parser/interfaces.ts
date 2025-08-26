@@ -78,10 +78,9 @@ export interface IUVParser {
    * Returns undefined if the line cannot be parsed or is not relevant.
    *
    * @param line - The line to parse
-   * @param lineNumber - Optional line number (1-indexed) for debugging
    * @returns Parsed output object or undefined
    */
-  parseLine(line: string, lineNumber?: number): UVParsedOutput | undefined;
+  parseLine(line: string): UVParsedOutput | undefined;
 
   /**
    * Parse multiple lines of UV output.
