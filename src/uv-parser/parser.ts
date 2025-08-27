@@ -33,7 +33,6 @@ import {
 import type {
   ChangedPackage,
   DownloadProgress,
-  Http2Frame,
   Http2FrameReceived,
   Http2FrameSent,
   InstallationSummary,
@@ -454,7 +453,7 @@ export class UVParser implements IUVParser {
         return {
           type: 'http2_frame',
           direction: 'send',
-          frameType: frameType as Http2Frame['frameType'],
+          frameType: frameType as Http2FrameSent['frameType'],
           streamId: streamId ? Number.parseInt(streamId, 10) : undefined,
           flags: flags || undefined,
           sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,
@@ -465,7 +464,7 @@ export class UVParser implements IUVParser {
         return {
           type: 'http2_frame',
           direction: 'received',
-          frameType: frameType as Http2Frame['frameType'],
+          frameType: frameType as Http2FrameReceived['frameType'],
           streamId: streamId ? Number.parseInt(streamId, 10) : undefined,
           flags: flags || undefined,
           sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,

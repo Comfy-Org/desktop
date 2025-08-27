@@ -272,11 +272,6 @@ export interface Http2FrameReceived extends Http2FrameBase {
 }
 
 /**
- * Discriminated union for HTTP/2 frames based on direction
- */
-export type Http2Frame = Http2FrameSent | Http2FrameReceived;
-
-/**
  * Warning or error message
  */
 export interface WarningOrError extends ParsedOutput {
@@ -330,7 +325,8 @@ export type UVParsedOutput =
   | PreparationSummary
   | InstallationSummary
   | CacheEvent
-  | Http2Frame
+  | Http2FrameSent
+  | Http2FrameReceived
   | WarningOrError
   | StatusMessage
   | ChangedPackage;
