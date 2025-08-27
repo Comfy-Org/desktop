@@ -8,8 +8,10 @@
 /**
  * Pattern for timestamped log lines
  * Example: "    0.000172s DEBUG uv uv 0.7.9 (13a86a23b 2025-05-30)"
+ * Example: "    22.110855s  21s  DEBUG h2::codec::framed_write send, frame=..."
  */
-export const TIMESTAMP_LOG_PATTERN = /^\s*([\d.]+)s(?:\s+([\d.]+)ms)?\s+(DEBUG|INFO|WARN|ERROR)\s+([\w:]+)\s+(.*)$/;
+export const TIMESTAMP_LOG_PATTERN =
+  /^\s*([\d.]+)s(?:\s+([\d.]+)(?:ms|s))?\s+(DEBUG|INFO|WARN|ERROR)\s+([\w:]+)\s+(.*)$/;
 
 /**
  * Pattern for module trace lines (indented, no timestamp)
@@ -95,11 +97,12 @@ export const SELECTING_PATTERN = /Selecting:\s+([\w-]+)==([\d.]+)\s+\[([^\]]+)]\
 export const SEARCHING_PATTERN = /Searching for a compatible version of\s+([\w-]+)\s*(\([^)]*\))?/;
 
 /**
- * Pattern for HTTP/2 frames
+ * Pattern for HTTP/2 frames (both send and received)
  * Example: "received, frame=Headers { stream_id: StreamId(1), flags: (0x4: END_HEADERS) }"
+ * Example: "send, frame=WindowUpdate { stream_id: StreamId(7), size_increment: 720896 }"
  */
 export const HTTP2_FRAME_PATTERN =
-  /received,\s+frame=(\w+)\s+{\s*stream_id:\s+StreamId\((\d+)\)(?:,\s*flags:\s*\(([^)]+)\))?\s*}/;
+  /(send|received),\s+frame=(\w+)\s+{\s*stream_id:\s+StreamId\((\d+)\)(?:,\s*(?:flags:\s*\(([^)]+)\)|size_increment:\s*(\d+)|[^}]+))*\s*}/;
 
 /**
  * Pattern for warning messages
