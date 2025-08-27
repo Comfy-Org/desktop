@@ -382,9 +382,13 @@ Installed 3 packages in 215ms
 
 ### HTTP/2 Specifics
 
-- Frame types: Settings, Headers, Data, WindowUpdate
+- Frame types: Settings, Headers, Data, WindowUpdate, GoAway, Ping, RstStream
+- Frame direction: Both 'send' and 'received' frames are tracked
 - Stream multiplexing with StreamId
-- Flow control via window updates
+- Flow control via WindowUpdate frames:
+  - **Sent WindowUpdate frames**: Acknowledge bytes received from server (size_increment = bytes processed)
+  - **Received WindowUpdate frames**: Server increases client's send window
+  - During downloads, sent WindowUpdate frames track actual download progress
 - Connection pooling and reuse
 
 ## Performance Characteristics

@@ -230,16 +230,26 @@ export interface CacheEvent extends ParsedOutput {
 export interface Http2Frame extends ParsedOutput {
   type: 'http2_frame';
 
+  /** Frame direction - whether it was sent or received */
+  direction: 'send' | 'received';
+
   /** Frame type */
   frameType: 'Settings' | 'Headers' | 'Data' | 'WindowUpdate' | 'GoAway' | 'Ping' | 'RstStream';
 
   /** Stream ID */
   streamId?: number;
 
-  /** Frame flags */
+  /** Frame flags (for Headers, Data, etc.) */
   flags?: string;
 
-  /** Frame details */
+  /**
+   * Size increment for WindowUpdate frames.
+   * When sent, this represents bytes received and acknowledged.
+   * When received, this represents window size increase from server.
+   */
+  sizeIncrement?: number;
+
+  /** Additional frame details */
   details?: Record<string, unknown>;
 }
 
