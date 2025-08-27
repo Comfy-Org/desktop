@@ -458,14 +458,14 @@ export class UVParser implements IUVParser {
       if (direction === 'send') {
         return {
           ...baseFrame,
-          direction: 'send' as const,
+          direction: 'send',
           flags: flags || undefined,
           sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,
         };
       } else {
         return {
           ...baseFrame,
-          direction: 'received' as const,
+          direction: 'received',
           flags: flags || undefined,
           sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,
         };
