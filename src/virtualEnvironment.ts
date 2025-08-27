@@ -561,9 +561,7 @@ export class VirtualEnvironment implements HasTelemetry {
     const isManagerUpgrade = (output: string) => {
       // Match the original case: 2 packages (uv + toml) | Added in https://github.com/ltdrdata/ComfyUI-Manager/commit/816a53a7b1a057af373c458ebf80aaae565b996b
       // Match the new case: 1 package (chardet) | Added in https://github.com/ltdrdata/ComfyUI-Manager/commit/60a5e4f2614c688b41a1ebaf0694953eb26db38a
-      // Match matrix-nio and its dependencies (14 packages) plus the original 3
-      const anyCombination =
-        /\bWould install \d+ packages?(\s+\+ (toml|uv|chardet|aiofiles|aiohttp-socks|h11|h2|hpack|hyperframe|jsonschema|jsonschema-specifications|matrix-nio|pycryptodome|python-socks|referencing|rpds-py|unpaddedbase64)==[\d.]+){1,17}\s*$/;
+      const anyCombination = /\bWould install [1-3] packages?(\s+\+ (toml|uv|chardet)==[\d.]+){1,3}\s*$/;
       return anyCombination.test(output);
     };
 
