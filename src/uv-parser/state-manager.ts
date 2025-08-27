@@ -1,14 +1,15 @@
 /**
- * UV State Manager Types
+ * UV State Manager
  *
- * Stage definitions for tracking UV installation progress.
- * Used by state managers that consume the stateless parser output.
+ * Manages state tracking for UV installations using the stateless parser.
+ * While the parser is stateless, this manager tracks overall progress.
  */
+import type { IUVParser } from './interfaces.js';
+import { createUVParser } from './parser.js';
+import type { ChangedPackage, PackageInfo, UVParsedOutput } from './types.js';
 
 /**
- * Represents the distinct stages of a UV pip install process.
- * UV progresses through these stages sequentially, though some may be skipped
- * based on cache state and installation requirements.
+ * UV installation stages derived from output patterns
  */
 export type UVStage =
   /** Default state before any output has been processed. */
@@ -35,3 +36,263 @@ export type UVStage =
   | 'final_summary'
   /** Process complete. */
   | 'complete';
+
+/**
+ * State manager for tracking UV installation progress
+ */
+export class UVStateManager {
+  private readonly parser: IUVParser;
+  private currentStage: UVStage = 'initializing';
+  private readonly packages: Map<string, PackageInfo> = new Map();
+  private outputs: UVParsedOutput[] = [];
+  private statistics = {
+    packagesResolved: 0,
+    packagesDownloaded: 0,
+    packagesInstalled: 0,
+    cacheHits: 0,
+    cacheMisses: 0,
+    linesProcessed: 0,
+    linesParsed: 0,
+  };
+
+  constructor(parser?: IUVParser) {
+    this.parser = parser || createUVParser();
+  }
+
+  /**
+   * Process a single line and update state
+   */
+  processLine(line: string): UVParsedOutput | undefined {
+    this.statistics.linesProcessed++;
+
+    const output = this.parser.parseLine(line);
+
+    if (output) {
+      this.statistics.linesParsed++;
+      this.outputs.push(output);
+      this.updateStateFromOutput(output);
+    }
+
+    return output;
+  }
+
+  /**
+   * Process multiple lines
+   */
+  processLines(lines: string[]): UVParsedOutput[] {
+    const results: UVParsedOutput[] = [];
+    for (const line of lines) {
+      const output = this.processLine(line);
+      if (output) {
+        results.push(output);
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Process complete output
+   */
+  processOutput(output: string): UVParsedOutput[] {
+    const lines = output.split('\n');
+    return this.processLines(lines);
+  }
+
+  /**
+   * Update internal state based on parsed output
+   */
+  private updateStateFromOutput(output: UVParsedOutput): void {
+    switch (output.type) {
+      case 'log_message':
+        // Check for stage transitions based on log content
+        if (output.message.includes('uv 0.')) {
+          this.currentStage = 'startup';
+        } else if (output.message.includes('Solving with installed Python version')) {
+          this.currentStage = 'resolution_setup';
+        } else if (
+          output.message.includes('No cache entry for') ||
+          output.message.includes('Found fresh response for')
+        ) {
+          if (this.currentStage === 'resolution_setup') {
+            this.currentStage = 'cache_checking';
+          }
+        } else if (output.message.includes('add_decision: Id::<PubGrubPackage>')) {
+          if (this.currentStage === 'cache_checking') {
+            this.currentStage = 'dependency_resolution';
+          }
+        } else if (output.module === 'uv_installer' && output.message.includes('plan')) {
+          this.currentStage = 'installation_planning';
+        } else if (output.message.includes('preparer::prepare')) {
+          this.currentStage = 'package_downloads';
+        } else if (output.message.includes('installer::install_blocking')) {
+          this.currentStage = 'installation';
+        }
+        break;
+
+      case 'resolution_summary':
+        this.currentStage = 'resolution_summary';
+        this.statistics.packagesResolved = output.packageCount;
+        break;
+
+      case 'preparation_summary':
+        this.currentStage = 'package_preparation';
+        this.statistics.packagesDownloaded = output.packageCount;
+        break;
+
+      case 'installation_summary':
+        this.currentStage = 'installation';
+        this.statistics.packagesInstalled = output.packageCount;
+        break;
+
+      case 'download_progress':
+        if (this.currentStage !== 'package_downloads' && this.currentStage !== 'package_preparation') {
+          this.currentStage = 'package_downloads';
+        }
+        if (output.package.name) {
+          this.packages.set(output.package.name, output.package);
+        }
+        break;
+
+      case 'changed_package':
+        this.currentStage = 'final_summary';
+        if (output.package.name) {
+          this.packages.set(output.package.name, output.package);
+        }
+        break;
+
+      case 'install_plan':
+        if (output.package.name) {
+          this.packages.set(output.package.name, output.package);
+        }
+        break;
+
+      case 'cache_event':
+        if (output.status === 'hit') {
+          this.statistics.cacheHits++;
+        } else if (output.status === 'miss') {
+          this.statistics.cacheMisses++;
+        }
+        break;
+
+      case 'resolution':
+        if (output.package.name) {
+          this.packages.set(output.package.name, output.package);
+        }
+        break;
+    }
+
+    // Check for completion
+    if (
+      this.currentStage === 'final_summary' &&
+      output.type === 'changed_package' &&
+      this.packages.size >= this.statistics.packagesInstalled
+    ) {
+      // If we've seen all the packages in the final summary
+      this.currentStage = 'complete';
+    }
+  }
+
+  /**
+   * Get current stage
+   */
+  getCurrentStage(): UVStage {
+    return this.currentStage;
+  }
+
+  /**
+   * Get all packages encountered
+   */
+  getPackages(): PackageInfo[] {
+    return [...this.packages.values()];
+  }
+
+  /**
+   * Get statistics
+   */
+  getStatistics() {
+    return { ...this.statistics };
+  }
+
+  /**
+   * Get all parsed outputs
+   */
+  getOutputs(): UVParsedOutput[] {
+    return [...this.outputs];
+  }
+
+  /**
+   * Get outputs of a specific type
+   */
+  getOutputsByType<T extends UVParsedOutput = UVParsedOutput>(type: UVParsedOutput['type']): T[] {
+    return this.outputs.filter((o): o is T => o.type === type);
+  }
+
+  /**
+   * Check if installation is complete
+   */
+  isComplete(): boolean {
+    return this.currentStage === 'complete';
+  }
+
+  /**
+   * Check if there were any errors
+   */
+  hasErrors(): boolean {
+    return this.outputs.some((o) => o.type === 'error');
+  }
+
+  /**
+   * Get all errors
+   */
+  getErrors() {
+    return this.getOutputsByType('error');
+  }
+
+  /**
+   * Get all warnings
+   */
+  getWarnings() {
+    return this.getOutputsByType('warning');
+  }
+
+  /**
+   * Get a summary of the installation
+   */
+  getSummary() {
+    const resolutionSummary = this.getOutputsByType('resolution_summary')[0];
+    const preparationSummary = this.getOutputsByType('preparation_summary')[0];
+    const installationSummary = this.getOutputsByType('installation_summary')[0];
+    const changedPackages = this.getOutputsByType<ChangedPackage>('changed_package');
+
+    return {
+      stage: this.currentStage,
+      complete: this.isComplete(),
+      hasErrors: this.hasErrors(),
+      statistics: this.getStatistics(),
+      packages: this.getPackages(),
+      resolution: resolutionSummary,
+      preparation: preparationSummary,
+      installation: installationSummary,
+      installedPackages: changedPackages.filter((p) => p.operation === '+').map((p) => p.package),
+      removedPackages: changedPackages.filter((p) => p.operation === '-').map((p) => p.package),
+    };
+  }
+
+  /**
+   * Reset the state manager
+   */
+  reset(): void {
+    this.currentStage = 'initializing';
+    this.packages.clear();
+    this.outputs = [];
+    this.statistics = {
+      packagesResolved: 0,
+      packagesDownloaded: 0,
+      packagesInstalled: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      linesProcessed: 0,
+      linesParsed: 0,
+    };
+  }
+}
