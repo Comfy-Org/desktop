@@ -225,33 +225,56 @@ export interface CacheEvent extends ParsedOutput {
 }
 
 /**
- * HTTP/2 frame event for detailed network analysis
+ * Base interface for HTTP/2 frames
  */
-export interface Http2Frame extends ParsedOutput {
+interface Http2FrameBase extends ParsedOutput {
   type: 'http2_frame';
-
-  /** Frame direction - whether it was sent or received */
-  direction: 'send' | 'received';
 
   /** Frame type */
   frameType: 'Settings' | 'Headers' | 'Data' | 'WindowUpdate' | 'GoAway' | 'Ping' | 'RstStream';
 
   /** Stream ID */
   streamId?: number;
+}
+
+/**
+ * HTTP/2 frame that was sent by the client
+ */
+export interface Http2FrameSent extends Http2FrameBase {
+  /** Discriminator for sent frames */
+  direction: 'send';
+
+  /** Frame flags (for Headers, Settings, etc.) */
+  flags?: string;
+
+  /**
+   * Size increment for WindowUpdate frames.
+   * Represents bytes received from server that are being acknowledged.
+   */
+  sizeIncrement?: number;
+}
+
+/**
+ * HTTP/2 frame that was received from the server
+ */
+export interface Http2FrameReceived extends Http2FrameBase {
+  /** Discriminator for received frames */
+  direction: 'received';
 
   /** Frame flags (for Headers, Data, etc.) */
   flags?: string;
 
   /**
    * Size increment for WindowUpdate frames.
-   * When sent, this represents bytes received and acknowledged.
-   * When received, this represents window size increase from server.
+   * Represents window size increase granted by server.
    */
   sizeIncrement?: number;
-
-  /** Additional frame details */
-  details?: Record<string, unknown>;
 }
+
+/**
+ * Discriminated union for HTTP/2 frames based on direction
+ */
+export type Http2Frame = Http2FrameSent | Http2FrameReceived;
 
 /**
  * Warning or error message

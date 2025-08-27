@@ -447,16 +447,29 @@ export class UVParser implements IUVParser {
     match = message.match(HTTP2_FRAME_PATTERN);
     if (match) {
       const [, direction, frameType, streamId, flags, sizeIncrement] = match;
-      return {
-        type: 'http2_frame',
-        direction: direction as 'send' | 'received',
+      const baseFrame = {
+        type: 'http2_frame' as const,
         frameType: frameType as Http2Frame['frameType'],
         streamId: streamId ? Number.parseInt(streamId, 10) : undefined,
-        flags: flags || undefined,
-        sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,
         timestamp: log.timestamp,
         relativeTime: log.relativeTime,
       };
+
+      if (direction === 'send') {
+        return {
+          ...baseFrame,
+          direction: 'send' as const,
+          flags: flags || undefined,
+          sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,
+        };
+      } else {
+        return {
+          ...baseFrame,
+          direction: 'received' as const,
+          flags: flags || undefined,
+          sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,
+        };
+      }
     }
 
     return undefined;
