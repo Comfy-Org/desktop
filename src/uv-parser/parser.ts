@@ -41,7 +41,6 @@ import type {
   PreparationSummary,
   ResolutionSummary,
   StatusMessage,
-  UVModule,
   UVParsedOutput,
 } from './types.js';
 
@@ -131,9 +130,10 @@ export class UVParser implements IUVParser {
     if (!match) return undefined;
 
     const [, operation, name, version] = match;
+    const op: '+' | '-' = operation === '+' ? '+' : '-';
     return {
       type: 'changed_package',
-      operation: operation as '+' | '-',
+      operation: op,
       package: {
         name,
         version,
@@ -231,12 +231,24 @@ export class UVParser implements IUVParser {
 
     const [, timestamp, relativeTime, level, module, message] = match;
 
+    const safeLevel = ((): LogLevel => {
+      switch (level) {
+        case 'DEBUG':
+        case 'INFO':
+        case 'WARN':
+        case 'ERROR':
+          return level;
+        default:
+          return '';
+      }
+    })();
+
     return {
       type: 'log_message',
       timestamp: parseTimestamp(timestamp),
       relativeTime: relativeTime || undefined,
-      level: level as LogLevel,
-      module: getModuleCategory(module) as UVModule,
+      level: safeLevel,
+      module: getModuleCategory(module),
       message,
     };
   }
@@ -253,7 +265,7 @@ export class UVParser implements IUVParser {
     return {
       type: 'log_message',
       level: '',
-      module: getModuleCategory(module) as UVModule,
+      module: getModuleCategory(module),
       message: `${module} ${rest}`.trim(),
     };
   }
@@ -449,11 +461,22 @@ export class UVParser implements IUVParser {
     if (match) {
       const [, direction, frameType, streamId, flags, sizeIncrement] = match;
 
+      const isValidFrameType = (value: string) =>
+        value === 'Settings' ||
+        value === 'Headers' ||
+        value === 'Data' ||
+        value === 'WindowUpdate' ||
+        value === 'GoAway' ||
+        value === 'Ping' ||
+        value === 'RstStream';
+
+      if (!isValidFrameType(frameType)) return undefined;
+
       if (direction === 'send') {
         return {
           type: 'http2_frame',
           direction: 'send',
-          frameType: frameType as Http2FrameSent['frameType'],
+          frameType,
           streamId: streamId ? Number.parseInt(streamId, 10) : undefined,
           flags: flags || undefined,
           sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,
@@ -464,7 +487,7 @@ export class UVParser implements IUVParser {
         return {
           type: 'http2_frame',
           direction: 'received',
-          frameType: frameType as Http2FrameReceived['frameType'],
+          frameType,
           streamId: streamId ? Number.parseInt(streamId, 10) : undefined,
           flags: flags || undefined,
           sizeIncrement: sizeIncrement ? Number.parseInt(sizeIncrement, 10) : undefined,
