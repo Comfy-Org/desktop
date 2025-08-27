@@ -65,7 +65,7 @@ These rules define how we write modern, strict, and highly readable TypeScript a
 
 - **Small modules**: Keep files focused and cohesive. Extract helpers when a module exceeds a clear single responsibility.
 - **Naming**: Use descriptive, intention‑revealing names. Avoid abbreviations. Classes/types use `PascalCase`; variables/functions use `camelCase`.
-- **Comments**: Document exported APIs with concise JSDoc. Explain “why”, not “what”. Avoid stale comments and TODOs—prefer immediate implementation.
+- **Comments**: Document exported APIs with concise JSDoc. Explain “why”, not “what”. Prefer `@param` and `@return` (omit `@return` for `void`), and use `{@link}` to reference symbols. Avoid stale comments and TODOs—prefer immediate implementation.
 
 ### Interop and boundaries
 

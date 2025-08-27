@@ -1,13 +1,13 @@
 ---
 description: Playwright End-to-End Testing
-globs: 
+globs:
 ---
 
 # Playwright End-to-End Testing
 
 - This project uses `Playwright` for end-to-end testing
-- Tests are stored in subdirectories of `tests/integrations/`
-- Directory structure of `tests/integrations/` is based on the test phase the tests 
+- Tests are stored in subdirectories of `tests/integration/`
+- Directory structure of `tests/integration/` is based on the test phase the tests
 - Tests should use the convenience methods and properties defined in the helper classes
   - Prefer adding properties to test classes over using locator selectors directly in tests
   - Test classes are stored in the `tests/integrations` directory
@@ -20,11 +20,15 @@ globs:
 2. `post-install-setup`: Installs the app with default settings, creating a baseline for each test in the next phase (`post-install`)
 3. `post-install`: Tests post-install features of the desktop app, with each test starting from the state set in `post-install-setup`
 
-## Spec files: *.spec.ts
+## Spec files: \*.spec.ts
 
 - Prefer imports from [testExtensions.ts](mdc:tests/integration/testExtensions.ts) over playwright defaults.
 
-## Test helper classes: tests/integration/test*.ts
+## Snapshots
+
+- Update E2E snapshots with `yarn test:e2e:update`
+
+## Test helper classes: tests/integration/test\*.ts
 
 - These files contain clean methods and properties for use in spec files
 - Use of these classes is preferred whenever possible, as they make the code easier to read

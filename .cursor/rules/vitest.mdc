@@ -1,11 +1,12 @@
 ---
 description: Creating unit tests
-globs: 
+globs:
 ---
 
 # Creating unit tests
 
 - This project uses `vitest` for unit testing
+- Do not build custom testing infrastructure; use Vitest and existing helpers
 - Tests are stored in the `tests/unit/` directory
   - Directory structure of `tests/unit/` should match that of the tested file in `src/`
 - Tests should be cross-platform compatible; able to run on Windows, macOS, and linux
@@ -23,3 +24,7 @@ globs:
 - Prefer the use of `test.extend` over loose variables
   - To achieve this, import `test as baseTest` from `vitest`
 - Never use `it`; `test` should be used in place of this
+
+## Pre-commit checks (tests)
+
+- Run `yarn test:unit` before committing changes
