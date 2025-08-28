@@ -52,7 +52,7 @@ jobs:
           gh release create "$TAG" \
             --title "$TAG" \
             --generate-notes \
-            --latest \
+            --prerelease \
             --verify-tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
