@@ -4,8 +4,8 @@ import { EventEmitter } from 'node:events';
 import { InstallStage } from '@/constants';
 import { AppStartError } from '@/infrastructure/appStartError';
 import type { Page } from '@/infrastructure/interfaces';
-import { getUVState } from '@/uv-parser/uv-state';
-import type { IUVState } from '@/uv-parser/uv-state-interfaces';
+import { getUVState } from '@/uv-parser/uvState';
+import type { IUVState } from '@/uv-parser/uvStateInterfaces';
 
 import { type InstallStageInfo, createInstallStageInfo } from './installStages';
 
