@@ -9,9 +9,9 @@ import log from 'electron-log/main';
 import { type ChildProcess, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 
-import { UVParser } from './parser.js';
-import { UVStateManager } from './stateManager.js';
-import type { UVStage } from './stateManager.js';
+import { UVParser } from './parser';
+import { UVStateManager } from './stateManager';
+import type { UVStage } from './stateManager';
 import type {
   DownloadProgress,
   InstallationSummary,
@@ -20,7 +20,7 @@ import type {
   ResolutionSummary,
   UVParsedOutput,
   WarningOrError,
-} from './types.js';
+} from './types';
 
 /**
  * Configuration for UV process
