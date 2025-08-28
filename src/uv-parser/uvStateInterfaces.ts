@@ -6,27 +6,27 @@
  */
 import type { EventEmitter } from 'node:events';
 
-import type { UVStage } from './stateManager';
+import type { UvStage } from './stateManager';
 import type {
   DownloadProgress,
   InstallationSummary,
   PackageInfo,
   PreparationSummary,
   ResolutionSummary,
-  UVParsedOutput,
   UvError,
+  UvParsedOutput,
   UvWarning,
 } from './types';
 
 /**
  * UV process identifiers for tracking different installations
  */
-export type UVProcessId = string;
+export type UvProcessId = string;
 
 /**
  * UV process type indicates what kind of installation is happening
  */
-export type UVProcessType =
+export type UvProcessType =
   | 'core_requirements' // Initial ComfyUI requirements
   | 'manager_requirements' // ComfyUI-Manager requirements
   | 'custom_node' // Custom node installation
@@ -39,7 +39,7 @@ export type UVProcessType =
 /**
  * UV process status
  */
-export type UVProcessStatus =
+export type UvProcessStatus =
   | 'idle' // No process running
   | 'starting' // Process is starting
   | 'running' // Process is running
@@ -50,18 +50,18 @@ export type UVProcessStatus =
 /**
  * UV process state for a single installation
  */
-export interface UVProcessState {
+export interface UvProcessState {
   /** Unique identifier for this process */
-  readonly id: UVProcessId;
+  readonly id: UvProcessId;
 
   /** Type of installation */
-  readonly type: UVProcessType;
+  readonly type: UvProcessType;
 
   /** Current status */
-  status: UVProcessStatus;
+  status: UvProcessStatus;
 
   /** Current stage of the UV installation */
-  stage: UVStage;
+  stage: UvStage;
 
   /** Start timestamp */
   readonly startedAt: Date;
@@ -76,7 +76,7 @@ export interface UVProcessState {
   packages: Map<string, PackageInfo>;
 
   /** Statistics about the process */
-  statistics: UVProcessStatistics;
+  statistics: UvProcessStatistics;
 
   /** Errors encountered */
   errors: UvError[];
@@ -103,13 +103,13 @@ export interface UVProcessState {
   rawOutput?: string[];
 
   /** Parsed outputs */
-  parsedOutputs: UVParsedOutput[];
+  parsedOutputs: UvParsedOutput[];
 }
 
 /**
  * Statistics for a UV process
  */
-export interface UVProcessStatistics {
+export interface UvProcessStatistics {
   /** Total lines of output processed */
   linesProcessed: number;
 
@@ -144,39 +144,39 @@ export interface UVProcessStatistics {
 /**
  * UV state events emitted during process execution
  */
-export type UVStateEvents = {
+export type UvStateEvents = {
   /** Emitted when a UV process starts */
-  'process:start': [process: UVProcessState];
+  'process:start': [process: UvProcessState];
 
   /** Emitted when UV process stage changes */
-  'stage:change': [processId: UVProcessId, newStage: UVStage, oldStage: UVStage];
+  'stage:change': [processId: UvProcessId, newStage: UvStage, oldStage: UvStage];
 
   /** Emitted when a line is parsed */
-  'output:parsed': [processId: UVProcessId, output: UVParsedOutput];
+  'output:parsed': [processId: UvProcessId, output: UvParsedOutput];
 
   /** Emitted for download progress */
-  'download:progress': [processId: UVProcessId, progress: DownloadProgress];
+  'download:progress': [processId: UvProcessId, progress: DownloadProgress];
 
   /** Emitted when a package is resolved */
-  'package:resolved': [processId: UVProcessId, packageInfo: PackageInfo];
+  'package:resolved': [processId: UvProcessId, packageInfo: PackageInfo];
 
   /** Emitted when a package is installed */
-  'package:installed': [processId: UVProcessId, packageInfo: PackageInfo];
+  'package:installed': [processId: UvProcessId, packageInfo: PackageInfo];
 
   /** Emitted when an error occurs */
-  'process:error': [processId: UVProcessId, error: UvError];
+  'process:error': [processId: UvProcessId, error: UvError];
 
   /** Emitted when a warning occurs */
-  'process:warning': [processId: UVProcessId, warning: UvWarning];
+  'process:warning': [processId: UvProcessId, warning: UvWarning];
 
   /** Emitted when a UV process completes */
-  'process:complete': [process: UVProcessState];
+  'process:complete': [process: UvProcessState];
 
   /** Emitted when a UV process fails */
-  'process:failed': [processId: UVProcessId, error: Error];
+  'process:failed': [processId: UvProcessId, error: Error];
 
   /** Emitted when a UV process is cancelled */
-  'process:cancelled': [processId: UVProcessId];
+  'process:cancelled': [processId: UvProcessId];
 
   /** Emitted when all UV processes are idle */
   'all:idle': [];
@@ -185,12 +185,12 @@ export type UVStateEvents = {
 /**
  * Options for creating a UV process
  */
-export interface UVProcessOptions {
+export interface UvProcessOptions {
   /** Type of installation */
-  type: UVProcessType;
+  type: UvProcessType;
 
   /** Optional custom ID (will be generated if not provided) */
-  id?: UVProcessId;
+  id?: UvProcessId;
 
   /** Whether to store raw output lines */
   storeRawOutput?: boolean;
@@ -205,15 +205,15 @@ export interface UVProcessOptions {
 /**
  * UV state manager interface for the application
  */
-export interface IUVState extends Pick<EventEmitter<UVStateEvents>, 'on' | 'once' | 'off' | 'emit'> {
+export interface IUvState extends Pick<EventEmitter<UvStateEvents>, 'on' | 'once' | 'off' | 'emit'> {
   /** Get current active process (if any) */
-  readonly activeProcess: UVProcessState | undefined;
+  readonly activeProcess: UvProcessState | undefined;
 
   /** Check if any process is running */
   readonly isRunning: boolean;
 
   /** Get all processes (including completed) */
-  readonly processes: Map<UVProcessId, UVProcessState>;
+  readonly processes: Map<UvProcessId, UvProcessState>;
 
   /** Get count of running processes */
   readonly runningCount: number;
@@ -223,7 +223,7 @@ export interface IUVState extends Pick<EventEmitter<UVStateEvents>, 'on' | 'once
    * @param options Process options
    * @returns The created process state
    */
-  startProcess(options: UVProcessOptions): UVProcessState;
+  startProcess(options: UvProcessOptions): UvProcessState;
 
   /**
    * Process a line of output for a specific process
@@ -231,7 +231,7 @@ export interface IUVState extends Pick<EventEmitter<UVStateEvents>, 'on' | 'once
    * @param line Output line to process
    * @returns Parsed output if any
    */
-  processLine(processId: UVProcessId, line: string): UVParsedOutput | undefined;
+  processLine(processId: UvProcessId, line: string): UvParsedOutput | undefined;
 
   /**
    * Process multiple lines of output
@@ -239,51 +239,51 @@ export interface IUVState extends Pick<EventEmitter<UVStateEvents>, 'on' | 'once
    * @param lines Output lines to process
    * @returns Array of parsed outputs
    */
-  processLines(processId: UVProcessId, lines: string[]): UVParsedOutput[];
+  processLines(processId: UvProcessId, lines: string[]): UvParsedOutput[];
 
   /**
    * Mark a process as completed
    * @param processId Process identifier
    */
-  completeProcess(processId: UVProcessId): void;
+  completeProcess(processId: UvProcessId): void;
 
   /**
    * Mark a process as failed
    * @param processId Process identifier
    * @param error Error that caused the failure
    */
-  failProcess(processId: UVProcessId, error: Error): void;
+  failProcess(processId: UvProcessId, error: Error): void;
 
   /**
    * Cancel a running process
    * @param processId Process identifier
    */
-  cancelProcess(processId: UVProcessId): void;
+  cancelProcess(processId: UvProcessId): void;
 
   /**
    * Get a specific process state
    * @param processId Process identifier
    * @returns Process state if found
    */
-  getProcess(processId: UVProcessId): UVProcessState | undefined;
+  getProcess(processId: UvProcessId): UvProcessState | undefined;
 
   /**
    * Get all running processes
    * @returns Array of running process states
    */
-  getRunningProcesses(): UVProcessState[];
+  getRunningProcesses(): UvProcessState[];
 
   /**
    * Get all completed processes
    * @returns Array of completed process states
    */
-  getCompletedProcesses(): UVProcessState[];
+  getCompletedProcesses(): UvProcessState[];
 
   /**
    * Get all failed processes
    * @returns Array of failed process states
    */
-  getFailedProcesses(): UVProcessState[];
+  getFailedProcesses(): UvProcessState[];
 
   /**
    * Clear completed/failed processes from memory
@@ -296,7 +296,7 @@ export interface IUVState extends Pick<EventEmitter<UVStateEvents>, 'on' | 'once
    * @param processId Process identifier
    * @returns Process summary
    */
-  getProcessSummary(processId: UVProcessId): ProcessSummary | undefined;
+  getProcessSummary(processId: UvProcessId): ProcessSummary | undefined;
 
   /**
    * Reset the UV state (clear all processes)
@@ -309,22 +309,22 @@ export interface IUVState extends Pick<EventEmitter<UVStateEvents>, 'on' | 'once
  */
 export interface ProcessSummary {
   /** Process ID */
-  id: UVProcessId;
+  id: UvProcessId;
 
   /** Process type */
-  type: UVProcessType;
+  type: UvProcessType;
 
   /** Status */
-  status: UVProcessStatus;
+  status: UvProcessStatus;
 
   /** Final stage reached */
-  finalStage: UVStage;
+  finalStage: UvStage;
 
   /** Duration in milliseconds */
   duration: number;
 
   /** Statistics */
-  statistics: UVProcessStatistics;
+  statistics: UvProcessStatistics;
 
   /** Number of errors */
   errorCount: number;
@@ -345,16 +345,16 @@ export interface ProcessSummary {
 /**
  * Factory for creating UV state managers
  */
-export interface IUVStateFactory {
+export interface IUvStateFactory {
   /**
    * Create a new UV state instance
    * @returns New UV state manager
    */
-  createUVState(): IUVState;
+  createUvState(): IUvState;
 
   /**
    * Get the singleton UV state instance
    * @returns Singleton UV state manager
    */
-  getUVState(): IUVState;
+  getUvState(): IUvState;
 }

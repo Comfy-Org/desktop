@@ -6,9 +6,9 @@
  */
 import { readFileSync } from 'node:fs';
 
-import { createUVParser } from './parser';
-import { UVStateManager } from './stateManager';
-import type { UVParsedOutput } from './types';
+import { createUvParser } from './parser';
+import { UvStateManager } from './stateManager';
+import type { UvParsedOutput } from './types';
 
 // ANSI color codes for terminal output
 const colors = {
@@ -34,8 +34,8 @@ function testFile(filePath: string, description: string) {
     const lines = content.split('\n');
 
     // Test stateless parser
-    const parser = createUVParser();
-    const parsedOutputs: UVParsedOutput[] = [];
+    const parser = createUvParser();
+    const parsedOutputs: UvParsedOutput[] = [];
     let unparsedLines = 0;
 
     for (const line of lines) {
@@ -56,7 +56,7 @@ function testFile(filePath: string, description: string) {
     }
 
     // Test state manager
-    const stateManager = new UVStateManager();
+    const stateManager = new UvStateManager();
     stateManager.processOutput(content);
     const summary = stateManager.getSummary();
 

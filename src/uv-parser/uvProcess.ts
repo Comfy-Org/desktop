@@ -9,24 +9,24 @@ import log from 'electron-log/main';
 import { type ChildProcess, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 
-import { UVParser } from './parser';
-import { UVStateManager } from './stateManager';
-import type { UVStage } from './stateManager';
+import { UvParser } from './parser';
+import { UvStateManager } from './stateManager';
+import type { UvStage } from './stateManager';
 import type {
   DownloadProgress,
   InstallationSummary,
   PackageInfo,
   PreparationSummary,
   ResolutionSummary,
-  UVParsedOutput,
   UvError,
+  UvParsedOutput,
   UvWarning,
 } from './types';
 
 /**
  * Configuration for UV process
  */
-export interface UVProcessConfig {
+export interface UvProcessConfig {
   /** UV executable path */
   uvPath: string;
 
@@ -55,7 +55,7 @@ export interface UVProcessConfig {
 /**
  * Result of UV process execution
  */
-export interface UVProcessResult {
+export interface UvProcessResult {
   /** Exit code of the process */
   exitCode: number;
 
@@ -63,7 +63,7 @@ export interface UVProcessResult {
   signal?: NodeJS.Signals;
 
   /** Final stage reached */
-  finalStage: UVStage;
+  finalStage: UvStage;
 
   /** Whether the process completed successfully */
   success: boolean;
@@ -102,12 +102,12 @@ export interface UVProcessResult {
 /**
  * Events emitted by UVProcess
  */
-export interface UVProcessEvents {
+export interface UvProcessEvents {
   /** Emitted when stage changes */
-  'stage-change': (newStage: UVStage, oldStage: UVStage) => void;
+  'stage-change': (newStage: UvStage, oldStage: UvStage) => void;
 
   /** Emitted when a line is parsed */
-  'output-parsed': (output: UVParsedOutput) => void;
+  'output-parsed': (output: UvParsedOutput) => void;
 
   /** Emitted for raw stdout data */
   stdout: (data: string) => void;
@@ -134,29 +134,29 @@ export interface UVProcessEvents {
   warning: (warning: UvWarning) => void;
 
   /** Emitted when the process completes */
-  complete: (result: UVProcessResult) => void;
+  complete: (result: UvProcessResult) => void;
 }
 
 /**
  * UV Process abstraction
  */
-export class UVProcess extends EventEmitter {
-  private readonly config: UVProcessConfig;
-  private readonly parser: UVParser;
-  private readonly stateManager: UVStateManager;
+export class UvProcess extends EventEmitter {
+  private readonly config: UvProcessConfig;
+  private readonly parser: UvParser;
+  private readonly stateManager: UvStateManager;
   private childProcess?: ChildProcess;
   private startTime?: number;
   private readonly rawStdout?: string[];
   private readonly rawStderr?: string[];
   private timeoutHandle?: NodeJS.Timeout;
   private isDestroyed = false;
-  private previousStage: UVStage = 'initializing';
+  private previousStage: UvStage = 'initializing';
 
-  constructor(config: UVProcessConfig) {
+  constructor(config: UvProcessConfig) {
     super();
     this.config = config;
-    this.parser = new UVParser();
-    this.stateManager = new UVStateManager();
+    this.parser = new UvParser();
+    this.stateManager = new UvStateManager();
 
     if (config.captureRawOutput) {
       this.rawStdout = [];
@@ -167,14 +167,14 @@ export class UVProcess extends EventEmitter {
   /**
    * Execute the UV process
    */
-  async execute(): Promise<UVProcessResult> {
+  async execute(): Promise<UvProcessResult> {
     if (this.isDestroyed) {
-      throw new Error('UVProcess has been destroyed');
+      throw new Error('UvProcess has been destroyed');
     }
 
     this.startTime = Date.now();
 
-    return new Promise<UVProcessResult>((resolve, reject) => {
+    return new Promise<UvProcessResult>((resolve, reject) => {
       try {
         this.spawn();
 
@@ -194,7 +194,7 @@ export class UVProcess extends EventEmitter {
           const duration = Date.now() - this.startTime!;
           const summary = this.stateManager.getSummary();
 
-          const result: UVProcessResult = {
+          const result: UvProcessResult = {
             exitCode: exitCode ?? -1,
             signal: signal ?? undefined,
             finalStage: this.stateManager.getCurrentStage(),
@@ -430,7 +430,7 @@ export class UVProcess extends EventEmitter {
 /**
  * Common options shared by all UV factory functions
  */
-export interface BaseUVOptions {
+export interface BaseUvOptions {
   /** Working directory for the process */
   cwd?: string;
 
@@ -447,7 +447,7 @@ export interface BaseUVOptions {
 /**
  * Options for creating a UV pip install process
  */
-export interface PipInstallOptions extends BaseUVOptions {
+export interface PipInstallOptions extends BaseUvOptions {
   /** List of packages to install */
   packages?: string[];
 
@@ -475,7 +475,7 @@ export interface PipInstallOptions extends BaseUVOptions {
  *
  * @param uvPath - Path to the UV executable
  * @param options - Configuration options for pip install
- * @return A configured {@link UVProcess} instance ready to execute
+ * @return A configured {@link UvProcess} instance ready to execute
  *
  * @example
  * ```typescript
@@ -499,7 +499,7 @@ export interface PipInstallOptions extends BaseUVOptions {
  * const result = await process.execute();
  * ```
  */
-export function createPipInstallProcess(uvPath: string, options: PipInstallOptions): UVProcess {
+export function createPipInstallProcess(uvPath: string, options: PipInstallOptions): UvProcess {
   const args: string[] = ['install'];
 
   if (options.upgrade) {
@@ -528,7 +528,7 @@ export function createPipInstallProcess(uvPath: string, options: PipInstallOptio
     args.push('--index-strategy', options.indexStrategy);
   }
 
-  return new UVProcess({
+  return new UvProcess({
     uvPath,
     command: 'pip',
     args,
@@ -542,7 +542,7 @@ export function createPipInstallProcess(uvPath: string, options: PipInstallOptio
 /**
  * Options for creating a UV virtual environment
  */
-export interface VenvOptions extends BaseUVOptions {
+export interface VenvOptions extends BaseUvOptions {
   /** Path where the virtual environment will be created */
   path: string;
 
@@ -558,7 +558,7 @@ export interface VenvOptions extends BaseUVOptions {
  *
  * @param uvPath - Path to the UV executable
  * @param options - Configuration options for virtual environment creation
- * @return A configured {@link UVProcess} instance ready to execute
+ * @return A configured {@link UvProcess} instance ready to execute
  *
  * @example
  * ```typescript
@@ -572,7 +572,7 @@ export interface VenvOptions extends BaseUVOptions {
  * const result = await process.execute();
  * ```
  */
-export function createVenvProcess(uvPath: string, options: VenvOptions): UVProcess {
+export function createVenvProcess(uvPath: string, options: VenvOptions): UvProcess {
   const args: string[] = [];
 
   if (options.python) {
@@ -585,7 +585,7 @@ export function createVenvProcess(uvPath: string, options: VenvOptions): UVProce
 
   args.push(options.path);
 
-  return new UVProcess({
+  return new UvProcess({
     uvPath,
     command: 'venv',
     args,
@@ -601,7 +601,7 @@ export function createVenvProcess(uvPath: string, options: VenvOptions): UVProce
  *
  * @param uvPath - Path to the UV executable
  * @param options - Configuration options for cache cleaning
- * @return A configured {@link UVProcess} instance ready to execute
+ * @return A configured {@link UvProcess} instance ready to execute
  *
  * @example
  * ```typescript
@@ -613,8 +613,8 @@ export function createVenvProcess(uvPath: string, options: VenvOptions): UVProce
  * const result = await process.execute();
  * ```
  */
-export function createCacheCleanProcess(uvPath: string, options: BaseUVOptions = {}): UVProcess {
-  return new UVProcess({
+export function createCacheCleanProcess(uvPath: string, options: BaseUvOptions = {}): UvProcess {
+  return new UvProcess({
     uvPath,
     command: 'cache',
     args: ['clean'],

@@ -19,7 +19,7 @@ export type LogLevel =
 /**
  * UV modules/components that generate log messages
  */
-export type UVModule =
+export type UvModule =
   /** Main UV application. */
   | 'uv'
   /** Dependency resolver. */
@@ -89,7 +89,7 @@ export interface LogMessage extends ParsedOutput {
   level: LogLevel;
 
   /** Module that generated the log */
-  module: UVModule;
+  module: UvModule;
 
   /** Log message content */
   message: string;
@@ -326,7 +326,7 @@ export interface ChangedPackage extends ParsedOutput {
 /**
  * Union type of all possible parsed output types
  */
-export type UVParsedOutput =
+export type UvParsedOutput =
   | LogMessage
   | ResolutionEvent
   | ResolutionSummary
