@@ -4,9 +4,9 @@
  * Manages state tracking for UV installations using the stateless parser.
  * While the parser is stateless, this manager tracks overall progress.
  */
-import type { IUVParser } from './interfaces.js';
-import { createUVParser } from './parser.js';
-import type { ChangedPackage, PackageInfo, UVParsedOutput } from './types.js';
+import type { IUVParser } from './interfaces';
+import { createUVParser } from './parser';
+import type { ChangedPackage, PackageInfo, UVParsedOutput } from './types';
 
 /**
  * UV installation stages derived from output patterns

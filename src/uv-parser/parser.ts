@@ -4,7 +4,7 @@
  * Stateless parser for UV pip install output.
  * Each line is parsed independently without requiring context.
  */
-import type { IUVParser } from './interfaces.js';
+import type { IUVParser } from './interfaces';
 import {
   AUDITED_PATTERN,
   CACHE_HIT_PATTERN,
@@ -29,7 +29,7 @@ import {
   extractPackageFromUrl,
   getModuleCategory,
   parseTimestamp,
-} from './patterns.js';
+} from './patterns';
 import type {
   ChangedPackage,
   DownloadProgress,
@@ -42,7 +42,7 @@ import type {
   ResolutionSummary,
   StatusMessage,
   UVParsedOutput,
-} from './types.js';
+} from './types';
 
 /**
  * Stateless UV output parser implementation

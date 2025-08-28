@@ -8,7 +8,7 @@
  */
 import { readFileSync } from 'node:fs';
 
-import { createUVParser } from './parser.js';
+import { createUVParser } from './parser';
 
 // Main function to allow proper error handling
 function main(): void {
