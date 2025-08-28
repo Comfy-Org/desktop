@@ -47,15 +47,15 @@ jobs:
 
       - name: Create release
         id: create_release
-        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
+        run: |
+          TAG="v${{ steps.current_version.outputs.version }}"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --latest \
+            --verify-tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.current_version.outputs.version }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          make_latest: 'true'
 
   publish:
     runs-on: ubuntu-latest
