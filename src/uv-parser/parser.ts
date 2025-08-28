@@ -280,7 +280,6 @@ export class UVParser implements IUVParser {
     if (log.level === 'WARN') {
       return {
         type: 'warning',
-        severity: 'warning',
         message,
         timestamp: log.timestamp,
         relativeTime: log.relativeTime,
@@ -290,7 +289,6 @@ export class UVParser implements IUVParser {
     if (log.level === 'ERROR') {
       return {
         type: 'error',
-        severity: 'error',
         message,
         timestamp: log.timestamp,
         relativeTime: log.relativeTime,

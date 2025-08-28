@@ -14,7 +14,8 @@ import type {
   PreparationSummary,
   ResolutionSummary,
   UVParsedOutput,
-  WarningOrError,
+  UvError,
+  UvWarning,
 } from './types';
 
 /**
@@ -78,10 +79,10 @@ export interface UVProcessState {
   statistics: UVProcessStatistics;
 
   /** Errors encountered */
-  errors: WarningOrError[];
+  errors: UvError[];
 
   /** Warnings encountered */
-  warnings: WarningOrError[];
+  warnings: UvWarning[];
 
   /** Resolution summary if available */
   resolutionSummary?: ResolutionSummary;
@@ -163,10 +164,10 @@ export type UVStateEvents = {
   'package:installed': [processId: UVProcessId, packageInfo: PackageInfo];
 
   /** Emitted when an error occurs */
-  'process:error': [processId: UVProcessId, error: WarningOrError];
+  'process:error': [processId: UVProcessId, error: UvError];
 
   /** Emitted when a warning occurs */
-  'process:warning': [processId: UVProcessId, warning: WarningOrError];
+  'process:warning': [processId: UVProcessId, warning: UvWarning];
 
   /** Emitted when a UV process completes */
   'process:complete': [process: UVProcessState];
