@@ -4,7 +4,7 @@
  * Regular expressions and matchers for identifying UV output line types.
  * Each pattern is designed to work independently without requiring context.
  */
-import type { UVModule } from './types';
+import type { UvModule } from './types';
 
 /**
  * Pattern for timestamped log lines
@@ -141,7 +141,7 @@ export function parseTimestamp(timestamp: string): number {
 /**
  * Identify module category from full module path
  */
-export function getModuleCategory(modulePath: string): UVModule {
+export function getModuleCategory(modulePath: string): UvModule {
   if (modulePath.startsWith('uv_resolver')) return 'uv_resolver';
   if (modulePath.startsWith('uv_client')) return 'uv_client';
   if (modulePath.startsWith('uv_installer')) return 'uv_installer';

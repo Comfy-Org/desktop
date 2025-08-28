@@ -3,12 +3,12 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { UVStateManager } from '@/uv-parser/stateManager';
+import { UvStateManager } from '@/uv-parser/stateManager';
 
-describe('UVStateManager', () => {
+describe('UvStateManager', () => {
   describe('Type Safety', () => {
     it('should return correctly typed arrays, not never[]', () => {
-      const manager = new UVStateManager();
+      const manager = new UvStateManager();
 
       // These should all return properly typed arrays, NOT never[]
       const warnings = manager.getOutputsByType('warning');
@@ -36,7 +36,7 @@ describe('UVStateManager', () => {
     });
 
     it('should properly infer types from getOutputsByType without type assertions', () => {
-      const manager = new UVStateManager();
+      const manager = new UvStateManager();
 
       // Process some test lines to populate outputs
       manager.processLine('ERROR uv::test Error message');
@@ -96,7 +96,7 @@ describe('UVStateManager', () => {
     });
 
     it('should handle empty state correctly', () => {
-      const manager = new UVStateManager();
+      const manager = new UvStateManager();
 
       // All methods should return properly typed empty arrays
       expect(manager.getErrors()).toEqual([]);
@@ -116,7 +116,7 @@ describe('UVStateManager', () => {
 
   describe('Output Processing', () => {
     it('should correctly parse and categorize different output types', () => {
-      const manager = new UVStateManager();
+      const manager = new UvStateManager();
 
       // Test various output types
       manager.processLine('    0.001s DEBUG uv uv 0.5.0');
@@ -141,7 +141,7 @@ describe('UVStateManager', () => {
 
   describe('State Transitions', () => {
     it('should track stage progression', () => {
-      const manager = new UVStateManager();
+      const manager = new UvStateManager();
 
       expect(manager.getCurrentStage()).toBe('initializing');
 
