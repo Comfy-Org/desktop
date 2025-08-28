@@ -1,0 +1,73 @@
+name: Create GitHub Release
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - master
+    paths:
+      - 'package.json'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'Release'))
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' package.json)
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if release exists
+        id: check_release
+        run: |
+          TAG="v${{ steps.current_version.outputs.version }}"
+          if gh release view "$TAG" --json tagName --repo ${{ github.repository }} > /dev/null 2>&1; then
+            echo "::error::Release $TAG already exists! This indicates either an attempt to recreate an existing release or a version numbering issue."
+            exit 1
+          else
+            echo "Release $TAG does not exist - will create"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release
+        id: create_release
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.current_version.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          make_latest: 'true'
+
+  publish:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name != 'workflow_dispatch' &&
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'Release')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
