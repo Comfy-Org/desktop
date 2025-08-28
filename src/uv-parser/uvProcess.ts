@@ -10,8 +10,8 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 
 import { UVParser } from './parser.js';
-import { UVStateManager } from './state-manager.js';
-import type { UVStage } from './state-manager.js';
+import { UVStateManager } from './stateManager.js';
+import type { UVStage } from './stateManager.js';
 import type {
   DownloadProgress,
   InstallationSummary,

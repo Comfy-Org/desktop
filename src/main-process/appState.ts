@@ -3,8 +3,8 @@ import { EventEmitter } from 'node:events';
 
 import { AppStartError } from '@/infrastructure/appStartError';
 import type { Page } from '@/infrastructure/interfaces';
-import { getUVState } from '@/uv-parser/uv-state';
-import type { IUVState } from '@/uv-parser/uv-state-interfaces';
+import { getUVState } from '@/uv-parser/uvState';
+import type { IUVState } from '@/uv-parser/uvStateInterfaces';
 
 import type { InstallStageInfo } from './installStages';
 

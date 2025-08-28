@@ -6,7 +6,7 @@
  */
 import type { EventEmitter } from 'node:events';
 
-import type { UVStage } from './state-manager';
+import type { UVStage } from './stateManager';
 import type {
   DownloadProgress,
   InstallationSummary,
