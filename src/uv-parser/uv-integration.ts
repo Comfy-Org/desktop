@@ -9,8 +9,8 @@ import log from 'electron-log/main';
 import { useAppState } from '@/main-process/appState';
 import type { ProcessCallbacks } from '@/virtualEnvironment';
 
-import type { UVParsedOutput } from './types.js';
-import type { IUVState, UVProcessId, UVProcessType } from './uv-state-interfaces.js';
+import type { UVParsedOutput } from './types';
+import type { IUVState, UVProcessId, UVProcessType } from './uv-state-interfaces';
 
 /**
  * Create process callbacks that integrate with UV state

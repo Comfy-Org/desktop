@@ -4,7 +4,7 @@
  * Regular expressions and matchers for identifying UV output line types.
  * Each pattern is designed to work independently without requiring context.
  */
-import type { UVModule } from './types.js';
+import type { UVModule } from './types';
 
 /**
  * Pattern for timestamped log lines

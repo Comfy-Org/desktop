@@ -8,8 +8,8 @@ import log from 'electron-log/main';
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 
-import { UVStateManager } from './state-manager.js';
-import type { UVStage } from './state-manager.js';
+import { UVStateManager } from './state-manager';
+import type { UVStage } from './state-manager';
 import type {
   InstallationSummary,
   PackageInfo,
@@ -17,7 +17,7 @@ import type {
   ResolutionSummary,
   UVParsedOutput,
   WarningOrError,
-} from './types.js';
+} from './types';
 import type {
   IUVState,
   IUVStateFactory,
@@ -29,7 +29,7 @@ import type {
   UVProcessStatus,
   UVProcessType,
   UVStateEvents,
-} from './uv-state-interfaces.js';
+} from './uv-state-interfaces';
 
 /**
  * Concrete implementation of UV process state
