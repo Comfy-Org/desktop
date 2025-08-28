@@ -6,7 +6,7 @@
  */
 import type { IUVParser } from './interfaces';
 import { createUVParser } from './parser';
-import type { ChangedPackage, PackageInfo, UVParsedOutput } from './types';
+import type { PackageInfo, UVParsedOutput, UvError, UvWarning } from './types';
 
 /**
  * UV installation stages derived from output patterns
@@ -221,10 +221,10 @@ export class UVStateManager {
   }
 
   /**
-   * Get outputs of a specific type
+   * Get outputs of a specific type with proper type narrowing
    */
-  getOutputsByType<T extends UVParsedOutput = UVParsedOutput>(type: UVParsedOutput['type']): T[] {
-    return this.outputs.filter((o): o is T => o.type === type);
+  getOutputsByType<T extends UVParsedOutput['type']>(type: T): Extract<UVParsedOutput, { type: T }>[] {
+    return this.outputs.filter((output): output is Extract<UVParsedOutput, { type: T }> => output.type === type);
   }
 
   /**
@@ -244,14 +244,14 @@ export class UVStateManager {
   /**
    * Get all errors
    */
-  getErrors() {
+  getErrors(): UvError[] {
     return this.getOutputsByType('error');
   }
 
   /**
    * Get all warnings
    */
-  getWarnings() {
+  getWarnings(): UvWarning[] {
     return this.getOutputsByType('warning');
   }
 
@@ -262,7 +262,7 @@ export class UVStateManager {
     const resolutionSummary = this.getOutputsByType('resolution_summary')[0];
     const preparationSummary = this.getOutputsByType('preparation_summary')[0];
     const installationSummary = this.getOutputsByType('installation_summary')[0];
-    const changedPackages = this.getOutputsByType<ChangedPackage>('changed_package');
+    const changedPackages = this.getOutputsByType('changed_package');
 
     return {
       stage: this.currentStage,

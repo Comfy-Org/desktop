@@ -272,15 +272,25 @@ export interface Http2FrameReceived extends Http2FrameBase {
 }
 
 /**
- * Warning or error message
+ * Warning message from uv output
  */
-export interface WarningOrError extends ParsedOutput {
-  type: 'warning' | 'error';
+export interface UvWarning extends ParsedOutput {
+  type: 'warning';
 
-  /** Severity level */
-  severity: 'warning' | 'error';
+  /** Warning message */
+  message: string;
 
-  /** Error/warning message */
+  /** Additional context */
+  context?: Record<string, unknown>;
+}
+
+/**
+ * Error message from uv output
+ */
+export interface UvError extends ParsedOutput {
+  type: 'error';
+
+  /** Error message */
   message: string;
 
   /** Additional context */
@@ -327,6 +337,7 @@ export type UVParsedOutput =
   | CacheEvent
   | Http2FrameSent
   | Http2FrameReceived
-  | WarningOrError
+  | UvWarning
+  | UvError
   | StatusMessage
   | ChangedPackage;

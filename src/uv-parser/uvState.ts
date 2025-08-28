@@ -16,7 +16,8 @@ import type {
   PreparationSummary,
   ResolutionSummary,
   UVParsedOutput,
-  WarningOrError,
+  UvError,
+  UvWarning,
 } from './types';
 import type {
   IUVState,
@@ -44,8 +45,8 @@ class UVProcessStateImpl implements UVProcessState {
   duration?: number;
   packages: Map<string, PackageInfo>;
   statistics: UVProcessStatistics;
-  errors: WarningOrError[];
-  warnings: WarningOrError[];
+  errors: UvError[];
+  warnings: UvWarning[];
   resolutionSummary?: ResolutionSummary;
   preparationSummary?: PreparationSummary;
   installationSummary?: InstallationSummary;
@@ -202,7 +203,6 @@ class UVProcessStateImpl implements UVProcessState {
     // Add error to errors list
     this.errors.push({
       type: 'error',
-      severity: 'error',
       message: error.message,
       context: {
         name: error.name,

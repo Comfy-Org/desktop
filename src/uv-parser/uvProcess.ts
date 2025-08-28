@@ -19,7 +19,8 @@ import type {
   PreparationSummary,
   ResolutionSummary,
   UVParsedOutput,
-  WarningOrError,
+  UvError,
+  UvWarning,
 } from './types';
 
 /**
@@ -83,10 +84,10 @@ export interface UVProcessResult {
   preparationSummary?: PreparationSummary;
 
   /** Errors encountered */
-  errors: WarningOrError[];
+  errors: UvError[];
 
   /** Warnings encountered */
-  warnings: WarningOrError[];
+  warnings: UvWarning[];
 
   /** Duration in milliseconds */
   duration: number;
@@ -127,10 +128,10 @@ export interface UVProcessEvents {
   'package-removed': (packageInfo: PackageInfo) => void;
 
   /** Emitted when an error occurs */
-  error: (error: WarningOrError) => void;
+  error: (error: UvError) => void;
 
   /** Emitted when a warning occurs */
-  warning: (warning: WarningOrError) => void;
+  warning: (warning: UvWarning) => void;
 
   /** Emitted when the process completes */
   complete: (result: UVProcessResult) => void;
@@ -200,11 +201,11 @@ export class UVProcess extends EventEmitter {
             success: exitCode === 0 && !this.stateManager.hasErrors(),
             installedPackages: summary.installedPackages,
             removedPackages: summary.removedPackages,
-            resolutionSummary: summary.resolution as ResolutionSummary | undefined,
-            installationSummary: summary.installation as InstallationSummary | undefined,
-            preparationSummary: summary.preparation as PreparationSummary | undefined,
-            errors: this.stateManager.getErrors() as WarningOrError[],
-            warnings: this.stateManager.getWarnings() as WarningOrError[],
+            resolutionSummary: summary.resolution,
+            installationSummary: summary.installation,
+            preparationSummary: summary.preparation,
+            errors: this.stateManager.getErrors(),
+            warnings: this.stateManager.getWarnings(),
             duration,
             rawStdout: this.rawStdout?.join('\n'),
             rawStderr: this.rawStderr?.join('\n'),
@@ -427,9 +428,26 @@ export class UVProcess extends EventEmitter {
 }
 
 /**
+ * Common options shared by all UV factory functions
+ */
+export interface BaseUVOptions {
+  /** Working directory for the process */
+  cwd?: string;
+
+  /** Environment variables */
+  env?: Record<string, string>;
+
+  /** Enable verbose output for debugging */
+  verbose?: boolean;
+
+  /** Process timeout in milliseconds */
+  timeout?: number;
+}
+
+/**
  * Options for creating a UV pip install process
  */
-export interface PipInstallOptions {
+export interface PipInstallOptions extends BaseUVOptions {
   /** List of packages to install */
   packages?: string[];
 
@@ -450,18 +468,6 @@ export interface PipInstallOptions {
 
   /** Allow prerelease versions */
   prerelease?: boolean;
-
-  /** Working directory for the process */
-  cwd?: string;
-
-  /** Environment variables */
-  env?: Record<string, string>;
-
-  /** Enable verbose output for debugging */
-  verbose?: boolean;
-
-  /** Process timeout in milliseconds */
-  timeout?: number;
 }
 
 /**
@@ -536,7 +542,7 @@ export function createPipInstallProcess(uvPath: string, options: PipInstallOptio
 /**
  * Options for creating a UV virtual environment
  */
-export interface VenvOptions {
+export interface VenvOptions extends BaseUVOptions {
   /** Path where the virtual environment will be created */
   path: string;
 
@@ -545,18 +551,6 @@ export interface VenvOptions {
 
   /** Python discovery preference */
   pythonPreference?: 'only-managed' | 'managed' | 'system' | 'only-system';
-
-  /** Working directory for the process */
-  cwd?: string;
-
-  /** Environment variables */
-  env?: Record<string, string>;
-
-  /** Enable verbose output for debugging */
-  verbose?: boolean;
-
-  /** Process timeout in milliseconds */
-  timeout?: number;
 }
 
 /**
@@ -603,23 +597,6 @@ export function createVenvProcess(uvPath: string, options: VenvOptions): UVProce
 }
 
 /**
- * Options for cleaning UV cache
- */
-export interface CacheCleanOptions {
-  /** Working directory for the process */
-  cwd?: string;
-
-  /** Environment variables */
-  env?: Record<string, string>;
-
-  /** Enable verbose output for debugging */
-  verbose?: boolean;
-
-  /** Process timeout in milliseconds */
-  timeout?: number;
-}
-
-/**
  * Create a UV cache clean process for clearing the UV package cache.
  *
  * @param uvPath - Path to the UV executable
@@ -636,7 +613,7 @@ export interface CacheCleanOptions {
  * const result = await process.execute();
  * ```
  */
-export function createCacheCleanProcess(uvPath: string, options: CacheCleanOptions = {}): UVProcess {
+export function createCacheCleanProcess(uvPath: string, options: BaseUVOptions = {}): UVProcess {
   return new UVProcess({
     uvPath,
     command: 'cache',
