@@ -2,6 +2,11 @@ name: Create GitHub Release
 
 on:
   workflow_dispatch:
+    inputs:
+      trigger_note:
+        description: 'Can be run manually in case Release label is forgotten. Does NOT bump version numbers. Will fail if release version already exists.'
+        required: false
+        default: 'Run to create release'
   pull_request:
     types: [closed]
     branches:
