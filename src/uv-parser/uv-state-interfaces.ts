@@ -6,7 +6,7 @@
  */
 import type { EventEmitter } from 'node:events';
 
-import type { UVStage } from './state-manager.js';
+import type { UVStage } from './state-manager';
 import type {
   DownloadProgress,
   InstallationSummary,
@@ -15,7 +15,7 @@ import type {
   ResolutionSummary,
   UVParsedOutput,
   WarningOrError,
-} from './types.js';
+} from './types';
 
 /**
  * UV process identifiers for tracking different installations
