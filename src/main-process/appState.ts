@@ -3,8 +3,8 @@ import { EventEmitter } from 'node:events';
 
 import { AppStartError } from '@/infrastructure/appStartError';
 import type { Page } from '@/infrastructure/interfaces';
-import { getUVState } from '@/uv-parser/uvState';
-import type { IUVState } from '@/uv-parser/uvStateInterfaces';
+import { getUvState } from '@/uv-parser/uvState';
+import type { IUvState } from '@/uv-parser/uvStateInterfaces';
 
 /** App event names */
 type AppStateEvents = {
@@ -29,7 +29,7 @@ export interface IAppState extends Pick<EventEmitter<AppStateEvents>, 'on' | 'on
   /** The last page the app loaded from the desktop side. @see {@link AppWindow.loadPage} */
   currentPage?: Page;
   /** UV process state manager for tracking package installations. */
-  readonly uvState: IUVState;
+  readonly uvState: IUvState;
 
   /** Updates state - IPC handlers have been registered. */
   emitIpcRegistered(): void;
@@ -45,12 +45,12 @@ class AppState extends EventEmitter<AppStateEvents> implements IAppState {
   ipcRegistered = false;
   loaded = false;
   currentPage?: Page;
-  readonly uvState: IUVState;
+  readonly uvState: IUvState;
 
   constructor() {
     super();
     // Initialize UV state
-    this.uvState = getUVState();
+    this.uvState = getUvState();
   }
 
   initialize() {

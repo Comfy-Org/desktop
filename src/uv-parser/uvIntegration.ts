@@ -9,19 +9,19 @@ import log from 'electron-log/main';
 import { useAppState } from '@/main-process/appState';
 import type { ProcessCallbacks } from '@/virtualEnvironment';
 
-import type { UVParsedOutput } from './types';
-import type { IUVState, UVProcessId, UVProcessType } from './uvStateInterfaces';
+import type { UvParsedOutput } from './types';
+import type { IUvState, UvProcessId, UvProcessType } from './uvStateInterfaces';
 
 /**
  * Create process callbacks that integrate with UV state
  */
-export function createUVProcessCallbacks(
-  processType: UVProcessType,
+export function createUvProcessCallbacks(
+  processType: UvProcessType,
   onData?: (data: string) => void,
-  processId?: UVProcessId
+  processId?: UvProcessId
 ): {
   callbacks: ProcessCallbacks;
-  processId: UVProcessId;
+  processId: UvProcessId;
 } {
   const uvState = useAppState().uvState;
 
@@ -78,7 +78,7 @@ export function createUVProcessCallbacks(
 /**
  * Complete a UV process successfully
  */
-export function completeUVProcess(processId: UVProcessId): void {
+export function completeUvProcess(processId: UvProcessId): void {
   const uvState = useAppState().uvState;
   uvState.completeProcess(processId);
 }
@@ -86,7 +86,7 @@ export function completeUVProcess(processId: UVProcessId): void {
 /**
  * Fail a UV process with an error
  */
-export function failUVProcess(processId: UVProcessId, error: Error): void {
+export function failUvProcess(processId: UvProcessId, error: Error): void {
   const uvState = useAppState().uvState;
   uvState.failProcess(processId, error);
 }
@@ -94,7 +94,7 @@ export function failUVProcess(processId: UVProcessId, error: Error): void {
 /**
  * Cancel a UV process
  */
-export function cancelUVProcess(processId: UVProcessId): void {
+export function cancelUvProcess(processId: UvProcessId): void {
   const uvState = useAppState().uvState;
   uvState.cancelProcess(processId);
 }
@@ -102,14 +102,14 @@ export function cancelUVProcess(processId: UVProcessId): void {
 /**
  * Get UV state instance
  */
-export function getUVStateFromApp(): IUVState {
+export function getUvStateFromApp(): IUvState {
   return useAppState().uvState;
 }
 
 /**
  * Log important parsed output
  */
-function logParsedOutput(output: UVParsedOutput): void {
+function logParsedOutput(output: UvParsedOutput): void {
   switch (output.type) {
     case 'resolution_summary':
       log.info(`UV: Resolved ${output.packageCount} packages in ${output.duration}`);
@@ -152,20 +152,20 @@ function logParsedOutput(output: UVParsedOutput): void {
 export function wrapInstallRequirements(
   originalMethod: (callbacks?: ProcessCallbacks) => Promise<void>,
   context: unknown,
-  processType: UVProcessType = 'core_requirements'
+  processType: UvProcessType = 'core_requirements'
 ): (callbacks?: ProcessCallbacks) => Promise<void> {
   return async function (callbacks?: ProcessCallbacks) {
-    const { callbacks: uvCallbacks, processId } = createUVProcessCallbacks(processType, callbacks?.onStdout);
+    const { callbacks: uvCallbacks, processId } = createUvProcessCallbacks(processType, callbacks?.onStdout);
 
     try {
       // Call original method with UV-enhanced callbacks
       await originalMethod.call(context, uvCallbacks);
 
       // Mark process as complete
-      completeUVProcess(processId);
+      completeUvProcess(processId);
     } catch (error) {
       // Mark process as failed
-      failUVProcess(processId, error as Error);
+      failUvProcess(processId, error as Error);
       throw error;
     }
   };
@@ -174,20 +174,20 @@ export function wrapInstallRequirements(
 /**
  * Wrap any UV pip install command
  */
-export function wrapUVCommand<T>(
+export function wrapUvCommand<T>(
   command: () => Promise<T>,
-  processType: UVProcessType,
+  processType: UvProcessType,
   onData?: (data: string) => void
 ): Promise<T> {
-  const { processId } = createUVProcessCallbacks(processType, onData);
+  const { processId } = createUvProcessCallbacks(processType, onData);
 
   return command()
     .then((result) => {
-      completeUVProcess(processId);
+      completeUvProcess(processId);
       return result;
     })
     .catch((error: unknown) => {
-      failUVProcess(processId, error as Error);
+      failUvProcess(processId, error as Error);
       throw error;
     });
 }

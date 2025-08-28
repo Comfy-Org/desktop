@@ -8,43 +8,43 @@ import log from 'electron-log/main';
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 
-import { UVStateManager } from './stateManager';
-import type { UVStage } from './stateManager';
+import { UvStateManager } from './stateManager';
+import type { UvStage } from './stateManager';
 import type {
   InstallationSummary,
   PackageInfo,
   PreparationSummary,
   ResolutionSummary,
-  UVParsedOutput,
   UvError,
+  UvParsedOutput,
   UvWarning,
 } from './types';
 import type {
-  IUVState,
-  IUVStateFactory,
+  IUvState,
+  IUvStateFactory,
   ProcessSummary,
-  UVProcessId,
-  UVProcessOptions,
-  UVProcessState,
-  UVProcessStatistics,
-  UVProcessStatus,
-  UVProcessType,
-  UVStateEvents,
+  UvProcessId,
+  UvProcessOptions,
+  UvProcessState,
+  UvProcessStatistics,
+  UvProcessStatus,
+  UvProcessType,
+  UvStateEvents,
 } from './uvStateInterfaces';
 
 /**
  * Concrete implementation of UV process state
  */
-class UVProcessStateImpl implements UVProcessState {
-  readonly id: UVProcessId;
-  readonly type: UVProcessType;
-  status: UVProcessStatus;
-  stage: UVStage;
+class UvProcessStateImpl implements UvProcessState {
+  readonly id: UvProcessId;
+  readonly type: UvProcessType;
+  status: UvProcessStatus;
+  stage: UvStage;
   readonly startedAt: Date;
   endedAt?: Date;
   duration?: number;
   packages: Map<string, PackageInfo>;
-  statistics: UVProcessStatistics;
+  statistics: UvProcessStatistics;
   errors: UvError[];
   warnings: UvWarning[];
   resolutionSummary?: ResolutionSummary;
@@ -53,13 +53,13 @@ class UVProcessStateImpl implements UVProcessState {
   installedPackages: PackageInfo[];
   removedPackages: PackageInfo[];
   rawOutput?: string[];
-  parsedOutputs: UVParsedOutput[];
+  parsedOutputs: UvParsedOutput[];
 
-  private readonly stateManager: UVStateManager;
+  private readonly stateManager: UvStateManager;
   private readonly maxParsedOutputs: number;
   private readonly storeRawOutput: boolean;
 
-  constructor(options: UVProcessOptions) {
+  constructor(options: UvProcessOptions) {
     this.id = options.id || randomUUID();
     this.type = options.type;
     this.status = 'starting';
@@ -82,7 +82,7 @@ class UVProcessStateImpl implements UVProcessState {
     this.removedPackages = [];
     this.parsedOutputs = [];
 
-    this.stateManager = new UVStateManager();
+    this.stateManager = new UvStateManager();
     this.maxParsedOutputs = options.maxParsedOutputs || 1000;
     this.storeRawOutput = options.storeRawOutput || false;
 
@@ -94,7 +94,7 @@ class UVProcessStateImpl implements UVProcessState {
   /**
    * Process a line of output
    */
-  processLine(line: string): UVParsedOutput | undefined {
+  processLine(line: string): UvParsedOutput | undefined {
     if (this.storeRawOutput) {
       this.rawOutput?.push(line);
     }
@@ -136,7 +136,7 @@ class UVProcessStateImpl implements UVProcessState {
   /**
    * Update state from parsed output
    */
-  private updateFromOutput(output: UVParsedOutput): void {
+  private updateFromOutput(output: UvParsedOutput): void {
     switch (output.type) {
       case 'error':
         this.errors.push(output);
@@ -224,11 +224,11 @@ class UVProcessStateImpl implements UVProcessState {
 /**
  * Concrete implementation of UV state manager
  */
-export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
-  private readonly processMap = new Map<UVProcessId, UVProcessStateImpl>();
-  private _activeProcess?: UVProcessStateImpl;
+export class UvState extends EventEmitter<UvStateEvents> implements IUvState {
+  private readonly processMap = new Map<UvProcessId, UvProcessStateImpl>();
+  private _activeProcess?: UvProcessStateImpl;
 
-  get activeProcess(): UVProcessState | undefined {
+  get activeProcess(): UvProcessState | undefined {
     return this._activeProcess;
   }
 
@@ -236,7 +236,7 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     return this._activeProcess !== undefined;
   }
 
-  get processes(): Map<UVProcessId, UVProcessState> {
+  get processes(): Map<UvProcessId, UvProcessState> {
     return new Map(this.processMap);
   }
 
@@ -250,7 +250,7 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     return count;
   }
 
-  startProcess(options: UVProcessOptions): UVProcessState {
+  startProcess(options: UvProcessOptions): UvProcessState {
     // For now, we only support one active process at a time
     // This matches the current UV usage pattern in the app
     if (this._activeProcess && this._activeProcess.status === 'running') {
@@ -258,7 +258,7 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
       throw new Error('Another UV process is already running');
     }
 
-    const process = new UVProcessStateImpl(options);
+    const process = new UvProcessStateImpl(options);
     this.processMap.set(process.id, process);
     this._activeProcess = process;
 
@@ -268,7 +268,7 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     return process;
   }
 
-  processLine(processId: UVProcessId, line: string): UVParsedOutput | undefined {
+  processLine(processId: UvProcessId, line: string): UvParsedOutput | undefined {
     const process = this.processMap.get(processId);
     if (!process) {
       log.warn(`Process not found: ${processId}`);
@@ -314,8 +314,8 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     return output;
   }
 
-  processLines(processId: UVProcessId, lines: string[]): UVParsedOutput[] {
-    const results: UVParsedOutput[] = [];
+  processLines(processId: UvProcessId, lines: string[]): UvParsedOutput[] {
+    const results: UvParsedOutput[] = [];
     for (const line of lines) {
       const output = this.processLine(processId, line);
       if (output) {
@@ -325,7 +325,7 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     return results;
   }
 
-  completeProcess(processId: UVProcessId): void {
+  completeProcess(processId: UvProcessId): void {
     const process = this.processMap.get(processId);
     if (!process) {
       log.warn(`Process not found: ${processId}`);
@@ -347,7 +347,7 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     }
   }
 
-  failProcess(processId: UVProcessId, error: Error): void {
+  failProcess(processId: UvProcessId, error: Error): void {
     const process = this.processMap.get(processId);
     if (!process) {
       log.warn(`Process not found: ${processId}`);
@@ -369,7 +369,7 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     }
   }
 
-  cancelProcess(processId: UVProcessId): void {
+  cancelProcess(processId: UvProcessId): void {
     const process = this.processMap.get(processId);
     if (!process) {
       log.warn(`Process not found: ${processId}`);
@@ -391,12 +391,12 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     }
   }
 
-  getProcess(processId: UVProcessId): UVProcessState | undefined {
+  getProcess(processId: UvProcessId): UvProcessState | undefined {
     return this.processMap.get(processId);
   }
 
-  getRunningProcesses(): UVProcessState[] {
-    const running: UVProcessState[] = [];
+  getRunningProcesses(): UvProcessState[] {
+    const running: UvProcessState[] = [];
     for (const process of this.processMap.values()) {
       if (process.status === 'running' || process.status === 'starting') {
         running.push(process);
@@ -405,8 +405,8 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     return running;
   }
 
-  getCompletedProcesses(): UVProcessState[] {
-    const completed: UVProcessState[] = [];
+  getCompletedProcesses(): UvProcessState[] {
+    const completed: UvProcessState[] = [];
     for (const process of this.processMap.values()) {
       if (process.status === 'completed') {
         completed.push(process);
@@ -415,8 +415,8 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     return completed;
   }
 
-  getFailedProcesses(): UVProcessState[] {
-    const failed: UVProcessState[] = [];
+  getFailedProcesses(): UvProcessState[] {
+    const failed: UvProcessState[] = [];
     for (const process of this.processMap.values()) {
       if (process.status === 'failed') {
         failed.push(process);
@@ -439,7 +439,7 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
     }
   }
 
-  getProcessSummary(processId: UVProcessId): ProcessSummary | undefined {
+  getProcessSummary(processId: UvProcessId): ProcessSummary | undefined {
     const process = this.processMap.get(processId);
     if (!process) {
       return undefined;
@@ -479,25 +479,25 @@ export class UVState extends EventEmitter<UVStateEvents> implements IUVState {
 /**
  * UV state factory implementation
  */
-class UVStateFactoryImpl implements IUVStateFactory {
-  private static instance?: UVState;
+class UvStateFactoryImpl implements IUvStateFactory {
+  private static instance?: UvState;
 
-  createUVState(): IUVState {
-    return new UVState();
+  createUvState(): IUvState {
+    return new UvState();
   }
 
-  getUVState(): IUVState {
-    if (!UVStateFactoryImpl.instance) {
-      UVStateFactoryImpl.instance = new UVState();
+  getUvState(): IUvState {
+    if (!UvStateFactoryImpl.instance) {
+      UvStateFactoryImpl.instance = new UvState();
     }
-    return UVStateFactoryImpl.instance;
+    return UvStateFactoryImpl.instance;
   }
 }
 
 // Export factory instance
-export const uvStateFactory = new UVStateFactoryImpl();
+export const uvStateFactory = new UvStateFactoryImpl();
 
 // Export convenience function for getting singleton
-export function getUVState(): IUVState {
-  return uvStateFactory.getUVState();
+export function getUvState(): IUvState {
+  return uvStateFactory.getUvState();
 }

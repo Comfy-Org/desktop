@@ -1,5 +1,5 @@
 /**
- * Example of using UVProcess to replace node-pty implementation
+ * Example of using UvProcess to replace node-pty implementation
  *
  * Key features demonstrated:
  * 1. Using factory functions to create UV processes
@@ -7,7 +7,7 @@
  * 3. Handling async execution with proper error handling
  */
 import type { PackageInfo } from './types';
-import { UVProcess, createCacheCleanProcess, createPipInstallProcess, createVenvProcess } from './uvProcess';
+import { UvProcess, createCacheCleanProcess, createPipInstallProcess, createVenvProcess } from './uvProcess';
 
 // Example 1: Simple pip install with packages
 async function installPackages() {
@@ -86,7 +86,7 @@ async function cleanCache() {
 
 // Example 5: Manual process creation with custom args
 async function customUVCommand() {
-  const process = new UVProcess({
+  const process = new UvProcess({
     uvPath: '/path/to/uv',
     command: 'pip',
     args: ['show', 'numpy'],

@@ -4,7 +4,7 @@
  * Stateless parser for UV pip install output.
  * Each line is parsed independently without requiring context.
  */
-import type { IUVParser } from './interfaces';
+import type { IUvParser } from './interfaces';
 import {
   AUDITED_PATTERN,
   CACHE_HIT_PATTERN,
@@ -41,18 +41,18 @@ import type {
   PreparationSummary,
   ResolutionSummary,
   StatusMessage,
-  UVParsedOutput,
+  UvParsedOutput,
 } from './types';
 
 /**
  * Stateless UV output parser implementation
  */
-export class UVParser implements IUVParser {
+export class UvParser implements IUvParser {
   /**
    * Parse a single line of UV output without any state context.
    * Returns undefined if the line cannot be parsed or is not relevant.
    */
-  parseLine(line: string): UVParsedOutput | undefined {
+  parseLine(line: string): UvParsedOutput | undefined {
     // Check for empty lines
     if (!line.trim()) {
       return undefined;
@@ -88,8 +88,8 @@ export class UVParser implements IUVParser {
   /**
    * Parse multiple lines of UV output.
    */
-  parseLines(lines: string[]): UVParsedOutput[] {
-    const results: UVParsedOutput[] = [];
+  parseLines(lines: string[]): UvParsedOutput[] {
+    const results: UvParsedOutput[] = [];
     for (const line of lines) {
       const parsed = this.parseLine(line);
       if (parsed) {
@@ -102,7 +102,7 @@ export class UVParser implements IUVParser {
   /**
    * Parse a complete UV output string.
    */
-  parseOutput(output: string): UVParsedOutput[] {
+  parseOutput(output: string): UvParsedOutput[] {
     const lines = output.split('\n');
     return this.parseLines(lines);
   }
@@ -117,7 +117,7 @@ export class UVParser implements IUVParser {
   /**
    * Get the type of output a line would produce without fully parsing it.
    */
-  getLineType(line: string): UVParsedOutput['type'] | undefined {
+  getLineType(line: string): UvParsedOutput['type'] | undefined {
     const parsed = this.parseLine(line);
     return parsed?.type;
   }
@@ -273,7 +273,7 @@ export class UVParser implements IUVParser {
   /**
    * Parse specific content from log messages
    */
-  private parseSpecificLogContent(log: LogMessage): UVParsedOutput | undefined {
+  private parseSpecificLogContent(log: LogMessage): UvParsedOutput | undefined {
     const message = log.message;
 
     // Warning or Error
@@ -502,6 +502,6 @@ export class UVParser implements IUVParser {
 /**
  * Create a new UV parser instance
  */
-export function createUVParser(): IUVParser {
-  return new UVParser();
+export function createUvParser(): IUvParser {
+  return new UvParser();
 }

@@ -1,13 +1,13 @@
 /**
- * Tests for UVProcess class
+ * Tests for UvProcess class
  */
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { UVStage } from '@/uv-parser/stateManager';
-import { UVProcess, createCacheCleanProcess, createPipInstallProcess, createVenvProcess } from '@/uv-parser/uvProcess';
-import type { UVProcessConfig } from '@/uv-parser/uvProcess';
+import type { UvStage } from '@/uv-parser/stateManager';
+import { UvProcess, createCacheCleanProcess, createPipInstallProcess, createVenvProcess } from '@/uv-parser/uvProcess';
+import type { UvProcessConfig } from '@/uv-parser/uvProcess';
 
 // Mock child_process spawn
 vi.mock('node:child_process', () => ({
@@ -24,7 +24,7 @@ vi.mock('electron-log/main', () => ({
   },
 }));
 
-describe('UVProcess', () => {
+describe('UvProcess', () => {
   let mockChildProcess: any;
 
   beforeEach(() => {
@@ -46,21 +46,21 @@ describe('UVProcess', () => {
 
   describe('constructor', () => {
     it('should initialize with config', () => {
-      const config: UVProcessConfig = {
+      const config: UvProcessConfig = {
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
       };
 
-      const process = new UVProcess(config);
-      expect(process).toBeInstanceOf(UVProcess);
+      const process = new UvProcess(config);
+      expect(process).toBeInstanceOf(UvProcess);
       expect(process).toBeInstanceOf(EventEmitter);
     });
   });
 
   describe('execute', () => {
     it('should spawn process with correct arguments', async () => {
-      const config: UVProcessConfig = {
+      const config: UvProcessConfig = {
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -68,7 +68,7 @@ describe('UVProcess', () => {
         env: { CUSTOM_VAR: 'value' },
       };
 
-      const process = new UVProcess(config);
+      const process = new UvProcess(config);
       const promise = process.execute();
 
       // Verify spawn was called correctly
@@ -95,14 +95,14 @@ describe('UVProcess', () => {
     });
 
     it('should add verbose flags when configured', () => {
-      const config: UVProcessConfig = {
+      const config: UvProcessConfig = {
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
         verbose: true,
       };
 
-      const process = new UVProcess(config);
+      const process = new UvProcess(config);
       void process.execute();
 
       expect(spawn).toHaveBeenCalledWith(
@@ -121,7 +121,7 @@ describe('UVProcess', () => {
     });
 
     it('should reject on non-zero exit code', async () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'invalid-package'],
@@ -138,7 +138,7 @@ describe('UVProcess', () => {
     });
 
     it('should handle process errors', async () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -156,7 +156,7 @@ describe('UVProcess', () => {
     });
 
     it('should handle timeout', async () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -171,7 +171,7 @@ describe('UVProcess', () => {
     });
 
     it('should capture raw output when configured', async () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -200,7 +200,7 @@ describe('UVProcess', () => {
   describe('event emission', () => {
     it('should emit stdout events', () =>
       new Promise<void>((resolve) => {
-        const process = new UVProcess({
+        const process = new UvProcess({
           uvPath: '/path/to/uv',
           command: 'pip',
           args: ['install', 'numpy'],
@@ -217,7 +217,7 @@ describe('UVProcess', () => {
 
     it('should emit parsed output events', () =>
       new Promise<void>((resolve) => {
-        const process = new UVProcess({
+        const process = new UvProcess({
           uvPath: '/path/to/uv',
           command: 'pip',
           args: ['install', 'numpy'],
@@ -236,14 +236,14 @@ describe('UVProcess', () => {
 
     it('should emit stage change events', () =>
       new Promise<void>((resolve) => {
-        const process = new UVProcess({
+        const process = new UvProcess({
           uvPath: '/path/to/uv',
           command: 'pip',
           args: ['install', 'numpy'],
         });
 
         let stageChangeCount = 0;
-        process.on('stage-change', (newStage: UVStage, oldStage: UVStage) => {
+        process.on('stage-change', (newStage: UvStage, oldStage: UvStage) => {
           stageChangeCount++;
           if (stageChangeCount === 1) {
             expect(oldStage).toBe('initializing');
@@ -260,7 +260,7 @@ describe('UVProcess', () => {
 
     it('should emit package-installed events', () =>
       new Promise<void>((resolve) => {
-        const process = new UVProcess({
+        const process = new UvProcess({
           uvPath: '/path/to/uv',
           command: 'pip',
           args: ['install', 'numpy'],
@@ -281,7 +281,7 @@ describe('UVProcess', () => {
 
   describe('kill', () => {
     it('should kill the child process', () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -295,7 +295,7 @@ describe('UVProcess', () => {
     });
 
     it('should return false if no process is running', () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -308,7 +308,7 @@ describe('UVProcess', () => {
 
   describe('destroy', () => {
     it('should clean up resources', () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -321,7 +321,7 @@ describe('UVProcess', () => {
     });
 
     it('should prevent multiple destroys', () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -335,7 +335,7 @@ describe('UVProcess', () => {
     });
 
     it('should prevent execute after destroy', async () => {
-      const process = new UVProcess({
+      const process = new UvProcess({
         uvPath: '/path/to/uv',
         command: 'pip',
         args: ['install', 'numpy'],
@@ -343,7 +343,7 @@ describe('UVProcess', () => {
 
       process.destroy();
 
-      await expect(process.execute()).rejects.toThrow('UVProcess has been destroyed');
+      await expect(process.execute()).rejects.toThrow('UvProcess has been destroyed');
     });
   });
 });
@@ -372,7 +372,7 @@ describe('Factory functions', () => {
         verbose: true,
       });
 
-      expect(process).toBeInstanceOf(UVProcess);
+      expect(process).toBeInstanceOf(UvProcess);
 
       // Trigger execute to verify args
       const promise = process.execute();

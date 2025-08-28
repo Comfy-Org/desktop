@@ -4,14 +4,14 @@
  * Manages state tracking for UV installations using the stateless parser.
  * While the parser is stateless, this manager tracks overall progress.
  */
-import type { IUVParser } from './interfaces';
-import { createUVParser } from './parser';
-import type { PackageInfo, UVParsedOutput, UvError, UvWarning } from './types';
+import type { IUvParser } from './interfaces';
+import { createUvParser } from './parser';
+import type { PackageInfo, UvError, UvParsedOutput, UvWarning } from './types';
 
 /**
  * UV installation stages derived from output patterns
  */
-export type UVStage =
+export type UvStage =
   /** Default state before any output has been processed. */
   | 'initializing'
   /** UV startup and environment discovery phase. */
@@ -40,11 +40,11 @@ export type UVStage =
 /**
  * State manager for tracking UV installation progress
  */
-export class UVStateManager {
-  private readonly parser: IUVParser;
-  private currentStage: UVStage = 'initializing';
+export class UvStateManager {
+  private readonly parser: IUvParser;
+  private currentStage: UvStage = 'initializing';
   private readonly packages: Map<string, PackageInfo> = new Map();
-  private outputs: UVParsedOutput[] = [];
+  private outputs: UvParsedOutput[] = [];
   private statistics = {
     packagesResolved: 0,
     packagesDownloaded: 0,
@@ -55,14 +55,14 @@ export class UVStateManager {
     linesParsed: 0,
   };
 
-  constructor(parser?: IUVParser) {
-    this.parser = parser || createUVParser();
+  constructor(parser?: IUvParser) {
+    this.parser = parser || createUvParser();
   }
 
   /**
    * Process a single line and update state
    */
-  processLine(line: string): UVParsedOutput | undefined {
+  processLine(line: string): UvParsedOutput | undefined {
     this.statistics.linesProcessed++;
 
     const output = this.parser.parseLine(line);
@@ -79,8 +79,8 @@ export class UVStateManager {
   /**
    * Process multiple lines
    */
-  processLines(lines: string[]): UVParsedOutput[] {
-    const results: UVParsedOutput[] = [];
+  processLines(lines: string[]): UvParsedOutput[] {
+    const results: UvParsedOutput[] = [];
     for (const line of lines) {
       const output = this.processLine(line);
       if (output) {
@@ -93,7 +93,7 @@ export class UVStateManager {
   /**
    * Process complete output
    */
-  processOutput(output: string): UVParsedOutput[] {
+  processOutput(output: string): UvParsedOutput[] {
     const lines = output.split('\n');
     return this.processLines(lines);
   }
@@ -101,7 +101,7 @@ export class UVStateManager {
   /**
    * Update internal state based on parsed output
    */
-  private updateStateFromOutput(output: UVParsedOutput): void {
+  private updateStateFromOutput(output: UvParsedOutput): void {
     switch (output.type) {
       case 'log_message':
         // Check for stage transitions based on log content
@@ -195,7 +195,7 @@ export class UVStateManager {
   /**
    * Get current stage
    */
-  getCurrentStage(): UVStage {
+  getCurrentStage(): UvStage {
     return this.currentStage;
   }
 
@@ -216,15 +216,15 @@ export class UVStateManager {
   /**
    * Get all parsed outputs
    */
-  getOutputs(): UVParsedOutput[] {
+  getOutputs(): UvParsedOutput[] {
     return [...this.outputs];
   }
 
   /**
    * Get outputs of a specific type with proper type narrowing
    */
-  getOutputsByType<T extends UVParsedOutput['type']>(type: T): Extract<UVParsedOutput, { type: T }>[] {
-    return this.outputs.filter((output): output is Extract<UVParsedOutput, { type: T }> => output.type === type);
+  getOutputsByType<T extends UvParsedOutput['type']>(type: T): Extract<UvParsedOutput, { type: T }>[] {
+    return this.outputs.filter((output): output is Extract<UvParsedOutput, { type: T }> => output.type === type);
   }
 
   /**

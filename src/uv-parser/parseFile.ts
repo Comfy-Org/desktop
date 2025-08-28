@@ -8,7 +8,7 @@
  */
 import { readFileSync } from 'node:fs';
 
-import { createUVParser } from './parser';
+import { createUvParser } from './parser';
 
 // Main function to allow proper error handling
 function main(): void {
@@ -25,7 +25,7 @@ function main(): void {
   const lines = content.split('\n');
 
   // Create parser instance
-  const parser = createUVParser();
+  const parser = createUvParser();
 
   // Parse each line and output JSON
   for (const line of lines) {
