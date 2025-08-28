@@ -10,7 +10,7 @@ import { useAppState } from '@/main-process/appState';
 import type { ProcessCallbacks } from '@/virtualEnvironment';
 
 import type { UVParsedOutput } from './types';
-import type { IUVState, UVProcessId, UVProcessType } from './uv-state-interfaces';
+import type { IUVState, UVProcessId, UVProcessType } from './uvStateInterfaces';
 
 /**
  * Create process callbacks that integrate with UV state

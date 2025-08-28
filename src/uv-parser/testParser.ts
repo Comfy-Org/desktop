@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs';
 
 import { createUVParser } from './parser';
-import { UVStateManager } from './state-manager';
+import { UVStateManager } from './stateManager';
 import type { UVParsedOutput } from './types';
 
 // ANSI color codes for terminal output

@@ -5,9 +5,9 @@ import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { UVStage } from '@/uv-parser/state-manager';
-import { UVProcess, createCacheCleanProcess, createPipInstallProcess, createVenvProcess } from '@/uv-parser/uv-process';
-import type { UVProcessConfig } from '@/uv-parser/uv-process';
+import type { UVStage } from '@/uv-parser/stateManager';
+import { UVProcess, createCacheCleanProcess, createPipInstallProcess, createVenvProcess } from '@/uv-parser/uvProcess';
+import type { UVProcessConfig } from '@/uv-parser/uvProcess';
 
 // Mock child_process spawn
 vi.mock('node:child_process', () => ({
