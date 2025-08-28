@@ -427,24 +427,73 @@ export class UVProcess extends EventEmitter {
 }
 
 /**
- * Create a UV pip install process
+ * Options for creating a UV pip install process
  */
-export function createPipInstallProcess(
-  uvPath: string,
-  options: {
-    packages?: string[];
-    requirementsFile?: string;
-    indexUrl?: string;
-    extraIndexUrl?: string;
-    indexStrategy?: 'compatible' | 'unsafe-best-match';
-    upgrade?: boolean;
-    prerelease?: boolean;
-    cwd?: string;
-    env?: Record<string, string>;
-    verbose?: boolean;
-    timeout?: number;
-  }
-): UVProcess {
+export interface PipInstallOptions {
+  /** List of packages to install */
+  packages?: string[];
+
+  /** Path to requirements file */
+  requirementsFile?: string;
+
+  /** Primary package index URL */
+  indexUrl?: string;
+
+  /** Additional package index URL */
+  extraIndexUrl?: string;
+
+  /** Index resolution strategy */
+  indexStrategy?: 'compatible' | 'unsafe-best-match';
+
+  /** Upgrade packages to latest versions */
+  upgrade?: boolean;
+
+  /** Allow prerelease versions */
+  prerelease?: boolean;
+
+  /** Working directory for the process */
+  cwd?: string;
+
+  /** Environment variables */
+  env?: Record<string, string>;
+
+  /** Enable verbose output for debugging */
+  verbose?: boolean;
+
+  /** Process timeout in milliseconds */
+  timeout?: number;
+}
+
+/**
+ * Create a UV pip install process for installing Python packages.
+ *
+ * @param uvPath - Path to the UV executable
+ * @param options - Configuration options for pip install
+ * @return A configured {@link UVProcess} instance ready to execute
+ *
+ * @example
+ * ```typescript
+ * // Install specific packages
+ * const process = createPipInstallProcess('/path/to/uv', {
+ *   packages: ['numpy', 'pandas'],
+ *   indexUrl: 'https://pypi.org/simple',
+ *   verbose: true
+ * });
+ * const result = await process.execute();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Install from requirements file
+ * const process = createPipInstallProcess('/path/to/uv', {
+ *   requirementsFile: '/path/to/requirements.txt',
+ *   upgrade: true,
+ *   timeout: 600000
+ * });
+ * const result = await process.execute();
+ * ```
+ */
+export function createPipInstallProcess(uvPath: string, options: PipInstallOptions): UVProcess {
   const args: string[] = ['install'];
 
   if (options.upgrade) {
@@ -485,20 +534,51 @@ export function createPipInstallProcess(
 }
 
 /**
- * Create a UV venv process
+ * Options for creating a UV virtual environment
  */
-export function createVenvProcess(
-  uvPath: string,
-  options: {
-    path: string;
-    python?: string;
-    pythonPreference?: 'only-managed' | 'managed' | 'system' | 'only-system';
-    cwd?: string;
-    env?: Record<string, string>;
-    verbose?: boolean;
-    timeout?: number;
-  }
-): UVProcess {
+export interface VenvOptions {
+  /** Path where the virtual environment will be created */
+  path: string;
+
+  /** Python version or path to use */
+  python?: string;
+
+  /** Python discovery preference */
+  pythonPreference?: 'only-managed' | 'managed' | 'system' | 'only-system';
+
+  /** Working directory for the process */
+  cwd?: string;
+
+  /** Environment variables */
+  env?: Record<string, string>;
+
+  /** Enable verbose output for debugging */
+  verbose?: boolean;
+
+  /** Process timeout in milliseconds */
+  timeout?: number;
+}
+
+/**
+ * Create a UV venv process for creating Python virtual environments.
+ *
+ * @param uvPath - Path to the UV executable
+ * @param options - Configuration options for virtual environment creation
+ * @return A configured {@link UVProcess} instance ready to execute
+ *
+ * @example
+ * ```typescript
+ * // Create a virtual environment with specific Python version
+ * const process = createVenvProcess('/path/to/uv', {
+ *   path: '/project/.venv',
+ *   python: '3.11',
+ *   pythonPreference: 'only-managed',
+ *   verbose: true
+ * });
+ * const result = await process.execute();
+ * ```
+ */
+export function createVenvProcess(uvPath: string, options: VenvOptions): UVProcess {
   const args: string[] = [];
 
   if (options.python) {
@@ -523,17 +603,40 @@ export function createVenvProcess(
 }
 
 /**
- * Create a UV cache clean process
+ * Options for cleaning UV cache
  */
-export function createCacheCleanProcess(
-  uvPath: string,
-  options: {
-    cwd?: string;
-    env?: Record<string, string>;
-    verbose?: boolean;
-    timeout?: number;
-  } = {}
-): UVProcess {
+export interface CacheCleanOptions {
+  /** Working directory for the process */
+  cwd?: string;
+
+  /** Environment variables */
+  env?: Record<string, string>;
+
+  /** Enable verbose output for debugging */
+  verbose?: boolean;
+
+  /** Process timeout in milliseconds */
+  timeout?: number;
+}
+
+/**
+ * Create a UV cache clean process for clearing the UV package cache.
+ *
+ * @param uvPath - Path to the UV executable
+ * @param options - Configuration options for cache cleaning
+ * @return A configured {@link UVProcess} instance ready to execute
+ *
+ * @example
+ * ```typescript
+ * // Clean UV cache with verbose output
+ * const process = createCacheCleanProcess('/path/to/uv', {
+ *   verbose: true,
+ *   timeout: 30000
+ * });
+ * const result = await process.execute();
+ * ```
+ */
+export function createCacheCleanProcess(uvPath: string, options: CacheCleanOptions = {}): UVProcess {
   return new UVProcess({
     uvPath,
     command: 'cache',
