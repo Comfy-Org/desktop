@@ -19,6 +19,7 @@ import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import type { ComfyInstallation } from './main-process/comfyInstallation';
 import { DevOverrides } from './main-process/devOverrides';
+import { InstallStage, createInstallStageInfo } from './main-process/installStages';
 import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
@@ -39,6 +40,7 @@ export class DesktopApp implements HasTelemetry {
   /** Load start screen - basic spinner */
   async showLoadingPage() {
     try {
+      this.appState.setInstallStage(createInstallStageInfo(InstallStage.APP_INITIALIZING));
       await this.appWindow.loadPage('desktop-start');
     } catch (error) {
       DesktopApp.fatalError({
@@ -84,6 +86,7 @@ export class DesktopApp implements HasTelemetry {
 
     if (!appState.ipcRegistered) this.registerIpcHandlers();
 
+    appState.setInstallStage(createInstallStageInfo(InstallStage.CHECKING_EXISTING_INSTALL));
     const installation = await this.initializeInstallation();
     if (!installation) return;
     this.installation = installation;
@@ -102,11 +105,13 @@ export class DesktopApp implements HasTelemetry {
       // Start server
       if (!overrides.useExternalServer && !comfyDesktopApp.serverRunning) {
         try {
+          appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
           await comfyDesktopApp.startComfyServer(serverArgs);
         } catch (error) {
           log.error('Unhandled exception during server start', error);
           appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
           appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+          appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { error: String(error) }));
           return;
         }
       }
@@ -114,6 +119,7 @@ export class DesktopApp implements HasTelemetry {
       await appWindow.loadComfyUI(serverArgs);
 
       // App start complete
+      appState.setInstallStage(createInstallStageInfo(InstallStage.READY));
       appState.emitLoaded();
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
