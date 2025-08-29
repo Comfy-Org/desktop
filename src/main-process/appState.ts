@@ -6,7 +6,7 @@ import type { Page } from '@/infrastructure/interfaces';
 import { getUvState } from '@/uv-parser/uvState';
 import type { IUvState } from '@/uv-parser/uvStateInterfaces';
 
-import type { InstallStageInfo } from './installStages';
+import { InstallStage, type InstallStageInfo, createInstallStageInfo } from './installStages';
 
 /** App event names */
 type AppStateEvents = {
@@ -14,7 +14,7 @@ type AppStateEvents = {
   ipcRegistered: [];
   /** Occurs once, immediately after the ComfyUI server has finished loading. */
   loaded: [];
-  /** Occurs when the installation stage changes */
+  /** Occurs when the install stage changes. */
   installStageChanged: [InstallStageInfo];
 };
 
@@ -34,14 +34,14 @@ export interface IAppState extends Pick<EventEmitter<AppStateEvents>, 'on' | 'on
   currentPage?: Page;
   /** UV process state manager for tracking package installations. */
   readonly uvState: IUvState;
-  /** The current installation stage information */
-  installStage?: InstallStageInfo;
+  /** Current installation stage information. */
+  readonly installStage: InstallStageInfo;
 
   /** Updates state - IPC handlers have been registered. */
   emitIpcRegistered(): void;
   /** Updates state - the app has loaded. */
   emitLoaded(): void;
-  /** Updates the installation stage */
+  /** Updates the current install stage. */
   setInstallStage(stage: InstallStageInfo): void;
 }
 
@@ -54,12 +54,14 @@ class AppState extends EventEmitter<AppStateEvents> implements IAppState {
   loaded = false;
   currentPage?: Page;
   readonly uvState: IUvState;
-  installStage?: InstallStageInfo;
+  installStage: InstallStageInfo;
 
   constructor() {
     super();
     // Initialize UV state
     this.uvState = getUvState();
+    // Initialize install stage to idle
+    this.installStage = createInstallStageInfo(InstallStage.IDLE);
   }
 
   initialize() {
