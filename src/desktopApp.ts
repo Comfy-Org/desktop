@@ -123,6 +123,7 @@ export class DesktopApp implements HasTelemetry {
       appState.emitLoaded();
     } catch (error) {
       log.error('Unhandled exception during app startup', error);
+      appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { error: String(error) }));
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
       if (!this.appState.isQuitting) {
