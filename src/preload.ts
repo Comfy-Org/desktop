@@ -433,6 +433,37 @@ const electronAPI = {
     return ipcRenderer.invoke(IPC_CHANNELS.CHECK_BLACKWELL);
   },
 
+  /**
+   * Installation stage tracking interfaces
+   */
+  InstallStage: {
+    /**
+     * Get the current installation stage
+     * @returns The current installation stage information
+     */
+    getCurrent: (): Promise<import('./main-process/installStages').InstallStageInfo> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.GET_INSTALL_STAGE);
+    },
+
+    /**
+     * Listen for installation stage updates
+     * @param callback Called when the installation stage changes
+     */
+    onUpdate: (callback: (stage: import('./main-process/installStages').InstallStageInfo) => void) => {
+      ipcRenderer.on(IPC_CHANNELS.INSTALL_STAGE_UPDATE, (_event, stage) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        callback(stage);
+      });
+    },
+
+    /**
+     * Remove the installation stage update listener
+     */
+    dispose: () => {
+      ipcRenderer.removeAllListeners(IPC_CHANNELS.INSTALL_STAGE_UPDATE);
+    },
+  },
+
   uv: {
     /**
      * Install the requirements for the ComfyUI server.
