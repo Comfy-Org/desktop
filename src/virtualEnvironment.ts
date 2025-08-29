@@ -7,6 +7,8 @@ import os, { EOL } from 'node:os';
 import path from 'node:path';
 
 import { TorchMirrorUrl } from './constants';
+import { useAppState } from './main-process/appState';
+import { InstallStage, createInstallStageInfo } from './main-process/installStages';
 import type { TorchDeviceType } from './preload';
 import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
@@ -301,6 +303,9 @@ export class VirtualEnvironment implements HasTelemetry {
 
   @trackEvent('install_flow:virtual_environment_install_requirements')
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
+    const appState = useAppState();
+    appState.setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS));
+
     // pytorch nightly is required for MPS
     if (process.platform === 'darwin') {
       return this.manualInstall(callbacks);
@@ -494,6 +499,13 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
+    const appState = useAppState();
+    appState.setInstallStage(
+      createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, {
+        message: 'Installing ComfyUI requirements',
+      })
+    );
+
     log.info(`Installing ComfyUI requirements from ${this.comfyUIRequirementsPath}`);
     const installCmd = getPipInstallArgs({
       requirementsFile: this.comfyUIRequirementsPath,
@@ -507,6 +519,13 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   async installComfyUIManagerRequirements(callbacks?: ProcessCallbacks): Promise<void> {
+    const appState = useAppState();
+    appState.setInstallStage(
+      createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, {
+        message: 'Installing ComfyUI Manager requirements',
+      })
+    );
+
     log.info(`Installing ComfyUIManager requirements from ${this.comfyUIManagerRequirementsPath}`);
     const installCmd = getPipInstallArgs({
       requirementsFile: this.comfyUIManagerRequirementsPath,
