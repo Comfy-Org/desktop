@@ -1,10 +1,7 @@
+/** @type {import('lint-staged').Configuration} */
 export default {
   './**/*.js': formatAndEslint,
-  './**/*.{ts,mts}': (stagedFiles) => [
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    ...formatAndEslint(stagedFiles),
-    'tsc --noEmit',
-  ],
+  './**/*.{ts,mts}': (stagedFiles) => [...formatAndEslint(stagedFiles), 'tsc --noEmit'],
 };
 
 /**
