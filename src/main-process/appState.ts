@@ -63,6 +63,8 @@ class AppState extends EventEmitter<AppStateEvents> implements IAppState {
     this.installStage = createInstallStageInfo(InstallStage.IDLE, { progress: 0 });
     // Initialize UV state
     this.uvState = getUvState();
+    // Initialize install stage to idle
+    this.installStage = createInstallStageInfo(InstallStage.IDLE);
   }
 
   initialize() {
