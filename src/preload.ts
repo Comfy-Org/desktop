@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import path from 'node:path';
 
 import { DownloadStatus, ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
+import type { InstallStageInfo } from './main-process/installStages';
 import type { DownloadState } from './main_types';
 import type { DesktopInstallState, DesktopWindowStyle } from './main_types';
 
@@ -441,7 +442,7 @@ const electronAPI = {
      * Get the current installation stage
      * @returns The current installation stage information
      */
-    getCurrent: (): Promise<import('./main-process/installStages').InstallStageInfo> => {
+    getCurrent: (): Promise<InstallStageInfo> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_INSTALL_STAGE);
     },
 
@@ -450,11 +451,8 @@ const electronAPI = {
      * @param callback Called when the installation stage changes
      * @returns A function to remove the event listener
      */
-    onUpdate: (callback: (stage: import('./main-process/installStages').InstallStageInfo) => void) => {
-      const handler = (
-        _event: Electron.IpcRendererEvent,
-        stage: import('./main-process/installStages').InstallStageInfo
-      ) => {
+    onUpdate: (callback: (stage: InstallStageInfo) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, stage: InstallStageInfo) => {
         callback(stage);
       };
       ipcRenderer.on(IPC_CHANNELS.INSTALL_STAGE_UPDATE, handler);
