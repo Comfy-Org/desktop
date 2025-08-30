@@ -34,6 +34,13 @@ vi.mock('node:fs/promises', () => ({
 vi.mock('../../../src/config/comfyConfigManager');
 vi.mock('../../../src/config/comfyServerConfig');
 
+vi.mock('../../../src/main-process/appState', () => ({
+  useAppState: vi.fn(() => ({
+    setInstallStage: vi.fn(),
+    installStage: { stage: 'idle', timestamp: Date.now() },
+  })),
+}));
+
 electronMock.app.getPath = vi.fn((name: string) => {
   switch (name) {
     case 'userData':
