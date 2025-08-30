@@ -35,6 +35,13 @@ vi.mock('@/store/desktopConfig', () => ({
   useDesktopConfig: vi.fn(() => config),
 }));
 
+vi.mock('@/main-process/appState', () => ({
+  useAppState: vi.fn(() => ({
+    setInstallStage: vi.fn(),
+    installStage: { stage: 'idle', timestamp: Date.now() },
+  })),
+}));
+
 vi.mock('@/utils', async () => {
   const actual = await vi.importActual<typeof utils>('@/utils');
   return {
