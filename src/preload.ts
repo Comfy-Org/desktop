@@ -448,12 +448,20 @@ const electronAPI = {
     /**
      * Listen for installation stage updates
      * @param callback Called when the installation stage changes
+     * @returns A function to remove the event listener
      */
     onUpdate: (callback: (stage: import('./main-process/installStages').InstallStageInfo) => void) => {
-      ipcRenderer.on(IPC_CHANNELS.INSTALL_STAGE_UPDATE, (_event, stage) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const handler = (
+        _event: Electron.IpcRendererEvent,
+        stage: import('./main-process/installStages').InstallStageInfo
+      ) => {
         callback(stage);
-      });
+      };
+      ipcRenderer.on(IPC_CHANNELS.INSTALL_STAGE_UPDATE, handler);
+
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.INSTALL_STAGE_UPDATE, handler);
+      };
     },
 
     /**
