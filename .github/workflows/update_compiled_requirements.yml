@@ -21,7 +21,7 @@ concurrency:
 env:
   # Define uv pip compile commands as environment variables for consistency
   UV_CMD_WINDOWS_CPU: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/windows_cpu.compiled --index-url https://pypi.org/simple'
-  UV_CMD_WINDOWS_NVIDIA: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --override assets/override.txt --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu128 -o assets/requirements/windows_nvidia.compiled'
+  UV_CMD_WINDOWS_NVIDIA: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --override assets/override.txt --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu129 -o assets/requirements/windows_nvidia.compiled'
   UV_CMD_MACOS: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/macos.compiled --override assets/override.txt --index-url https://pypi.org/simple'
   # PR comment messages
   PR_MSG_SUCCESS: '✅ Compiled requirements have been updated successfully!'
