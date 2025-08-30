@@ -12,11 +12,9 @@ export function registerInstallStateHandlers() {
   // Handler to get current install stage
   ipcMain.handle(IPC_CHANNELS.GET_INSTALL_STAGE, () => appState.installStage);
 
-  // Listen for install stage changes and broadcast to renderer
+  // Listen for install stage changes and broadcast to all windows
   appState.on('installStageChanged', (stageInfo) => {
-    // Find all windows and send update
-    const windows = BrowserWindow.getAllWindows();
-    for (const window of windows) {
+    for (const window of BrowserWindow.getAllWindows()) {
       window.webContents.send(IPC_CHANNELS.INSTALL_STAGE_UPDATE, stageInfo);
     }
   });
