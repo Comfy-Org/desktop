@@ -259,7 +259,14 @@ describe('DesktopApp', () => {
 
     expect(() => DesktopApp.fatalError({ message, error })).toThrow('Test exited via app.quit()');
 
-    expect(log.error).toHaveBeenCalledWith(message, error);
+    expect(log.error).toHaveBeenCalledWith(
+      message,
+      expect.objectContaining({
+        name: 'FatalError',
+        message: 'Test error',
+        cause: error,
+      })
+    );
   });
 
   test('registerIpcHandlers - registers all handlers and emits ipcRegistered', ({ desktopApp }) => {
