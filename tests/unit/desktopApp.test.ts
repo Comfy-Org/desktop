@@ -8,7 +8,6 @@ import { IPC_CHANNELS } from '@/constants';
 import { DesktopApp } from '@/desktopApp';
 import type { Mutable } from '@/infrastructure/interfaces';
 import { InstallationManager } from '@/install/installationManager';
-import { useAppState } from '@/main-process/appState';
 import { ComfyDesktopApp } from '@/main-process/comfyDesktopApp';
 import type { ComfyInstallation } from '@/main-process/comfyInstallation';
 import { DevOverrides } from '@/main-process/devOverrides';
@@ -49,6 +48,28 @@ vi.mock('@/store/desktopConfig', () => ({
     get: vi.fn(() => '/mock/path'),
     set: vi.fn(),
   })),
+}));
+
+const mockAppState = {
+  emitIpcRegistered: vi.fn(),
+  emitLoaded: vi.fn(),
+  setInstallStage: vi.fn(),
+  isQuitting: false,
+  ipcRegistered: false,
+  loaded: false,
+  currentPage: undefined,
+  uvState: {
+    isInstalling: false,
+    packageDetails: [],
+  },
+  installStage: { stage: 'idle' },
+  on: vi.fn(),
+  once: vi.fn(),
+  off: vi.fn(),
+};
+
+vi.mock('@/main-process/appState', () => ({
+  useAppState: vi.fn(() => mockAppState),
 }));
 
 vi.mock('@/install/installationManager');
@@ -272,7 +293,7 @@ describe('DesktopApp', () => {
   test('registerIpcHandlers - registers all handlers and emits ipcRegistered', ({ desktopApp }) => {
     desktopApp['registerIpcHandlers']();
 
-    expect(useAppState().emitIpcRegistered).toHaveBeenCalled();
+    expect(mockAppState.emitIpcRegistered).toHaveBeenCalled();
     expect(ipcMain.handle).toHaveBeenCalledWith(IPC_CHANNELS.START_TROUBLESHOOTING, expect.any(Function));
   });
 
