@@ -51,6 +51,26 @@ vi.mock('@/store/desktopConfig', () => ({
   })),
 }));
 
+vi.mock('@/main-process/appState', () => ({
+  useAppState: vi.fn(() => ({
+    emitIpcRegistered: vi.fn(),
+    emitLoaded: vi.fn(),
+    setInstallStage: vi.fn(),
+    isQuitting: false,
+    ipcRegistered: false,
+    loaded: false,
+    currentPage: undefined,
+    uvState: {
+      isInstalling: false,
+      packageDetails: [],
+    },
+    installStage: { stage: 'idle' },
+    on: vi.fn(),
+    once: vi.fn(),
+    off: vi.fn(),
+  })),
+}));
+
 vi.mock('@/install/installationManager');
 
 const mockComfyDesktopApp = {
