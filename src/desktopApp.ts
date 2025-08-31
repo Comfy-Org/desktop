@@ -43,6 +43,7 @@ export class DesktopApp implements HasTelemetry {
     try {
       this.appState.setInstallStage(createInstallStageInfo(InstallStage.APP_INITIALIZING, { progress: 1 }));
       await this.appWindow.loadPage('desktop-start');
+      await new Promise((resolve) => setTimeout(resolve, 60_000));
     } catch (error) {
       DesktopApp.fatalError({
         error,
