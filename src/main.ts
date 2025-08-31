@@ -7,6 +7,7 @@ import log from 'electron-log/main';
 import { LogFile } from './constants';
 import { DesktopApp } from './desktopApp';
 import { removeAnsiCodesTransform, replaceFileLoggingTransform } from './infrastructure/structuredLogging';
+import { getStartupDebugLogger } from './utils/startupDebugLogger';
 import { initializeAppState } from './main-process/appState';
 import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
@@ -41,22 +42,34 @@ if (!gotTheLock) {
 
 /** Wrapper for top-level await; the app is bundled to CommonJS. */
 async function startApp() {
+  const debugLog = getStartupDebugLogger();
+  debugLog.log('Main', 'startApp() called');
+  const appTimer = debugLog.startTimer('Main:totalStartup');
+  
   // Wait for electron app ready event
+  debugLog.log('Main', 'Waiting for app ready event');
   await new Promise<void>((resolve) => app.once('ready', () => resolve()));
+  debugLog.log('Main', 'App ready event received');
+  
   await rotateLogFiles(app.getPath('logs'), LogFile.Main, 50);
   log.debug('App ready');
+  
+  debugLog.log('Main', 'Registering telemetry handlers');
   telemetry.registerHandlers();
   telemetry.track('desktop:app_ready');
 
   // Load config or exit
+  debugLog.log('Main', 'Loading desktop config');
   const config = await DesktopConfig.load(shell);
   if (!config) {
+    debugLog.log('Main', 'Failed to load config, fatal error');
     DesktopApp.fatalError({
       message: 'Unknown error loading app config on startup.',
       title: 'User Data',
       exitCode: 20,
     });
   }
+  debugLog.log('Main', 'Config loaded successfully');
 
   telemetry.loadGenerationCount(config);
 
@@ -69,9 +82,17 @@ async function startApp() {
     }
   }
 
+  debugLog.log('Main', 'Creating DesktopApp instance');
   const desktopApp = new DesktopApp(overrides, config);
+  
+  debugLog.log('Main', 'Showing loading page');
   await desktopApp.showLoadingPage();
+  
+  debugLog.log('Main', 'Starting DesktopApp');
   await desktopApp.start();
+  
+  appTimer();
+  debugLog.log('Main', 'App startup complete');
 }
 
 /**
