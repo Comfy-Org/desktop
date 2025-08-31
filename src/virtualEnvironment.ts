@@ -14,6 +14,7 @@ import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
+import { getStartupDebugLogger } from './utils/startupDebugLogger';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -237,12 +238,20 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
+    const debugLog = getStartupDebugLogger();
+    debugLog.log('VirtualEnvironment', 'createEnvironment started', {
+      pythonVersion: this.pythonVersion,
+      device: this.selectedDevice,
+      venvPath: this.venvPath,
+    });
+
     this.telemetry.track(`install_flow:virtual_environment_create_start`, {
       python_version: this.pythonVersion,
       device: this.selectedDevice,
     });
     if (this.selectedDevice === 'unsupported') {
       log.info('User elected to manually configure their environment.  Skipping python configuration.');
+      debugLog.log('VirtualEnvironment', 'Skipping - unsupported device');
       this.telemetry.track(`install_flow:virtual_environment_create_end`, {
         reason: 'unsupported_device',
       });
@@ -331,10 +340,18 @@ export class VirtualEnvironment implements HasTelemetry {
    * @returns
    */
   public runPythonCommand(args: string[], callbacks?: ProcessCallbacks): ChildProcess {
+    const debugLog = getStartupDebugLogger();
     const pythonInterpreterPath =
       process.platform === 'win32'
         ? path.join(this.venvPath, 'Scripts', 'python.exe')
         : path.join(this.venvPath, 'bin', 'python');
+
+    debugLog.log('VirtualEnvironment', 'runPythonCommand called', {
+      pythonPath: pythonInterpreterPath,
+      argsLength: args.length,
+      firstArgs: args.slice(0, 3),
+      venvPath: this.venvPath,
+    });
 
     return this.runCommand(
       pythonInterpreterPath,
@@ -375,10 +392,28 @@ export class VirtualEnvironment implements HasTelemetry {
    * @returns
    */
   private async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
+    const debugLog = getStartupDebugLogger();
     const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
     const command = `${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`;
+
+    debugLog.log('VirtualEnvironment', 'Running uv command', {
+      uvPath: this.uvPath,
+      args: args.slice(0, 5),
+      fullCommand: command.length > 200 ? command.substring(0, 200) + '...' : command,
+    });
     log.info('Running uv command:', command);
-    return this.runPtyCommandAsync(command, callbacks?.onStdout);
+
+    const timer = debugLog.startTimer(`VirtualEnvironment:uv:${args[0]}`);
+    try {
+      const result = await this.runPtyCommandAsync(command, callbacks?.onStdout);
+      timer();
+      debugLog.log('VirtualEnvironment', 'uv command completed', { exitCode: result.exitCode });
+      return result;
+    } catch (error) {
+      timer();
+      debugLog.log('VirtualEnvironment', 'uv command failed', { error: String(error) });
+      throw error;
+    }
   }
 
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
@@ -429,6 +464,12 @@ export class VirtualEnvironment implements HasTelemetry {
     callbacks?: ProcessCallbacks,
     cwd: string = this.basePath
   ): ChildProcess {
+    const debugLog = getStartupDebugLogger();
+    debugLog.log('VirtualEnvironment', 'Spawning process', {
+      command: path.basename(command),
+      argsPreview: args.slice(0, 3).join(' '),
+      cwd,
+    });
     log.info(`Running command: ${command} ${args.join(' ')} in ${cwd}`);
     const childProcess = spawn(command, args, {
       cwd,
@@ -437,6 +478,8 @@ export class VirtualEnvironment implements HasTelemetry {
         ...env,
       },
     });
+
+    debugLog.log('VirtualEnvironment', 'Process spawned', { pid: childProcess.pid });
 
     if (callbacks) {
       childProcess.stdout.on('data', (data: Buffer) => {
