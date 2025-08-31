@@ -16,12 +16,12 @@ class StartupDebugLogger {
   constructor() {
     this.startTime = performance.now();
     this.lastTimestamp = this.startTime;
-    
+
     // Create log file in userData directory with timestamp
     const userDataPath = app.getPath('userData');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     this.logPath = path.join(userDataPath, `startup-debug-${timestamp}.log`);
-    
+
     try {
       this.fileStream = fs.createWriteStream(this.logPath, { flags: 'a' });
       this.log('STARTUP_DEBUG_LOGGER', 'Session started');
@@ -74,7 +74,7 @@ class StartupDebugLogger {
   startTimer(name: string): () => void {
     const startTime = performance.now();
     this.log('TIMER_START', name);
-    
+
     return () => {
       const elapsed = performance.now() - startTime;
       this.log('TIMER_END', name, { durationMs: elapsed.toFixed(3) });
@@ -107,8 +107,8 @@ class StartupDebugLogger {
   close(): void {
     if (this.fileStream) {
       const totalTime = performance.now() - this.startTime;
-      this.log('STARTUP_DEBUG_LOGGER', 'Session ended', { 
-        totalSessionMs: totalTime.toFixed(3) 
+      this.log('STARTUP_DEBUG_LOGGER', 'Session ended', {
+        totalSessionMs: totalTime.toFixed(3),
       });
       this.fileStream.end();
       this.fileStream = null;

@@ -7,13 +7,13 @@ import log from 'electron-log/main';
 import { LogFile } from './constants';
 import { DesktopApp } from './desktopApp';
 import { removeAnsiCodesTransform, replaceFileLoggingTransform } from './infrastructure/structuredLogging';
-import { getStartupDebugLogger } from './utils/startupDebugLogger';
 import { initializeAppState } from './main-process/appState';
 import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';
 import { getTelemetry } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
 import { rotateLogFiles } from './utils';
+import { getStartupDebugLogger } from './utils/startupDebugLogger';
 
 // Synchronous pre-start configuration
 dotenv.config();
@@ -45,15 +45,15 @@ async function startApp() {
   const debugLog = getStartupDebugLogger();
   debugLog.log('Main', 'startApp() called');
   const appTimer = debugLog.startTimer('Main:totalStartup');
-  
+
   // Wait for electron app ready event
   debugLog.log('Main', 'Waiting for app ready event');
   await new Promise<void>((resolve) => app.once('ready', () => resolve()));
   debugLog.log('Main', 'App ready event received');
-  
+
   await rotateLogFiles(app.getPath('logs'), LogFile.Main, 50);
   log.debug('App ready');
-  
+
   debugLog.log('Main', 'Registering telemetry handlers');
   telemetry.registerHandlers();
   telemetry.track('desktop:app_ready');
@@ -84,13 +84,13 @@ async function startApp() {
 
   debugLog.log('Main', 'Creating DesktopApp instance');
   const desktopApp = new DesktopApp(overrides, config);
-  
+
   debugLog.log('Main', 'Showing loading page');
   await desktopApp.showLoadingPage();
-  
+
   debugLog.log('Main', 'Starting DesktopApp');
   await desktopApp.start();
-  
+
   appTimer();
   debugLog.log('Main', 'App startup complete');
 }

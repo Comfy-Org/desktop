@@ -117,7 +117,7 @@ export class ComfyServer implements HasTelemetry {
   async start() {
     const debugLog = getStartupDebugLogger();
     debugLog.log('ComfyServer', 'start() called');
-    
+
     if (this.isRunning) {
       const message = 'ComfyUI server is already running';
       log.error(message);
@@ -127,13 +127,13 @@ export class ComfyServer implements HasTelemetry {
 
     debugLog.log('ComfyServer', 'Locking ComfySettings writes');
     ComfySettings.lockWrites();
-    
+
     debugLog.log('ComfyServer', 'Adding app bundled custom nodes to config');
     await ComfyServerConfig.addAppBundledCustomNodesToConfig();
-    
+
     debugLog.log('ComfyServer', 'Rotating log files');
     await rotateLogFiles(app.getPath('logs'), LogFile.ComfyUI, 50);
-    
+
     debugLog.log('ComfyServer', 'Setting up promise for server start');
     return new Promise<void>((resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });
@@ -142,13 +142,13 @@ export class ComfyServer implements HasTelemetry {
       comfyUILog.transports.file.transforms.unshift(removeAnsiCodesTransform);
 
       this.timedOutWhilstStarting = false;
-      
-      debugLog.log('ComfyServer', 'Launch arguments prepared', { 
+
+      debugLog.log('ComfyServer', 'Launch arguments prepared', {
         args: this.launchArgs,
         uvPath: this.virtualEnvironment.uvPath,
-        basePath: this.basePath
+        basePath: this.basePath,
       });
-      
+
       debugLog.log('ComfyServer', 'Starting Python subprocess');
       const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.launchArgs, {
         onStdout: (data) => {
@@ -187,12 +187,12 @@ export class ComfyServer implements HasTelemetry {
       debugLog.log('ComfyServer', 'Process reference stored', { pid: comfyServerProcess.pid });
 
       const waitOnUrl = `${this.baseUrl}/queue`;
-      debugLog.log('ComfyServer', 'Starting waitOn for server readiness', { 
+      debugLog.log('ComfyServer', 'Starting waitOn for server readiness', {
         url: waitOnUrl,
         timeoutMs: ComfyServer.MAX_FAIL_WAIT,
-        intervalMs: ComfyServer.CHECK_INTERVAL
+        intervalMs: ComfyServer.CHECK_INTERVAL,
       });
-      
+
       const waitOnTimer = debugLog.startTimer('ComfyServer:waitOn');
       waitOn({
         resources: [waitOnUrl],

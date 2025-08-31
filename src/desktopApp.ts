@@ -3,7 +3,6 @@ import log from 'electron-log/main';
 
 import { ProgressStatus } from './constants';
 import { IPC_CHANNELS } from './constants';
-import { getStartupDebugLogger } from './utils/startupDebugLogger';
 import { registerAppHandlers } from './handlers/AppHandlers';
 import { registerAppInfoHandlers } from './handlers/appInfoHandlers';
 import { registerGpuHandlers } from './handlers/gpuHandlers';
@@ -24,6 +23,7 @@ import { InstallStage, createInstallStageInfo } from './main-process/installStag
 import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
+import { getStartupDebugLogger } from './utils/startupDebugLogger';
 
 export class DesktopApp implements HasTelemetry {
   readonly telemetry: ITelemetry = getTelemetry();
@@ -42,7 +42,7 @@ export class DesktopApp implements HasTelemetry {
   async showLoadingPage() {
     const debugLog = getStartupDebugLogger();
     debugLog.log('DesktopApp', 'showLoadingPage() called');
-    
+
     try {
       this.appState.setInstallStage(createInstallStageInfo(InstallStage.APP_INITIALIZING));
       debugLog.log('DesktopApp', 'Loading desktop-start page');
@@ -75,17 +75,17 @@ export class DesktopApp implements HasTelemetry {
   private async initializeInstallation(): Promise<ComfyInstallation | undefined> {
     const debugLog = getStartupDebugLogger();
     debugLog.log('DesktopApp', 'initializeInstallation() called');
-    
+
     const { appWindow } = this;
     try {
       debugLog.log('DesktopApp', 'Creating InstallationManager');
       const installManager = new InstallationManager(appWindow, this.telemetry);
-      
+
       debugLog.log('DesktopApp', 'Ensuring installation');
       const installation = await installManager.ensureInstalled();
-      debugLog.log('DesktopApp', 'Installation ensured', { 
+      debugLog.log('DesktopApp', 'Installation ensured', {
         success: !!installation,
-        basePath: installation?.basePath 
+        basePath: installation?.basePath,
       });
       return installation;
     } catch (error) {
@@ -104,7 +104,7 @@ export class DesktopApp implements HasTelemetry {
     const debugLog = getStartupDebugLogger();
     debugLog.log('DesktopApp', 'start() called');
     const startTimer = debugLog.startTimer('DesktopApp:start');
-    
+
     const { appState, appWindow, overrides, telemetry } = this;
 
     if (!appState.ipcRegistered) {
@@ -114,11 +114,11 @@ export class DesktopApp implements HasTelemetry {
 
     debugLog.log('DesktopApp', 'Checking existing installation');
     appState.setInstallStage(createInstallStageInfo(InstallStage.CHECKING_EXISTING_INSTALL));
-    
+
     const installTimer = debugLog.startTimer('DesktopApp:initializeInstallation');
     const installation = await this.initializeInstallation();
     installTimer();
-    
+
     if (!installation) {
       debugLog.log('DesktopApp', 'No installation found, exiting');
       startTimer();
@@ -149,7 +149,7 @@ export class DesktopApp implements HasTelemetry {
         try {
           debugLog.log('DesktopApp', 'Starting ComfyUI server');
           appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
-          
+
           const serverTimer = debugLog.startTimer('DesktopApp:startComfyServer');
           await comfyDesktopApp.startComfyServer(serverArgs);
           serverTimer();
@@ -164,15 +164,15 @@ export class DesktopApp implements HasTelemetry {
           return;
         }
       } else {
-        debugLog.log('DesktopApp', 'Skipping server start', { 
+        debugLog.log('DesktopApp', 'Skipping server start', {
           useExternalServer: overrides.useExternalServer,
-          serverRunning: comfyDesktopApp.serverRunning 
+          serverRunning: comfyDesktopApp.serverRunning,
         });
       }
-      
+
       debugLog.log('DesktopApp', 'Sending READY progress');
       appWindow.sendServerStartProgress(ProgressStatus.READY);
-      
+
       debugLog.log('DesktopApp', 'Loading ComfyUI interface');
       await appWindow.loadComfyUI(serverArgs);
 
@@ -180,7 +180,7 @@ export class DesktopApp implements HasTelemetry {
       debugLog.log('DesktopApp', 'Setting install stage to READY');
       appState.setInstallStage(createInstallStageInfo(InstallStage.READY));
       appState.emitLoaded();
-      
+
       startTimer();
       debugLog.log('DesktopApp', 'Application startup complete');
       log.info(`Startup debug log saved to: ${debugLog.getLogPath()}`);
@@ -191,9 +191,9 @@ export class DesktopApp implements HasTelemetry {
       appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { error: String(error) }));
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
-      
+
       log.info(`Startup debug log saved to: ${debugLog.getLogPath()}`);
-      
+
       if (!this.appState.isQuitting) {
         dialog.showErrorBox(
           'Unhandled exception',

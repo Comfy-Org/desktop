@@ -6,8 +6,6 @@ import { rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
-import { getStartupDebugLogger } from './utils/startupDebugLogger';
-
 import { TorchMirrorUrl } from './constants';
 import { useAppState } from './main-process/appState';
 import { InstallStage, createInstallStageInfo } from './main-process/installStages';
@@ -16,6 +14,7 @@ import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
+import { getStartupDebugLogger } from './utils/startupDebugLogger';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -243,9 +242,9 @@ export class VirtualEnvironment implements HasTelemetry {
     debugLog.log('VirtualEnvironment', 'createEnvironment started', {
       pythonVersion: this.pythonVersion,
       device: this.selectedDevice,
-      venvPath: this.venvPath
+      venvPath: this.venvPath,
     });
-    
+
     this.telemetry.track(`install_flow:virtual_environment_create_start`, {
       python_version: this.pythonVersion,
       device: this.selectedDevice,
@@ -351,7 +350,7 @@ export class VirtualEnvironment implements HasTelemetry {
       pythonPath: pythonInterpreterPath,
       argsLength: args.length,
       firstArgs: args.slice(0, 3),
-      venvPath: this.venvPath
+      venvPath: this.venvPath,
     });
 
     return this.runCommand(
@@ -396,14 +395,14 @@ export class VirtualEnvironment implements HasTelemetry {
     const debugLog = getStartupDebugLogger();
     const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
     const command = `${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`;
-    
+
     debugLog.log('VirtualEnvironment', 'Running uv command', {
       uvPath: this.uvPath,
       args: args.slice(0, 5),
-      fullCommand: command.length > 200 ? command.substring(0, 200) + '...' : command
+      fullCommand: command.length > 200 ? command.substring(0, 200) + '...' : command,
     });
     log.info('Running uv command:', command);
-    
+
     const timer = debugLog.startTimer(`VirtualEnvironment:uv:${args[0]}`);
     try {
       const result = await this.runPtyCommandAsync(command, callbacks?.onStdout);
@@ -469,7 +468,7 @@ export class VirtualEnvironment implements HasTelemetry {
     debugLog.log('VirtualEnvironment', 'Spawning process', {
       command: path.basename(command),
       argsPreview: args.slice(0, 3).join(' '),
-      cwd
+      cwd,
     });
     log.info(`Running command: ${command} ${args.join(' ')} in ${cwd}`);
     const childProcess = spawn(command, args, {
@@ -479,7 +478,7 @@ export class VirtualEnvironment implements HasTelemetry {
         ...env,
       },
     });
-    
+
     debugLog.log('VirtualEnvironment', 'Process spawned', { pid: childProcess.pid });
 
     if (callbacks) {

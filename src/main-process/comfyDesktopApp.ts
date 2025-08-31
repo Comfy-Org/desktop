@@ -46,7 +46,7 @@ export class ComfyDesktopApp implements HasTelemetry {
   async buildServerArgs({ useExternalServer, COMFY_HOST, COMFY_PORT }: DevOverrides): Promise<ServerArgs> {
     const debugLog = getStartupDebugLogger();
     debugLog.log('ComfyDesktopApp', 'Building server args', { useExternalServer, COMFY_HOST, COMFY_PORT });
-    
+
     // Shallow-clone the setting launch args to avoid mutation.
     const serverArgs: ServerArgs = {
       listen: DEFAULT_SERVER_ARGS.listen,
@@ -107,7 +107,7 @@ export class ComfyDesktopApp implements HasTelemetry {
     const debugLog = getStartupDebugLogger();
     debugLog.log('ComfyDesktopApp', 'startComfyServer called', { serverArgs });
     log.info('Server start');
-    
+
     if (!this.appWindow.isOnPage('server-start')) {
       debugLog.log('ComfyDesktopApp', 'Loading server-start page');
       await this.appWindow.loadPage('server-start');
@@ -128,17 +128,17 @@ export class ComfyDesktopApp implements HasTelemetry {
 
     debugLog.log('ComfyDesktopApp', 'Sending STARTING_SERVER progress');
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
-    
+
     if (!this.comfyServer) {
       debugLog.log('ComfyDesktopApp', 'Creating new ComfyServer instance');
       this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
     }
-    
+
     debugLog.log('ComfyDesktopApp', 'Calling comfyServer.start()');
     const startTimer = debugLog.startTimer('ComfyDesktopApp:comfyServer.start');
     await this.comfyServer.start();
     startTimer();
-    
+
     debugLog.log('ComfyDesktopApp', 'Server started, initializing terminal');
     this.initializeTerminal(virtualEnvironment);
     debugLog.log('ComfyDesktopApp', 'Terminal initialized');
