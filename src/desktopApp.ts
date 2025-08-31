@@ -3,6 +3,7 @@ import log from 'electron-log/main';
 
 import { ProgressStatus } from './constants';
 import { IPC_CHANNELS } from './constants';
+import { getStartupDebugLogger } from './utils/startupDebugLogger';
 import { registerAppHandlers } from './handlers/AppHandlers';
 import { registerAppInfoHandlers } from './handlers/appInfoHandlers';
 import { registerGpuHandlers } from './handlers/gpuHandlers';
@@ -39,11 +40,16 @@ export class DesktopApp implements HasTelemetry {
 
   /** Load start screen - basic spinner */
   async showLoadingPage() {
+    const debugLog = getStartupDebugLogger();
+    debugLog.log('DesktopApp', 'showLoadingPage() called');
+    
     try {
       this.appState.setInstallStage(createInstallStageInfo(InstallStage.APP_INITIALIZING));
+      debugLog.log('DesktopApp', 'Loading desktop-start page');
       await this.appWindow.loadPage('desktop-start');
       await new Promise((resolve) => setTimeout(resolve, 60_000));
     } catch (error) {
+      debugLog.log('DesktopApp', 'Failed to load start screen', { error: String(error) });
       DesktopApp.fatalError({
         error,
         message: `Unknown error whilst loading start screen.\n\n${error}`,
@@ -67,11 +73,23 @@ export class DesktopApp implements HasTelemetry {
    * @throws Rethrows any errors when the installation fails before the app has set the current page.
    */
   private async initializeInstallation(): Promise<ComfyInstallation | undefined> {
+    const debugLog = getStartupDebugLogger();
+    debugLog.log('DesktopApp', 'initializeInstallation() called');
+    
     const { appWindow } = this;
     try {
+      debugLog.log('DesktopApp', 'Creating InstallationManager');
       const installManager = new InstallationManager(appWindow, this.telemetry);
-      return await installManager.ensureInstalled();
+      
+      debugLog.log('DesktopApp', 'Ensuring installation');
+      const installation = await installManager.ensureInstalled();
+      debugLog.log('DesktopApp', 'Installation ensured', { 
+        success: !!installation,
+        basePath: installation?.basePath 
+      });
+      return installation;
     } catch (error) {
+      debugLog.log('DesktopApp', 'Installation initialization failed', { error: String(error) });
       // Don't force app quit if the error occurs after moving away from the start page.
       if (this.appState.currentPage !== 'desktop-start') {
         appWindow.sendServerStartProgress(ProgressStatus.ERROR);
@@ -83,50 +101,99 @@ export class DesktopApp implements HasTelemetry {
   }
 
   async start(): Promise<void> {
+    const debugLog = getStartupDebugLogger();
+    debugLog.log('DesktopApp', 'start() called');
+    const startTimer = debugLog.startTimer('DesktopApp:start');
+    
     const { appState, appWindow, overrides, telemetry } = this;
 
-    if (!appState.ipcRegistered) this.registerIpcHandlers();
+    if (!appState.ipcRegistered) {
+      debugLog.log('DesktopApp', 'Registering IPC handlers');
+      this.registerIpcHandlers();
+    }
 
+    debugLog.log('DesktopApp', 'Checking existing installation');
     appState.setInstallStage(createInstallStageInfo(InstallStage.CHECKING_EXISTING_INSTALL));
+    
+    const installTimer = debugLog.startTimer('DesktopApp:initializeInstallation');
     const installation = await this.initializeInstallation();
-    if (!installation) return;
+    installTimer();
+    
+    if (!installation) {
+      debugLog.log('DesktopApp', 'No installation found, exiting');
+      startTimer();
+      return;
+    }
     this.installation = installation;
+    debugLog.log('DesktopApp', 'Installation initialized', { basePath: installation.basePath });
 
     // At this point, user has gone through the onboarding flow.
+    debugLog.log('DesktopApp', 'Initializing telemetry');
     await this.initializeTelemetry(installation);
 
     try {
       // Initialize app
-      this.comfyDesktopApp ??= new ComfyDesktopApp(installation, appWindow, telemetry);
+      if (!this.comfyDesktopApp) {
+        debugLog.log('DesktopApp', 'Creating ComfyDesktopApp instance');
+        this.comfyDesktopApp = new ComfyDesktopApp(installation, appWindow, telemetry);
+      }
       const { comfyDesktopApp } = this;
 
       // Construct core launch args
+      debugLog.log('DesktopApp', 'Building server args');
       const serverArgs = await comfyDesktopApp.buildServerArgs(overrides);
+      debugLog.log('DesktopApp', 'Server args built', { serverArgs });
 
       // Start server
       if (!overrides.useExternalServer && !comfyDesktopApp.serverRunning) {
         try {
+          debugLog.log('DesktopApp', 'Starting ComfyUI server');
           appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
+          
+          const serverTimer = debugLog.startTimer('DesktopApp:startComfyServer');
           await comfyDesktopApp.startComfyServer(serverArgs);
+          serverTimer();
+          debugLog.log('DesktopApp', 'Server started successfully');
         } catch (error) {
+          debugLog.log('DesktopApp', 'Server start failed', { error: String(error) });
           log.error('Unhandled exception during server start', error);
           appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
           appWindow.sendServerStartProgress(ProgressStatus.ERROR);
           appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { error: String(error) }));
+          startTimer();
           return;
         }
+      } else {
+        debugLog.log('DesktopApp', 'Skipping server start', { 
+          useExternalServer: overrides.useExternalServer,
+          serverRunning: comfyDesktopApp.serverRunning 
+        });
       }
+      
+      debugLog.log('DesktopApp', 'Sending READY progress');
       appWindow.sendServerStartProgress(ProgressStatus.READY);
+      
+      debugLog.log('DesktopApp', 'Loading ComfyUI interface');
       await appWindow.loadComfyUI(serverArgs);
 
       // App start complete
+      debugLog.log('DesktopApp', 'Setting install stage to READY');
       appState.setInstallStage(createInstallStageInfo(InstallStage.READY));
       appState.emitLoaded();
+      
+      startTimer();
+      debugLog.log('DesktopApp', 'Application startup complete');
+      log.info(`Startup debug log saved to: ${debugLog.getLogPath()}`);
     } catch (error) {
+      startTimer();
+      debugLog.log('DesktopApp', 'Fatal startup error', { error: String(error) });
       log.error('Unhandled exception during app startup', error);
       appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { error: String(error) }));
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+      
+      log.info(`Startup debug log saved to: ${debugLog.getLogPath()}`);
+      
       if (!this.appState.isQuitting) {
         dialog.showErrorBox(
           'Unhandled exception',
