@@ -3,6 +3,7 @@ import { rm } from 'node:fs/promises';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings, useComfySettings } from '../config/comfySettings';
+import { InstallStage } from '../constants';
 import type { DesktopInstallState } from '../main_types';
 import type { InstallValidation } from '../preload';
 import { type ITelemetry, getTelemetry } from '../services/telemetry';
@@ -10,7 +11,7 @@ import { useDesktopConfig } from '../store/desktopConfig';
 import { canExecute, canExecuteShellCommand, pathAccessible } from '../utils';
 import { VirtualEnvironment } from '../virtualEnvironment';
 import { useAppState } from './appState';
-import { InstallStage, createInstallStageInfo } from './installStages';
+import { createInstallStageInfo } from './installStages';
 
 /**
  * Object representing the desktop app installation itself.
