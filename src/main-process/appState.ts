@@ -1,12 +1,13 @@
 import { app } from 'electron';
 import { EventEmitter } from 'node:events';
 
+import { InstallStage } from '@/constants';
 import { AppStartError } from '@/infrastructure/appStartError';
 import type { Page } from '@/infrastructure/interfaces';
 import { getUvState } from '@/uv-parser/uvState';
 import type { IUvState } from '@/uv-parser/uvStateInterfaces';
 
-import { InstallStage, type InstallStageInfo, createInstallStageInfo } from './installStages';
+import { type InstallStageInfo, createInstallStageInfo } from './installStages';
 
 /** App event names */
 type AppStateEvents = {

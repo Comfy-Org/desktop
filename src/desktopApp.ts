@@ -3,6 +3,7 @@ import log from 'electron-log/main';
 
 import { ProgressStatus } from './constants';
 import { IPC_CHANNELS } from './constants';
+import { InstallStage } from './constants';
 import { registerAppHandlers } from './handlers/AppHandlers';
 import { registerAppInfoHandlers } from './handlers/appInfoHandlers';
 import { registerGpuHandlers } from './handlers/gpuHandlers';
@@ -19,7 +20,7 @@ import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import type { ComfyInstallation } from './main-process/comfyInstallation';
 import { DevOverrides } from './main-process/devOverrides';
-import { InstallStage, createInstallStageInfo } from './main-process/installStages';
+import { createInstallStageInfo } from './main-process/installStages';
 import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';

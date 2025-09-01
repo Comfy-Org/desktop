@@ -6,9 +6,9 @@ import { rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
-import { TorchMirrorUrl } from './constants';
+import { InstallStage, TorchMirrorUrl } from './constants';
 import { useAppState } from './main-process/appState';
-import { InstallStage, createInstallStageInfo } from './main-process/installStages';
+import { createInstallStageInfo } from './main-process/installStages';
 import type { TorchDeviceType } from './preload';
 import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';

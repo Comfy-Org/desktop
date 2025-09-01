@@ -1,11 +1,11 @@
 import { Notification, app, dialog, ipcMain, shell } from 'electron';
 import log from 'electron-log/main';
 
-import { IPC_CHANNELS, ProgressStatus } from '../constants';
+import { IPC_CHANNELS, InstallStage, ProgressStatus } from '../constants';
 import { useAppState } from '../main-process/appState';
 import type { AppWindow } from '../main-process/appWindow';
 import { ComfyInstallation } from '../main-process/comfyInstallation';
-import { InstallStage, createInstallStageInfo } from '../main-process/installStages';
+import { createInstallStageInfo } from '../main-process/installStages';
 import type { InstallOptions, InstallValidation } from '../preload';
 import { CmCli } from '../services/cmCli';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
