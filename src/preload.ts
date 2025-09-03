@@ -434,6 +434,19 @@ const electronAPI = {
     return ipcRenderer.invoke(IPC_CHANNELS.CHECK_BLACKWELL);
   },
 
+  /**
+   * Installation stage tracking interfaces
+   */
+  InstallStage: {
+    /**
+     * Get the current installation stage
+     * @returns The current installation stage information
+     */
+    getCurrent: (): Promise<InstallStageInfo> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.GET_INSTALL_STAGE);
+    },
+  },
+
   uv: {
     /**
      * Install the requirements for the ComfyUI server.
