@@ -48,6 +48,7 @@ class AppState extends EventEmitter<AppStateEvents> implements IAppState {
   ipcRegistered = false;
   loaded = false;
   currentPage?: Page;
+  installStage?: InstallStageInfo;
 
   initialize() {
     // Store quitting state - suppresses errors when already quitting
