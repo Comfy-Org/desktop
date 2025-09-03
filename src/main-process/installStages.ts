@@ -4,10 +4,12 @@
  */
 import { InstallStage } from '../constants';
 
-export type InstallStageType = (typeof InstallStage)[keyof typeof InstallStage];
+type ValuesOf<T> = T[keyof T];
+
+export type InstallStageName = ValuesOf<typeof InstallStage>;
 
 export interface InstallStageInfo {
-  stage: InstallStageType;
+  stage: InstallStageName;
   progress: number; // 0-100
   message?: string;
   error?: string;
@@ -18,7 +20,7 @@ export interface InstallStageInfo {
  * Helper to create install stage info
  */
 export function createInstallStageInfo(
-  stage: InstallStageType,
+  stage: InstallStageName,
   options?: {
     progress?: number;
     message?: string;
