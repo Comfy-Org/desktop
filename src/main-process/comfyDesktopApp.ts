@@ -3,7 +3,6 @@ import { app, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
 import { useComfySettings } from '@/config/comfySettings';
-import { getStartupDebugLogger } from '@/utils/startupDebugLogger';
 
 import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { DownloadManager } from '../models/DownloadManager';
@@ -44,9 +43,6 @@ export class ComfyDesktopApp implements HasTelemetry {
    * @returns The server args for the ComfyUI server.
    */
   async buildServerArgs({ useExternalServer, COMFY_HOST, COMFY_PORT }: DevOverrides): Promise<ServerArgs> {
-    const debugLog = getStartupDebugLogger();
-    debugLog.log('ComfyDesktopApp', 'Building server args', { useExternalServer, COMFY_HOST, COMFY_PORT });
-
     // Shallow-clone the setting launch args to avoid mutation.
     const serverArgs: ServerArgs = {
       listen: DEFAULT_SERVER_ARGS.listen,
@@ -60,13 +56,10 @@ export class ComfyDesktopApp implements HasTelemetry {
     // Find first available port (unless using external server).
     if (!useExternalServer) {
       const targetPort = Number(serverArgs.port);
-      debugLog.log('ComfyDesktopApp', 'Finding available port', { targetPort });
       const port = await findAvailablePort(serverArgs.listen, targetPort, targetPort + 1000);
-      debugLog.log('ComfyDesktopApp', 'Found available port', { port });
       serverArgs.port = String(port);
     }
 
-    debugLog.log('ComfyDesktopApp', 'Server args built', { serverArgs });
     return serverArgs;
   }
 
@@ -104,44 +97,24 @@ export class ComfyDesktopApp implements HasTelemetry {
   }
 
   async startComfyServer(serverArgs: ServerArgs) {
-    const debugLog = getStartupDebugLogger();
-    debugLog.log('ComfyDesktopApp', 'startComfyServer called', { serverArgs });
     log.info('Server start');
-
     if (!this.appWindow.isOnPage('server-start')) {
-      debugLog.log('ComfyDesktopApp', 'Loading server-start page');
       await this.appWindow.loadPage('server-start');
-      debugLog.log('ComfyDesktopApp', 'Server-start page loaded');
     }
 
-    debugLog.log('ComfyDesktopApp', 'Getting DownloadManager instance');
     DownloadManager.getInstance(this.appWindow, getModelsDirectory(this.basePath));
 
     const { virtualEnvironment } = this.installation;
-    debugLog.log('ComfyDesktopApp', 'Got virtual environment from installation');
 
     if (this.comfyServer?.isRunning) {
       log.error('ComfyUI server is already running');
-      debugLog.log('ComfyDesktopApp', 'Server already running - throwing error');
       throw new Error('ComfyUI server is already running');
     }
 
-    debugLog.log('ComfyDesktopApp', 'Sending STARTING_SERVER progress');
     this.appWindow.sendServerStartProgress(ProgressStatus.STARTING_SERVER);
-
-    if (!this.comfyServer) {
-      debugLog.log('ComfyDesktopApp', 'Creating new ComfyServer instance');
-      this.comfyServer = new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
-    }
-
-    debugLog.log('ComfyDesktopApp', 'Calling comfyServer.start()');
-    const startTimer = debugLog.startTimer('ComfyDesktopApp:comfyServer.start');
+    this.comfyServer ??= new ComfyServer(this.basePath, serverArgs, virtualEnvironment, this.appWindow, this.telemetry);
     await this.comfyServer.start();
-    startTimer();
-
-    debugLog.log('ComfyDesktopApp', 'Server started, initializing terminal');
     this.initializeTerminal(virtualEnvironment);
-    debugLog.log('ComfyDesktopApp', 'Terminal initialized');
   }
 
   async stopComfyServer() {

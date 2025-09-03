@@ -5,7 +5,6 @@ import path from 'node:path';
 import waitOn from 'wait-on';
 
 import { removeAnsiCodesTransform } from '@/infrastructure/structuredLogging';
-import { getStartupDebugLogger } from '@/utils/startupDebugLogger';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings } from '../config/comfySettings';
@@ -115,26 +114,15 @@ export class ComfyServer implements HasTelemetry {
 
   @trackEvent('comfyui:server_start')
   async start() {
-    const debugLog = getStartupDebugLogger();
-    debugLog.log('ComfyServer', 'start() called');
-
     if (this.isRunning) {
       const message = 'ComfyUI server is already running';
       log.error(message);
-      debugLog.log('ComfyServer', 'Server already running, throwing error');
       throw new Error(message);
     }
 
-    debugLog.log('ComfyServer', 'Locking ComfySettings writes');
     ComfySettings.lockWrites();
-
-    debugLog.log('ComfyServer', 'Adding app bundled custom nodes to config');
     await ComfyServerConfig.addAppBundledCustomNodesToConfig();
-
-    debugLog.log('ComfyServer', 'Rotating log files');
     await rotateLogFiles(app.getPath('logs'), LogFile.ComfyUI, 50);
-
-    debugLog.log('ComfyServer', 'Setting up promise for server start');
     return new Promise<void>((resolve, reject) => {
       const comfyUILog = log.create({ logId: 'comfyui' });
       comfyUILog.transports.file.fileName = LogFile.ComfyUI;
@@ -142,14 +130,6 @@ export class ComfyServer implements HasTelemetry {
       comfyUILog.transports.file.transforms.unshift(removeAnsiCodesTransform);
 
       this.timedOutWhilstStarting = false;
-
-      debugLog.log('ComfyServer', 'Launch arguments prepared', {
-        args: this.launchArgs,
-        uvPath: this.virtualEnvironment.uvPath,
-        basePath: this.basePath,
-      });
-
-      debugLog.log('ComfyServer', 'Starting Python subprocess');
       const comfyServerProcess = this.virtualEnvironment.runPythonCommand(this.launchArgs, {
         onStdout: (data) => {
           comfyUILog.info(data);
@@ -164,15 +144,12 @@ export class ComfyServer implements HasTelemetry {
       const rejectOnError = (err: Error) => {
         this.comfyServerProcess = null;
         log.error('Failed to start ComfyUI:', err);
-        debugLog.log('ComfyServer', 'Process error occurred', { error: err.message });
         reject(err);
       };
       comfyServerProcess.on('error', rejectOnError);
-      debugLog.log('ComfyServer', 'Error handler attached');
 
       comfyServerProcess.on('exit', (code, signal) => {
         this.comfyServerProcess = null;
-        debugLog.log('ComfyServer', 'Process exited', { code, signal });
         if (code !== 0) {
           log.error(`Python process exited with code ${code} and signal ${signal}`);
           reject(new Error(`Python process exited with code ${code} and signal ${signal}`));
@@ -181,35 +158,21 @@ export class ComfyServer implements HasTelemetry {
           resolve();
         }
       });
-      debugLog.log('ComfyServer', 'Exit handler attached');
 
       this.comfyServerProcess = comfyServerProcess;
-      debugLog.log('ComfyServer', 'Process reference stored', { pid: comfyServerProcess.pid });
 
-      const waitOnUrl = `${this.baseUrl}/queue`;
-      debugLog.log('ComfyServer', 'Starting waitOn for server readiness', {
-        url: waitOnUrl,
-        timeoutMs: ComfyServer.MAX_FAIL_WAIT,
-        intervalMs: ComfyServer.CHECK_INTERVAL,
-      });
-
-      const waitOnTimer = debugLog.startTimer('ComfyServer:waitOn');
       waitOn({
-        resources: [waitOnUrl],
+        resources: [`${this.baseUrl}/queue`],
         timeout: ComfyServer.MAX_FAIL_WAIT,
         interval: ComfyServer.CHECK_INTERVAL,
       })
         .then(() => {
-          waitOnTimer();
-          debugLog.log('ComfyServer', 'Server is ready and responding');
           log.info('Python server is ready');
           comfyServerProcess.off('error', rejectOnError);
           resolve();
         })
         .catch((error) => {
-          waitOnTimer();
           this.timedOutWhilstStarting = true;
-          debugLog.log('ComfyServer', 'Server startup timeout', { error: error.message });
           log.error('Server failed to start within timeout:', error);
           reject(new Error('Python server failed to start within timeout.'));
         });
