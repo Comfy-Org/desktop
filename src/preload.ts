@@ -461,6 +461,13 @@ const electronAPI = {
         ipcRenderer.removeListener(IPC_CHANNELS.INSTALL_STAGE_UPDATE, handler);
       };
     },
+
+    /**
+     * Remove the installation stage update listener
+     */
+    dispose: () => {
+      ipcRenderer.removeAllListeners(IPC_CHANNELS.INSTALL_STAGE_UPDATE);
+    },
   },
 
   uv: {
