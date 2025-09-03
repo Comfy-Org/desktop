@@ -8,6 +8,7 @@ import { registerAppInfoHandlers } from './handlers/appInfoHandlers';
 import { registerGpuHandlers } from './handlers/gpuHandlers';
 import { registerNetworkHandlers } from './handlers/networkHandlers';
 import { registerPathHandlers } from './handlers/pathHandlers';
+import { registerInstallStateHandlers } from './handlers/installStateHandlers';
 import { FatalError } from './infrastructure/fatalError';
 import type { FatalErrorOptions } from './infrastructure/interfaces';
 import { InstallationManager } from './install/installationManager';
@@ -138,6 +139,7 @@ export class DesktopApp implements HasTelemetry {
       registerAppInfoHandlers();
       registerAppHandlers();
       registerGpuHandlers();
+      registerInstallStateHandlers();
 
       ipcMain.handle(IPC_CHANNELS.START_TROUBLESHOOTING, async () => await this.showTroubleshootingPage());
     } catch (error) {
