@@ -80,6 +80,44 @@ export enum ProgressStatus {
 
 export type IPCChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 
+export const InstallStage = {
+  // Initial stages
+  IDLE: 'idle',
+  APP_INITIALIZING: 'app_initializing',
+  CHECKING_EXISTING_INSTALL: 'checking_existing_install',
+
+  // Pre-installation checks
+  HARDWARE_VALIDATION: 'hardware_validation',
+  GIT_CHECK: 'git_check',
+
+  // User interaction
+  WELCOME_SCREEN: 'welcome_screen',
+  INSTALL_OPTIONS_SELECTION: 'install_options_selection',
+
+  // Installation process
+  CREATING_DIRECTORIES: 'creating_directories',
+  INITIALIZING_CONFIG: 'initializing_config',
+  PYTHON_ENVIRONMENT_SETUP: 'python_environment_setup',
+  INSTALLING_REQUIREMENTS: 'installing_requirements',
+  MIGRATING_CUSTOM_NODES: 'migrating_custom_nodes',
+
+  // Validation stages
+  VALIDATION_IN_PROGRESS: 'validation_in_progress',
+  VALIDATION_BASEPATH: 'validation_basepath',
+  VALIDATION_VENV: 'validation_venv',
+  VALIDATION_PYTHON: 'validation_python',
+  VALIDATION_UV: 'validation_uv',
+  VALIDATION_PACKAGES: 'validation_packages',
+  VALIDATION_GIT: 'validation_git',
+  VALIDATION_VCREDIST: 'validation_vcredist',
+
+  // Post-installation
+  MAINTENANCE_MODE: 'maintenance_mode',
+  STARTING_SERVER: 'starting_server',
+  READY: 'ready',
+  ERROR: 'error',
+} as const;
+
 export const ELECTRON_BRIDGE_API = 'electronAPI';
 
 export const SENTRY_URL_ENDPOINT =
