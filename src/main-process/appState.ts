@@ -11,6 +11,8 @@ type AppStateEvents = {
   ipcRegistered: [];
   /** Occurs once, immediately after the ComfyUI server has finished loading. */
   loaded: [];
+  /** Occurs when the installation stage changes */
+  installStageChanged: [InstallStageInfo];
 };
 
 /**
