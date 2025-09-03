@@ -71,6 +71,11 @@ class AppState extends EventEmitter<AppStateEvents> implements IAppState {
   emitLoaded() {
     if (!this.loaded) this.emit('loaded');
   }
+
+  setInstallStage(stage: InstallStageInfo) {
+    this.installStage = stage;
+    this.emit('installStageChanged', stage);
+  }
 }
 
 const appState = new AppState();
