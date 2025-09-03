@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron';
 
-import { InstallStage, IPC_CHANNELS } from '../constants';
-import { createInstallStageInfo, type InstallStageInfo } from '../main-process/installStages';
+import { IPC_CHANNELS, InstallStage } from '../constants';
 import { useAppState } from '../main-process/appState';
+import { type InstallStageInfo, createInstallStageInfo } from '../main-process/installStages';
 
 /**
  * Registers IPC handlers for installation state management

@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events';
 
 import { AppStartError } from '@/infrastructure/appStartError';
 import type { Page } from '@/infrastructure/interfaces';
+
 import type { InstallStageInfo } from './installStages';
 
 /** App event names */
