@@ -10,7 +10,7 @@ export type InstallStageName = ValuesOf<typeof InstallStage>;
 
 export interface InstallStageInfo {
   stage: InstallStageName;
-  progress?: number; // 0-100
+  progress: number; // 0-100
   message?: string;
   error?: string;
   timestamp: number;
@@ -29,7 +29,7 @@ export function createInstallStageInfo(
 ): InstallStageInfo {
   return {
     stage,
-    progress: options?.progress,
+    progress: options?.progress ?? 0,
     message: options?.message,
     error: options?.error,
     timestamp: Date.now(),
