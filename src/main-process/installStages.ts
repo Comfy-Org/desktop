@@ -13,3 +13,23 @@ export interface InstallStageInfo {
   error?: string;
   timestamp: number;
 }
+
+/**
+ * Helper to create install stage info
+ */
+export function createInstallStageInfo(
+  stage: InstallStageType,
+  options?: {
+    progress?: number;
+    message?: string;
+    error?: string;
+  }
+): InstallStageInfo {
+  return {
+    stage,
+    progress: options?.progress ?? 0,
+    message: options?.message,
+    error: options?.error,
+    timestamp: Date.now(),
+  };
+}
