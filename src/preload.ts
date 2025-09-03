@@ -445,6 +445,22 @@ const electronAPI = {
     getCurrent: (): Promise<InstallStageInfo> => {
       return ipcRenderer.invoke(IPC_CHANNELS.GET_INSTALL_STAGE);
     },
+
+    /**
+     * Listen for installation stage updates
+     * @param callback Called when the installation stage changes
+     * @returns A function to remove the event listener
+     */
+    onUpdate: (callback: (stage: InstallStageInfo) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, stage: InstallStageInfo) => {
+        callback(stage);
+      };
+      ipcRenderer.on(IPC_CHANNELS.INSTALL_STAGE_UPDATE, handler);
+
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.INSTALL_STAGE_UPDATE, handler);
+      };
+    },
   },
 
   uv: {
