@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import path from 'node:path';
 
 import { DownloadStatus, ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
+import type { InstallStageInfo } from './main-process/installStages';
 import type { DownloadState } from './main_types';
 import type { DesktopInstallState, DesktopWindowStyle } from './main_types';
 
