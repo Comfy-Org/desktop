@@ -45,7 +45,7 @@ export class DesktopApp implements HasTelemetry {
     debugLog.log('DesktopApp', 'showLoadingPage() called');
 
     try {
-      this.appState.setInstallStage(createInstallStageInfo(InstallStage.APP_INITIALIZING));
+      this.appState.setInstallStage(createInstallStageInfo(InstallStage.APP_INITIALIZING, { progress: 1 }));
       debugLog.log('DesktopApp', 'Loading desktop-start page');
       await this.appWindow.loadPage('desktop-start');
       await new Promise((resolve) => setTimeout(resolve, 60_000));
@@ -114,7 +114,7 @@ export class DesktopApp implements HasTelemetry {
     }
 
     debugLog.log('DesktopApp', 'Checking existing installation');
-    appState.setInstallStage(createInstallStageInfo(InstallStage.CHECKING_EXISTING_INSTALL));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.CHECKING_EXISTING_INSTALL, { progress: 3 }));
 
     const installTimer = debugLog.startTimer('DesktopApp:initializeInstallation');
     const installation = await this.initializeInstallation();
@@ -149,7 +149,7 @@ export class DesktopApp implements HasTelemetry {
       if (!overrides.useExternalServer && !comfyDesktopApp.serverRunning) {
         try {
           debugLog.log('DesktopApp', 'Starting ComfyUI server');
-          appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
+          appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER, { progress: 95 }));
 
           const serverTimer = debugLog.startTimer('DesktopApp:startComfyServer');
           await comfyDesktopApp.startComfyServer(serverArgs);
@@ -160,7 +160,7 @@ export class DesktopApp implements HasTelemetry {
           log.error('Unhandled exception during server start', error);
           appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
           appWindow.sendServerStartProgress(ProgressStatus.ERROR);
-          appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { error: String(error) }));
+          appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { progress: 0, error: String(error) }));
           startTimer();
           return;
         }
@@ -179,7 +179,7 @@ export class DesktopApp implements HasTelemetry {
 
       // App start complete
       debugLog.log('DesktopApp', 'Setting install stage to READY');
-      appState.setInstallStage(createInstallStageInfo(InstallStage.READY));
+      appState.setInstallStage(createInstallStageInfo(InstallStage.READY, { progress: 100 }));
       appState.emitLoaded();
 
       startTimer();
