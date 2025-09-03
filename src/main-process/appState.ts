@@ -29,11 +29,15 @@ export interface IAppState extends Pick<EventEmitter<AppStateEvents>, 'on' | 'on
   readonly loaded: boolean;
   /** The last page the app loaded from the desktop side. @see {@link AppWindow.loadPage} */
   currentPage?: Page;
+  /** The current installation stage information */
+  installStage?: InstallStageInfo;
 
   /** Updates state - IPC handlers have been registered. */
   emitIpcRegistered(): void;
   /** Updates state - the app has loaded. */
   emitLoaded(): void;
+  /** Updates the installation stage */
+  setInstallStage(stage: InstallStageInfo): void;
 }
 
 /**
