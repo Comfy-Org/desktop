@@ -114,7 +114,7 @@ export class ComfyInstallation {
 
     // Validate base path
     const appState = useAppState();
-    appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_BASEPATH));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_BASEPATH, { progress: 86 }));
     const basePath = useDesktopConfig().get('basePath');
     if (basePath && (await pathAccessible(basePath))) {
       await this.updateBasePathAndVenv(basePath);
@@ -123,26 +123,26 @@ export class ComfyInstallation {
       this.onUpdate?.(validation);
 
       // Validate virtual environment
-      appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_VENV));
+      appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_VENV, { progress: 87 }));
       const venv = this.virtualEnvironment;
       if (await venv.exists()) {
         validation.venvDirectory = 'OK';
         this.onUpdate?.(validation);
 
         // Python interpreter
-        appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_PYTHON));
+        appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_PYTHON, { progress: 88 }));
         validation.pythonInterpreter = (await canExecute(venv.pythonInterpreterPath)) ? 'OK' : 'error';
         if (validation.pythonInterpreter !== 'OK') log.warn('Python interpreter is missing or not executable.');
         this.onUpdate?.(validation);
 
         // uv
-        appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_UV));
+        appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_UV, { progress: 89 }));
         if (await canExecute(venv.uvPath)) {
           validation.uv = 'OK';
           this.onUpdate?.(validation);
 
           // Python packages
-          appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_PACKAGES));
+          appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_PACKAGES, { progress: 90 }));
           try {
             const result = await venv.hasRequirements();
             if (result === 'package-upgrade') {
@@ -171,13 +171,13 @@ export class ComfyInstallation {
     this.onUpdate?.(validation);
 
     // Git
-    appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_GIT));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_GIT, { progress: 91 }));
     validation.git = (await canExecuteShellCommand('git --help')) ? 'OK' : 'error';
     if (validation.git !== 'OK') log.warn('git not found in path.');
     this.onUpdate?.(validation);
 
     // Visual C++ Redistributable
-    appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_VCREDIST));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_VCREDIST, { progress: 92 }));
     if (process.platform === 'win32') {
       const vcDllPath = `${process.env.SYSTEMROOT}\\System32\\vcruntime140.dll`;
       validation.vcRedist = (await pathAccessible(vcDllPath)) ? 'OK' : 'error';
