@@ -139,13 +139,13 @@ export class InstallationManager implements HasTelemetry {
       await this.appWindow.loadPage('not-supported');
     } else {
       log.verbose('Loading welcome renderer.');
-      appState.setInstallStage(createInstallStageInfo(InstallStage.WELCOME_SCREEN, { progress: 8 }));
+      appState.setInstallStage(createInstallStageInfo(InstallStage.WELCOME_SCREEN, { progress: 16 }));
       await this.appWindow.loadPage('welcome');
     }
 
     // Check if git is installed
     log.verbose('Checking if git is installed.');
-    appState.setInstallStage(createInstallStageInfo(InstallStage.GIT_CHECK, { progress: 10 }));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.GIT_CHECK, { progress: 18 }));
     const gitInstalled = await canExecuteShellCommand('git --version');
     if (!gitInstalled) {
       log.verbose('git not detected in path, loading download-git page.');
@@ -165,7 +165,7 @@ export class InstallationManager implements HasTelemetry {
     }
 
     // Handover to frontend
-    appState.setInstallStage(createInstallStageInfo(InstallStage.INSTALL_OPTIONS_SELECTION, { progress: 15 }));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.INSTALL_OPTIONS_SELECTION, { progress: 20 }));
     const installOptions = await optionsPromise;
     this.telemetry.track('desktop:install_options_received', {
       gpuType: installOptions.device,
@@ -191,7 +191,7 @@ export class InstallationManager implements HasTelemetry {
     }
 
     // Creates folders and initializes ComfyUI settings
-    appState.setInstallStage(createInstallStageInfo(InstallStage.CREATING_DIRECTORIES, { progress: 20 }));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.CREATING_DIRECTORIES, { progress: 22 }));
     const installWizard = new InstallWizard(installOptions, this.telemetry);
     await installWizard.install();
 
@@ -225,7 +225,7 @@ export class InstallationManager implements HasTelemetry {
 
     // Migrate custom nodes
     if (shouldMigrateCustomNodes) {
-      appState.setInstallStage(createInstallStageInfo(InstallStage.MIGRATING_CUSTOM_NODES, { progress: 80 }));
+      appState.setInstallStage(createInstallStageInfo(InstallStage.MIGRATING_CUSTOM_NODES, { progress: 82 }));
     }
     const customNodeMigrationError = await this.migrateCustomNodes(config, virtualEnvironment, processCallbacks);
     if (customNodeMigrationError) {
