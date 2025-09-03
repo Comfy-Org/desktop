@@ -1,6 +1,7 @@
-name: Publish to npm
+name: Publish ElectronAPI to npm
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [closed]
     branches:
