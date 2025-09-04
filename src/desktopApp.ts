@@ -87,7 +87,7 @@ export class DesktopApp implements HasTelemetry {
 
     if (!appState.ipcRegistered) this.registerIpcHandlers();
 
-    appState.setInstallStage(createInstallStageInfo(InstallStage.CHECKING_EXISTING_INSTALL, { progress: 3 }));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.CHECKING_EXISTING_INSTALL, { progress: 2 }));
     const installation = await this.initializeInstallation();
     if (!installation) return;
     this.installation = installation;
@@ -106,7 +106,7 @@ export class DesktopApp implements HasTelemetry {
       // Start server
       if (!overrides.useExternalServer && !comfyDesktopApp.serverRunning) {
         try {
-          appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER, { progress: 95 }));
+          appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER, { progress: 98 }));
           await comfyDesktopApp.startComfyServer(serverArgs);
         } catch (error) {
           log.error('Unhandled exception during server start', error);

@@ -303,7 +303,7 @@ export class VirtualEnvironment implements HasTelemetry {
 
   @trackEvent('install_flow:virtual_environment_install_requirements')
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
-    useAppState().setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 45 }));
+    useAppState().setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 35 }));
 
     // pytorch nightly is required for MPS
     if (process.platform === 'darwin') {
@@ -500,7 +500,7 @@ export class VirtualEnvironment implements HasTelemetry {
   async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(
       createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, {
-        progress: 60,
+        progress: 45,
         message: 'Installing ComfyUI requirements',
       })
     );
@@ -520,7 +520,7 @@ export class VirtualEnvironment implements HasTelemetry {
   async installComfyUIManagerRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(
       createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, {
-        progress: 75,
+        progress: 60,
         message: 'Installing ComfyUI Manager requirements',
       })
     );

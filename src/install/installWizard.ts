@@ -36,7 +36,7 @@ export class InstallWizard implements HasTelemetry {
     this.initializeUserFiles();
 
     const appState = useAppState();
-    appState.setInstallStage(createInstallStageInfo(InstallStage.INITIALIZING_CONFIG, { progress: 24 }));
+    appState.setInstallStage(createInstallStageInfo(InstallStage.INITIALIZING_CONFIG, { progress: 10 }));
 
     await this.initializeSettings();
     await this.initializeModelPaths();
