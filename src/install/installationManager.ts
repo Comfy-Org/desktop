@@ -193,7 +193,6 @@ export class InstallationManager implements HasTelemetry {
     const installWizard = new InstallWizard(installOptions, this.telemetry);
     await installWizard.install();
 
-    // this.appWindow.maximize();
     const shouldMigrateCustomNodes =
       !!installWizard.migrationSource && installWizard.migrationItemIds.has('custom_nodes');
     if (shouldMigrateCustomNodes) {
