@@ -106,7 +106,7 @@ export class DesktopApp implements HasTelemetry {
       // Start server
       if (!overrides.useExternalServer && !comfyDesktopApp.serverRunning) {
         try {
-          appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER, { progress: 95 }));
+          appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
           await comfyDesktopApp.startComfyServer(serverArgs);
         } catch (error) {
           log.error('Unhandled exception during server start', error);
