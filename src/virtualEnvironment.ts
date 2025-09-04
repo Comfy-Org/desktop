@@ -480,6 +480,13 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
+    useAppState().setInstallStage(
+      createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, {
+        progress: 25,
+        message: 'Installing PyTorch',
+      })
+    );
+
     const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
     const config: PipInstallConfig = {
       packages: ['torch', 'torchvision', 'torchaudio'],
