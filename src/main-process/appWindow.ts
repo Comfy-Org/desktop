@@ -66,9 +66,9 @@ export class AppWindow {
     const minWidth = 640;
     const minHeight = 640;
 
-    // Retrieve stored window size, or use default if not available
-    const storedWidth = store.get('windowWidth', width);
-    const storedHeight = store.get('windowHeight', height);
+    // For fresh installs, force 1024x768 regardless of stored values
+    const storedWidth = installed ? store.get('windowWidth', width) : width;
+    const storedHeight = installed ? store.get('windowHeight', height) : height;
     const storedX = store.get('windowX');
     const storedY = store.get('windowY');
 
@@ -114,7 +114,8 @@ export class AppWindow {
     this.window.once('ready-to-show', () => this.window.show());
 
     if (!installed && storedX === undefined) this.window.center();
-    if (store.get('windowMaximized')) this.window.maximize();
+    // Only maximize for installed apps with the stored preference
+    if (installed && store.get('windowMaximized')) this.window.maximize();
 
     this.setupWindowEvents();
     this.setupAppEvents();
