@@ -100,7 +100,6 @@ export const InstallStage = {
   CREATING_DIRECTORIES: 'creating_directories',
   INITIALIZING_CONFIG: 'initializing_config',
   PYTHON_ENVIRONMENT_SETUP: 'python_environment_setup',
-  INSTALLING_PYTORCH: 'installing_pytorch',
   INSTALLING_REQUIREMENTS: 'installing_requirements',
   INSTALLING_PYTORCH: 'installing_pytorch',
   INSTALLING_COMFYUI_REQUIREMENTS: 'installing_comfyui_requirements',
