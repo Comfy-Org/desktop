@@ -481,7 +481,7 @@ export class VirtualEnvironment implements HasTelemetry {
 
   async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(
-      createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, {
+      createInstallStageInfo(InstallStage.INSTALLING_PYTORCH, {
         progress: 25,
         message: 'Installing PyTorch',
       })
