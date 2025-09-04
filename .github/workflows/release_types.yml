@@ -26,8 +26,11 @@ jobs:
           cache: 'yarn'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Build types
         run: yarn run vite:types
