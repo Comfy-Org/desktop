@@ -101,6 +101,9 @@ export const InstallStage = {
   INITIALIZING_CONFIG: 'initializing_config',
   PYTHON_ENVIRONMENT_SETUP: 'python_environment_setup',
   INSTALLING_REQUIREMENTS: 'installing_requirements',
+  INSTALLING_PYTORCH: 'installing_pytorch',
+  INSTALLING_COMFYUI_REQUIREMENTS: 'installing_comfyui_requirements',
+  INSTALLING_MANAGER_REQUIREMENTS: 'installing_manager_requirements',
   MIGRATING_CUSTOM_NODES: 'migrating_custom_nodes',
 
   // Post-installation
