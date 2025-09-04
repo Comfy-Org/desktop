@@ -212,9 +212,7 @@ const electronAPI = {
   /**
    * Get the current Electron version
    */
-  getElectronVersion: () => {
-    return ipcRenderer.invoke(IPC_CHANNELS.GET_ELECTRON_VERSION);
-  },
+  getElectronVersion: (): Promise<string> => ipcRenderer.invoke(IPC_CHANNELS.GET_ELECTRON_VERSION),
   /** The ComfyUI core version (as defined in package.json) */
   getComfyUIVersion: () => __COMFYUI_VERSION__,
   Terminal: {
