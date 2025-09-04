@@ -23,10 +23,8 @@
 ### Code Quality (ALWAYS RUN AFTER CHANGES)
 
 ```bash
-yarn lint              # Check ESLint issues
-yarn lint:fix          # Auto-fix ESLint issues
-yarn format            # Check Prettier formatting
-yarn format:fix        # Auto-format code
+yarn lint              # Check & auto-fix ESLint issues
+yarn format            # Auto-format code
 yarn typescript        # TypeScript type checking
 ```
 
@@ -139,7 +137,7 @@ The app packages these components:
 
 ## Before Committing
 
-1. Use `yarn format:fix` to ensure consistent formatting
+1. Use `yarn format` to ensure consistent formatting
 1. Run `yarn lint` and `yarn typescript` to check code quality
 1. Run `yarn test:unit` to ensure unit tests pass
 1. Consider running `yarn test:e2e` for UI changes
