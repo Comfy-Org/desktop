@@ -304,7 +304,7 @@ export class VirtualEnvironment implements HasTelemetry {
   @trackEvent('install_flow:virtual_environment_install_requirements')
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(
-      createInstallStageInfo(InstallStage.INSTALLING_COMFYUI_REQUIREMENTS, { progress: 25 })
+      createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 25 })
     );
 
     // pytorch nightly is required for MPS
