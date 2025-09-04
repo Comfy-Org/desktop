@@ -48,8 +48,6 @@ export class InstallationManager implements HasTelemetry {
 
   private async validateInstallation(installation: ComfyInstallation) {
     this.#onMaintenancePage = false;
-    const appState = useAppState();
-    appState.setInstallStage(createInstallStageInfo(InstallStage.VALIDATION_IN_PROGRESS, { progress: 85 }));
 
     // Send updates to renderer
     using troubleshooting = new Troubleshooting(installation, this.appWindow);
