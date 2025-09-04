@@ -57,6 +57,7 @@ yarn vite:compile      # Compile with Vite
 ### Troubleshooting
 
 - If you encounter errors regarding `NODE_MODULE_VERSION`, try running `npx electron-rebuild` before other troubleshooting steps.
+  - If that still fails, try `yarn rebuild`
 
 ## Custom testing
 
