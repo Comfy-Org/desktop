@@ -103,16 +103,6 @@ export const InstallStage = {
   INSTALLING_REQUIREMENTS: 'installing_requirements',
   MIGRATING_CUSTOM_NODES: 'migrating_custom_nodes',
 
-  // Validation stages
-  VALIDATION_IN_PROGRESS: 'validation_in_progress',
-  VALIDATION_BASEPATH: 'validation_basepath',
-  VALIDATION_VENV: 'validation_venv',
-  VALIDATION_PYTHON: 'validation_python',
-  VALIDATION_UV: 'validation_uv',
-  VALIDATION_PACKAGES: 'validation_packages',
-  VALIDATION_GIT: 'validation_git',
-  VALIDATION_VCREDIST: 'validation_vcredist',
-
   // Post-installation
   MAINTENANCE_MODE: 'maintenance_mode',
   STARTING_SERVER: 'starting_server',
