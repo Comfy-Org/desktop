@@ -17,6 +17,7 @@ import { debounce } from 'lodash';
 import path from 'node:path';
 import { URL } from 'node:url';
 
+import { useComfySettings } from '@/config/comfySettings';
 import { ElectronError } from '@/infrastructure/electronError';
 import type { Page } from '@/infrastructure/interfaces';
 import { type IAppState, useAppState } from '@/main-process/appState';
@@ -30,7 +31,7 @@ import { useDesktopConfig } from '../store/desktopConfig';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
- * Closes the application when the window is closed.
+ * Closes the application or hides to system tray when the window is closed (based on 'Comfy-Desktop.RunInBackgroundOnClose' setting).
  */
 export class AppWindow {
   private readonly appState: IAppState = useAppState();
@@ -171,10 +172,18 @@ export class AppWindow {
 
   public show(): void {
     this.window.show();
+    if (process.platform === 'darwin') {
+      app.dock.show().catch((error) => {
+        log.error('Error showing dock', error);
+      });
+    }
   }
 
   public hide(): void {
     this.window.hide();
+    if (process.platform === 'darwin') {
+      app.dock.hide();
+    }
   }
 
   public isMinimized(): boolean {
@@ -319,7 +328,28 @@ export class AppWindow {
 
     this.window.on('resize', updateBounds);
     this.window.on('move', updateBounds);
-    this.window.on('close', () => log.info('App window closed.'));
+    this.window.on('close', (event) => {
+      if (this.appState.isQuitting) {
+        // App is actually quitting - allow the window to close
+        log.info('App window closing - app is quitting');
+        return;
+      }
+
+      // Check if run in background setting is enabled
+      const settings = useComfySettings();
+      const runInBackground = settings.get('Comfy-Desktop.RunInBackgroundOnClose');
+
+      if (runInBackground) {
+        // Hide to tray - prevent window close
+        log.info('App window close requested - hiding to tray instead');
+        event.preventDefault();
+        this.hide();
+      } else {
+        // Setting is disabled - allow normal close behavior (quit app)
+        log.info('App window closing - run in background disabled');
+        // Let the window close normally, which will quit the app
+      }
+    });
 
     this.window.webContents.setWindowOpenHandler(({ url }) => {
       if (this.#shouldOpenInPopup(url)) {
@@ -343,6 +373,11 @@ export class AppWindow {
 
       if (this.isMinimized()) this.restore();
       this.focus();
+    });
+
+    // Handle activate event (macOS - clicking dock icon when no windows visible)
+    app.on('activate', () => {
+      this.show();
     });
   }
 
@@ -419,12 +454,6 @@ export class AppWindow {
         label: 'Show Comfy Window',
         click: () => {
           this.show();
-          // Mac Only
-          if (process.platform === 'darwin') {
-            app.dock.show().catch((error) => {
-              log.error('Error showing dock', error);
-            });
-          }
         },
       },
       {
@@ -437,10 +466,6 @@ export class AppWindow {
         label: 'Hide',
         click: () => {
           this.hide();
-          // Mac Only
-          if (process.platform === 'darwin') {
-            app.dock.hide();
-          }
         },
       },
     ]);
