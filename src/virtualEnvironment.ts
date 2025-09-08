@@ -236,6 +236,13 @@ export class VirtualEnvironment implements HasTelemetry {
     throw new Error(`Unsupported platform: ${process.platform}`);
   }
 
+  /**
+   * Creates the virtual environment if it does not exist.
+   * Will add any missing requirements to an existing venv.
+   * Designed for installation rather than troubleshooting.
+   * @param callbacks - The callbacks to use for the installation.
+   * @returns A promise that resolves when the virtual environment is created.
+   */
   private async createEnvironment(callbacks?: ProcessCallbacks): Promise<void> {
     this.telemetry.track(`install_flow:virtual_environment_create_start`, {
       python_version: this.pythonVersion,
@@ -251,14 +258,20 @@ export class VirtualEnvironment implements HasTelemetry {
 
     try {
       if (await this.exists()) {
-        this.telemetry.track(`install_flow:virtual_environment_create_end`, {
-          reason: 'already_exists',
-        });
         log.info('Virtual environment already exists at', this.venvPath);
-        return;
+        const requirementsStatus = await this.hasRequirements();
+
+        if (requirementsStatus === 'OK') {
+          log.info('Skipping requirements installation - all requirements already installed');
+          this.telemetry.track(`install_flow:virtual_environment_create_end`, {
+            reason: 'already_exists',
+          });
+          return;
+        }
+      } else {
+        await this.createVenvWithPython(callbacks);
       }
 
-      await this.createVenvWithPython(callbacks);
       await this.ensurePip(callbacks);
       await this.installRequirements(callbacks);
       this.telemetry.track('install_flow:virtual_environment_create_end', {
@@ -303,9 +316,7 @@ export class VirtualEnvironment implements HasTelemetry {
 
   @trackEvent('install_flow:virtual_environment_install_requirements')
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
-    useAppState().setInstallStage(
-      createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 25 })
-    );
+    useAppState().setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 25 }));
 
     // pytorch nightly is required for MPS
     if (process.platform === 'darwin') {
