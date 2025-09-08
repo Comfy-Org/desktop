@@ -572,7 +572,7 @@ export class VirtualEnvironment implements HasTelemetry {
   async hasRequirements(): Promise<'OK' | 'error' | 'package-upgrade'> {
     const checkRequirements = async (requirementsPath: string) => {
       const args = ['pip', 'install', '--dry-run', '-r', requirementsPath];
-      log.info(`Running direct process command: ${args.join(' ')}`);
+      log.info(`Running uv command directly: ${args.join(' ')}`);
 
       // Get packages as json string
       let output = '';
