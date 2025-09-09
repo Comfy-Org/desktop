@@ -397,6 +397,21 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   /**
+   * Runs uv with the virtual environment env var set.
+   * @param args The arguments to pass to uv.
+   * @param callbacks The callbacks to use for the command.
+   * @returns A promise with the exit code and signal.
+   */
+  private async runUvAsync(
+    args: string[],
+    callbacks?: ProcessCallbacks
+  ): Promise<{ exitCode: number | null; signal: NodeJS.Signals | null }> {
+    log.info('Running uv child process: uv', args.join(' '));
+
+    return this.runCommandAsync(this.uvPath, args, { VIRTUAL_ENV: this.venvPath }, callbacks);
+  }
+
+  /**
    * Runs a uv command inside a managed, interactive shell. The virtual environment is set to this instance's venv.
    * @param args
    * @returns A promise with the exit code.
@@ -646,7 +661,7 @@ export class VirtualEnvironment implements HasTelemetry {
         onStdout: (data) => (output += data.toString()),
         onStderr: (data) => (output += data.toString()),
       };
-      const result = await this.runCommandAsync(this.uvPath, args, { VIRTUAL_ENV: this.venvPath }, callbacks);
+      const result = await this.runUvAsync(args, callbacks);
 
       if (result.exitCode !== 0)
         throw new Error(`Failed to get packages: Exit code ${result.exitCode}, signal ${result.signal}`);
