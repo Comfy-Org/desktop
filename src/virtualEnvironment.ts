@@ -295,6 +295,10 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
+  /**
+   * Uses `uv` to create a virtual environment with a managed python interpreter.
+   * @param callbacks The callbacks to use for the command.
+   */
   @trackEvent('install_flow:virtual_environment_create_python')
   public async createVenvWithPython(callbacks?: ProcessCallbacks): Promise<void> {
     log.info(`Creating virtual environment at ${this.venvPath} with python ${this.pythonVersion}`);
@@ -306,6 +310,10 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
+  /**
+   * Uses `ensurepip` to upgrade pip in the virtual environment.
+   * @param callbacks The callbacks to use for the command.
+   */
   @trackEvent('install_flow:virtual_environment_ensurepip')
   public async ensurePip(callbacks?: ProcessCallbacks): Promise<void> {
     const { exitCode } = await this.runPythonCommandAsync(['-m', 'ensurepip', '--upgrade'], callbacks);
@@ -314,6 +322,12 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
+  /**
+   * Installs the requirements for the virtual environment, preferring the compiled requirements where possible.
+   *
+   * Falls back to regular `pip install` commands if the compiled requirements are not available or fail for any reason.
+   * @param callbacks The callbacks to use for the command.
+   */
   @trackEvent('install_flow:virtual_environment_install_requirements')
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 25 }));
@@ -441,6 +455,15 @@ export class VirtualEnvironment implements HasTelemetry {
     });
   }
 
+  /**
+   * Starts a process, piping all output to the {@link callbacks}.
+   * @param command The command to run.
+   * @param args The arguments to pass to the command.
+   * @param env The environment variables to set for the command. Overrides process.env.
+   * @param callbacks The callbacks to use for the command.
+   * @param cwd The working directory for the command.
+   * @returns The child process created by running {@link command} with {@link args}.
+   */
   private runCommand(
     command: string,
     args: string[],
@@ -472,6 +495,15 @@ export class VirtualEnvironment implements HasTelemetry {
     return childProcess;
   }
 
+  /**
+   * Runs a command asynchronously, returning a promise with the exit code and signal.
+   * @param command The command to run.
+   * @param args The arguments to pass to the command.
+   * @param env The environment variables to set for the command. Overrides
+   * @param callbacks The callbacks to use for the command.
+   * @param cwd The working directory for the command.
+   * @returns A promise with the exit code and signal.
+   */
   private async runCommandAsync(
     command: string,
     args: string[],
@@ -492,12 +524,20 @@ export class VirtualEnvironment implements HasTelemetry {
     });
   }
 
+  /**
+   * Installs PyTorch, ComfyUI core, and ComfyUI Manager, using pip install rather than compiled requirements.
+   * @param callbacks The callbacks to use for the command.
+   */
   private async manualInstall(callbacks?: ProcessCallbacks): Promise<void> {
     await this.installPytorch(callbacks);
     await this.installComfyUIRequirements(callbacks);
     await this.installComfyUIManagerRequirements(callbacks);
   }
 
+  /**
+   * Installs PyTorch, using `pip install` with direct package names.
+   * @param callbacks The callbacks to use for the command.
+   */
   async installPytorch(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(
       createInstallStageInfo(InstallStage.INSTALLING_PYTORCH, {
@@ -523,6 +563,10 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
+  /**
+   * Installs the requirements for ComfyUI core using `requirements.txt`.
+   * @param callbacks The callbacks to use for the command.
+   */
   async installComfyUIRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(
       createInstallStageInfo(InstallStage.INSTALLING_COMFYUI_REQUIREMENTS, {
@@ -543,6 +587,10 @@ export class VirtualEnvironment implements HasTelemetry {
     }
   }
 
+  /**
+   * Installs the requirements for ComfyUI Manager using `requirements.txt`.
+   * @param callbacks The callbacks to use for the command.
+   */
   async installComfyUIManagerRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(
       createInstallStageInfo(InstallStage.INSTALLING_MANAGER_REQUIREMENTS, {
@@ -664,6 +712,11 @@ export class VirtualEnvironment implements HasTelemetry {
     return coreOk && managerOk ? 'OK' : 'error';
   }
 
+  /**
+   * Clears the system-wide uv cache.
+   * @param onData The callback to use for all output data.
+   * @returns `true` if the cache was cleared successfully, otherwise `false`.
+   */
   async clearUvCache(onData: ((data: string) => void) | undefined): Promise<boolean> {
     const callbacks = { onStdout: onData };
     const args = ['cache', 'clean'];
@@ -672,10 +725,20 @@ export class VirtualEnvironment implements HasTelemetry {
     return exitCode === 0;
   }
 
+  /**
+   * Removes the virtual environment directory.
+   * @returns `true` if the directory was removed successfully, otherwise `false`.
+   */
   async removeVenvDirectory(): Promise<boolean> {
     return await this.#rmdir(this.venvPath, '.venv directory');
   }
 
+  /**
+   * Removes a directory, logging the event.
+   * @param dir The path of the directory to remove.
+   * @param logName Human-readable name of the directory to remove, used for the log message.
+   * @returns `true` if the directory was removed successfully, otherwise `false`.
+   */
   async #rmdir(dir: string, logName: string): Promise<boolean> {
     if (await pathAccessible(dir)) {
       log.info(`Removing ${logName} [${dir}]`);
