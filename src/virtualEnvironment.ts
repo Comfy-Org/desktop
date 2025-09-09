@@ -258,7 +258,8 @@ export class VirtualEnvironment implements HasTelemetry {
 
     try {
       if (await this.exists()) {
-        log.info('Virtual environment already exists at', this.venvPath);
+        log.info('Virtual environment directory already exists: ', this.venvPath);
+
         const requirementsStatus = await this.hasRequirements();
 
         if (requirementsStatus === 'OK') {
@@ -267,6 +268,9 @@ export class VirtualEnvironment implements HasTelemetry {
             reason: 'already_exists',
           });
           return;
+        } else {
+          log.info('Starting manual install - venv missing requirements');
+          return await this.manualInstall(callbacks);
         }
       } else {
         await this.createVenvWithPython(callbacks);
