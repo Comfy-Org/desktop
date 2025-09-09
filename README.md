@@ -290,6 +290,10 @@ If a build fails for some reason, you can manually retry by running the "Publish
 
 There is a Claude Code command, "bump-stable", that can be used to automate the release process.
 
+## Updating uv compiled requirements
+
+Applying the "Update Compiled Requirements" label to an open PR will automatically update compiled requirements. If changes are made, the action commits the updated files to the PR.
+
 ## Utility scripts
 
 A number of utility scripts are defined under the "scripts" field of package.json. For example, to clean up the build artifacts you can run:
