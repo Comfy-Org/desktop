@@ -394,6 +394,12 @@ export class VirtualEnvironment implements HasTelemetry {
     return this.runPtyCommandAsync(command, callbacks?.onStdout);
   }
 
+  /**
+   * Runs a command inside a managed, interactive shell. The shell can be reused for multiple commands.
+   * @param command The command to run.
+   * @param onData The callback to use for all output data.
+   * @returns A promise with the exit code.
+   */
   private async runPtyCommandAsync(command: string, onData?: (data: string) => void): Promise<{ exitCode: number }> {
     function hasExited(data: string, endMarker: string): string | undefined {
       // Remove ansi sequences to see if this the exit marker
