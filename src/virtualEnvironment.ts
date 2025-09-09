@@ -2,7 +2,7 @@ import { app } from 'electron';
 import log from 'electron-log/main';
 import pty from 'node-pty';
 import { ChildProcess, spawn } from 'node:child_process';
-import { rm } from 'node:fs/promises';
+import { readdir, rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
