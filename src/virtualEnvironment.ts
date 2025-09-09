@@ -383,9 +383,9 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   /**
-   * Runs a uv command with the virtual environment set to this instance's venv and returns a promise with the exit code.
+   * Runs a uv command inside a managed, interactive shell. The virtual environment is set to this instance's venv.
    * @param args
-   * @returns
+   * @returns A promise with the exit code.
    */
   private async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
     const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
