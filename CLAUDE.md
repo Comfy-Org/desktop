@@ -135,6 +135,13 @@ The app packages these components:
   - Common tags are `@param`, and `@return` (do not use for `void` return type)
   - Use `{@link }` to reference symbols
 
+### Type constraints
+
+This project must maintain exceptionally high type standards. The `any` type must not be used. `unknown` can be used when the type is unknown.
+
+- `unknown` means "I do not know what the type is".
+- `any` means "I do not **care** what the type is".
+
 ## Before Committing
 
 1. Use `yarn format` to ensure consistent formatting
