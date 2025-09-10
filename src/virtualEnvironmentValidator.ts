@@ -1,3 +1,4 @@
+import Joi from 'joi';
 import log from 'electron-log/main';
 
 import type { ProcessCallbacks, VirtualEnvironment } from './virtualEnvironment';
