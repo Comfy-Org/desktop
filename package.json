@@ -31,7 +31,7 @@
     "download-frontend": "node scripts/downloadFrontend.js",
     "make:frontend": "yarn run download-frontend",
     "format": "prettier --write --cache --log-level warn .",
-    "format:check": "prettier --check --log-level error .",
+    "format:check": "prettier --check --log-level warn .",
     "lint": "eslint --fix --cache src",
     "lint:check": "eslint --max-warnings 0 src",
     "make": "yarn run vite:compile && electron-builder build --config=builder-debug.config.ts && yarn run verify:build",
