@@ -82,13 +82,13 @@ export async function validateVirtualEnvironment(
     // Try to parse and validate the JSON output
     try {
       /** Joi schema for validating Python script output */
-      const pythonOutputSchema = Joi.object<PythonOutput>({
+      const pythonValidationSchema = Joi.object<PythonValidationResult>({
         success: Joi.boolean().required(),
         failed_imports: Joi.array().items(Joi.string()).required(),
       });
 
       const parsedOutput: unknown = JSON.parse(output);
-      const validationResult = pythonOutputSchema.validate(parsedOutput);
+      const validationResult = pythonValidationSchema.validate(parsedOutput);
 
       if (validationResult.error) {
         log.error('Invalid Python output format:', validationResult.error.message);
