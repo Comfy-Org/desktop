@@ -8,7 +8,7 @@ import type { ProcessCallbacks, VirtualEnvironment } from './virtualEnvironment'
 export type VenvValidationResult = {
   success: boolean;
   error?: string;
-  missingPackage?: string;
+  missingImports?: string[];
 };
 
 /**
@@ -33,50 +33,41 @@ except ImportError as e:
  * @param callbacks Optional callbacks for output handling
  * @returns Validation result indicating success or specific failure
  */
-export async function validateVirtualEnvironment(
-  venv: VirtualEnvironment,
-  callbacks?: ProcessCallbacks
-): Promise<VenvValidationResult> {
+export async function validateVirtualEnvironment(venv: VirtualEnvironment): Promise<VenvValidationResult> {
   log.info('Validating virtual environment - testing yaml import');
 
   let output = '';
-  let errorOutput = '';
 
-  const testCallbacks: ProcessCallbacks = {
-    onStdout: (data) => {
-      output += data;
-      callbacks?.onStdout?.(data);
-    },
-    onStderr: (data) => {
-      errorOutput += data;
-      callbacks?.onStderr?.(data);
-    },
-  };
+  const cb = (data: string) => (output += data);
+
+  const callbacks = {
+    onStdout: cb,
+    onStderr: cb,
+  } satisfies ProcessCallbacks;
 
   try {
-    const { exitCode } = await venv.runPythonCommandAsync(['-c', YAML_IMPORT_TEST_SCRIPT], testCallbacks);
+    const { exitCode } = await venv.runPythonCommandAsync(['-c', YAML_IMPORT_TEST_SCRIPT], callbacks);
 
     if (exitCode === 0 && output.includes('yaml_import_success')) {
       log.info('Virtual environment validation successful - yaml imports correctly');
       return { success: true };
-    } else {
-      const errorMessage = errorOutput || output;
-      log.error('Virtual environment validation failed:', errorMessage);
+    }
 
-      // Check if it's specifically a yaml import failure
-      if (output.includes('yaml_import_failed') || errorMessage.toLowerCase().includes('yaml')) {
-        return {
-          success: false,
-          error: 'Failed to import yaml module',
-          missingPackage: 'pyyaml',
-        };
-      }
+    log.error('Virtual environment validation failed:', output);
 
+    // Check if it's specifically a yaml import failure
+    if (output.includes('yaml_import_failed') || output.toLowerCase().includes('yaml')) {
       return {
         success: false,
-        error: `Python validation failed with exit code ${exitCode}: ${errorMessage}`,
+        error: 'Failed to import yaml module',
+        missingPackage: 'pyyaml',
       };
     }
+
+    return {
+      success: false,
+      error: `Python validation failed with exit code ${exitCode}: ${output}`,
+    };
   } catch (error) {
     log.error('Error during virtual environment validation:', error);
     return {
