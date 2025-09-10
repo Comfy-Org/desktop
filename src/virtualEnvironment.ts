@@ -14,6 +14,7 @@ import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
+import { validateVirtualEnvironment } from './virtualEnvironmentValidator';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -729,6 +730,20 @@ export class VirtualEnvironment implements HasTelemetry {
     }
 
     return coreOk && managerOk ? 'OK' : 'error';
+  }
+
+  async validateVirtualEnvironment(): Promise<boolean> {
+    const validation = await validateVirtualEnvironment(this, [
+      'yaml',
+      'torch',
+      'uv',
+      'toml',
+      'numpy',
+      'PIL',
+      'sqlalchemy',
+    ]);
+
+    return validation.success;
   }
 
   /**
