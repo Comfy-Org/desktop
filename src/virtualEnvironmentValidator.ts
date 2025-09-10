@@ -74,21 +74,24 @@ export async function validateVirtualEnvironment(
 
     // Try to parse the JSON output
     try {
-      const result = JSON.parse(output);
+      const result = JSON.parse(output) as {
+        success: boolean;
+        failed_imports: string[];
+      };
       
       if (result.success) {
         log.info('Virtual environment validation successful - all imports available');
         return { success: true };
-      } else {
-        const failedImports = result.failed_imports || [];
-        log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
-        return {
-          success: false,
-          missingImports: failedImports,
-          error: `Missing imports: ${failedImports.join(', ')}`,
-        };
       }
-    } catch (parseError) {
+      
+      const failedImports = result.failed_imports || [];
+      log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
+      return {
+        success: false,
+        missingImports: failedImports,
+        error: `Missing imports: ${failedImports.join(', ')}`,
+      };
+    } catch {
       // If we can't parse the output, return a generic error
       log.error('Failed to parse validation output:', output);
       return {
