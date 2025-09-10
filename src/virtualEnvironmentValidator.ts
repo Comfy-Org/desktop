@@ -106,7 +106,7 @@ export async function validateVirtualEnvironment(
 
       // At this point, TypeScript knows error is undefined and value is PythonOutput
       const validatedOutput = validationResult.value;
-      
+
       if (validatedOutput.success) {
         log.info('Virtual environment validation successful - all imports available');
         return { success: true };
