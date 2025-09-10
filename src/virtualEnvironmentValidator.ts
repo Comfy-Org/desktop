@@ -94,7 +94,9 @@ export async function validateVirtualEnvironment(
     // Try to parse and validate the JSON output
     try {
       const parsedOutput: unknown = JSON.parse(output);
-      const { error, value } = pythonOutputSchema.validate(parsedOutput);
+      const validationResult = pythonOutputSchema.validate(parsedOutput);
+      const error = validationResult.error;
+      const value = validationResult.value as PythonOutput | undefined;
 
       if (error) {
         log.error('Invalid Python output format:', error.message);
