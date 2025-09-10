@@ -85,36 +85,3 @@ export async function validateVirtualEnvironment(
     };
   }
 }
-
-/**
- * Attempts to repair a virtual environment with missing packages.
- * This is useful when uv fails silently and leaves a partial installation.
- *
- * @param venv The virtual environment to repair
- * @param missingPackages List of packages to install
- * @param callbacks Optional callbacks for output handling
- * @returns True if repair was successful, false otherwise
- */
-export async function repairVirtualEnvironment(
-  venv: VirtualEnvironment,
-  missingPackages: string[],
-  callbacks?: ProcessCallbacks
-): Promise<boolean> {
-  log.info(`Attempting to repair virtual environment - installing missing packages: ${missingPackages.join(', ')}`);
-
-  try {
-    // Fall back to manual installation for the missing packages
-    const { exitCode } = await venv.runPythonCommandAsync(['-m', 'pip', 'install', ...missingPackages], callbacks);
-
-    if (exitCode === 0) {
-      log.info('Successfully repaired virtual environment');
-      return true;
-    } else {
-      log.error(`Failed to repair virtual environment - pip install exited with code ${exitCode}`);
-      return false;
-    }
-  } catch (error) {
-    log.error('Error during virtual environment repair:', error);
-    return false;
-  }
-}
