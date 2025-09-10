@@ -10,11 +10,11 @@ import { InstallStage, TorchMirrorUrl } from './constants';
 import { useAppState } from './main-process/appState';
 import { createInstallStageInfo } from './main-process/installStages';
 import type { TorchDeviceType } from './preload';
+import { verifyPythonImports } from './pythonImportVerifier';
 import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
 import { pathAccessible } from './utils';
-import { verifyPythonImports } from './pythonImportVerifier';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -733,15 +733,7 @@ export class VirtualEnvironment implements HasTelemetry {
   }
 
   async validateVirtualEnvironment(): Promise<boolean> {
-    const verification = await verifyPythonImports(this, [
-      'yaml',
-      'torch',
-      'uv',
-      'toml',
-      'numpy',
-      'PIL',
-      'sqlalchemy',
-    ]);
+    const verification = await verifyPythonImports(this, ['yaml', 'torch', 'uv', 'toml', 'numpy', 'PIL', 'sqlalchemy']);
 
     return verification.success;
   }
