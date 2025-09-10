@@ -10,7 +10,7 @@ export type VenvValidationResult = {
   missingImports?: string[];
 };
 
-/** Type for Python script output */
+/** List of failed imports reported by the Python script */
 type PythonOutput = {
   success: boolean;
   failed_imports: string[];
