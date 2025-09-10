@@ -4,17 +4,17 @@ import Joi from 'joi';
 import type { ProcessCallbacks, VirtualEnvironment } from './virtualEnvironment';
 
 /** Result of virtual environment validation */
-export type VenvValidationResult = {
+export interface VenvValidationResult {
   success: boolean;
   error?: string;
   missingImports?: string[];
-};
+}
 
 /** List of failed imports reported by the Python script */
-type PythonOutput = {
+interface PythonValidationResult {
   success: boolean;
   failed_imports: string[];
-};
+}
 
 /**
  * Generates a Python script that tests multiple imports and reports failures
