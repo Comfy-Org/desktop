@@ -3,26 +3,20 @@ import Joi from 'joi';
 
 import type { ProcessCallbacks, VirtualEnvironment } from './virtualEnvironment';
 
-/**
- * Result of virtual environment validation
- */
+/** Result of virtual environment validation */
 export type VenvValidationResult = {
   success: boolean;
   error?: string;
   missingImports?: string[];
 };
 
-/**
- * Type for Python script output
- */
+/** Type for Python script output */
 type PythonOutput = {
   success: boolean;
   failed_imports: string[];
 };
 
-/**
- * Joi schema for validating Python script output
- */
+/** Joi schema for validating Python script output */
 const pythonOutputSchema = Joi.object<PythonOutput>({
   success: Joi.boolean().required(),
   failed_imports: Joi.array().items(Joi.string()).required(),
@@ -104,9 +98,7 @@ export async function validateVirtualEnvironment(
         };
       }
 
-      // At this point, TypeScript knows error is undefined and value is PythonOutput
       const validatedOutput = validationResult.value;
-
       if (validatedOutput.success) {
         log.info('Virtual environment validation successful - all imports available');
         return { success: true };
@@ -114,6 +106,7 @@ export async function validateVirtualEnvironment(
 
       const failedImports = validatedOutput.failed_imports;
       log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
+
       return {
         success: false,
         missingImports: failedImports,
