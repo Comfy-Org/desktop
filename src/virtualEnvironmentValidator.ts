@@ -50,13 +50,11 @@ sys.exit(0 if len(failed_imports) == 0 else 1)
  *
  * @param venv The virtual environment to validate
  * @param importsToCheck Array of Python module names to check
- * @param callbacks Optional callbacks for output handling
  * @returns Validation result indicating success or list of missing imports
  */
 export async function validateVirtualEnvironment(
   venv: VirtualEnvironment,
-  importsToCheck: string[],
-  callbacks?: ProcessCallbacks
+  importsToCheck: string[]
 ): Promise<VenvValidationResult> {
   if (importsToCheck.length === 0) {
     return { success: true };
@@ -68,12 +66,10 @@ export async function validateVirtualEnvironment(
 
   const cb = (data: string) => (output += data);
 
-  const processCallbacks =
-    callbacks ??
-    ({
-      onStdout: cb,
-      onStderr: cb,
-    } satisfies ProcessCallbacks);
+  const processCallbacks = {
+    onStdout: cb,
+    onStderr: cb,
+  } satisfies ProcessCallbacks;
 
   try {
     const testScript = generateImportTestScript(importsToCheck);
