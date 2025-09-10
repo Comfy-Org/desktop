@@ -44,8 +44,8 @@ jobs:
       - name: Run type check
         run: yarn tsc --noEmit --strict
 
-      - name: Run lint
-        run: yarn lint
+      - name: Check lint
+        run: yarn lint:check
 
       - name: Run Unit Tests
         run: yarn run test:unit
@@ -62,4 +62,4 @@ jobs:
           verbose: true
 
       - name: Check Prettier Formatting
-        run: yarn run format
+        run: yarn run format:check
