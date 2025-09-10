@@ -3,8 +3,8 @@ import Joi from 'joi';
 
 import type { ProcessCallbacks, VirtualEnvironment } from './virtualEnvironment';
 
-/** Result of virtual environment validation */
-export interface VenvValidationResult {
+/** Result of Python import verification */
+export interface ImportVerificationResult {
   success: boolean;
   error?: string;
   missingImports?: string[];
@@ -45,7 +45,7 @@ sys.exit(0 if len(failed_imports) == 0 else 1)
 }
 
 /** Builds the Joi schema for validating Python script output */
-function getPythonValidationSchema(): Joi.ObjectSchema<PythonValidationResult> {
+function getPythonVerificationSchema(): Joi.ObjectSchema<PythonValidationResult> {
   return Joi.object<PythonValidationResult>({
     success: Joi.boolean().required(),
     failed_imports: Joi.array().items(Joi.string()).required(),
@@ -64,35 +64,35 @@ function interpretPythonValidationOutput(
   | { type: 'ok'; value: PythonValidationResult } {
   try {
     const parsedOutput: unknown = JSON.parse(output);
-    const validationResult = getPythonValidationSchema().validate(parsedOutput);
+    const verificationResult = getPythonVerificationSchema().validate(parsedOutput);
 
-    if (validationResult.error) {
-      return { type: 'invalid_format', message: validationResult.error.message };
+    if (verificationResult.error) {
+      return { type: 'invalid_format', message: verificationResult.error.message };
     }
 
-    return { type: 'ok', value: validationResult.value };
+    return { type: 'ok', value: verificationResult.value };
   } catch {
     return { type: 'parse_error' };
   }
 }
 
 /**
- * Validates that a virtual environment can successfully import specified packages.
- * This helps detect partial installations where uv may have failed silently.
+ * Verifies that specified Python packages can be successfully imported.
+ * This helps detect partial installations where package managers may have failed silently.
  *
- * @param venv The virtual environment to validate
+ * @param venv The virtual environment to use for verification
  * @param importsToCheck Array of Python module names to check
- * @returns Validation result indicating success or list of missing imports
+ * @returns Verification result indicating success or list of missing imports
  */
-export async function validateVirtualEnvironment(
+export async function verifyPythonImports(
   venv: VirtualEnvironment,
   importsToCheck: string[]
-): Promise<VenvValidationResult> {
+): Promise<ImportVerificationResult> {
   if (importsToCheck.length === 0) {
     return { success: true };
   }
 
-  log.info(`Validating virtual environment - testing ${importsToCheck.length} imports`);
+  log.info(`Verifying Python imports - testing ${importsToCheck.length} modules`);
 
   let output = '';
 
@@ -111,10 +111,10 @@ export async function validateVirtualEnvironment(
 
     if (interpretation.type === 'parse_error') {
       // If we can't parse the output, return a generic error
-      log.error('Failed to parse validation output:', output);
+      log.error('Failed to parse verification output:', output);
       return {
         success: false,
-        error: `Python validation failed with exit code ${exitCode}: ${output}`,
+        error: `Python import verification failed with exit code ${exitCode}: ${output}`,
       };
     }
 
@@ -122,18 +122,18 @@ export async function validateVirtualEnvironment(
       log.error('Invalid Python output format:', interpretation.message);
       return {
         success: false,
-        error: `Invalid validation output format: ${interpretation.message}`,
+        error: `Invalid verification output format: ${interpretation.message}`,
       };
     }
 
     const validatedOutput = interpretation.value;
     if (validatedOutput.success) {
-      log.info('Virtual environment validation successful - all imports available');
+      log.info('Python import verification successful - all modules available');
       return { success: true };
     }
 
     const failedImports = validatedOutput.failed_imports;
-    log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
+    log.error(`Python import verification failed - missing modules: ${failedImports.join(', ')}`);
 
     return {
       success: false,
@@ -141,10 +141,10 @@ export async function validateVirtualEnvironment(
       error: `Missing imports: ${failedImports.join(', ')}`,
     };
   } catch (error) {
-    log.error('Error during virtual environment validation:', error);
+    log.error('Error during Python import verification:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown validation error',
+      error: error instanceof Error ? error.message : 'Unknown verification error',
     };
   }
 }
