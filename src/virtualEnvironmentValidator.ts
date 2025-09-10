@@ -83,19 +83,25 @@ export async function validateVirtualEnvironment(
     const testScript = generateImportTestScript(importsToCheck);
     const { exitCode } = await venv.runPythonCommandAsync(['-c', testScript], processCallbacks);
 
-    // Try to parse the JSON output
+    // Try to parse and validate the JSON output
     try {
-      const result = JSON.parse(output) as {
-        success: boolean;
-        failed_imports: string[];
-      };
+      const parsedOutput = JSON.parse(output);
+      const { error, value } = pythonOutputSchema.validate(parsedOutput);
 
-      if (result.success) {
+      if (error) {
+        log.error('Invalid Python output format:', error.message);
+        return {
+          success: false,
+          error: `Invalid validation output format: ${error.message}`,
+        };
+      }
+
+      if (value.success) {
         log.info('Virtual environment validation successful - all imports available');
         return { success: true };
       }
 
-      const failedImports = result.failed_imports || [];
+      const failedImports = value.failed_imports;
       log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
       return {
         success: false,
