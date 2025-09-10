@@ -13,9 +13,17 @@ export type VenvValidationResult = {
 };
 
 /**
+ * Type for Python script output
+ */
+type PythonOutput = {
+  success: boolean;
+  failed_imports: string[];
+};
+
+/**
  * Joi schema for validating Python script output
  */
-const pythonOutputSchema = Joi.object({
+const pythonOutputSchema = Joi.object<PythonOutput>({
   success: Joi.boolean().required(),
   failed_imports: Joi.array().items(Joi.string()).required(),
 });
