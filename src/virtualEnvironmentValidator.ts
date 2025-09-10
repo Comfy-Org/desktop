@@ -13,6 +13,14 @@ export type VenvValidationResult = {
 };
 
 /**
+ * Joi schema for validating Python script output
+ */
+const pythonOutputSchema = Joi.object({
+  success: Joi.boolean().required(),
+  failed_imports: Joi.array().items(Joi.string()).required(),
+});
+
+/**
  * Generates a Python script that tests multiple imports and reports failures
  * @param imports Array of Python module names to test
  * @returns Python script as a string
