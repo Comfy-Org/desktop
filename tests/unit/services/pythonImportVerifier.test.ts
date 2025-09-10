@@ -58,9 +58,7 @@ describe('runPythonImportVerifyScript', () => {
     const { venv } = createMockVenv({ stdout: JSON.stringify({ failed_imports: failed, success: false }) });
     const result = await runPythonImportVerifyScript(venv, ['toml', 'uv', 'yaml']);
     expect(result).toEqual({ success: false, missingImports: failed, error: `Missing imports: ${failed.join(', ')}` });
-    expect(log.error).toHaveBeenCalledWith(
-      `Python import verification failed - missing modules: ${failed.join(', ')}`
-    );
+    expect(log.error).toHaveBeenCalledWith(`Python import verification failed - missing modules: ${failed.join(', ')}`);
   });
 
   test('handles invalid JSON format from Python (schema validation failure)', async () => {
