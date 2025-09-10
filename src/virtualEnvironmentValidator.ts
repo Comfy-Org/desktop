@@ -63,10 +63,12 @@ export async function validateVirtualEnvironment(
 
   const cb = (data: string) => (output += data);
 
-  const processCallbacks = callbacks ?? {
-    onStdout: cb,
-    onStderr: cb,
-  } satisfies ProcessCallbacks;
+  const processCallbacks =
+    callbacks ??
+    ({
+      onStdout: cb,
+      onStderr: cb,
+    } satisfies ProcessCallbacks);
 
   try {
     const testScript = generateImportTestScript(importsToCheck);
@@ -78,12 +80,12 @@ export async function validateVirtualEnvironment(
         success: boolean;
         failed_imports: string[];
       };
-      
+
       if (result.success) {
         log.info('Virtual environment validation successful - all imports available');
         return { success: true };
       }
-      
+
       const failedImports = result.failed_imports || [];
       log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
       return {
