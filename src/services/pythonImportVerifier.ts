@@ -1,7 +1,7 @@
 import log from 'electron-log/main';
 import Joi from 'joi';
 
-import type { ProcessCallbacks, PythonExecutor } from './virtualEnvironment';
+import type { ProcessCallbacks, PythonExecutor } from '../virtualEnvironment';
 
 /** Result of Python import verification */
 export interface ImportVerificationResult {

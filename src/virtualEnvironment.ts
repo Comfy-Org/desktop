@@ -10,7 +10,7 @@ import { InstallStage, TorchMirrorUrl } from './constants';
 import { useAppState } from './main-process/appState';
 import { createInstallStageInfo } from './main-process/installStages';
 import type { TorchDeviceType } from './preload';
-import { runPythonImportVerifyScript } from './pythonImportVerifier';
+import { runPythonImportVerifyScript } from './services/pythonImportVerifier';
 import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
