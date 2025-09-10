@@ -1,7 +1,7 @@
 import log from 'electron-log/main';
 import Joi from 'joi';
 
-import type { ProcessCallbacks, VirtualEnvironment } from './virtualEnvironment';
+import type { ProcessCallbacks, PythonExecutor } from './virtualEnvironment';
 
 /** Result of Python import verification */
 export interface ImportVerificationResult {
@@ -80,12 +80,12 @@ function interpretPythonValidationOutput(
  * Verifies that specified Python packages can be successfully imported.
  * This helps detect partial installations where package managers may have failed silently.
  *
- * @param venv The virtual environment to use for verification
+ * @param pythonEnv The virtual environment to use for verification
  * @param importsToCheck Array of Python module names to check
  * @returns Verification result indicating success or list of missing imports
  */
-export async function verifyPythonImports(
-  venv: VirtualEnvironment,
+export async function runPythonImportVerifyScript(
+  pythonEnv: PythonExecutor,
   importsToCheck: string[]
 ): Promise<ImportVerificationResult> {
   if (importsToCheck.length === 0) {
@@ -105,7 +105,7 @@ export async function verifyPythonImports(
 
   try {
     const testScript = generateImportTestScript(importsToCheck);
-    const { exitCode } = await venv.runPythonCommandAsync(['-c', testScript], processCallbacks);
+    const { exitCode } = await pythonEnv.runPythonCommandAsync(['-c', testScript], processCallbacks);
 
     const interpretation = interpretPythonValidationOutput(output);
 

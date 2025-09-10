@@ -10,7 +10,7 @@ import { InstallStage, TorchMirrorUrl } from './constants';
 import { useAppState } from './main-process/appState';
 import { createInstallStageInfo } from './main-process/installStages';
 import type { TorchDeviceType } from './preload';
-import { verifyPythonImports } from './pythonImportVerifier';
+import { runPythonImportVerifyScript } from './pythonImportVerifier';
 import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
@@ -20,6 +20,16 @@ export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
   onStderr?: (data: string) => void;
 };
+
+/** An environment that can run Python commands. */
+export interface PythonExecutor {
+  runPythonCommandAsync(
+    args: string[],
+    callbacks?: ProcessCallbacks,
+    env?: Record<string, string>,
+    cwd?: string
+  ): Promise<{ exitCode: number | null }>;
+}
 
 interface PipInstallConfig {
   packages: string[];
@@ -95,7 +105,7 @@ function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undef
  * Maintains its own node-pty instance; output from this is piped to the virtual terminal.
  * @todo Split either installation or terminal management to a separate class.
  */
-export class VirtualEnvironment implements HasTelemetry {
+export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   readonly basePath: string;
   readonly venvPath: string;
   readonly pythonVersion: string;
@@ -732,8 +742,16 @@ export class VirtualEnvironment implements HasTelemetry {
     return coreOk && managerOk ? 'OK' : 'error';
   }
 
-  async validateVirtualEnvironment(): Promise<boolean> {
-    const verification = await verifyPythonImports(this, ['yaml', 'torch', 'uv', 'toml', 'numpy', 'PIL', 'sqlalchemy']);
+  async verifyPythonImports(): Promise<boolean> {
+    const verification = await runPythonImportVerifyScript(this, [
+      'yaml',
+      'torch',
+      'uv',
+      'toml',
+      'numpy',
+      'PIL',
+      'sqlalchemy',
+    ]);
 
     return verification.success;
   }
