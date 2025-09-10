@@ -29,7 +29,7 @@ function createMockVenv(
   return { venv, captured: () => capturedArgs };
 }
 
-describe('validateVirtualEnvironment', () => {
+describe('runPythonImportVerifyScript', () => {
   test('returns success immediately when no imports provided', async () => {
     const { venv } = createMockVenv();
     const result = await runPythonImportVerifyScript(venv, []);
