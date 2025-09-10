@@ -94,6 +94,6 @@ describe('validateVirtualEnvironment', () => {
     const { venv } = createMockVenv({ throwError: boom });
     const result = await runPythonImportVerifyScript(venv, ['yaml']);
     expect(result).toEqual({ success: false, error: 'boom' });
-    expect(log.error).toHaveBeenCalledWith('Error during virtual environment validation:', boom);
+    expect(log.error).toHaveBeenCalledWith('Error during Python import verification:', boom);
   });
 });
