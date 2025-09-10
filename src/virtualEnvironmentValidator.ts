@@ -16,12 +16,6 @@ type PythonOutput = {
   failed_imports: string[];
 };
 
-/** Joi schema for validating Python script output */
-const pythonOutputSchema = Joi.object<PythonOutput>({
-  success: Joi.boolean().required(),
-  failed_imports: Joi.array().items(Joi.string()).required(),
-});
-
 /**
  * Generates a Python script that tests multiple imports and reports failures
  * @param imports Array of Python module names to test
@@ -87,6 +81,12 @@ export async function validateVirtualEnvironment(
 
     // Try to parse and validate the JSON output
     try {
+      /** Joi schema for validating Python script output */
+      const pythonOutputSchema = Joi.object<PythonOutput>({
+        success: Joi.boolean().required(),
+        failed_imports: Joi.array().items(Joi.string()).required(),
+      });
+
       const parsedOutput: unknown = JSON.parse(output);
       const validationResult = pythonOutputSchema.validate(parsedOutput);
 
