@@ -12,18 +12,32 @@ export type VenvValidationResult = {
 };
 
 /**
- * Test script that attempts to import yaml module
+ * Generates a Python script that tests multiple imports and reports failures
+ * @param imports Array of Python module names to test
+ * @returns Python script as a string
  */
-const YAML_IMPORT_TEST_SCRIPT = `
+function generateImportTestScript(imports: string[]): string {
+  return `
+import json
 import sys
-try:
-    import yaml
-    print("yaml_import_success")
-    sys.exit(0)
-except ImportError as e:
-    print(f"yaml_import_failed: {e}")
-    sys.exit(1)
+
+failed_imports = []
+
+for module_name in ${JSON.stringify(imports)}:
+    try:
+        __import__(module_name)
+    except ImportError as e:
+        failed_imports.append(module_name)
+
+# Output results as JSON for easy parsing
+print(json.dumps({
+    "failed_imports": failed_imports,
+    "success": len(failed_imports) == 0
+}))
+
+sys.exit(0 if len(failed_imports) == 0 else 1)
 `;
+}
 
 /**
  * Validates that a virtual environment can successfully import critical packages.
