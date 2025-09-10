@@ -98,11 +98,11 @@ export async function validateVirtualEnvironment(
       const error = validationResult.error;
       const value = validationResult.value as PythonOutput | undefined;
 
-      if (error) {
-        log.error('Invalid Python output format:', error.message);
+      if (error || !value) {
+        log.error('Invalid Python output format:', error?.message ?? 'Validation failed');
         return {
           success: false,
-          error: `Invalid validation output format: ${error.message}`,
+          error: `Invalid validation output format: ${error?.message ?? 'Unknown error'}`,
         };
       }
 
