@@ -5,12 +5,14 @@ This document provides a comprehensive overview of the integration testing infra
 ## Core Testing Framework
 
 ### Technology Stack
+
 - **Playwright**: E2E testing framework for Electron applications
 - **TypeScript**: All test files use TypeScript
 - **Test Runner**: Playwright Test with custom fixtures
 - **Location**: All integration tests live in `/tests/integration/`
 
 ### Environment Control
+
 Integration tests require the environment variable `COMFYUI_ENABLE_VOLATILE_TESTS=1` to be set (or running in CI). This prevents accidental execution on development machines.
 
 ## Test Architecture
@@ -30,48 +32,51 @@ projects: [
 ```
 
 **Project Dependencies:**
+
 - `post-install-setup` depends on `install` completing first
-- `post-install` depends on `post-install-setup` 
+- `post-install` depends on `post-install-setup`
 - `post-install-teardown` runs after all post-install tests
 
 ### 2. Core Infrastructure Classes
 
 #### TestApp (testApp.ts)
+
 The main test application wrapper that manages the Electron process:
 
 ```typescript
 class TestApp {
-  testEnvironment: TestEnvironment  // Manages app data and installation
-  app: ElectronApplication          // Playwright's Electron wrapper
-  
+  testEnvironment: TestEnvironment; // Manages app data and installation
+  app: ElectronApplication; // Playwright's Electron wrapper
+
   // Key methods:
-  static create(testInfo)           // Factory to launch Electron
-  firstWindow()                     // Get the main window
-  browserWindow()                   // Get browser window handle
-  close()                          // Gracefully close the app
-  [Symbol.asyncDispose]()          // Cleanup on test end
+  static create(testInfo); // Factory to launch Electron
+  firstWindow(); // Get the main window
+  browserWindow(); // Get browser window handle
+  close(); // Gracefully close the app
+  [Symbol.asyncDispose](); // Cleanup on test end
 }
 ```
 
 #### TestEnvironment (testEnvironment.ts)
+
 Manages the application's file system state and configuration:
 
 ```typescript
 class TestEnvironment {
-  appDataDir: string               // ComfyUI app data directory
-  configPath: string               // config.json location
-  installLocation: TempDirectory   // Temporary install directory
-  defaultInstallLocation: string   // Default ComfyUI install path
-  
+  appDataDir: string; // ComfyUI app data directory
+  configPath: string; // config.json location
+  installLocation: TempDirectory; // Temporary install directory
+  defaultInstallLocation: string; // Default ComfyUI install path
+
   // Test helper methods:
-  readConfig()                     // Read desktop settings
-  breakInstallPath()              // Simulate broken installation
-  breakVenv()                     // Simulate broken Python environment
-  breakServerStart()              // Simulate server startup failure
-  deleteEverything()              // Complete cleanup
-  
+  readConfig(); // Read desktop settings
+  breakInstallPath(); // Simulate broken installation
+  breakVenv(); // Simulate broken Python environment
+  breakServerStart(); // Simulate server startup failure
+  deleteEverything(); // Complete cleanup
+
   // Auto-restoration on dispose
-  [Symbol.asyncDispose]()         // Restores any broken states
+  [Symbol.asyncDispose](); // Restores any broken states
 }
 ```
 
@@ -80,63 +85,67 @@ class TestEnvironment {
 Each major UI component has a dedicated test class that encapsulates its locators and interactions:
 
 #### TestInstallWizard (testInstallWizard.ts)
+
 ```typescript
 class TestInstallWizard {
   // Buttons
-  getStartedButton
-  nextButton
-  installButton
-  
+  getStartedButton;
+  nextButton;
+  installButton;
+
   // Controls
-  cpuToggle                       // CPU mode toggle
-  installLocationInput            // Installation path input
-  
+  cpuToggle; // CPU mode toggle
+  installLocationInput; // Installation path input
+
   // Screen titles for navigation verification
-  selectGpuTitle
-  installLocationTitle
-  migrateTitle
-  desktopSettingsTitle
+  selectGpuTitle;
+  installLocationTitle;
+  migrateTitle;
+  desktopSettingsTitle;
 }
 ```
 
 #### TestInstalledApp (testInstalledApp.ts)
+
 ```typescript
 class TestInstalledApp {
-  graphCanvas: TestGraphCanvas     // Graph editor component
-  vueApp                          // Main Vue application
-  uiBlockedSpinner               // Loading spinner
-  
-  waitUntilLoaded(timeout)       // Wait for app to be fully ready
+  graphCanvas: TestGraphCanvas; // Graph editor component
+  vueApp; // Main Vue application
+  uiBlockedSpinner; // Loading spinner
+
+  waitUntilLoaded(timeout); // Wait for app to be fully ready
 }
 ```
 
 #### TestServerStart (testServerStart.ts)
+
 ```typescript
 class TestServerStart {
   // Buttons
-  openLogsButton
-  troubleshootButton
-  showTerminalButton
-  
-  terminal                        // Terminal output display
-  status: TestServerStatus        // Server status component
-  
-  expectServerStarts(timeout)     // Wait for server to start
-  encounteredError()             // Check if error occurred
+  openLogsButton;
+  troubleshootButton;
+  showTerminalButton;
+
+  terminal; // Terminal output display
+  status: TestServerStatus; // Server status component
+
+  expectServerStarts(timeout); // Wait for server to start
+  encounteredError(); // Check if error occurred
 }
 ```
 
 #### TestTroubleshooting (testTroubleshooting.ts)
+
 ```typescript
 class TestTroubleshooting {
   // Task cards for different fixes
-  basePathCard: TestTaskCard      // Fix installation path
-  vcRedistCard: TestTaskCard      // Install VC++ redistributable
-  installPythonPackagesCard       // Reinstall Python packages
-  resetVenvCard                   // Reset virtual environment
-  
-  refreshButton                   // Refresh troubleshooting status
-  expectReady()                   // Wait for page to load
+  basePathCard: TestTaskCard; // Fix installation path
+  vcRedistCard: TestTaskCard; // Install VC++ redistributable
+  installPythonPackagesCard; // Reinstall Python packages
+  resetVenvCard; // Reset virtual environment
+
+  refreshButton; // Refresh troubleshooting status
+  expectReady(); // Wait for page to load
 }
 ```
 
@@ -147,18 +156,18 @@ The test framework provides these fixtures automatically via `testExtensions.ts`
 ```typescript
 interface DesktopTestFixtures {
   // Core fixtures
-  app: TestApp                    // The Electron application
-  window: Page                    // Main Playwright page object
-  
+  app: TestApp; // The Electron application
+  window: Page; // Main Playwright page object
+
   // UI Component fixtures
-  troubleshooting: TestTroubleshooting
-  installWizard: TestInstallWizard
-  serverStart: TestServerStart
-  installedApp: TestInstalledApp
-  graphCanvas: TestGraphCanvas
-  
+  troubleshooting: TestTroubleshooting;
+  installWizard: TestInstallWizard;
+  serverStart: TestServerStart;
+  installedApp: TestInstalledApp;
+  graphCanvas: TestGraphCanvas;
+
   // Utility fixtures
-  attachScreenshot: (name) => Promise<void>  // Attach screenshot to test
+  attachScreenshot: (name) => Promise<void>; // Attach screenshot to test
 }
 ```
 
@@ -202,21 +211,21 @@ Place in `/tests/integration/install/`:
 
 ```typescript
 test('Can install app', async ({ installWizard, installedApp, serverStart, app }) => {
-  test.slow();  // Mark as slow test
-  
+  test.slow(); // Mark as slow test
+
   // Navigate through installation
   await installWizard.clickGetStarted();
   await installWizard.cpuToggle.click();
   await installWizard.clickNext();
-  
+
   // Set install location
   const { installLocation } = app.testEnvironment;
   await installWizard.installLocationInput.fill(installLocation.path);
   await installWizard.clickNext();
-  
+
   // Complete installation
   await installWizard.installButton.click();
-  
+
   // Wait for server to start
   await serverStart.expectServerStarts();
   await installedApp.waitUntilLoaded();
@@ -236,15 +245,15 @@ test.describe('Troubleshooting - broken install path', () => {
 
   test('Can fix install path', async ({ troubleshooting, serverStart }) => {
     await troubleshooting.expectReady();
-    
+
     // Mock file dialog
     await app.app.evaluate((electron, filePath) => {
       electron.dialog.showOpenDialog = async () => ({
         canceled: false,
-        filePaths: [filePath]
+        filePaths: [filePath],
       });
     }, getDefaultInstallLocation());
-    
+
     // Fix the path
     await troubleshooting.basePathCard.button.click();
     await serverStart.expectServerStarts();
@@ -277,7 +286,7 @@ await expect(window).toHaveScreenshot('name.png');
 
 // With masks for dynamic content
 await expect(window).toHaveScreenshot('error.png', {
-  mask: [serverStart.status.errorDesktopVersion]  // Masks version number
+  mask: [serverStart.status.errorDesktopVersion], // Masks version number
 });
 
 // Manual screenshot attachment
@@ -307,7 +316,7 @@ await expect(async () => {
 ```typescript
 // Default timeout: 60 seconds
 // For slow operations:
-test.slow();  // Triples the timeout
+test.slow(); // Triples the timeout
 
 // Custom timeouts:
 await expect(element).toBeVisible({ timeout: 5 * 60 * 1000 });
@@ -327,8 +336,8 @@ await serverStart.expectServerStarts(30 * 1000);
 const timeout = process.env.CI ? 60 * 1000 : 30 * 1000;
 
 // Platform-specific paths handled by utilities
-getDefaultInstallLocation()  // Returns platform-appropriate path
-getComfyUIAppDataPath()      // Returns platform-specific app data
+getDefaultInstallLocation(); // Returns platform-appropriate path
+getComfyUIAppDataPath(); // Returns platform-specific app data
 ```
 
 ### 5. Working with Async Operations
@@ -351,7 +360,7 @@ await expect(serverStart.status.get()).resolves.not.toBe('unknown');
 await app.app.evaluate((electron, selectedPath) => {
   electron.dialog.showOpenDialog = async () => ({
     canceled: false,
-    filePaths: [selectedPath]
+    filePaths: [selectedPath],
   });
 }, '/path/to/select');
 ```
@@ -395,6 +404,7 @@ yarn test:e2e:update
 ### CI Environment
 
 Tests run automatically in CI with:
+
 - 1 retry on failure
 - Video/trace capture on first retry
 - HTML report generation
