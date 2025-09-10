@@ -59,7 +59,7 @@ describe('validateVirtualEnvironment', () => {
     const result = await runPythonImportVerifyScript(venv, ['toml', 'uv', 'yaml']);
     expect(result).toEqual({ success: false, missingImports: failed, error: `Missing imports: ${failed.join(', ')}` });
     expect(log.error).toHaveBeenCalledWith(
-      `Virtual environment validation failed - missing imports: ${failed.join(', ')}`
+      `Python import verification failed - missing modules: ${failed.join(', ')}`
     );
   });
 
