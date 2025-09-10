@@ -78,8 +78,8 @@ describe('validateVirtualEnvironment', () => {
     const { venv } = createMockVenv({ stdout: noisy, exitCode: 1 });
     const result = await runPythonImportVerifyScript(venv, ['yaml']);
     expect(result.success).toBe(false);
-    expect(result.error).toContain(`Python validation failed with exit code 1: ${noisy}`);
-    expect(log.error).toHaveBeenCalledWith('Failed to parse validation output:', noisy);
+    expect(result.error).toContain(`Python import verification failed with exit code 1: ${noisy}`);
+    expect(log.error).toHaveBeenCalledWith('Failed to parse verification output:', noisy);
   });
 
   test('parses JSON from stderr as well as stdout', async () => {
