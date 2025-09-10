@@ -93,7 +93,7 @@ export async function validateVirtualEnvironment(
 
     // Try to parse and validate the JSON output
     try {
-      const parsedOutput = JSON.parse(output);
+      const parsedOutput: unknown = JSON.parse(output);
       const { error, value } = pythonOutputSchema.validate(parsedOutput);
 
       if (error) {
