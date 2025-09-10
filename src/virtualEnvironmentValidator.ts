@@ -94,23 +94,25 @@ export async function validateVirtualEnvironment(
     // Try to parse and validate the JSON output
     try {
       const parsedOutput: unknown = JSON.parse(output);
-      const validationResult: Joi.ValidationResult<PythonOutput> = pythonOutputSchema.validate(parsedOutput);
-      const { error, value } = validationResult;
+      const validationResult = pythonOutputSchema.validate(parsedOutput);
 
-      if (error || !value) {
-        log.error('Invalid Python output format:', error?.message ?? 'Validation failed');
+      if (validationResult.error) {
+        log.error('Invalid Python output format:', validationResult.error.message);
         return {
           success: false,
-          error: `Invalid validation output format: ${error?.message ?? 'Unknown error'}`,
+          error: `Invalid validation output format: ${validationResult.error.message}`,
         };
       }
 
-      if (value.success) {
+      // At this point, TypeScript knows error is undefined and value is PythonOutput
+      const validatedOutput = validationResult.value;
+      
+      if (validatedOutput.success) {
         log.info('Virtual environment validation successful - all imports available');
         return { success: true };
       }
 
-      const failedImports = value.failed_imports;
+      const failedImports = validatedOutput.failed_imports;
       log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
       return {
         success: false,
