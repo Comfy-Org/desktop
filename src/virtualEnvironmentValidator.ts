@@ -44,6 +44,38 @@ sys.exit(0 if len(failed_imports) == 0 else 1)
 `;
 }
 
+/** Builds the Joi schema for validating Python script output */
+function getPythonValidationSchema(): Joi.ObjectSchema<PythonValidationResult> {
+  return Joi.object<PythonValidationResult>({
+    success: Joi.boolean().required(),
+    failed_imports: Joi.array().items(Joi.string()).required(),
+  });
+}
+
+/**
+ * Parses and validates the output from the Python import test script.
+ * Returns a discriminated union describing the outcome without side effects.
+ */
+function interpretPythonValidationOutput(
+  output: string
+):
+  | { type: 'parse_error' }
+  | { type: 'invalid_format'; message: string }
+  | { type: 'ok'; value: PythonValidationResult } {
+  try {
+    const parsedOutput: unknown = JSON.parse(output);
+    const validationResult = getPythonValidationSchema().validate(parsedOutput);
+
+    if (validationResult.error) {
+      return { type: 'invalid_format', message: validationResult.error.message };
+    }
+
+    return { type: 'ok', value: validationResult.value };
+  } catch {
+    return { type: 'parse_error' };
+  }
+}
+
 /**
  * Validates that a virtual environment can successfully import specified packages.
  * This helps detect partial installations where uv may have failed silently.
@@ -75,40 +107,9 @@ export async function validateVirtualEnvironment(
     const testScript = generateImportTestScript(importsToCheck);
     const { exitCode } = await venv.runPythonCommandAsync(['-c', testScript], processCallbacks);
 
-    // Try to parse and validate the JSON output
-    try {
-      /** Joi schema for validating Python script output */
-      const pythonValidationSchema = Joi.object<PythonValidationResult>({
-        success: Joi.boolean().required(),
-        failed_imports: Joi.array().items(Joi.string()).required(),
-      });
+    const interpretation = interpretPythonValidationOutput(output);
 
-      const parsedOutput: unknown = JSON.parse(output);
-      const validationResult = pythonValidationSchema.validate(parsedOutput);
-
-      if (validationResult.error) {
-        log.error('Invalid Python output format:', validationResult.error.message);
-        return {
-          success: false,
-          error: `Invalid validation output format: ${validationResult.error.message}`,
-        };
-      }
-
-      const validatedOutput = validationResult.value;
-      if (validatedOutput.success) {
-        log.info('Virtual environment validation successful - all imports available');
-        return { success: true };
-      }
-
-      const failedImports = validatedOutput.failed_imports;
-      log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
-
-      return {
-        success: false,
-        missingImports: failedImports,
-        error: `Missing imports: ${failedImports.join(', ')}`,
-      };
-    } catch {
+    if (interpretation.type === 'parse_error') {
       // If we can't parse the output, return a generic error
       log.error('Failed to parse validation output:', output);
       return {
@@ -116,6 +117,29 @@ export async function validateVirtualEnvironment(
         error: `Python validation failed with exit code ${exitCode}: ${output}`,
       };
     }
+
+    if (interpretation.type === 'invalid_format') {
+      log.error('Invalid Python output format:', interpretation.message);
+      return {
+        success: false,
+        error: `Invalid validation output format: ${interpretation.message}`,
+      };
+    }
+
+    const validatedOutput = interpretation.value;
+    if (validatedOutput.success) {
+      log.info('Virtual environment validation successful - all imports available');
+      return { success: true };
+    }
+
+    const failedImports = validatedOutput.failed_imports;
+    log.error(`Virtual environment validation failed - missing imports: ${failedImports.join(', ')}`);
+
+    return {
+      success: false,
+      missingImports: failedImports,
+      error: `Missing imports: ${failedImports.join(', ')}`,
+    };
   } catch (error) {
     log.error('Error during virtual environment validation:', error);
     return {
