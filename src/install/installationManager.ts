@@ -9,6 +9,7 @@ import { ComfyInstallation } from '../main-process/comfyInstallation';
 import { createInstallStageInfo } from '../main-process/installStages';
 import type { InstallOptions, InstallValidation } from '../preload';
 import { CmCli } from '../services/cmCli';
+import { captureSentryException } from '../services/sentry';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { canExecuteShellCommand, validateHardware } from '../utils';
@@ -237,9 +238,7 @@ export class InstallationManager implements HasTelemetry {
         if (result.response === 1) {
           // User chose to ignore the issue
           log.warn('User chose to ignore python import verification failure');
-          this.telemetry.track('install_flow:virtual_environment_create_end', {
-            reason: 'ignore_venv_issues',
-          });
+          this.telemetry.track('install_flow:virtual_environment_create_error', { reason: 'ignore_venv_issues' });
         } else {
           // User chose to reinstall - remove venv and retry
           log.info('User chose to reinstall venv after import verification failure');
@@ -247,7 +246,41 @@ export class InstallationManager implements HasTelemetry {
           await virtualEnvironment.create(processCallbacks);
         }
       } else {
-        throw error;
+        // Send error to Sentry
+        const errorEventName = 'install_flow:virtual_environment_create_fatal';
+        const sentryUrl = captureSentryException(
+          error instanceof Error ? error : new Error(String(error)),
+          errorEventName
+        );
+        
+        // Log the error
+        log.error('Fatal error creating virtual environment:', error);
+        this.telemetry.track(errorEventName, {
+          error_name: error instanceof Error ? error.name : 'UnknownError',
+          error_type: error instanceof Error ? error.constructor.name : typeof error,
+          error_message: error instanceof Error ? error.message : 'Unknown error occurred',
+          sentry_url: sentryUrl,
+        });
+        
+        // Show friendly error dialog with documentation link
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const result = await dialog.showMessageBox({
+          type: 'error',
+          title: 'Virtual Environment Creation Failed',
+          message: 'Failed to create virtual environment',
+          detail: `ComfyUI Desktop was unable to set up the Python environment required to run.\n\nError details:\n${errorMessage}\n\nWould you like to view the documentation for help with this issue?`,
+          buttons: ['View Documentation', 'Exit'],
+          defaultId: 0,
+          cancelId: 1,
+        });
+        
+        // Open documentation if user clicked "View Documentation"
+        if (result.response === 0) {
+          await shell.openExternal('https://docs.comfy.org');
+        }
+        
+        // Exit gracefully
+        app.exit(3001);
       }
     }
 
