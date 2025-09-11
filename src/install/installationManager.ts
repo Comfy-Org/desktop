@@ -11,7 +11,7 @@ import { CmCli } from '../services/cmCli';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { canExecuteShellCommand, validateHardware } from '../utils';
-import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
+import { PythonImportVerificationError, type ProcessCallbacks, type VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
 
@@ -218,7 +218,38 @@ export class InstallationManager implements HasTelemetry {
     // Create virtual environment
     appState.setInstallStage(createInstallStageInfo(InstallStage.PYTHON_ENVIRONMENT_SETUP, { progress: 15 }));
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
-    await virtualEnvironment.create(processCallbacks);
+    
+    try {
+      await virtualEnvironment.create(processCallbacks);
+    } catch (error) {
+      if (error instanceof PythonImportVerificationError) {
+        // Show dialog to user asking if they want to reinstall
+        const result = await this.appWindow.showMessageBox({
+          type: 'warning',
+          title: 'Python Environment Issue',
+          message: `${error.message} Would you like to remove your .venv directory and reinstall it?`,
+          buttons: ['Reinstall venv', 'Ignore'],
+          defaultId: 0,
+          cancelId: 1,
+        });
+
+        if (result.response === 1) {
+          // User chose to ignore the issue
+          log.warn('User chose to ignore python import verification failure');
+          this.telemetry.track('install_flow:virtual_environment_create_end', {
+            reason: 'ignore_venv_issues',
+          });
+        } else {
+          // User chose to reinstall - remove venv and retry
+          log.info('User chose to reinstall venv after import verification failure');
+          await virtualEnvironment.removeVenvDirectory();
+          await virtualEnvironment.create(processCallbacks);
+        }
+      } else {
+        // Re-throw other errors
+        throw error;
+      }
+    }
 
     // Migrate custom nodes
     if (shouldMigrateCustomNodes) {
