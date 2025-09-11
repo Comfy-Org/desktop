@@ -289,6 +289,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
           await this.manualInstall(callbacks);
         }
 
+        // Verify python imports actually work (limited set / common failures)
         const importsOk = await this.verifyPythonImports();
         if (importsOk) {
           this.telemetry.track(`install_flow:virtual_environment_create_end`, {
@@ -297,8 +298,8 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
           return;
         }
 
+        // Warn user, require confirmation to nuke venv
         log.warn('Some python imports failed to verify');
-
         const result = await dialog.showMessageBox({
           type: 'warning',
           title: 'Python Environment Issue',
@@ -317,13 +318,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
           return;
         }
 
-        log.info('User chose to reinstall venv');
         await this.removeVenvDirectory();
-        await this.createVenvWithPython(callbacks);
-        await this.ensurePip(callbacks);
-        await this.installRequirements(callbacks);
-
-        return;
       }
 
       await this.createVenvWithPython(callbacks);
