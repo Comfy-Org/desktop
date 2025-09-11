@@ -21,6 +21,14 @@ export type ProcessCallbacks = {
   onStderr?: (data: string) => void;
 };
 
+/** Error thrown when Python import verification fails in the virtual environment. */
+export class PythonImportVerificationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PythonImportVerificationError';
+  }
+}
+
 /** An environment that can run Python commands. */
 export interface PythonExecutor {
   runPythonCommandAsync(
