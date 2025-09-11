@@ -739,7 +739,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return 'package-upgrade';
     }
 
-    return coreOk && managerOk ? 'OK' : 'error';
+    const result = coreOk && managerOk ? 'OK' : 'error';
+    log.debug('hasRequirements result:', result);
+    return result;
   }
 
   async verifyPythonImports(): Promise<boolean> {
