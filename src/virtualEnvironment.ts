@@ -780,8 +780,8 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   }
 
   /**
-   * Verifies that the Python environment can import the specified modules.
-   * @returns `true` if the Python environment can import the specified modules, otherwise `false`.
+   * Verifies that the Python environment can import modules that frequently show up in errors.
+   * @returns `true` if the Python environment successfully imports the modules, otherwise `false`.
    */
   async verifyPythonImports(): Promise<boolean> {
     const verification = await runPythonImportVerifyScript(this, [
