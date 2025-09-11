@@ -26,7 +26,7 @@ export interface PythonExecutor {
   runPythonCommandAsync(
     args: string[],
     callbacks?: ProcessCallbacks,
-    env?: Record<string, string>,
+    env?: NodeJS.ProcessEnv,
     cwd?: string
   ): Promise<{ exitCode: number | null }>;
 }
@@ -424,7 +424,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   public async runPythonCommandAsync(
     args: string[],
     callbacks?: ProcessCallbacks,
-    env?: Record<string, string>,
+    env?: NodeJS.ProcessEnv,
     cwd?: string
   ): Promise<{ exitCode: number | null }> {
     return this.runCommandAsync(
@@ -525,7 +525,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   private runCommand(
     command: string,
     args: string[],
-    env: Record<string, string>,
+    env: NodeJS.ProcessEnv,
     callbacks?: ProcessCallbacks,
     cwd: string = this.basePath
   ): ChildProcess {
@@ -565,7 +565,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   private async runCommandAsync(
     command: string,
     args: string[],
-    env: Record<string, string>,
+    env: NodeJS.ProcessEnv,
     callbacks?: ProcessCallbacks,
     cwd?: string
   ): Promise<{ exitCode: number | null; signal: NodeJS.Signals | null }> {
