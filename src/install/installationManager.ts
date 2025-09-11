@@ -11,7 +11,7 @@ import { CmCli } from '../services/cmCli';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { canExecuteShellCommand, validateHardware } from '../utils';
-import { PythonImportVerificationError, type ProcessCallbacks, type VirtualEnvironment } from '../virtualEnvironment';
+import { type ProcessCallbacks, PythonImportVerificationError, type VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
 
@@ -218,7 +218,7 @@ export class InstallationManager implements HasTelemetry {
     // Create virtual environment
     appState.setInstallStage(createInstallStageInfo(InstallStage.PYTHON_ENVIRONMENT_SETUP, { progress: 15 }));
     this.appWindow.sendServerStartProgress(ProgressStatus.PYTHON_SETUP);
-    
+
     try {
       await virtualEnvironment.create(processCallbacks);
     } catch (error) {
