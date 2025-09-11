@@ -247,7 +247,6 @@ export class InstallationManager implements HasTelemetry {
           await virtualEnvironment.create(processCallbacks);
         }
       } else {
-        // Re-throw other errors
         throw error;
       }
     }
