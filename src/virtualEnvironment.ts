@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { app, dialog } from 'electron';
 import log from 'electron-log/main';
 import pty from 'node-pty';
 import { ChildProcess, spawn } from 'node:child_process';
@@ -268,6 +268,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     }
 
     try {
+      // Gracefully handle existing / partial venvs
       if (await this.exists()) {
         log.info('Virtual environment directory already exists: ', this.venvPath);
 
@@ -275,18 +276,25 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
 
         if (requirementsStatus === 'OK') {
           log.info('Skipping requirements installation - all requirements already installed');
+        } else {
+          log.info('Starting manual install - venv missing requirements');
+          await this.manualInstall(callbacks);
+        }
+
+        const importsOk = await this.verifyPythonImports();
+        if (importsOk) {
           this.telemetry.track(`install_flow:virtual_environment_create_end`, {
             reason: 'already_exists',
           });
           return;
-        } else {
-          log.info('Starting manual install - venv missing requirements');
-          return await this.manualInstall(callbacks);
         }
-      } else {
-        await this.createVenvWithPython(callbacks);
+
+        log.warn('Some python imports failed to verify');
+
+        return;
       }
 
+      await this.createVenvWithPython(callbacks);
       await this.ensurePip(callbacks);
       await this.installRequirements(callbacks);
       this.telemetry.track('install_flow:virtual_environment_create_end', {
