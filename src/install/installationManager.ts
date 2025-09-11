@@ -252,7 +252,7 @@ export class InstallationManager implements HasTelemetry {
           error instanceof Error ? error : new Error(String(error)),
           errorEventName
         );
-        
+
         // Log the error
         log.error('Fatal error creating virtual environment:', error);
         this.telemetry.track(errorEventName, {
@@ -261,7 +261,7 @@ export class InstallationManager implements HasTelemetry {
           error_message: error instanceof Error ? error.message : 'Unknown error occurred',
           sentry_url: sentryUrl,
         });
-        
+
         // Show friendly error dialog with documentation link
         const errorMessage = error instanceof Error ? error.message : String(error);
         const result = await dialog.showMessageBox({
@@ -273,12 +273,12 @@ export class InstallationManager implements HasTelemetry {
           defaultId: 0,
           cancelId: 1,
         });
-        
+
         // Open documentation if user clicked "View Documentation"
         if (result.response === 0) {
           await shell.openExternal('https://docs.comfy.org');
         }
-        
+
         // Exit gracefully
         app.exit(3001);
       }

@@ -12,6 +12,12 @@ import type { ITelemetry } from '@/services/telemetry';
 import { useDesktopConfig } from '@/store/desktopConfig';
 import * as utils from '@/utils';
 
+vi.mock('@sentry/electron/main', () => ({
+  init: vi.fn(),
+  captureException: vi.fn(),
+  setContext: vi.fn(),
+}));
+
 vi.mock('node:fs/promises', () => ({
   default: {
     access: vi.fn(),
