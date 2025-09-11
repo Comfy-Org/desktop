@@ -11,7 +11,8 @@ import { CmCli } from '../services/cmCli';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { canExecuteShellCommand, validateHardware } from '../utils';
-import { type ProcessCallbacks, PythonImportVerificationError, type VirtualEnvironment } from '../virtualEnvironment';
+import { PythonImportVerificationError } from '../infrastructure/pythonImportVerificationError';
+import { type ProcessCallbacks, type VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
 
