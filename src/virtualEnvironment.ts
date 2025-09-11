@@ -293,14 +293,11 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
         // Verify python imports actually work (limited set / common failures)
         const importsOk = await this.verifyPythonImports();
         if (importsOk) {
-          this.telemetry.track(`install_flow:virtual_environment_create_end`, {
-            reason: 'already_exists',
-          });
+          this.telemetry.track(`install_flow:virtual_environment_create_end`, { reason: 'already_exists' });
           return;
         }
 
-        // Python imports failed - throw error to let caller handle UI
-        log.warn('Some python imports failed to verify');
+        // Python imports failed
         throw new PythonImportVerificationError(
           'We were unable to verify the state of your Python virtual environment. This will likely prevent ComfyUI from starting.'
         );
