@@ -122,14 +122,21 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   readonly torchMirror?: string;
   uvPty: pty.IPty | undefined;
 
-  /** @todo Refactor to `using` */
-  get uvPtyInstance() {
-    const env = {
-      ...(process.env as Record<string, string>),
+  /** The environment variables to set for uv. */
+  get uvEnv() {
+    return {
       VIRTUAL_ENV: this.venvPath,
       // Empty strings are not valid values for these env vars,
       // dropping them here to avoid passing them to uv.
       ...(this.pythonMirror ? { UV_PYTHON_INSTALL_MIRROR: this.pythonMirror } : {}),
+    };
+  }
+
+  /** @todo Refactor to `using` */
+  get uvPtyInstance() {
+    const env = {
+      ...process.env,
+      ...this.uvEnv,
     };
 
     if (!this.uvPty) {
@@ -451,7 +458,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   ): Promise<{ exitCode: number | null; signal: NodeJS.Signals | null }> {
     log.info('Running uv child process: uv', args.join(' '));
 
-    return this.runCommandAsync(this.uvPath, args, { VIRTUAL_ENV: this.venvPath }, callbacks);
+    return this.runCommandAsync(this.uvPath, args, this.uvEnv, callbacks);
   }
 
   /**
