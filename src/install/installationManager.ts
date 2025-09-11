@@ -2,6 +2,7 @@ import { Notification, app, dialog, ipcMain, shell } from 'electron';
 import log from 'electron-log/main';
 
 import { IPC_CHANNELS, InstallStage, ProgressStatus } from '../constants';
+import { PythonImportVerificationError } from '../infrastructure/pythonImportVerificationError';
 import { useAppState } from '../main-process/appState';
 import type { AppWindow } from '../main-process/appWindow';
 import { ComfyInstallation } from '../main-process/comfyInstallation';
@@ -11,8 +12,7 @@ import { CmCli } from '../services/cmCli';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { canExecuteShellCommand, validateHardware } from '../utils';
-import { PythonImportVerificationError } from '../infrastructure/pythonImportVerificationError';
-import { type ProcessCallbacks, type VirtualEnvironment } from '../virtualEnvironment';
+import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
 
