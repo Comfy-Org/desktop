@@ -1,4 +1,4 @@
-import { app, dialog } from 'electron';
+import { app } from 'electron';
 import log from 'electron-log/main';
 import pty from 'node-pty';
 import { ChildProcess, spawn } from 'node:child_process';
@@ -306,27 +306,11 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
           return;
         }
 
-        // Warn user, require confirmation to nuke venv
+        // Python imports failed - throw error to let caller handle UI
         log.warn('Some python imports failed to verify');
-        const result = await dialog.showMessageBox({
-          type: 'warning',
-          title: 'Python Environment Issue',
-          message:
-            'We were unable to verify the state of your Python virtual environment. This will likely prevent ComfyUI from starting. Would you like to remove your .venv directory and reinstall it?',
-          buttons: ['Reinstall venv', 'Ignore'],
-          defaultId: 0,
-          cancelId: 1,
-        });
-
-        if (result.response === 1) {
-          log.warn('Ignoring python import verification failure');
-          this.telemetry.track(`install_flow:virtual_environment_create_end`, {
-            reason: 'ignore_venv_issues',
-          });
-          return;
-        }
-
-        await this.removeVenvDirectory();
+        throw new PythonImportVerificationError(
+          'We were unable to verify the state of your Python virtual environment. This will likely prevent ComfyUI from starting.'
+        );
       }
 
       await this.createVenvWithPython(callbacks);
