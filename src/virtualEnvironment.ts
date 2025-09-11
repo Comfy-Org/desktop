@@ -291,6 +291,25 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
 
         log.warn('Some python imports failed to verify');
 
+        const result = await dialog.showMessageBox({
+          type: 'warning',
+          title: 'Python Environment Issue',
+          message: 'We were unable to verify the state of your Python virtual environment. This will likely prevent ComfyUI from starting. Would you like to remove your .venv directory and reinstall it?',
+          buttons: ['Reinstall venv', 'Ignore'],
+          defaultId: 0,
+          cancelId: 1
+        });
+
+        if (result.response === 1) {
+          return;
+        }
+
+        log.info('User chose to reinstall venv');
+        await this.removeVenvDirectory();
+        await this.createVenvWithPython(callbacks);
+        await this.ensurePip(callbacks);
+        await this.installRequirements(callbacks);
+
         return;
       }
 
