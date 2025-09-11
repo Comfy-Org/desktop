@@ -7,6 +7,7 @@ import os, { EOL } from 'node:os';
 import path from 'node:path';
 
 import { InstallStage, TorchMirrorUrl } from './constants';
+import { PythonImportVerificationError } from './infrastructure/pythonImportVerificationError';
 import { useAppState } from './main-process/appState';
 import { createInstallStageInfo } from './main-process/installStages';
 import type { TorchDeviceType } from './preload';
@@ -20,14 +21,6 @@ export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
   onStderr?: (data: string) => void;
 };
-
-/** Error thrown when Python import verification fails in the virtual environment. */
-export class PythonImportVerificationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PythonImportVerificationError';
-  }
-}
 
 /** An environment that can run Python commands. */
 export interface PythonExecutor {
