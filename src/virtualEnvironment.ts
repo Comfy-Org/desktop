@@ -310,6 +310,10 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
         });
 
         if (result.response === 1) {
+          log.warn('Ignoring python import verification failure');
+          this.telemetry.track(`install_flow:virtual_environment_create_end`, {
+            reason: 'ignore_venv_issues',
+          });
           return;
         }
 
