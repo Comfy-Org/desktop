@@ -232,4 +232,51 @@ describe('VirtualEnvironment', () => {
       await expect(virtualEnv.hasRequirements()).resolves.toBe('error');
     });
   });
+
+  describe('uvEnv', () => {
+    test('includes VIRTUAL_ENV and UV_PYTHON_INSTALL_MIRROR when pythonMirror is set', () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const mirror = 'https://python.example.com';
+      const envWithMirror = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'cpu',
+        pythonVersion: '3.12',
+        pythonMirror: mirror,
+      });
+
+      const { uvEnv } = envWithMirror;
+      expect(uvEnv.VIRTUAL_ENV).toBe(envWithMirror.venvPath);
+      expect('UV_PYTHON_INSTALL_MIRROR' in uvEnv).toBe(true);
+      expect(uvEnv.UV_PYTHON_INSTALL_MIRROR).toBe(mirror);
+    });
+
+    test('omits UV_PYTHON_INSTALL_MIRROR when pythonMirror is undefined', ({ virtualEnv }) => {
+      const { uvEnv } = virtualEnv;
+      expect(uvEnv.VIRTUAL_ENV).toBe(virtualEnv.venvPath);
+      expect('UV_PYTHON_INSTALL_MIRROR' in uvEnv).toBe(false);
+    });
+
+    test('omits UV_PYTHON_INSTALL_MIRROR when pythonMirror is empty string', () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const envNoMirror = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'cpu',
+        pythonVersion: '3.12',
+        pythonMirror: '',
+      });
+
+      const { uvEnv } = envNoMirror;
+      expect(uvEnv.VIRTUAL_ENV).toBe(envNoMirror.venvPath);
+      expect('UV_PYTHON_INSTALL_MIRROR' in uvEnv).toBe(false);
+      expect(uvEnv.UV_PYTHON_INSTALL_MIRROR).toBeUndefined();
+    });
+  });
 });
