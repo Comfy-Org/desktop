@@ -14,6 +14,7 @@ import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
 import { canExecuteShellCommand, validateHardware } from '../utils';
 import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
+import { createProcessCallbacks } from './createProcessCallbacks';
 import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
 
@@ -206,16 +207,7 @@ export class InstallationManager implements HasTelemetry {
     const { virtualEnvironment } = installation;
 
     // Virtual terminal output callbacks
-    const processCallbacks: ProcessCallbacks = {
-      onStdout: (data) => {
-        log.info(data);
-        this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-      },
-      onStderr: (data) => {
-        log.error(data);
-        this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-      },
-    };
+    const processCallbacks = createProcessCallbacks(this.appWindow);
 
     // Create virtual environment
     appState.setInstallStage(createInstallStageInfo(InstallStage.PYTHON_ENVIRONMENT_SETUP, { progress: 15 }));
@@ -353,17 +345,10 @@ export class InstallationManager implements HasTelemetry {
 
   @trackEvent('installation_manager:manager_packages_update')
   private async updatePackages(installation: ComfyInstallation) {
-    const sendLogIpc = (data: string) => {
-      log.info(data);
-      this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, data);
-    };
     await this.appWindow.loadPage('desktop-update');
 
     // Using requirements.txt again here ensures that uv installs the expected packages from the previous step (--dry-run)
-    const callbacks: ProcessCallbacks = {
-      onStdout: sendLogIpc,
-      onStderr: sendLogIpc,
-    };
+    const callbacks = createProcessCallbacks(this.appWindow, { logStderrAsInfo: true });
     try {
       await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
       await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
