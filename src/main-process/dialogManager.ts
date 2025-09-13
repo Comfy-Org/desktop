@@ -110,10 +110,14 @@ class DialogInstance<T extends string> {
     }
 
     // Set up IPC handlers for this dialog
+    return this.waitForClick();
+  }
+
+  private waitForClick(): T | PromiseLike<T | null> | null {
     return new Promise<T | null>((resolve) => {
-      // Handle button clicks
-      const clickHandler = async (_event: Electron.IpcMainInvokeEvent, returnValue: string) => {
+      ipcMain.handle(IPC_CHANNELS.DIALOG_CLICK_BUTTON, async (_event, returnValue) => {
         const button = this.buttons.find((button) => button.returnValue === returnValue);
+        if (!button) return false;
 
         // Handle URL open - don't close the dialog
         if (button?.action === 'openUrl') {
@@ -123,11 +127,9 @@ class DialogInstance<T extends string> {
 
         // Any other action should close the dialog
         this.close();
-        resolve(returnValue as T);
+        resolve(button.returnValue);
         return true;
-      };
-
-      ipcMain.handle(IPC_CHANNELS.DIALOG_CLICK_BUTTON, clickHandler);
+      });
 
       // Handle dialog close
       this.dialogWindow.on('closed', () => {
