@@ -119,7 +119,7 @@ export class DesktopApp implements HasTelemetry {
         // If there is a module import error, offer to try and recreate the venv.
         const lastError = comfyDesktopApp.comfyServer?.parseLastError();
         if (lastError === 'ModuleNotFoundError') {
-          const shouldReinstallVenv = await getUserApprovalToReinstallVenv();
+          const shouldReinstallVenv = await this.getUserApprovalToReinstallVenv();
 
           if (shouldReinstallVenv) {
             // User chose to reinstall - remove venv and retry
@@ -157,34 +157,6 @@ export class DesktopApp implements HasTelemetry {
     }
 
     /**
-     * Shows a dialog to the user asking if they want to reinstall the venv.
-     * @returns The result of the dialog.
-     */
-    async function getUserApprovalToReinstallVenv(): Promise<boolean> {
-      const dialogManager = DialogManager.getInstance();
-
-      const result = await dialogManager.showDialog(appWindow.getBrowserWindow(), {
-        title: 'Python Environment Issue',
-        message:
-          'Missing Python Module\n\n' +
-          'We were unable to import at least one required Python module.\n\n' +
-          'Would you like to remove and reinstall the venv?',
-        buttons: [
-          {
-            label: 'Open Docs',
-            action: 'openUrl',
-            severity: 'warn',
-            url: 'https://docs.comfy.org',
-            returnValue: 'openDocs',
-          },
-          { label: 'Ignore', action: 'close', returnValue: 'ignore' },
-          { label: 'Reset Environment', action: 'close', severity: 'danger', returnValue: 'resetVenv' },
-        ],
-      });
-      return result === 'resetVenv';
-    }
-
-    /**
      * Shows the starting server page and starts the ComfyUI server.
      * @param comfyDesktopApp The comfy desktop app instance.
      * @param serverArgs The server args to use to start the server.
@@ -216,6 +188,32 @@ export class DesktopApp implements HasTelemetry {
       appWindow.sendServerStartProgress(ProgressStatus.ERROR);
       appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { progress: 0, error: String(error) }));
     }
+  }
+
+  /**
+   * Shows a dialog to the user asking if they want to reinstall the venv.
+   * @returns The result of the dialog.
+   */
+  private async getUserApprovalToReinstallVenv(): Promise<'openDocs' | 'ignore' | 'resetVenv' | null> {
+    const dialogManager = DialogManager.getInstance();
+
+    return await dialogManager.showDialog(this.appWindow.getBrowserWindow(), {
+      title: 'Reinstall ComfyUI (Fresh Start)?',
+      message:
+        "Sorry, we can't launch ComfyUI because some installed packages aren't compatible.\n\n" +
+        'Click Reinstall to restore ComfyUI and get back up and running.\n\n' +
+        "Please note: if you've added custom nodes, you'll need to reinstall them after this process.",
+      buttons: [
+        {
+          label: 'Learn More',
+          action: 'openUrl',
+          url: 'https://docs.comfy.org',
+          returnValue: 'openDocs',
+        },
+        { label: 'Reinstall', action: 'close', severity: 'danger', returnValue: 'resetVenv' },
+      ],
+      height: 340,
+    });
   }
 
   private registerIpcHandlers() {
