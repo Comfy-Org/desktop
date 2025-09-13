@@ -70,11 +70,12 @@ export class DialogManager {
     });
 
     // Pass options as query parameters
-    const params = new URLSearchParams({
+    const query = {
       title: options.title,
       message: options.message,
       buttons: JSON.stringify(options.buttons),
-    });
+    };
+    const params = new URLSearchParams(query);
 
     // Check for dev server URL (same pattern as AppWindow)
     const devUrlOverride = !app.isPackaged ? process.env.DEV_SERVER_URL : undefined;
@@ -88,7 +89,8 @@ export class DialogManager {
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
       await this.activeDialog.loadFile(path.join(frontendPath, 'index.html'), {
-        hash: `desktop-dialog?${params.toString()}`,
+        hash: `desktop-dialog`,
+        query,
       });
     }
 
