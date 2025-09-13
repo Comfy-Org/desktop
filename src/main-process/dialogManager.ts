@@ -60,8 +60,12 @@ export class DialogManager {
       transparent: true,
       frame: false,
       webPreferences: {
+        // eslint-disable-next-line unicorn/prefer-module
+        preload: path.join(__dirname, '../build/preload.cjs'),
         nodeIntegration: true,
-        contextIsolation: false,
+        contextIsolation: true,
+        webviewTag: true,
+        devTools: true,
       },
     });
 
