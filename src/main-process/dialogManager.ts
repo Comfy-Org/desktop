@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain, shell } from 'electron';
+import { BrowserWindow, app, ipcMain, shell } from 'electron';
 import path from 'node:path';
 
 import { IPC_CHANNELS } from '../constants';
