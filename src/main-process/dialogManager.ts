@@ -23,7 +23,7 @@ export interface DialogOptions {
 
 export class DialogManager {
   private static instance: DialogManager;
-  private activeDialog: BrowserWindow | null = null;
+  private activeDialog?: BrowserWindow;
 
   private constructor() {}
 
@@ -103,7 +103,7 @@ export class DialogManager {
         ipcMain.removeHandler(IPC_CHANNELS.DIALOG_CLICK_BUTTON);
         ipcMain.removeHandler(IPC_CHANNELS.DIALOG_OPEN_URL);
         if (this.activeDialog && !this.activeDialog.isDestroyed()) {
-          this.activeDialog = null;
+          this.activeDialog = undefined;
         }
       };
 
@@ -135,7 +135,7 @@ export class DialogManager {
   closeActiveDialog(): void {
     if (this.activeDialog && !this.activeDialog.isDestroyed()) {
       this.activeDialog.close();
-      this.activeDialog = null;
+      this.activeDialog = undefined;
     }
   }
 }
