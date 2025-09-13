@@ -52,7 +52,7 @@ export class DialogManager {
    */
   async showDialog(
     parent: BrowserWindow,
-    { title, message, buttons, width = 480, height = 280 }: DialogOptions
+    { title, message, buttons, width = 488, height = 320 }: DialogOptions
   ): Promise<string | null> {
     // Close any existing dialog
     if (this.activeDialog && !this.activeDialog.isDestroyed()) {
