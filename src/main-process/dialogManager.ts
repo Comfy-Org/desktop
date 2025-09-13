@@ -67,6 +67,7 @@ export class DialogManager {
         webviewTag: true,
         devTools: true,
       },
+      vibrancy: 'popover',
     });
 
     // Pass options as query parameters
