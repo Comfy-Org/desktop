@@ -132,9 +132,6 @@ export class DialogManager {
 
         // Any other action should close the dialog
         cleanup();
-        if (this.activeDialog && !this.activeDialog.isDestroyed()) {
-          this.activeDialog.close();
-        }
         resolve(returnValue);
       });
 
