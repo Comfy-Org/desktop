@@ -170,15 +170,15 @@ export class DesktopApp implements HasTelemetry {
           'We were unable to import at least one required Python module.\n\n' +
           'Would you like to remove and reinstall the venv?',
         buttons: [
-          { label: 'Ignore', action: 'close', returnValue: 'ignore' },
           {
-            label: 'Open Documentation',
+            label: 'Open Docs',
             action: 'openUrl',
             severity: 'warn',
             url: 'https://docs.comfy.org',
             returnValue: 'openDocs',
           },
-          { label: 'Reset Virtual Environment', action: 'close', returnValue: 'resetVenv' },
+          { label: 'Ignore', action: 'close', returnValue: 'ignore' },
+          { label: 'Reset Environment', action: 'close', severity: 'danger', returnValue: 'resetVenv' },
         ],
       });
       return result === 'resetVenv';
