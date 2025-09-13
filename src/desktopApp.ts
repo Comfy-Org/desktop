@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
 import log from 'electron-log/main';
 
 import { ProgressStatus, type ServerArgs } from './constants';
@@ -110,20 +110,6 @@ export class DesktopApp implements HasTelemetry {
         await loadFrontend(serverArgs);
         return;
       }
-
-      const dialogWindow = new BrowserWindow({
-        parent: appWindow.getBrowserWindow(),
-        modal: true,
-        width: 400,
-        height: 200,
-        alwaysOnTop: true,
-        resizable: false,
-        transparent: true, // For rounded corners
-        vibrancy: 'popover', // macOS native look
-      });
-
-      await dialogWindow.loadURL('data:text/html,<html><body>Testing 1 2 3</body></html>');
-      await new Promise((resolve) => setTimeout(resolve, 20_000));
 
       // Start server
       try {
