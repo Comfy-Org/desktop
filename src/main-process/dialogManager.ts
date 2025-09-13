@@ -1,5 +1,7 @@
 import { BrowserWindow, ipcMain, shell } from 'electron';
 
+import { IPC_CHANNELS } from '../constants';
+
 export interface DialogButton {
   label: string;
   action: 'close' | 'openUrl';
@@ -69,15 +71,15 @@ export class DialogManager {
     // Set up IPC handlers for this dialog
     return new Promise((resolve) => {
       const cleanup = () => {
-        ipcMain.removeHandler('dialog:button-click');
-        ipcMain.removeHandler('dialog:open-url');
+        ipcMain.removeHandler(IPC_CHANNELS.DIALOG_BUTTON_CLICK);
+        ipcMain.removeHandler(IPC_CHANNELS.DIALOG_OPEN_URL);
         if (this.activeDialog && !this.activeDialog.isDestroyed()) {
           this.activeDialog = null;
         }
       };
 
       // Handle button clicks
-      ipcMain.handleOnce('dialog:button-click', (_event, returnValue: string | null) => {
+      ipcMain.handleOnce(IPC_CHANNELS.DIALOG_BUTTON_CLICK, (_event, returnValue: string | null) => {
         cleanup();
         if (this.activeDialog && !this.activeDialog.isDestroyed()) {
           this.activeDialog.close();
@@ -86,7 +88,7 @@ export class DialogManager {
       });
 
       // Handle URL opening (keeps dialog open)
-      ipcMain.handle('dialog:open-url', async (_event, url: string) => {
+      ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_URL, async (_event, url: string) => {
         await shell.openExternal(url);
       });
 
