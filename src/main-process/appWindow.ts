@@ -126,6 +126,10 @@ export class AppWindow {
     this.buildTextMenu();
   }
 
+  public getBrowserWindow(): BrowserWindow {
+    return this.window;
+  }
+
   public isReady(): boolean {
     return this.rendererReady;
   }
