@@ -112,8 +112,7 @@ export class DesktopApp implements HasTelemetry {
 
       // Start server
       try {
-        appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
-        await comfyDesktopApp.startComfyServer(serverArgs);
+        await startComfyServer(comfyDesktopApp, serverArgs);
         await loadFrontend(serverArgs);
       } catch (error) {
         // If there is a module import error, offer to try and recreate the venv.
@@ -131,9 +130,7 @@ export class DesktopApp implements HasTelemetry {
 
             try {
               await virtualEnvironment.create(createProcessCallbacks(appWindow, { logStderrAsInfo: true }));
-              await comfyDesktopApp.startComfyServer(serverArgs);
-
-              // Success! Back to normal flow.
+              await startComfyServer(comfyDesktopApp, serverArgs);
               await loadFrontend(serverArgs);
               return;
             } catch (error) {
@@ -172,6 +169,16 @@ export class DesktopApp implements HasTelemetry {
         cancelId: 1,
       });
       return response === 0;
+    }
+
+    /**
+     * Shows the starting server page and starts the ComfyUI server.
+     * @param comfyDesktopApp The comfy desktop app instance.
+     * @param serverArgs The server args to use to start the server.
+     */
+    async function startComfyServer(comfyDesktopApp: ComfyDesktopApp, serverArgs: ServerArgs): Promise<void> {
+      appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
+      await comfyDesktopApp.startComfyServer(serverArgs);
     }
 
     /**
