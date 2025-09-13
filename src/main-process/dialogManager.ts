@@ -40,13 +40,15 @@ export class DialogManager {
    * @param options Dialog configuration options
    * @returns Promise that resolves with the user's selection or null if closed
    */
-  async showDialog(parent: BrowserWindow, options: DialogOptions): Promise<string | null> {
+  async showDialog(
+    parent: BrowserWindow,
+    { title, message, buttons, width = 480, height = 280 }: DialogOptions
+  ): Promise<string | null> {
     // Close any existing dialog
     if (this.activeDialog && !this.activeDialog.isDestroyed()) {
       this.activeDialog.close();
+      this.activeButtons = undefined;
     }
-
-    const { width = 480, height = 280 } = options;
 
     // Create dialog window
     this.activeDialog = new BrowserWindow({
@@ -74,9 +76,9 @@ export class DialogManager {
 
     // Pass options as query parameters
     const query = {
-      title: options.title,
-      message: options.message,
-      buttons: JSON.stringify(options.buttons),
+      title,
+      message,
+      buttons: JSON.stringify(buttons),
     };
     const params = new URLSearchParams(query);
 
