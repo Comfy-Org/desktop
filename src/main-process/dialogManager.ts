@@ -8,7 +8,7 @@ interface DialogButtonBase {
   label: string;
   /** Optional severity of the button (e.g. delete "danger"). Maps to PrimeVueSeverity enum. */
   severity?: 'info' | 'warn' | 'danger';
-  returnValue?: string;
+  returnValue: string;
 }
 
 interface DialogCloseButton extends DialogButtonBase {
