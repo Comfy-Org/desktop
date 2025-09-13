@@ -163,8 +163,11 @@ export class DesktopApp implements HasTelemetry {
       const { response } = await appWindow.showMessageBox({
         type: 'error',
         title: 'Python Environment Issue',
-        message: `Unable to start ComfyUI server. The error indicated a missing Python module.\n\nWould you like to remove your .venv directory and reinstall it? This will completely reset your Python environment, similar to reinstalling.`,
-        buttons: ['Reinstall venv', 'Ignore'],
+        message:
+          'Missing Python Module\n\n' +
+          'We were unable to import at least one required Python module.\n\n' +
+          'Would you like to remove and reinstall the venv?',
+        buttons: ['Reset Virtual Environment', 'Ignore'],
         defaultId: 0,
         cancelId: 1,
       });
