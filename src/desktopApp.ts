@@ -21,6 +21,7 @@ import { AppWindow } from './main-process/appWindow';
 import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import type { ComfyInstallation } from './main-process/comfyInstallation';
 import { DevOverrides } from './main-process/devOverrides';
+import { DialogManager } from './main-process/dialogManager';
 import { createInstallStageInfo } from './main-process/installStages';
 import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
@@ -174,18 +175,27 @@ export class DesktopApp implements HasTelemetry {
      * @returns The result of the dialog.
      */
     async function getUserApprovalToReinstallVenv(): Promise<boolean> {
-      const { response } = await appWindow.showMessageBox({
-        type: 'error',
+      const dialogManager = DialogManager.getInstance();
+
+      const result = await dialogManager.showDialog(appWindow.getBrowserWindow(), {
         title: 'Python Environment Issue',
         message:
           'Missing Python Module\n\n' +
           'We were unable to import at least one required Python module.\n\n' +
           'Would you like to remove and reinstall the venv?',
-        buttons: ['Reset Virtual Environment', 'Ignore'],
-        defaultId: 0,
-        cancelId: 1,
+        buttons: [
+          { label: 'Ignore', action: 'close', returnValue: 'ignore' },
+          {
+            label: 'Open Documentation',
+            action: 'openUrl',
+            severity: 'warn',
+            url: 'https://docs.comfy.org',
+            returnValue: 'openDocs',
+          },
+          { label: 'Reset Virtual Environment', action: 'close', returnValue: 'resetVenv' },
+        ],
       });
-      return response === 0;
+      return result === 'resetVenv';
     }
 
     /**
