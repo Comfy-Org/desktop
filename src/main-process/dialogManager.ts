@@ -100,7 +100,7 @@ export class DialogManager {
     // Set up IPC handlers for this dialog
     return new Promise((resolve) => {
       const cleanup = () => {
-        ipcMain.removeHandler(IPC_CHANNELS.DIALOG_BUTTON_CLICK);
+        ipcMain.removeHandler(IPC_CHANNELS.DIALOG_CLICK_BUTTON);
         ipcMain.removeHandler(IPC_CHANNELS.DIALOG_OPEN_URL);
         if (this.activeDialog && !this.activeDialog.isDestroyed()) {
           this.activeDialog = null;
@@ -108,7 +108,7 @@ export class DialogManager {
       };
 
       // Handle button clicks
-      ipcMain.handleOnce(IPC_CHANNELS.DIALOG_BUTTON_CLICK, (_event, returnValue: string | null) => {
+      ipcMain.handleOnce(IPC_CHANNELS.DIALOG_CLICK_BUTTON, (_event, returnValue: string | null) => {
         cleanup();
         if (this.activeDialog && !this.activeDialog.isDestroyed()) {
           this.activeDialog.close();
