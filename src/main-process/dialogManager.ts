@@ -4,14 +4,23 @@ import path from 'node:path';
 import { IPC_CHANNELS } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
-export interface DialogButton {
+interface DialogButtonBase {
   label: string;
-  action: 'close' | 'openUrl';
   /** Optional severity of the button (e.g. delete "danger"). Maps to PrimeVueSeverity enum. */
   severity?: 'info' | 'warn' | 'danger';
-  url?: string;
   returnValue?: string;
 }
+
+interface DialogCloseButton extends DialogButtonBase {
+  action: 'close';
+}
+
+interface DialogUrlButton extends DialogButtonBase {
+  action: 'openUrl';
+  url: string;
+}
+
+export type DialogButton = DialogCloseButton | DialogUrlButton;
 
 export interface DialogOptions {
   title: string;
@@ -24,6 +33,7 @@ export interface DialogOptions {
 export class DialogManager {
   private static instance: DialogManager;
   private activeDialog?: BrowserWindow;
+  private activeButtons?: DialogButton[];
 
   private constructor() {}
 
@@ -74,6 +84,8 @@ export class DialogManager {
       vibrancy: 'popover',
     });
 
+    this.activeButtons = structuredClone(buttons);
+
     // Pass options as query parameters
     const query = {
       title,
@@ -103,24 +115,27 @@ export class DialogManager {
     return new Promise((resolve) => {
       const cleanup = () => {
         ipcMain.removeHandler(IPC_CHANNELS.DIALOG_CLICK_BUTTON);
-        ipcMain.removeHandler(IPC_CHANNELS.DIALOG_OPEN_URL);
         if (this.activeDialog && !this.activeDialog.isDestroyed()) {
           this.activeDialog = undefined;
         }
       };
 
       // Handle button clicks
-      ipcMain.handleOnce(IPC_CHANNELS.DIALOG_CLICK_BUTTON, (_event, returnValue: string) => {
+      ipcMain.handleOnce(IPC_CHANNELS.DIALOG_CLICK_BUTTON, async (_event, returnValue: string) => {
+        const button = this.activeButtons?.find((button) => button.returnValue === returnValue);
+
+        // Handle URL open - don't close the dialog
+        if (button?.action === 'openUrl') {
+          await shell.openExternal(button.url);
+          return;
+        }
+
+        // Any other action should close the dialog
         cleanup();
         if (this.activeDialog && !this.activeDialog.isDestroyed()) {
           this.activeDialog.close();
         }
         resolve(returnValue);
-      });
-
-      // Handle URL opening (keeps dialog open)
-      ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_URL, async (_event, url: string) => {
-        await shell.openExternal(url);
       });
 
       // Handle dialog close
