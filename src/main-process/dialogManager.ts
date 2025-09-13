@@ -108,7 +108,7 @@ export class DialogManager {
       };
 
       // Handle button clicks
-      ipcMain.handleOnce(IPC_CHANNELS.DIALOG_CLICK_BUTTON, (_event, returnValue: string | null) => {
+      ipcMain.handleOnce(IPC_CHANNELS.DIALOG_CLICK_BUTTON, (_event, returnValue: string) => {
         cleanup();
         if (this.activeDialog && !this.activeDialog.isDestroyed()) {
           this.activeDialog.close();
