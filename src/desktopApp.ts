@@ -115,9 +115,9 @@ export class DesktopApp implements HasTelemetry {
         modal: true,
         width: 400,
         height: 200,
-        frame: false, // No window chrome
         alwaysOnTop: true,
         resizable: false,
+        transparent: true, // For rounded corners
         vibrancy: 'popover', // macOS native look
       });
 
