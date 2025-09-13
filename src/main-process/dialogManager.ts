@@ -113,15 +113,8 @@ export class DialogManager {
 
     // Set up IPC handlers for this dialog
     return new Promise((resolve) => {
-      const cleanup = () => {
-        ipcMain.removeHandler(IPC_CHANNELS.DIALOG_CLICK_BUTTON);
-        if (this.activeDialog && !this.activeDialog.isDestroyed()) {
-          this.activeDialog = undefined;
-        }
-      };
-
       // Handle button clicks
-      ipcMain.handleOnce(IPC_CHANNELS.DIALOG_CLICK_BUTTON, async (_event, returnValue: string) => {
+      ipcMain.handle(IPC_CHANNELS.DIALOG_CLICK_BUTTON, async (_event, returnValue: string) => {
         const button = this.activeButtons?.find((button) => button.returnValue === returnValue);
 
         // Handle URL open - don't close the dialog
@@ -131,13 +124,13 @@ export class DialogManager {
         }
 
         // Any other action should close the dialog
-        cleanup();
+        this.ensureClosed();
         resolve(returnValue);
       });
 
       // Handle dialog close
       this.activeDialog?.on('closed', () => {
-        cleanup();
+        this.ensureClosed();
         resolve(null);
       });
     });
@@ -146,10 +139,14 @@ export class DialogManager {
   /**
    * Closes the active dialog if one exists
    */
-  closeActiveDialog(): void {
-    if (this.activeDialog && !this.activeDialog.isDestroyed()) {
-      this.activeDialog.close();
+  ensureClosed(): void {
+    const { activeDialog } = this;
+    ipcMain.removeHandler(IPC_CHANNELS.DIALOG_CLICK_BUTTON);
+
+    if (activeDialog && !activeDialog.isDestroyed()) {
+      activeDialog.close();
       this.activeDialog = undefined;
+      this.activeButtons = undefined;
     }
   }
 }
