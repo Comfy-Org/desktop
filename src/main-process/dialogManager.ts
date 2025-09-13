@@ -7,6 +7,8 @@ import { getAppResourcesPath } from '../install/resourcePaths';
 export interface DialogButton {
   label: string;
   action: 'close' | 'openUrl';
+  /** Optional severity of the button (e.g. delete "danger"). Maps to PrimeVueSeverity enum. */
+  severity?: 'info' | 'warn' | 'danger';
   url?: string;
   returnValue?: string;
 }
