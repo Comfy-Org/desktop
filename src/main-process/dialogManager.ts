@@ -31,46 +31,30 @@ interface DialogUrlButton extends DialogButtonBase {
 
 export type DialogButton = DialogCloseButton | DialogUrlButton;
 
-export interface DialogOptions {
+export interface DialogOptions<T extends string = string> {
   title: string;
   message: string;
-  buttons: DialogButton[];
+  buttons: (DialogButton & { returnValue: T })[];
   width?: number;
   height?: number;
 }
 
-export class DialogManager {
-  private static instance: DialogManager;
-  private activeDialog?: BrowserWindow;
-  private activeButtons?: DialogButton[];
+/**
+ * A type-safe dialog instance that handles a single dialog window
+ */
+class DialogInstance<T extends string> {
+  private readonly dialogWindow: BrowserWindow;
+  private readonly buttons: (DialogButton & { returnValue: T })[];
 
-  private constructor() {}
-
-  static getInstance(): DialogManager {
-    if (!DialogManager.instance) {
-      DialogManager.instance = new DialogManager();
-    }
-    return DialogManager.instance;
-  }
-
-  /**
-   * Shows a custom dialog window with the specified options
-   * @param parent The parent BrowserWindow
-   * @param options Dialog configuration options
-   * @returns Promise that resolves with the user's selection or null if closed
-   */
-  async showDialog(
+  constructor(
     parent: BrowserWindow,
-    { title, message, buttons, width = 488, height = 320 }: DialogOptions
-  ): Promise<string | null> {
-    // Close any existing dialog
-    if (this.activeDialog && !this.activeDialog.isDestroyed()) {
-      this.activeDialog.close();
-      this.activeButtons = undefined;
-    }
+    private readonly options: DialogOptions<T>
+  ) {
+    const { width = 488, height = 320, buttons } = options;
+    this.buttons = buttons;
 
     // Create dialog window
-    this.activeDialog = new BrowserWindow({
+    this.dialogWindow = new BrowserWindow({
       parent,
       modal: true,
       width,
@@ -92,8 +76,13 @@ export class DialogManager {
       },
       vibrancy: 'popover',
     });
+  }
 
-    this.activeButtons = structuredClone(buttons);
+  /**
+   * Shows the dialog and returns a promise that resolves with the selected value
+   */
+  async show(): Promise<T | null> {
+    const { title, message, buttons } = this.options;
 
     // Pass options as query parameters
     const query = {
@@ -109,53 +98,91 @@ export class DialogManager {
     if (devUrlOverride) {
       // Development: Load from dev server
       const url = `${devUrlOverride}/desktop-dialog?${params.toString()}`;
-      await this.activeDialog.loadURL(url);
+      await this.dialogWindow.loadURL(url);
     } else {
       // Production: Load from file system
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
-      await this.activeDialog.loadFile(path.join(frontendPath, 'index.html'), {
+      await this.dialogWindow.loadFile(path.join(frontendPath, 'index.html'), {
         hash: `desktop-dialog`,
         query,
       });
     }
 
     // Set up IPC handlers for this dialog
-    return new Promise((resolve) => {
+    return new Promise<T | null>((resolve) => {
       // Handle button clicks
-      ipcMain.handle(IPC_CHANNELS.DIALOG_CLICK_BUTTON, async (_event, returnValue: string) => {
-        const button = this.activeButtons?.find((button) => button.returnValue === returnValue);
+      const clickHandler = async (_event: Electron.IpcMainInvokeEvent, returnValue: string) => {
+        const button = this.buttons.find((button) => button.returnValue === returnValue);
 
         // Handle URL open - don't close the dialog
         if (button?.action === 'openUrl') {
           await shell.openExternal(button.url);
-          return;
+          return true;
         }
 
         // Any other action should close the dialog
-        this.ensureClosed();
-        resolve(returnValue);
-      });
+        this.close();
+        resolve(returnValue as T);
+        return true;
+      };
+
+      ipcMain.handle(IPC_CHANNELS.DIALOG_CLICK_BUTTON, clickHandler);
 
       // Handle dialog close
-      this.activeDialog?.on('closed', () => {
-        this.ensureClosed();
+      this.dialogWindow.on('closed', () => {
+        ipcMain.removeHandler(IPC_CHANNELS.DIALOG_CLICK_BUTTON);
         resolve(null);
       });
     });
   }
 
   /**
-   * Closes the active dialog if one exists
+   * Closes the dialog window if it exists
    */
-  ensureClosed(): void {
-    const { activeDialog } = this;
-    ipcMain.removeHandler(IPC_CHANNELS.DIALOG_CLICK_BUTTON);
-
-    if (activeDialog && !activeDialog.isDestroyed()) {
-      activeDialog.close();
-      this.activeDialog = undefined;
-      this.activeButtons = undefined;
+  close(): void {
+    if (this.dialogWindow && !this.dialogWindow.isDestroyed()) {
+      this.dialogWindow.close();
     }
+  }
+}
+
+export class DialogManager {
+  private static instance: DialogManager;
+  private activeDialog?: DialogInstance<string>;
+
+  private constructor() {}
+
+  static getInstance(): DialogManager {
+    if (!DialogManager.instance) {
+      DialogManager.instance = new DialogManager();
+    }
+    return DialogManager.instance;
+  }
+
+  /**
+   * Shows a custom dialog window with the specified options
+   * @param parent The parent BrowserWindow
+   * @param options Dialog configuration options
+   * @returns Promise that resolves with the user's selection or null if closed
+   */
+  async showDialog<T extends string>(parent: BrowserWindow, options: DialogOptions<T>): Promise<T | null> {
+    // Close any existing dialog
+    if (this.activeDialog) {
+      this.activeDialog.close();
+      this.activeDialog = undefined;
+    }
+
+    // Create new dialog instance with type safety
+    const dialogInstance = new DialogInstance<T>(parent, options);
+    this.activeDialog = dialogInstance;
+
+    // Show the dialog and return the typed result
+    const result = await dialogInstance.show();
+
+    // Clear the reference after dialog is closed
+    this.activeDialog = undefined;
+
+    return result;
   }
 }
