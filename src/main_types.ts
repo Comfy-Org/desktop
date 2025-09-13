@@ -14,3 +14,4 @@ export type {
   InstallValidation,
 } from './preload';
 export type { DesktopInstallState, DesktopWindowStyle } from './store/desktopSettings';
+export type { DialogButton } from './main-process/dialogManager';
