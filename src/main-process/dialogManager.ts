@@ -69,10 +69,6 @@ export class DialogManager {
       },
     });
 
-    // Load the dialog page from frontend
-    const appResourcesPath = getAppResourcesPath();
-    const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
-
     // Pass options as query parameters
     const params = new URLSearchParams({
       title: options.title,
@@ -80,9 +76,21 @@ export class DialogManager {
       buttons: JSON.stringify(options.buttons),
     });
 
-    await this.activeDialog.loadFile(path.join(frontendPath, 'index.html'), {
-      hash: `desktop-dialog?${params.toString()}`,
-    });
+    // Check for dev server URL (same pattern as AppWindow)
+    const devUrlOverride = !app.isPackaged ? process.env.DEV_SERVER_URL : undefined;
+
+    if (devUrlOverride) {
+      // Development: Load from dev server
+      const url = `${devUrlOverride}/desktop-dialog?${params.toString()}`;
+      await this.activeDialog.loadURL(url);
+    } else {
+      // Production: Load from file system
+      const appResourcesPath = getAppResourcesPath();
+      const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
+      await this.activeDialog.loadFile(path.join(frontendPath, 'index.html'), {
+        hash: `desktop-dialog?${params.toString()}`,
+      });
+    }
 
     // Set up IPC handlers for this dialog
     return new Promise((resolve) => {
