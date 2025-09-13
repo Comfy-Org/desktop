@@ -229,7 +229,9 @@ export class ComfyInstallation {
    * @todo Allow normal removal of the app and its effects.
    */
   async uninstall(): Promise<void> {
-    await rm(ComfyServerConfig.configPath);
+    if (await pathAccessible(ComfyServerConfig.configPath)) {
+      await rm(ComfyServerConfig.configPath);
+    }
     await useDesktopConfig().permanentlyDeleteConfigFile();
   }
 }
