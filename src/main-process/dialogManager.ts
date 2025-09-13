@@ -9,8 +9,8 @@ interface DialogButtonBase {
   label: string;
   /** Optional tooltip for the button */
   tooltip?: string;
-  /** Optional severity of the button (e.g. delete "danger"). Maps to PrimeVueSeverity enum. */
-  severity?: 'info' | 'warn' | 'danger';
+  /** Optional severity of the button (e.g. delete "danger"). Maps to PrimeVueSeverity enum in Frontend. */
+  severity?: 'primary' | 'secondary' | 'success' | 'info' | 'warn' | 'help' | 'danger' | 'contrast';
   /** The value that will be sent via IPC when this button is clicked */
   returnValue: string;
 }
