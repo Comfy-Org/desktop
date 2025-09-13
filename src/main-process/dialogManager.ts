@@ -5,18 +5,27 @@ import { IPC_CHANNELS } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
 interface DialogButtonBase {
+  /** The text that will be displayed on the button */
   label: string;
+  /** Optional tooltip for the button */
+  tooltip?: string;
   /** Optional severity of the button (e.g. delete "danger"). Maps to PrimeVueSeverity enum. */
   severity?: 'info' | 'warn' | 'danger';
+  /** The value that will be sent via IPC when this button is clicked */
   returnValue: string;
 }
 
+/** A button that closes the dialog when clicked */
 interface DialogCloseButton extends DialogButtonBase {
+  /** The type of action this button performs */
   action: 'close';
 }
 
+/** A button that opens a URL when clicked */
 interface DialogUrlButton extends DialogButtonBase {
+  /** The type of action this button performs */
   action: 'openUrl';
+  /** The URL to open when the button is clicked */
   url: string;
 }
 
