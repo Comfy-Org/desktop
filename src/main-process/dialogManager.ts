@@ -7,6 +7,13 @@ import { getAppResourcesPath } from '../install/resourcePaths';
 /** Union type for all available dialog types */
 export type DialogType = 'reinstall-venv';
 
+/** Simplified dialog options that only specify type and optional dimensions */
+export interface SimplifiedDialogOptions {
+  type: DialogType;
+  width?: number;
+  height?: number;
+}
+
 interface DialogButtonBase {
   /** The text that will be displayed on the button */
   label: string;
