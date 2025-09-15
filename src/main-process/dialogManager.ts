@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain, shell } from 'electron';
+import { BrowserWindow, app, ipcMain } from 'electron';
 import path from 'node:path';
 
 import { IPC_CHANNELS } from '../constants';
@@ -54,14 +54,14 @@ export interface DialogOptions<T extends string = string> {
  */
 class DialogInstance<T extends string> {
   private readonly dialogWindow: BrowserWindow;
-  private readonly buttons: (DialogButton & { returnValue: T })[];
+  private readonly dialogType: DialogType;
 
   constructor(
     parent: BrowserWindow,
-    private readonly options: DialogOptions<T>
+    private readonly options: SimplifiedDialogOptions
   ) {
-    const { width = 488, height = 320, buttons } = options;
-    this.buttons = buttons;
+    const { width = 488, height = 320, type } = options;
+    this.dialogType = type;
 
     // Create dialog window
     this.dialogWindow = new BrowserWindow({
@@ -92,30 +92,22 @@ class DialogInstance<T extends string> {
    * Shows the dialog and returns a promise that resolves with the selected value
    */
   async show(): Promise<T | null> {
-    const { title, message, buttons } = this.options;
-
-    // Pass options as query parameters
-    const query = {
-      title,
-      message,
-      buttons: JSON.stringify(buttons),
-    };
-    const params = new URLSearchParams(query);
+    // Build the URL path based on dialog type
+    const dialogPath = `desktop-dialog/${this.dialogType}`;
 
     // Check for dev server URL (same pattern as AppWindow)
     const devUrlOverride = !app.isPackaged ? process.env.DEV_SERVER_URL : undefined;
 
     if (devUrlOverride) {
       // Development: Load from dev server
-      const url = `${devUrlOverride}/desktop-dialog?${params.toString()}`;
+      const url = `${devUrlOverride}/${dialogPath}`;
       await this.dialogWindow.loadURL(url);
     } else {
       // Production: Load from file system
       const appResourcesPath = getAppResourcesPath();
       const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
       await this.dialogWindow.loadFile(path.join(frontendPath, 'index.html'), {
-        hash: `desktop-dialog`,
-        query,
+        hash: dialogPath,
       });
     }
 
@@ -125,19 +117,10 @@ class DialogInstance<T extends string> {
 
   private waitForClick(): T | PromiseLike<T | null> | null {
     return new Promise<T | null>((resolve) => {
-      ipcMain.handle(IPC_CHANNELS.DIALOG_CLICK_BUTTON, async (_event, returnValue) => {
-        const button = this.buttons.find((button) => button.returnValue === returnValue);
-        if (!button) return false;
-
-        // Handle URL open - don't close the dialog
-        if (button?.action === 'openUrl') {
-          await shell.openExternal(button.url);
-          return true;
-        }
-
-        // Any other action should close the dialog
+      ipcMain.handle(IPC_CHANNELS.DIALOG_CLICK_BUTTON, (_event, returnValue: T) => {
+        // Frontend handles all button logic, we just close and return the value
         this.close();
-        resolve(button.returnValue);
+        resolve(returnValue);
         return true;
       });
 
@@ -178,7 +161,7 @@ export class DialogManager {
    * @param options Dialog configuration options
    * @returns Promise that resolves with the user's selection or null if closed
    */
-  async showDialog<T extends string>(parent: BrowserWindow, options: DialogOptions<T>): Promise<T | null> {
+  async showDialog<T extends string>(parent: BrowserWindow, options: SimplifiedDialogOptions): Promise<T | null> {
     // Close any existing dialog
     if (this.activeDialog) {
       this.activeDialog.close();
