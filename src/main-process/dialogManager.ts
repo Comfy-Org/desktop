@@ -4,6 +4,9 @@ import path from 'node:path';
 import { IPC_CHANNELS } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
+/** Union type for all available dialog types */
+export type DialogType = 'reinstall-venv';
+
 interface DialogButtonBase {
   /** The text that will be displayed on the button */
   label: string;
