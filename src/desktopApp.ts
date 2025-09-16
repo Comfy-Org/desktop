@@ -198,7 +198,7 @@ export class DesktopApp implements HasTelemetry {
     const dialogManager = DialogManager.getInstance();
 
     return await dialogManager.showDialog(this.appWindow.getBrowserWindow(), {
-      type: 'reinstall-venv',
+      type: 'reinstallVenv',
       height: 340,
     });
   }

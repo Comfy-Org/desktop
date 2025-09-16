@@ -5,7 +5,7 @@ import { IPC_CHANNELS } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 
 /** Union type for all available dialog types */
-export type DialogType = 'reinstall-venv';
+export type DialogType = 'reinstallVenv';
 
 /** Simplified dialog options that only specify type and optional dimensions */
 export interface SimplifiedDialogOptions {
