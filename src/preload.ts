@@ -496,6 +496,18 @@ const electronAPI = {
    */
   // "Fire and forget", code on desktop side will catch errors pre-restart
   restartAndInstall: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.RESTART_AND_INSTALL),
+
+  /**
+   * Dialog API for custom dialogs
+   */
+  Dialog: {
+    /**
+     * Sends a button click result back to the main process
+     * @param returnValue The value to return from the dialog
+     */
+    clickButton: (returnValue: string): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.DIALOG_CLICK_BUTTON, returnValue),
+  },
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
