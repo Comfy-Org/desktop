@@ -151,13 +151,16 @@
         StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
 
         ; $3 now contains value of base_path
+        ${if} $isDeleteBasePath == "1"
+          ; Remove user data dir and break
+          RMDir /r /REBOOTOK "$3"
+          ${ExitDo}
+        ${endIf}
+
         RMDir /r /REBOOTOK "$3\.venv"
         RMDir /r /REBOOTOK "$3\uv-cache"
         ${if} $isResetSettings == "1"
           Delete "$3\user\default\comfy.settings.json"
-        ${endIf}
-        ${if} $isDeleteBasePath == "1"
-          RMDir /r /REBOOTOK "$3"
         ${endIf}
 
         ${ExitDo} ; No need to continue, break the cycle
