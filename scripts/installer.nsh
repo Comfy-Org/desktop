@@ -79,5 +79,7 @@
     FileClose $0
     Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
     Delete "$APPDATA\ComfyUI\config.json"
+    ; Remove the entire ComfyUI folder in %APPDATA%
+    RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
   ${endIf}
 !macroend
