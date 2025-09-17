@@ -24,26 +24,28 @@
   !insertmacro customUnInstallCheckCommon
 !macroend
 
-; Insert a custom page right after the Uninstall Welcome page
-!macro customUnWelcomePage
-  ; Keep the default welcome screen
-  !insertmacro MUI_UNPAGE_WELCOME
-  ; Then show our extra page
-  UninstPage custom un.ExtraUninstallPage_Create
-!macroend
+!ifdef BUILD_UNINSTALLER
+  ; Insert a custom page right after the Uninstall Welcome page
+  !macro customUnWelcomePage
+    ; Keep the default welcome screen
+    !insertmacro MUI_UNPAGE_WELCOME
+    ; Then show our extra page
+    UninstPage custom un.ExtraUninstallPage_Create
+  !macroend
 
-Function un.ExtraUninstallPage_Create
-  nsDialogs::Create 1018
-  Pop $0
-  ${If} $0 == error
-    Abort
-  ${EndIf}
+  Function un.ExtraUninstallPage_Create
+    nsDialogs::Create 1018
+    Pop $0
+    ${If} $0 == error
+      Abort
+    ${EndIf}
 
-  ${NSD_CreateLabel} 0 0 100% 12u "Extra step before uninstall continues."
-  ${NSD_CreateLabel} 0 14u 100% 24u "Click Next to proceed with removing the application."
+    ${NSD_CreateLabel} 0 0 100% 12u "Extra step before uninstall continues."
+    ${NSD_CreateLabel} 0 14u 100% 24u "Click Next to proceed with removing the application."
 
-  nsDialogs::Show
-FunctionEnd
+    nsDialogs::Show
+  FunctionEnd
+!endif
 
 !macro customRemoveFiles
   ${ifNot} ${isUpdated}
