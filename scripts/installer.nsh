@@ -31,6 +31,8 @@
   Var /GLOBAL chkDeleteBasePath
   Var /GLOBAL isDeleteUpdateCache
   Var /GLOBAL chkDeleteUpdateCache
+  Var /GLOBAL isResetSettings
+  Var /GLOBAL chkResetSettings
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
     ; Keep the default welcome screen
@@ -66,6 +68,11 @@
     StrCpy $isDeleteUpdateCache "1"
     ${NSD_SetState} $chkDeleteUpdateCache 0
 
+    ${NSD_CreateCheckBox} 0 98u 100% 12u "Reset ComfyUI settings"
+    Pop $chkResetSettings
+    StrCpy $isResetSettings "0"
+    ${NSD_SetState} $chkResetSettings 0
+
     nsDialogs::Show
   FunctionEnd
 
@@ -89,6 +96,12 @@
       StrCpy $isDeleteUpdateCache "1"
     ${Else}
       StrCpy $isDeleteUpdateCache "0"
+    ${EndIf}
+    ${NSD_GetState} $chkResetSettings $0
+    ${If} $0 == 1
+      StrCpy $isResetSettings "1"
+    ${Else}
+      StrCpy $isResetSettings "0"
     ${EndIf}
   FunctionEnd
 !endif
@@ -140,6 +153,9 @@
         ; $3 now contains value of base_path
         RMDir /r /REBOOTOK "$3\.venv"
         RMDir /r /REBOOTOK "$3\uv-cache"
+        ${if} $isResetSettings == "1"
+          Delete "$3\user\default\comfy.settings.json"
+        ${endIf}
         ${if} $isDeleteBasePath == "1"
           RMDir /r /REBOOTOK "$3"
         ${endIf}
