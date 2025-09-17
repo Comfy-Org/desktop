@@ -24,7 +24,6 @@
 !macroend
 
 !macro customRemoveFiles
-  MessageBox MB_OK|MB_ICONEXCLAMATION "Hello?" /SD IDOK
   ${ifNot} ${isUpdated}
     ClearErrors
     FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
