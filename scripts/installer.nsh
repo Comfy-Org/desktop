@@ -57,35 +57,35 @@
     ${NSD_CreateLabel} 0 14u 100% 24u "Choose whether to remove ComfyUI data stored in %APPDATA%."
     Pop $1
 
-    ${NSD_CreateRadioButton} 0 144u 100% 12u "Full cleanup"
-    Pop $radPresetFull
-    ${NSD_CreateRadioButton} 0 116u 100% 12u "Preset: Custom"
+    ${NSD_CreateRadioButton} 0 36u 100% 12u "Preset: Custom"
     Pop $radPresetCustom
+    ${NSD_CreateRadioButton} 0 52u 100% 12u "Full cleanup"
+    Pop $radPresetFull
     ${NSD_OnClick} $radPresetFull un.PresetFull_OnClick
     ${NSD_OnClick} $radPresetCustom un.PresetCustom_OnClick
 
-    ${NSD_CreateCheckBox} 0 44u 100% 12u "Remove ComfyUI data in %APPDATA%"
+    ${NSD_CreateCheckBox} 10u 72u 100% 12u "Remove ComfyUI data in %APPDATA%"
     Pop $chkDeleteComfyUI
     ; default to not deleting
     StrCpy $isDeleteComfyUI "0"
     ${NSD_SetState} $chkDeleteComfyUI 0
 
-    ${NSD_CreateCheckBox} 0 62u 100% 12u "Remove base_path directory (from config)"
+    ${NSD_CreateCheckBox} 10u 88u 100% 12u "Remove base_path directory (from config)"
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
 
-    ${NSD_CreateCheckBox} 0 80u 100% 12u "Remove any temporary update files"
+    ${NSD_CreateCheckBox} 10u 104u 100% 12u "Remove any temporary update files"
     Pop $chkDeleteUpdateCache
     StrCpy $isDeleteUpdateCache "1"
     ${NSD_SetState} $chkDeleteUpdateCache 0
 
-    ${NSD_CreateCheckBox} 0 98u 100% 12u "Reset ComfyUI settings"
+    ${NSD_CreateCheckBox} 10u 120u 100% 12u "Reset ComfyUI settings"
     Pop $chkResetSettings
     StrCpy $isResetSettings "0"
     ${NSD_SetState} $chkResetSettings 0
 
-    ${NSD_CreateCheckBox} 0 112u 100% 12u "Remove Python virtual env (.venv)"
+    ${NSD_CreateCheckBox} 10u 136u 100% 12u "Remove Python virtual env (.venv)"
     Pop $chkDeleteVenv
     StrCpy $isDeleteVenv "0"
     ${NSD_SetState} $chkDeleteVenv 0
