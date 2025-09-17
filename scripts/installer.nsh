@@ -35,7 +35,6 @@
   !macro customUnWelcomePage
     ; Keep the default welcome screen
     !insertmacro MUI_UNPAGE_WELCOME
-    ; Then show our extra page with a checkbox
     UninstPage custom un.ExtraUninstallPage_Create un.ExtraUninstallPage_Leave
   !macroend
 
@@ -160,13 +159,16 @@
     ${if} $installMode == "all"
       SetShellVarContext current
     ${endif}
+    ; APP_INSTALLER_STORE_FILE is defined by electron-builder; it is the relative path
+    ; to the copy of the installer stored under %LOCALAPPDATA% for update flows
     !ifdef APP_INSTALLER_STORE_FILE
       Delete "$LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
     !endif
+    ; APP_PACKAGE_STORE_FILE is defined when using a web/remote package; it is the
+    ; cached app package stored under %LOCALAPPDATA%
     !ifdef APP_PACKAGE_STORE_FILE
       Delete "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}"
     !endif
-    ; Remove electron-updater cache directory if present
     RMDir /r /REBOOTOK "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
     ${if} $installMode == "all"
       SetShellVarContext all
