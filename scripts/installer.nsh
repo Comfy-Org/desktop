@@ -70,7 +70,7 @@
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
-    
+
     ${NSD_CreateCheckBox} 0 80u 100% 12u "Remove any temporary update files"
     Pop $chkDeleteUpdateCache
     StrCpy $isDeleteUpdateCache "1"
@@ -129,14 +129,14 @@
     StrCpy $prefix "base_path: " ; Space at the end is important to strip away correct number of letters
     StrLen $prefixLength $prefix
     StrCpy $prefixFirstLetter $prefix 1
-    
+
     StrCpy $R3 $R0
     StrCpy $R0 -1
     IntOp $R0 $R0 + 1
     StrCpy $R2 $R3 1 $R0
     StrCmp $R2 "" +2
     StrCmp $R2 $R1 +2 -3
-  
+
     StrCpy $R0 -1
 
     ${DoUntil} ${Errors}
@@ -181,7 +181,7 @@
   ${if} $isDeleteComfyUI == "1"
     RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
   ${endIf}
-  
+
   ${if} $isDeleteUpdateCache == "1"
     ${if} $installMode == "all"
       SetShellVarContext current
