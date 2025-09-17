@@ -33,6 +33,9 @@
   Var /GLOBAL chkDeleteUpdateCache
   Var /GLOBAL isResetSettings
   Var /GLOBAL chkResetSettings
+  Var /GLOBAL radPresetCustom
+  Var /GLOBAL radPresetFull
+
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
     ; Keep the default welcome screen
@@ -72,6 +75,11 @@
     Pop $chkResetSettings
     StrCpy $isResetSettings "0"
     ${NSD_SetState} $chkResetSettings 0
+
+    ${NSD_CreateRadioButton} 0 116u 100% 12u "Preset: Custom"
+    Pop $radPresetCustom
+    ${NSD_CreateRadioButton} 0 144u 100% 12u "Full cleanup"
+    Pop $radPresetFull
 
     nsDialogs::Show
   FunctionEnd
