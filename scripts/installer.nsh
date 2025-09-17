@@ -24,6 +24,7 @@
 !macroend
 
 !macro customRemoveFiles
+  MessageBox MB_OK|MB_ICONEXCLAMATION "Hello?" /SD IDOK
   ${ifNot} ${isUpdated}
     ClearErrors
     FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
@@ -68,6 +69,7 @@
         StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
 
         ; $3 now contains value of base_path
+        RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
         RMDir /r /REBOOTOK "$3\.venv"
         RMDir /r /REBOOTOK "$3\uv-cache"
 
@@ -77,9 +79,6 @@
     ${LoopUntil} 1 = 0
 
     FileClose $0
-    Delete "$APPDATA\ComfyUI\extra_models_config.yaml"
-    Delete "$APPDATA\ComfyUI\config.json"
-    ; Remove the entire ComfyUI folder in %APPDATA%
-    RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
   ${endIf}
+  RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
 !macroend
