@@ -25,12 +25,14 @@
 !macroend
 
 !ifdef BUILD_UNINSTALLER
+  Var /GLOBAL isDeleteComfyUI
+  Var /GLOBAL chkDeleteComfyUI
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
     ; Keep the default welcome screen
     !insertmacro MUI_UNPAGE_WELCOME
-    ; Then show our extra page
-    UninstPage custom un.ExtraUninstallPage_Create
+    ; Then show our extra page with a checkbox
+    UninstPage custom un.ExtraUninstallPage_Create un.ExtraUninstallPage_Leave
   !macroend
 
   Function un.ExtraUninstallPage_Create
@@ -40,10 +42,27 @@
       Abort
     ${EndIf}
 
-    ${NSD_CreateLabel} 0 0 100% 12u "Extra step before uninstall continues."
-    ${NSD_CreateLabel} 0 14u 100% 24u "Click Next to proceed with removing the application."
+    ${NSD_CreateLabel} 0 0 100% 12u "Uninstall options"
+    Pop $1
+    ${NSD_CreateLabel} 0 14u 100% 24u "Choose whether to remove ComfyUI data stored in %APPDATA%."
+    Pop $1
+
+    ${NSD_CreateCheckBox} 0 44u 100% 12u "Remove ComfyUI data in %APPDATA%"
+    Pop $chkDeleteComfyUI
+    ; default to not deleting
+    StrCpy $isDeleteComfyUI "0"
+    ${NSD_SetState} $chkDeleteComfyUI 0
 
     nsDialogs::Show
+  FunctionEnd
+
+  Function un.ExtraUninstallPage_Leave
+    ${NSD_GetState} $chkDeleteComfyUI $0
+    ${If} $0 == 1
+      StrCpy $isDeleteComfyUI "1"
+    ${Else}
+      StrCpy $isDeleteComfyUI "0"
+    ${EndIf}
   FunctionEnd
 !endif
 
@@ -102,5 +121,7 @@
 
     FileClose $0
   ${endIf}
-  RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
+  ${if} $isDeleteComfyUI == "1"
+    RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
+  ${endIf}
 !macroend
