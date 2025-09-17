@@ -33,8 +33,8 @@
   Var /GLOBAL chkDeleteUpdateCache
   Var /GLOBAL isResetSettings
   Var /GLOBAL chkResetSettings
-  Var /GLOBAL radPresetCustom
   Var /GLOBAL radPresetFull
+  Var /GLOBAL radPresetCustom
 
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
@@ -59,6 +59,8 @@
     Pop $radPresetFull
     ${NSD_CreateRadioButton} 0 116u 100% 12u "Preset: Custom"
     Pop $radPresetCustom
+    ${NSD_OnClick} $radPresetFull un.PresetFull_OnClick
+    ${NSD_OnClick} $radPresetCustom un.PresetCustom_OnClick
 
     ${NSD_CreateCheckBox} 0 44u 100% 12u "Remove ComfyUI data in %APPDATA%"
     Pop $chkDeleteComfyUI
@@ -82,6 +84,25 @@
     ${NSD_SetState} $chkResetSettings 0
 
     nsDialogs::Show
+  FunctionEnd
+
+  Function un.SetCheckboxesEnabled
+    Exch $0
+    EnableWindow $chkDeleteComfyUI $0
+    EnableWindow $chkDeleteBasePath $0
+    EnableWindow $chkDeleteUpdateCache $0
+    EnableWindow $chkResetSettings $0
+    Pop $0
+  FunctionEnd
+
+  Function un.PresetFull_OnClick
+    Push 0
+    Call un.SetCheckboxesEnabled
+  FunctionEnd
+
+  Function un.PresetCustom_OnClick
+    Push 1
+    Call un.SetCheckboxesEnabled
   FunctionEnd
 
   Function un.ExtraUninstallPage_Leave
