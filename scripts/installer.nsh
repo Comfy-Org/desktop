@@ -27,6 +27,8 @@
 !ifdef BUILD_UNINSTALLER
   Var /GLOBAL isDeleteComfyUI
   Var /GLOBAL chkDeleteComfyUI
+  Var /GLOBAL isDeleteBasePath
+  Var /GLOBAL chkDeleteBasePath
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
     ; Keep the default welcome screen
@@ -53,6 +55,11 @@
     StrCpy $isDeleteComfyUI "0"
     ${NSD_SetState} $chkDeleteComfyUI 0
 
+    ${NSD_CreateCheckBox} 0 62u 100% 12u "Remove base_path directory (from config)"
+    Pop $chkDeleteBasePath
+    StrCpy $isDeleteBasePath "0"
+    ${NSD_SetState} $chkDeleteBasePath 0
+
     nsDialogs::Show
   FunctionEnd
 
@@ -62,6 +69,13 @@
       StrCpy $isDeleteComfyUI "1"
     ${Else}
       StrCpy $isDeleteComfyUI "0"
+    ${EndIf}
+
+    ${NSD_GetState} $chkDeleteBasePath $0
+    ${If} $0 == 1
+      StrCpy $isDeleteBasePath "1"
+    ${Else}
+      StrCpy $isDeleteBasePath "0"
     ${EndIf}
   FunctionEnd
 !endif
@@ -113,6 +127,9 @@
         ; $3 now contains value of base_path
         RMDir /r /REBOOTOK "$3\.venv"
         RMDir /r /REBOOTOK "$3\uv-cache"
+        ${if} $isDeleteBasePath == "1"
+          RMDir /r /REBOOTOK "$3"
+        ${endIf}
 
         ${ExitDo} ; No need to continue, break the cycle
       ${EndIf}
