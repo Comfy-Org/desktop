@@ -63,7 +63,7 @@
     
     ${NSD_CreateCheckBox} 0 80u 100% 12u "Remove any temporary update files"
     Pop $chkDeleteUpdateCache
-    StrCpy $isDeleteUpdateCache "0"
+    StrCpy $isDeleteUpdateCache "1"
     ${NSD_SetState} $chkDeleteUpdateCache 0
 
     nsDialogs::Show
