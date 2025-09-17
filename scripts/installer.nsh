@@ -35,6 +35,8 @@
   Var /GLOBAL chkResetSettings
   Var /GLOBAL radPresetFull
   Var /GLOBAL radPresetCustom
+  Var /GLOBAL isDeleteVenv
+  Var /GLOBAL chkDeleteVenv
 
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
@@ -83,6 +85,11 @@
     StrCpy $isResetSettings "0"
     ${NSD_SetState} $chkResetSettings 0
 
+    ${NSD_CreateCheckBox} 0 112u 100% 12u "Remove Python virtual env (.venv)"
+    Pop $chkDeleteVenv
+    StrCpy $isDeleteVenv "0"
+    ${NSD_SetState} $chkDeleteVenv 0
+
     nsDialogs::Show
   FunctionEnd
 
@@ -92,6 +99,7 @@
     EnableWindow $chkDeleteBasePath $0
     EnableWindow $chkDeleteUpdateCache $0
     EnableWindow $chkResetSettings $0
+    EnableWindow $chkDeleteVenv $0
     Pop $0
   FunctionEnd
 
@@ -131,6 +139,12 @@
       StrCpy $isResetSettings "1"
     ${Else}
       StrCpy $isResetSettings "0"
+    ${EndIf}
+    ${NSD_GetState} $chkDeleteVenv $0
+    ${If} $0 == 1
+      StrCpy $isDeleteVenv "1"
+    ${Else}
+      StrCpy $isDeleteVenv "0"
     ${EndIf}
   FunctionEnd
 !endif
@@ -180,8 +194,10 @@
         StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
 
         ; $3 now contains value of base_path
+        ${if} $isDeleteVenv == "1"
+          RMDir /r /REBOOTOK "$3\\.venv"
+        ${endIf}
         ${if} $isDeleteBasePath == "1"
-          ; Remove user data dir and break
           RMDir /r /REBOOTOK "$3"
           ${ExitDo}
         ${endIf}
