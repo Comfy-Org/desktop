@@ -29,6 +29,8 @@
   Var /GLOBAL chkDeleteComfyUI
   Var /GLOBAL isDeleteBasePath
   Var /GLOBAL chkDeleteBasePath
+  Var /GLOBAL isDeleteUpdateCache
+  Var /GLOBAL chkDeleteUpdateCache
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
     ; Keep the default welcome screen
@@ -59,6 +61,11 @@
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
+    
+    ${NSD_CreateCheckBox} 0 80u 100% 12u "Remove any temporary update files"
+    Pop $chkDeleteUpdateCache
+    StrCpy $isDeleteUpdateCache "0"
+    ${NSD_SetState} $chkDeleteUpdateCache 0
 
     nsDialogs::Show
   FunctionEnd
@@ -76,6 +83,13 @@
       StrCpy $isDeleteBasePath "1"
     ${Else}
       StrCpy $isDeleteBasePath "0"
+    ${EndIf}
+
+    ${NSD_GetState} $chkDeleteUpdateCache $0
+    ${If} $0 == 1
+      StrCpy $isDeleteUpdateCache "1"
+    ${Else}
+      StrCpy $isDeleteUpdateCache "0"
     ${EndIf}
   FunctionEnd
 !endif
@@ -140,5 +154,22 @@
   ${endIf}
   ${if} $isDeleteComfyUI == "1"
     RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
+  ${endIf}
+  
+  ${if} $isDeleteUpdateCache == "1"
+    ${if} $installMode == "all"
+      SetShellVarContext current
+    ${endif}
+    !ifdef APP_INSTALLER_STORE_FILE
+      Delete "$LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
+    !endif
+    !ifdef APP_PACKAGE_STORE_FILE
+      Delete "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}"
+    !endif
+    ; Remove electron-updater cache directory if present
+    RMDir /r /REBOOTOK "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
+    ${if} $installMode == "all"
+      SetShellVarContext all
+    ${endif}
   ${endIf}
 !macroend
