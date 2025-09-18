@@ -11,8 +11,8 @@
   "type": "module",
   "config": {
     "frontend": {
-      "version": "1.25.11",
-      "optionalBranch": ""
+      "version": "1.27.5",
+      "optionalBranch": "ec04f84cbfcedaf07263f4181b193c60e3681cb0"
     },
     "comfyUI": {
       "version": "0.3.59",
