@@ -10,7 +10,7 @@
 !define LABEL_APPDATA       "Delete logs and Desktop settings"
 !define LABEL_VENV          "Remove the ComfyUI Python virtual environment (.venv)"
 !define LABEL_UPDATECACHE   "Remove any temporary update files"
-!define LABEL_RESETSETTINGS "Completely reset ComfyUI settings"
+!define LABEL_RESETSETTINGS "Reset ComfyUI settings (comfy.settings.json)"
 !define LABEL_BASEPATH      "Remove all models / created content from"
 
 ; The following is used to add the "/SD" flag to MessageBox so that the
