@@ -101,31 +101,31 @@
     ${NSD_CreateLabel} 0 56u 100% 12u "ComfyUI Path: $basePath"
     Pop $basePathLabel
 
-    ${NSD_CreateCheckBox} 10u 68u 100% 12u "${LABEL_APPDATA}"
+    ${NSD_CreateCheckBox} 8u 54u 100% 12u "${LABEL_APPDATA}"
     Pop $chkDeleteComfyUI
     StrCpy $isDeleteComfyUI "1"
     ${NSD_SetState} $chkDeleteComfyUI 1
     ${NSD_OnClick} $chkDeleteComfyUI un.Desc_ComfyData
 
-    ${NSD_CreateCheckBox} 10u 82u 100% 12u "${LABEL_VENV}"
+    ${NSD_CreateCheckBox} 8u 68u 100% 12u "${LABEL_VENV}"
     Pop $chkDeleteVenv
     StrCpy $isDeleteVenv "1"
     ${NSD_SetState} $chkDeleteVenv 1
     ${NSD_OnClick} $chkDeleteVenv un.Desc_Venv
 
-    ${NSD_CreateCheckBox} 10u 96u 100% 12u "${LABEL_UPDATECACHE}"
+    ${NSD_CreateCheckBox} 8u 82u 100% 12u "${LABEL_UPDATECACHE}"
     Pop $chkDeleteUpdateCache
     StrCpy $isDeleteUpdateCache "1"
     ${NSD_SetState} $chkDeleteUpdateCache 1
     ${NSD_OnClick} $chkDeleteUpdateCache un.Desc_UpdateCache
 
-    ${NSD_CreateCheckBox} 10u 110u 100% 12u "${LABEL_RESETSETTINGS}"
+    ${NSD_CreateCheckBox} 8u 96u 100% 12u "${LABEL_RESETSETTINGS}"
     Pop $chkResetSettings
     StrCpy $isResetSettings "0"
     ${NSD_SetState} $chkResetSettings 0
     ${NSD_OnClick} $chkResetSettings un.Desc_ResetSettings
 
-    ${NSD_CreateCheckBox} 10u 124u 100% 12u "${LABEL_BASEPATH}"
+    ${NSD_CreateCheckBox} 8u 110u 100% 12u "${LABEL_BASEPATH}"
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
