@@ -56,6 +56,11 @@
   Var /GLOBAL descLabel
   Var /GLOBAL basePath
 
+  ; Resolve basePath at uninstaller startup
+  !macro customUnInit
+    Call un.ResolveBasePath
+  !macroend
+
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
     ; Keep the default welcome screen
