@@ -54,6 +54,7 @@
   Var /GLOBAL isDeleteVenv
   Var /GLOBAL chkDeleteVenv
   Var /GLOBAL descLabel
+  Var /GLOBAL basePath
 
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
@@ -107,11 +108,18 @@
     ${NSD_SetState} $chkResetSettings 0
     ${NSD_OnClick} $chkResetSettings un.Desc_ResetSettings
 
-    ${NSD_CreateCheckBox} 10u 124u 100% 12u "${LABEL_BASEPATH}: "
+    ${NSD_CreateCheckBox} 10u 124u 100% 12u "${LABEL_BASEPATH}"
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
     ${NSD_OnClick} $chkDeleteBasePath un.Desc_BasePath
+
+    ; If basePath is known, append specifics to labels
+    ${If} $basePath != ""
+      StrCpy $4 "$basePath\.venv"
+      ${NSD_SetText} $chkDeleteVenv "${LABEL_VENV} ($4)"
+      ${NSD_SetText} $chkDeleteBasePath "${LABEL_BASEPATH} [$basePath]"
+    ${EndIf}
 
     ; Hide all checkboxes by default (shown when Custom is selected)
     Push 0
@@ -223,6 +231,45 @@
       StrCpy $isResetSettings "0"
     ${EndIf}
   FunctionEnd
+
+  ; Resolve $basePath from $APPDATA\ComfyUI\extra_models_config.yaml (sets empty if not found)
+  Function un.ResolveBasePath
+    StrCpy $basePath ""
+    ClearErrors
+    FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
+    IfErrors done
+
+    StrCpy $1 "base_path:"        ; prefix without trailing space for robustness
+    StrLen $2 $1                   ; $2 = prefix length
+
+    loop:
+      FileRead $0 $3
+      IfErrors close
+
+      ; Trim leading spaces/tabs
+      StrCpy $4 -1
+      nextc:
+        IntOp $4 $4 + 1
+        StrCpy $5 $3 1 $4
+        StrCmp $5 " " nextc
+        StrCmp $5 "\t" nextc
+
+      ; Compare prefix at first non-space
+      StrCpy $6 $3 $2 $4
+      StrCmp $6 $1 0 loop
+
+      ; Extract value after 'base_path:' (skip optional space)
+      IntOp $7 $4 + $2
+      StrCpy $5 $3 1 $7
+      StrCmp $5 " " 0 +2
+        IntOp $7 $7 + 1
+      StrCpy $basePath $3 1024 $7
+      Goto close
+
+    close:
+      FileClose $0
+    done:
+  FunctionEnd
 !endif
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -231,55 +278,13 @@
 
 !macro customRemoveFiles
   ${ifNot} ${isUpdated}
-    ClearErrors
-    FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
-    var /global line
-    var /global lineLength
-    var /global prefix
-    var /global prefixLength
-    var /global prefixFirstLetter
-    var /global basePath
+    Call un.ResolveBasePath
 
-    FileRead $0 $line
-
-    StrCpy $prefix "base_path: " ; Space at the end is important to strip away correct number of letters
-    StrLen $prefixLength $prefix
-    StrCpy $prefixFirstLetter $prefix 1
-
-    StrCpy $R3 $R0
-    StrCpy $R0 -1
-    IntOp $R0 $R0 + 1
-    StrCpy $R2 $R3 1 $R0
-    StrCmp $R2 "" +2
-    StrCmp $R2 $R1 +2 -3
-
-    StrCpy $R0 -1
-
-    ${DoUntil} ${Errors}
-      StrCpy $R3 0 ; Whitespace padding counter
-      StrLen $lineLength $line
-
-      ${Do} ; Find first letter of prefix
-          StrCpy $R4 $line 1 $R3
-
-          ${IfThen} $R4 == $prefixFirstLetter ${|} ${ExitDo} ${|}
-          ${IfThen} $R3 > $lineLength ${|} ${ExitDo} ${|}
-
-          IntOp $R3 $R3 + 1
-      ${Loop}
-
-      StrCpy $R2 $line $prefixLength $R3 ; Copy part from first letter to length of prefix
-
-      ${If} $R2 == $prefix
-        StrCpy $2 $line 1024 $R3 ; Strip off whitespace padding
-        StrCpy $basePath $2 1024 $prefixLength ; Strip off prefix
-
-        ${if} $isDeleteBasePath == "1"
-          DetailPrint "Removing base_path directory: $basePath"
-          RMDir /r /REBOOTOK "$basePath"
-          ${ExitDo}
-        ${endIf}
-
+    ${if} $basePath != ""
+      ${if} $isDeleteBasePath == "1"
+        DetailPrint "Removing base_path directory: $basePath"
+        RMDir /r /REBOOTOK "$basePath"
+      ${else}
         ${if} $isDeleteVenv == "1"
           StrCpy $4 "$basePath\.venv"
           DetailPrint "Removing Python virtual env: $4"
@@ -295,13 +300,8 @@
           DetailPrint "Removing user preferences: $6"
           Delete "$6"
         ${endIf}
-
-        ${ExitDo} ; No need to continue, break the cycle
-      ${EndIf}
-      FileRead $0 $line
-    ${LoopUntil} 1 = 0
-
-    FileClose $0
+      ${endIf}
+    ${endIf}
   ${endIf}
 
   ${if} $isDeleteComfyUI == "1"
