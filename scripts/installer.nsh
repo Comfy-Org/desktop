@@ -61,25 +61,25 @@
     Pop $radPresetFull
     ${NSD_CreateRadioButton} 0 52u 100% 12u "Remove selected components"
     Pop $radPresetCustom
+    ${NSD_SetState} $radPresetCustom 1
     ${NSD_OnClick} $radPresetFull un.PresetFull_OnClick
     ${NSD_OnClick} $radPresetCustom un.PresetCustom_OnClick
 
     ${NSD_CreateCheckBox} 10u 68u 100% 12u "Remove ComfyUI data in %APPDATA%"
     Pop $chkDeleteComfyUI
-    ; default to not deleting
-    StrCpy $isDeleteComfyUI "0"
-    ${NSD_SetState} $chkDeleteComfyUI 0
+    StrCpy $isDeleteComfyUI "1"
+    ${NSD_SetState} $chkDeleteComfyUI 1
 
     ; Move .venv to #2
     ${NSD_CreateCheckBox} 10u 82u 100% 12u "Remove Python virtual env (.venv)"
     Pop $chkDeleteVenv
-    StrCpy $isDeleteVenv "0"
-    ${NSD_SetState} $chkDeleteVenv 0
+    StrCpy $isDeleteVenv "1"
+    ${NSD_SetState} $chkDeleteVenv 1
 
     ${NSD_CreateCheckBox} 10u 96u 100% 12u "Remove any temporary update files"
     Pop $chkDeleteUpdateCache
     StrCpy $isDeleteUpdateCache "1"
-    ${NSD_SetState} $chkDeleteUpdateCache 0
+    ${NSD_SetState} $chkDeleteUpdateCache 1
 
     ${NSD_CreateCheckBox} 10u 110u 100% 12u "Reset ComfyUI settings"
     Pop $chkResetSettings
