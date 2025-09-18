@@ -42,6 +42,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 !ifdef BUILD_UNINSTALLER
+  Var /GLOBAL basePath
+
+  Var /GLOBAL descLabel
+  Var /GLOBAL basePathLabel
+
+  Var /GLOBAL radioRemoveStandard
+  Var /GLOBAL radioRemoveCustom
+
   Var /GLOBAL isDeleteComfyUI
   Var /GLOBAL chkDeleteComfyUI
   Var /GLOBAL isDeleteBasePath
@@ -50,12 +58,8 @@
   Var /GLOBAL chkDeleteUpdateCache
   Var /GLOBAL isResetSettings
   Var /GLOBAL chkResetSettings
-  Var /GLOBAL radioRemoveStandard
-  Var /GLOBAL radioRemoveCustom
   Var /GLOBAL isDeleteVenv
   Var /GLOBAL chkDeleteVenv
-  Var /GLOBAL descLabel
-  Var /GLOBAL basePath
 
   ; Resolve basePath at uninstaller startup
   !macro customUnInit
@@ -83,7 +87,7 @@
     Pop $descLabel
 
     ${NSD_CreateLabel} 0 24u 100% 12u "$basePath"
-    Pop $descLabel
+    Pop $basePathLabel
 
     ${NSD_CreateRadioButton} 0 24u 100% 12u "${LABEL_STANDARD}"
     Pop $radioRemoveStandard
