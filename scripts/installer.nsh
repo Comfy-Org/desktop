@@ -86,9 +86,6 @@
     ${NSD_CreateLabel} 0 0 100% 24u "${DESC_STANDARD}"
     Pop $descLabel
 
-    ${NSD_CreateLabel} 0 24u 100% 12u "$basePath"
-    Pop $basePathLabel
-
     ${NSD_CreateRadioButton} 0 24u 100% 12u "${LABEL_STANDARD}"
     Pop $radioRemoveStandard
     ${NSD_CreateRadioButton} 0 40u 100% 12u "${LABEL_CUSTOM}"
@@ -96,6 +93,9 @@
     ${NSD_SetState} $radioRemoveStandard 1
     ${NSD_OnClick} $radioRemoveStandard un.PresetFull_OnClick
     ${NSD_OnClick} $radioRemoveCustom un.PresetCustom_OnClick
+
+    ${NSD_CreateLabel} 0 54u 100% 12u "$basePath"
+    Pop $basePathLabel
 
     ${NSD_CreateCheckBox} 10u 68u 100% 12u "${LABEL_APPDATA}"
     Pop $chkDeleteComfyUI
