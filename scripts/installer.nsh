@@ -98,9 +98,6 @@
     ${NSD_OnClick} $radioRemoveStandard un.PresetFull_OnClick
     ${NSD_OnClick} $radioRemoveCustom un.PresetCustom_OnClick
 
-    ${NSD_CreateLabel} 0 56u 100% 12u "ComfyUI Path: $basePath"
-    Pop $basePathLabel
-
     ${NSD_CreateCheckBox} 8u 54u 100% 12u "${LABEL_APPDATA}"
     Pop $chkDeleteComfyUI
     StrCpy $isDeleteComfyUI "1"
@@ -131,12 +128,9 @@
     ${NSD_SetState} $chkDeleteBasePath 0
     ${NSD_OnClick} $chkDeleteBasePath un.Desc_BasePath
 
-    ; If basePath is known, append specifics to labels
-    ${If} $basePath != ""
-      StrCpy $4 "$basePath\.venv"
-      ${NSD_SetText} $chkDeleteVenv "${LABEL_VENV} ($4)"
-      ${NSD_SetText} $chkDeleteBasePath "${LABEL_BASEPATH} [$basePath]"
-    ${EndIf}
+    ; ComfyUI Path
+    ${NSD_CreateLabel} 0 122u 100% 12u "ComfyUI Path: $basePath"
+    Pop $basePathLabel
 
     ; Hide all checkboxes by default (shown when Custom is selected)
     Push 0
