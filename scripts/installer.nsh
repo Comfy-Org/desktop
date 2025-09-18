@@ -1,4 +1,5 @@
 !include 'MUI2.nsh'
+!include 'StrFunc.nsh'
 !include 'LogicLib.nsh'
 !include 'nsDialogs.nsh'
 
@@ -42,6 +43,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 !ifdef BUILD_UNINSTALLER
+  ${UnStrRep}
+
   Var /GLOBAL basePath
 
   Var /GLOBAL descLabel
@@ -310,6 +313,8 @@
         IntOp $R1 $R1 - 1
         IntOp $R6 $R9 + 1
         StrCpy $basePath $3 $R1 $R6
+        ; Normalize JSON doubled backslashes to single backslashes
+        ${UnStrRep} $basePath $basePath "\\" "\"
         Goto close
 
     close:
