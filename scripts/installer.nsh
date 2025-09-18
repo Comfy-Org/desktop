@@ -64,24 +64,24 @@
     ${NSD_OnClick} $radPresetFull un.PresetFull_OnClick
     ${NSD_OnClick} $radPresetCustom un.PresetCustom_OnClick
 
-    ${NSD_CreateCheckBox} 10u 72u 100% 12u "Remove ComfyUI data in %APPDATA%"
+    ${NSD_CreateCheckBox} 10u 68u 100% 12u "Remove ComfyUI data in %APPDATA%"
     Pop $chkDeleteComfyUI
     ; default to not deleting
     StrCpy $isDeleteComfyUI "0"
     ${NSD_SetState} $chkDeleteComfyUI 0
 
     ; Move .venv to #2
-    ${NSD_CreateCheckBox} 10u 86u 100% 12u "Remove Python virtual env (.venv)"
+    ${NSD_CreateCheckBox} 10u 82u 100% 12u "Remove Python virtual env (.venv)"
     Pop $chkDeleteVenv
     StrCpy $isDeleteVenv "0"
     ${NSD_SetState} $chkDeleteVenv 0
 
-    ${NSD_CreateCheckBox} 10u 100u 100% 12u "Remove any temporary update files"
+    ${NSD_CreateCheckBox} 10u 96u 100% 12u "Remove any temporary update files"
     Pop $chkDeleteUpdateCache
     StrCpy $isDeleteUpdateCache "1"
     ${NSD_SetState} $chkDeleteUpdateCache 0
 
-    ${NSD_CreateCheckBox} 10u 114u 100% 12u "Reset ComfyUI settings"
+    ${NSD_CreateCheckBox} 10u 110u 100% 12u "Reset ComfyUI settings"
     Pop $chkResetSettings
     StrCpy $isResetSettings "0"
     ${NSD_SetState} $chkResetSettings 0
@@ -93,7 +93,7 @@
     SendMessage $1 0x0170 $9 0 ; STM_SETICON
 
     ; base_path moved to bottom and indented to make room for icon
-    ${NSD_CreateCheckBox} 26u 128u 100% 12u "Remove base_path directory (from config)"
+    ${NSD_CreateCheckBox} 26u 124u 100% 12u "Remove base_path directory (from config)"
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
