@@ -24,7 +24,7 @@ const frontendRepo = 'https://github.com/Comfy-Org/ComfyUI_frontend';
 if (frontend.optionalBranch) {
   // Optional branch, no release; build from source
   console.log('Building frontend from source...');
-  const frontendDir = 'assets/frontend';
+  const frontendDir = '../frontend';
 
   try {
     execAndLog(`git clone ${frontendRepo} --depth 1 --branch ${frontend.optionalBranch} ${frontendDir}`);
