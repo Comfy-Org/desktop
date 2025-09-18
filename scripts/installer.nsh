@@ -216,7 +216,6 @@
           ${ExitDo}
         ${endIf}
 
-        RMDir /r /REBOOTOK "$3\.venv"
         RMDir /r /REBOOTOK "$3\uv-cache"
         ${if} $isResetSettings == "1"
           Delete "$3\user\default\comfy.settings.json"
