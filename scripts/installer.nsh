@@ -59,7 +59,7 @@
 
     ${NSD_CreateRadioButton} 0 36u 100% 12u "Preset: Custom"
     Pop $radPresetCustom
-    ${NSD_CreateRadioButton} 0 52u 100% 12u "Full cleanup"
+    ${NSD_CreateRadioButton} 0 52u 100% 12u "Remove everything"
     Pop $radPresetFull
     ${NSD_OnClick} $radPresetFull un.PresetFull_OnClick
     ${NSD_OnClick} $radPresetCustom un.PresetCustom_OnClick
