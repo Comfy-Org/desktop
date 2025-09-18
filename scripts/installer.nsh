@@ -104,11 +104,19 @@
   FunctionEnd
 
   Function un.PresetFull_OnClick
+    Pop $0
+    ; Check all cleanup boxes and disable them
+    ${NSD_SetState} $chkDeleteComfyUI 1
+    ${NSD_SetState} $chkDeleteBasePath 1
+    ${NSD_SetState} $chkDeleteUpdateCache 1
+    ${NSD_SetState} $chkResetSettings 1
+    ${NSD_SetState} $chkDeleteVenv 1
     Push 0
     Call un.SetCheckboxesEnabled
   FunctionEnd
 
   Function un.PresetCustom_OnClick
+    Pop $0
     Push 1
     Call un.SetCheckboxesEnabled
   FunctionEnd
