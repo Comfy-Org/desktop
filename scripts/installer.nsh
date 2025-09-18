@@ -1,3 +1,4 @@
+!include 'MUI2.nsh'
 !include 'LogicLib.nsh'
 !include 'nsDialogs.nsh'
 
