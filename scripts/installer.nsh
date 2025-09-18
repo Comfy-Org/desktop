@@ -37,8 +37,8 @@
   Var /GLOBAL chkDeleteUpdateCache
   Var /GLOBAL isResetSettings
   Var /GLOBAL chkResetSettings
-  Var /GLOBAL radPresetFull
-  Var /GLOBAL radPresetCustom
+  Var /GLOBAL radioRemoveStandard
+  Var /GLOBAL radioRemoveCustom
   Var /GLOBAL isDeleteVenv
   Var /GLOBAL chkDeleteVenv
 
@@ -58,16 +58,16 @@
 
     ${NSD_CreateLabel} 0 0 100% 12u "Uninstall options"
     Pop $1
-    ${NSD_CreateLabel} 0 14u 100% 24u "Choose whether to remove ComfyUI data stored in %APPDATA%."
+    ${NSD_CreateLabel} 0 14u 100% 24u ""
     Pop $1
 
-    ${NSD_CreateRadioButton} 0 36u 100% 12u "Remove everything"
-    Pop $radPresetFull
-    ${NSD_CreateRadioButton} 0 52u 100% 12u "Remove selected components"
-    Pop $radPresetCustom
-    ${NSD_SetState} $radPresetCustom 1
-    ${NSD_OnClick} $radPresetFull un.PresetFull_OnClick
-    ${NSD_OnClick} $radPresetCustom un.PresetCustom_OnClick
+    ${NSD_CreateRadioButton} 0 36u 100% 12u "Standard"
+    Pop $radioRemoveStandard
+    ${NSD_CreateRadioButton} 0 52u 100% 12u "Custom"
+    Pop $radioRemoveCustom
+    ${NSD_SetState} $radioRemoveCustom 1
+    ${NSD_OnClick} $radioRemoveStandard un.PresetFull_OnClick
+    ${NSD_OnClick} $radioRemoveCustom un.PresetCustom_OnClick
 
     ${NSD_CreateCheckBox} 10u 68u 100% 12u "Remove ComfyUI data in %APPDATA%"
     Pop $chkDeleteComfyUI
@@ -123,7 +123,7 @@
 
   Function un.ExtraUninstallPage_Leave
     ; If Full preset selected, apply selections on leave
-    ${NSD_GetState} $radPresetFull $1
+    ${NSD_GetState} $radioRemoveStandard $1
     ${If} $1 == 1
       ${NSD_SetState} $chkDeleteComfyUI 1
       ${NSD_SetState} $chkDeleteBasePath 1
