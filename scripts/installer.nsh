@@ -237,39 +237,72 @@
     ${EndIf}
   FunctionEnd
 
-  ; Resolve $basePath from $APPDATA\ComfyUI\extra_models_config.yaml (sets empty if not found)
+  ; Resolve $basePath from $APPDATA\ComfyUI\config.json (sets empty if not found)
   Function un.ResolveBasePath
     StrCpy $basePath ""
     ClearErrors
-    FileOpen $0 "$APPDATA\ComfyUI\extra_models_config.yaml" r
+    FileOpen $0 "$APPDATA\ComfyUI\config.json" r
     IfErrors done
 
-    StrCpy $1 "base_path:"        ; prefix without trailing space for robustness
-    StrLen $2 $1                   ; $2 = prefix length
+    StrCpy $1 "basePath"
+    StrLen $2 $1
 
     loop:
       FileRead $0 $3
       IfErrors close
 
-      ; Trim leading spaces/tabs
-      StrCpy $4 -1
-      nextc:
-        IntOp $4 $4 + 1
-        StrCpy $5 $3 1 $4
-        StrCmp $5 " " nextc
-        StrCmp $5 "\t" nextc
+      ; scan for "basePath"
+      StrCpy $R2 -1
+      scan:
+        IntOp $R2 $R2 + 1
+        StrCpy $R3 $3 1 $R2
+        StrCmp $R3 "" loop
+        StrCmp $R3 '"' check_key
+        Goto scan
 
-      ; Compare prefix at first non-space
-      StrCpy $6 $3 $2 $4
-      StrCmp $6 $1 0 loop
+      check_key:
+        IntOp $R4 $R2 + 1
+        StrCpy $R5 $3 $2 $R4
+        StrCmp $R5 $1 next_quote scan
 
-      ; Extract value after 'base_path:' (skip optional space)
-      IntOp $7 $4 + $2
-      StrCpy $5 $3 1 $7
-      StrCmp $5 " " 0 +2
-        IntOp $7 $7 + 1
-      StrCpy $basePath $3 1024 $7
-      Goto close
+      next_quote:
+        IntOp $R6 $R4 + $2
+        StrCpy $R7 $3 1 $R6
+        StrCmp $R7 '"' find_colon scan
+
+      find_colon:
+        IntOp $R8 $R6 + 1
+        find_colon_loop:
+          StrCpy $R7 $3 1 $R8
+          StrCmp $R7 ":" after_colon
+          StrCmp $R7 "" loop
+          IntOp $R8 $R8 + 1
+          Goto find_colon_loop
+
+      after_colon:
+        IntOp $R9 $R8 + 1
+        find_open_quote:
+          StrCpy $R7 $3 1 $R9
+          StrCmp $R7 '"' open_ok
+          StrCmp $R7 "" loop
+          IntOp $R9 $R9 + 1
+          Goto find_open_quote
+
+      open_ok:
+        IntOp $R0 $R9 + 1
+        find_close_quote:
+          StrCpy $R7 $3 1 $R0
+          StrCmp $R7 '"' got_value
+          StrCmp $R7 "" loop
+          IntOp $R0 $R0 + 1
+          Goto find_close_quote
+
+      got_value:
+        IntOp $R1 $R0 - $R9
+        IntOp $R1 $R1 - 1
+        IntOp $R6 $R9 + 1
+        StrCpy $basePath $3 $R1 $R6
+        Goto close
 
     close:
       FileClose $0
