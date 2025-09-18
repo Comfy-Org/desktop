@@ -76,6 +76,7 @@
     UninstPage custom un.ExtraUninstallPage_Create un.ExtraUninstallPage_Leave
   !macroend
 
+  ; Create uninstall options page
   Function un.ExtraUninstallPage_Create
     !insertmacro MUI_HEADER_TEXT "${TITLE_CHOOSE}" ""
 
