@@ -96,7 +96,6 @@
     ${NSD_SetState} $chkDeleteComfyUI 1
     ${NSD_OnClick} $chkDeleteComfyUI un.Desc_ComfyData
 
-    ; Move .venv to #2
     ${NSD_CreateCheckBox} 10u 82u 100% 12u "${LABEL_VENV}"
     Pop $chkDeleteVenv
     StrCpy $isDeleteVenv "1"
@@ -115,7 +114,6 @@
     ${NSD_SetState} $chkResetSettings 0
     ${NSD_OnClick} $chkResetSettings un.Desc_ResetSettings
 
-    ; base_path moved to bottom; add warning marker in label
     ${NSD_CreateCheckBox} 10u 124u 100% 12u "${LABEL_BASEPATH}"
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
