@@ -251,4 +251,10 @@
       SetShellVarContext all
     ${endif}
   ${endIf}
+
+  ; Attempt to remove install dir if empty; keep if not empty
+  ClearErrors
+  RMDir $INSTDIR
+  IfErrors 0 +2
+  DetailPrint "Install dir not empty; leaving in place."
 !macroend
