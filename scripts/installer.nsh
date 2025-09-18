@@ -208,14 +208,16 @@
         StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
 
         ; $3 now contains value of base_path
-        ${if} $isDeleteVenv == "1"
-          DetailPrint "Removing Python virtual env: $3\.venv"
-          RMDir /r /REBOOTOK "$3\\.venv"
-        ${endIf}
         ${if} $isDeleteBasePath == "1"
           DetailPrint "Removing base_path directory: $3"
           RMDir /r /REBOOTOK "$3"
           ${ExitDo}
+        ${endIf}
+
+        ${if} $isDeleteVenv == "1"
+          DetailPrint "Removing Python virtual env: $3\.venv"
+
+          RMDir /r /REBOOTOK "$3\\.venv"
         ${endIf}
 
         DetailPrint "Removing cache directory: $3\uv-cache"
