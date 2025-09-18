@@ -2,20 +2,22 @@
 !include 'StrFunc.nsh'
 !include 'LogicLib.nsh'
 !include 'nsDialogs.nsh'
+!include 'WinMessages.nsh'
 
 ; Centralized strings, to be converted to i18n when practical
-!define TITLE_CHOOSE        "Choose what to remove"
-!define DESC_STANDARD       "Standard uninstall removes the app itself, its managed python packages, and some settings only for the desktop app. It does not remove model files or content that was created."
-!define DESC_CUSTOM         "Custom allows you to select which components to uninstall. The detected install path is:"
-!define LABEL_STANDARD      "Standard"
-!define LABEL_CUSTOM        "Custom"
-!define LABEL_APPDATA       "Delete logs and Desktop settings"
-!define LABEL_VENV          "Remove the ComfyUI Python virtual environment (.venv)"
-!define LABEL_UPDATECACHE   "Remove any temporary update files"
-!define LABEL_RESETSETTINGS "Reset ComfyUI settings (comfy.settings.json)"
-!define LABEL_BASEPATH      "WARNING: COMPLETELY delete ComfyUI Path - ALL models, ALL created content"
-!define LABEL_COMFYUI_PATH  "ComfyUI Path"
-!define LABEL_NOT_FOUND     "Not found"
+!define TITLE_CHOOSE         "Choose what to remove"
+!define DESC_STANDARD        "Standard uninstall removes the app itself, its managed python packages, and some settings only for the desktop app. It does not remove model files or content that was created."
+!define DESC_CUSTOM          "Custom allows you to select which components to uninstall. The detected install path is:"
+!define LABEL_STANDARD       "Standard"
+!define LABEL_CUSTOM         "Custom"
+!define LABEL_APPDATA        "Delete logs and Desktop settings"
+!define LABEL_VENV           "Remove the ComfyUI Python virtual environment (.venv)"
+!define LABEL_UPDATECACHE    "Remove any temporary update files"
+!define LABEL_RESETSETTINGS  "Reset ComfyUI settings (comfy.settings.json)"
+!define LABEL_BASEPATH       "WARNING: COMPLETELY delete ComfyUI Path - ALL models, ALL created content"
+!define LABEL_COMFYUI_PATH   "ComfyUI Path"
+!define LABEL_NOT_FOUND      "Not found"
+!define LABEL_CONFIRM_DELETE "Yes, delete the ComfyUI Folder"
 
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
@@ -65,17 +67,18 @@
   Var /GLOBAL chkResetSettings
   Var /GLOBAL isDeleteVenv
   Var /GLOBAL chkDeleteVenv
+  Var /GLOBAL confirmCheckbox
 
   ; Resolve basePath at uninstaller startup
   !macro customUnInit
     Call un.ResolveBasePath
   !macroend
 
-  ; Insert a custom page right after the Uninstall Welcome page
+  ; Insert custom pages: options, then conditional confirmation
   !macro customUnWelcomePage
-    ; Keep the default welcome screen
     !insertmacro MUI_UNPAGE_WELCOME
     UninstPage custom un.ExtraUninstallPage_Create un.ExtraUninstallPage_Leave
+    UninstPage custom un.ConfirmDeleteBasePath_Create un.ConfirmDeleteBasePath_Leave
   !macroend
 
   ; Create uninstall options page
@@ -260,6 +263,44 @@
       StrCpy $isResetSettings "1"
     ${Else}
       StrCpy $isResetSettings "0"
+    ${EndIf}
+  FunctionEnd
+  
+  ; Confirmation page after options (only shown if base_path is selected)
+  Function un.ConfirmDeleteBasePath_Create
+    ${IfNot} $isDeleteBasePath == "1"
+      Abort
+    ${EndIf}
+    nsDialogs::Create 1018
+    Pop $0
+    ${If} $0 == error
+      Abort
+    ${EndIf}
+
+    ; Warning title
+    ${NSD_CreateLabel} 0 0 100% 24u "Are you sure?"
+    Pop $1
+    ; Create bold 16pt font and apply to first label
+    System::Call 'gdi32::CreateFont(i -16, i 0, i 0, i 0, i 700, i 0, i 0, i 0, i 0, i 0, i 0, i 0, t "MS Shell Dlg") p .r9'
+    SendMessage $1 ${WM_SETFONT} $9 1
+
+    ${NSD_CreateLabel} 0 24u 100% 24u "This will PERMANENTLY delete the folder below. It is used to store models, LoRAs inputs, outputs, and other data."
+    ${NSD_CreateLabel} 0 48u 100% 24u "$basePath"
+    Pop $2
+    ; Create bold 10pt font and apply to first label
+    System::Call 'gdi32::CreateFont(i -12, i 0, i 0, i 0, i 700, i 0, i 0, i 0, i 0, i 0, i 0, i 0, t "MS Shell Dlg") p .r9'
+    SendMessage $2 ${WM_SETFONT} $9 1
+
+    ${NSD_CreateCheckBox} 0 72u 100% 12u "${LABEL_CONFIRM_DELETE}"
+    Pop $confirmCheckbox
+
+    nsDialogs::Show
+  FunctionEnd
+
+  Function un.ConfirmDeleteBasePath_Leave
+    ${NSD_GetState} $confirmCheckbox $0
+    ${IfNot} $0 == 1
+      StrCpy $isDeleteBasePath "0"
     ${EndIf}
   FunctionEnd
 
