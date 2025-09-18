@@ -130,15 +130,14 @@
     ${NSD_SetState} $chkDeleteBasePath 0
     ${NSD_OnClick} $chkDeleteBasePath un.Desc_BasePath
 
-    ; If basePath is known, append specifics to labels
+    ; ComfyUI Path
     ${If} $basePath != ""
       StrCpy $1 "${LABEL_COMFYUI_PATH}: $basePath"
     ${Else}
       StrCpy $1 "${LABEL_COMFYUI_PATH}: ${LABEL_NOT_FOUND}"
     ${EndIf}
 
-    ; ComfyUI Path
-    ${NSD_CreateLabel} 0 122u 100% 12u "$1"
+    ${NSD_CreateLabel} 0 126u 100% 12u "$1"
     Pop $basePathLabel
 
     ; Disable checkboxes if basePath is not found
