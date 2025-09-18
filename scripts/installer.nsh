@@ -41,6 +41,7 @@
   Var /GLOBAL radioRemoveCustom
   Var /GLOBAL isDeleteVenv
   Var /GLOBAL chkDeleteVenv
+  Var /GLOBAL descLabel
 
   ; Insert a custom page right after the Uninstall Welcome page
   !macro customUnWelcomePage
@@ -58,8 +59,9 @@
 
     ${NSD_CreateLabel} 0 0 100% 12u "Choose what to remove"
     Pop $1
-    ${NSD_CreateLabel} 0 14u 100% 24u "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
-    Pop $1
+    ; Description label
+    ${NSD_CreateLabel} 0 14u 100% 24u "Hover/click options to see details."
+    Pop $descLabel
 
     ${NSD_CreateRadioButton} 0 36u 100% 12u "Standard"
     Pop $radioRemoveStandard
@@ -73,28 +75,33 @@
     Pop $chkDeleteComfyUI
     StrCpy $isDeleteComfyUI "1"
     ${NSD_SetState} $chkDeleteComfyUI 1
+    ${NSD_OnClick} $chkDeleteComfyUI un.Desc_ComfyData
 
     ; Move .venv to #2
     ${NSD_CreateCheckBox} 10u 82u 100% 12u "Remove Python virtual env (.venv)"
     Pop $chkDeleteVenv
     StrCpy $isDeleteVenv "1"
     ${NSD_SetState} $chkDeleteVenv 1
+    ${NSD_OnClick} $chkDeleteVenv un.Desc_Venv
 
     ${NSD_CreateCheckBox} 10u 96u 100% 12u "Remove any temporary update files"
     Pop $chkDeleteUpdateCache
     StrCpy $isDeleteUpdateCache "1"
     ${NSD_SetState} $chkDeleteUpdateCache 1
+    ${NSD_OnClick} $chkDeleteUpdateCache un.Desc_UpdateCache
 
     ${NSD_CreateCheckBox} 10u 110u 100% 12u "Reset ComfyUI settings"
     Pop $chkResetSettings
     StrCpy $isResetSettings "0"
     ${NSD_SetState} $chkResetSettings 0
+    ${NSD_OnClick} $chkResetSettings un.Desc_ResetSettings
 
     ; base_path moved to bottom; add warning marker in label
     ${NSD_CreateCheckBox} 10u 124u 100% 12u "Remove base_path directory (from config)"
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
+    ${NSD_OnClick} $chkDeleteBasePath un.Desc_BasePath
 
     nsDialogs::Show
   FunctionEnd
@@ -121,12 +128,39 @@
     Pop $0
     Push 0
     Call un.SetCheckboxesVisible
+    ${NSD_SetText} $descLabel "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
   FunctionEnd
 
   Function un.PresetCustom_OnClick
     Pop $0
     Push 1
     Call un.SetCheckboxesVisible
+    ${NSD_SetText} $descLabel "Custom: Choose the specific components to remove."
+  FunctionEnd
+
+  Function un.Desc_ComfyData
+    Pop $0
+    ${NSD_SetText} $descLabel "Removes %APPDATA%\\ComfyUI (user data)."
+  FunctionEnd
+
+  Function un.Desc_Venv
+    Pop $0
+    ${NSD_SetText} $descLabel "Removes base_path\\.venv (Python virtual environment)."
+  FunctionEnd
+
+  Function un.Desc_UpdateCache
+    Pop $0
+    ${NSD_SetText} $descLabel "Removes cached installer and updater files in Local AppData."
+  FunctionEnd
+
+  Function un.Desc_ResetSettings
+    Pop $0
+    ${NSD_SetText} $descLabel "Removes base_path\\user\\default\\comfy.settings.json only."
+  FunctionEnd
+
+  Function un.Desc_BasePath
+    Pop $0
+    ${NSD_SetText} $descLabel "Removes the entire base_path directory (use with caution)."
   FunctionEnd
 
   Function un.ExtraUninstallPage_Leave
