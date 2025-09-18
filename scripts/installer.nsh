@@ -24,6 +24,10 @@
   !insertmacro customUnInstallCheckCommon
 !macroend
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Uninstall - Config / Functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 !ifdef BUILD_UNINSTALLER
   Var /GLOBAL isDeleteComfyUI
   Var /GLOBAL chkDeleteComfyUI
@@ -162,6 +166,10 @@
     ${EndIf}
   FunctionEnd
 !endif
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Uninstall - Excute
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 !macro customRemoveFiles
   ${ifNot} ${isUpdated}
