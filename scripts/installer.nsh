@@ -13,7 +13,9 @@
 !define LABEL_VENV          "Remove the ComfyUI Python virtual environment (.venv)"
 !define LABEL_UPDATECACHE   "Remove any temporary update files"
 !define LABEL_RESETSETTINGS "Reset ComfyUI settings (comfy.settings.json)"
-!define LABEL_BASEPATH      "Remove all models / created content from"
+!define LABEL_BASEPATH      "WARNING: Remove all models / created content from"
+!define LABEL_COMFYUI_PATH  "ComfyUI Path"
+!define LABEL_NOT_FOUND     "Not found"
 
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
@@ -128,9 +130,26 @@
     ${NSD_SetState} $chkDeleteBasePath 0
     ${NSD_OnClick} $chkDeleteBasePath un.Desc_BasePath
 
+    ; If basePath is known, append specifics to labels
+    ${If} $basePath != ""
+      StrCpy $1 "${LABEL_COMFYUI_PATH}: $basePath"
+    ${Else}
+      StrCpy $1 "${LABEL_COMFYUI_PATH}: ${LABEL_NOT_FOUND}"
+    ${EndIf}
+
     ; ComfyUI Path
-    ${NSD_CreateLabel} 0 122u 100% 12u "ComfyUI Path: $basePath"
+    ${NSD_CreateLabel} 0 122u 100% 12u "$1"
     Pop $basePathLabel
+
+    ; Disable checkboxes if basePath is not found
+    ${If} $basePath == ""
+      EnableWindow $chkResetSettings 0
+      EnableWindow $chkDeleteVenv 0
+      EnableWindow $chkDeleteBasePath 0
+      ${NSD_SetState} $chkResetSettings 0
+      ${NSD_SetState} $chkDeleteVenv 0
+      ${NSD_SetState} $chkDeleteBasePath 0
+    ${EndIf}
 
     ; Hide all checkboxes by default (shown when Custom is selected)
     Push 0
@@ -143,16 +162,18 @@
     Exch $0
     ${If} $0 == 0
       ShowWindow $chkDeleteComfyUI ${SW_HIDE}
-      ShowWindow $chkDeleteBasePath ${SW_HIDE}
       ShowWindow $chkDeleteUpdateCache ${SW_HIDE}
       ShowWindow $chkResetSettings ${SW_HIDE}
       ShowWindow $chkDeleteVenv ${SW_HIDE}
+      ShowWindow $chkDeleteBasePath ${SW_HIDE}
     ${Else}
       ShowWindow $chkDeleteComfyUI ${SW_SHOW}
-      ShowWindow $chkDeleteBasePath ${SW_SHOW}
       ShowWindow $chkDeleteUpdateCache ${SW_SHOW}
-      ShowWindow $chkResetSettings ${SW_SHOW}
-      ShowWindow $chkDeleteVenv ${SW_SHOW}
+      ${If} $basePath != ""
+        ShowWindow $chkResetSettings ${SW_SHOW}
+        ShowWindow $chkDeleteVenv ${SW_SHOW}
+        ShowWindow $chkDeleteBasePath ${SW_SHOW}
+      ${EndIf}
     ${EndIf}
     Pop $0
   FunctionEnd
