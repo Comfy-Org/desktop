@@ -107,12 +107,7 @@
 
   Function un.PresetFull_OnClick
     Pop $0
-    ; Check all cleanup boxes and disable them
-    ${NSD_SetState} $chkDeleteComfyUI 1
-    ${NSD_SetState} $chkDeleteBasePath 1
-    ${NSD_SetState} $chkDeleteUpdateCache 1
-    ${NSD_SetState} $chkResetSettings 1
-    ${NSD_SetState} $chkDeleteVenv 1
+    ; Disable checkboxes without changing their state
     Push 0
     Call un.SetCheckboxesEnabled
   FunctionEnd
@@ -124,6 +119,16 @@
   FunctionEnd
 
   Function un.ExtraUninstallPage_Leave
+    ; If Full preset selected, apply selections on leave
+    ${NSD_GetState} $radPresetFull $1
+    ${If} $1 == 1
+      ${NSD_SetState} $chkDeleteComfyUI 1
+      ${NSD_SetState} $chkDeleteBasePath 1
+      ${NSD_SetState} $chkDeleteUpdateCache 1
+      ${NSD_SetState} $chkResetSettings 1
+      ${NSD_SetState} $chkDeleteVenv 1
+    ${EndIf}
+
     ${NSD_GetState} $chkDeleteComfyUI $0
     ${If} $0 == 1
       StrCpy $isDeleteComfyUI "1"
