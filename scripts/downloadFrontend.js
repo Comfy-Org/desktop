@@ -28,8 +28,8 @@ if (frontend.optionalBranch) {
 
   try {
     execAndLog(`git clone ${frontendRepo} --depth 1 --branch ${frontend.optionalBranch} ${frontendDir}`);
-    execAndLog(`npm ci`, frontendDir);
-    execAndLog(`npm run build`, frontendDir);
+    execAndLog(`pnpm ci`, frontendDir);
+    execAndLog(`pnpm run build`, frontendDir);
     await fs.mkdir('assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
     await fs.cp(path.join(frontendDir, 'dist'), 'assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
     await fs.rm(frontendDir, { recursive: true });
