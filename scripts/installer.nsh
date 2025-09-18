@@ -57,10 +57,10 @@
     ${NSD_CreateLabel} 0 14u 100% 24u "Choose whether to remove ComfyUI data stored in %APPDATA%."
     Pop $1
 
-    ${NSD_CreateRadioButton} 0 36u 100% 12u "Preset: Custom"
-    Pop $radPresetCustom
-    ${NSD_CreateRadioButton} 0 52u 100% 12u "Remove everything"
+    ${NSD_CreateRadioButton} 0 36u 100% 12u "Remove everything"
     Pop $radPresetFull
+    ${NSD_CreateRadioButton} 0 52u 100% 12u "Preset: Custom"
+    Pop $radPresetCustom
     ${NSD_OnClick} $radPresetFull un.PresetFull_OnClick
     ${NSD_OnClick} $radPresetCustom un.PresetCustom_OnClick
 
