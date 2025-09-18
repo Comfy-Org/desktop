@@ -14,7 +14,7 @@
 !define LABEL_VENV           "Remove the ComfyUI Python virtual environment (.venv)"
 !define LABEL_UPDATECACHE    "Remove any temporary update files"
 !define LABEL_RESETSETTINGS  "Reset ComfyUI settings (comfy.settings.json)"
-!define LABEL_BASEPATH       "WARNING: COMPLETELY delete ComfyUI Path - ALL models, ALL created content"
+!define LABEL_BASEPATH       "Completely delete ComfyUI Path - all models, created content, etc"
 !define LABEL_COMFYUI_PATH   "ComfyUI Path"
 !define LABEL_NOT_FOUND      "Not found"
 !define LABEL_CONFIRM_DELETE "Yes, delete the ComfyUI Folder"
@@ -196,12 +196,12 @@
 
   Function un.Desc_ComfyData
     Pop $0
-    ${NSD_SetText} $descLabel "Removes %APPDATA%\ComfyUI (user data)."
+    ${NSD_SetText} $descLabel "Removes %APPDATA%\ComfyUI (log files, settings exclusive to the desktop app)."
   FunctionEnd
 
   Function un.Desc_Venv
     Pop $0
-    ${NSD_SetText} $descLabel "Removes base_path\.venv (Python virtual environment)."
+    ${NSD_SetText} $descLabel "Removes the Python virtual environment (.venv) used by the desktop app."
   FunctionEnd
 
   Function un.Desc_UpdateCache
@@ -211,12 +211,12 @@
 
   Function un.Desc_ResetSettings
     Pop $0
-    ${NSD_SetText} $descLabel "Removes base_path\user\default\comfy.settings.json only."
+    ${NSD_SetText} $descLabel "Removes the ComfyUI settings file (comfy.settings.json), resetting in-app settings."
   FunctionEnd
 
   Function un.Desc_BasePath
     Pop $0
-    ${NSD_SetText} $descLabel "Removes the entire base_path directory (use with caution)."
+    ${NSD_SetText} $descLabel "Removes the entire ComfyUI Path directory (use with caution)."
   FunctionEnd
 
   Function un.ExtraUninstallPage_Leave
