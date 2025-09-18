@@ -180,7 +180,7 @@
   Function un.ExtraUninstallPage_Leave
     ; If Full preset selected, apply selections on leave
     ${NSD_GetState} $radioRemoveStandard $1
-    ${If} $1 == 0
+    ${If} $1 == 1
       ${NSD_SetState} $chkDeleteComfyUI 1
       ${NSD_SetState} $chkDeleteVenv 1
       ${NSD_SetState} $chkDeleteUpdateCache 1
