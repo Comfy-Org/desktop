@@ -13,7 +13,7 @@
 !define LABEL_VENV          "Remove the ComfyUI Python virtual environment (.venv)"
 !define LABEL_UPDATECACHE   "Remove any temporary update files"
 !define LABEL_RESETSETTINGS "Reset ComfyUI settings (comfy.settings.json)"
-!define LABEL_BASEPATH      "WARNING: Remove all models / created content from"
+!define LABEL_BASEPATH      "WARNING: COMPLETELY delete ComfyUI Path - ALL models, ALL created content"
 !define LABEL_COMFYUI_PATH  "ComfyUI Path"
 !define LABEL_NOT_FOUND     "Not found"
 
