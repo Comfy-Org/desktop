@@ -1,6 +1,25 @@
 !include 'LogicLib.nsh'
 !include 'nsDialogs.nsh'
 
+; Centralized strings, to be converted to i18n when practical
+!define TITLE_CHOOSE        "Choose what to remove"
+!define DESC_STANDARD       "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
+!define DESC_CUSTOM         "Custom: choose specific items to remove."
+!define LABEL_STANDARD      "Standard"
+!define LABEL_CUSTOM        "Custom"
+!define LABEL_APPDATA       "Remove ComfyUI data in %APPDATA%"
+!define LABEL_VENV          "Remove Python virtual env (.venv)"
+!define LABEL_UPDATECACHE   "Remove any temporary update files"
+!define LABEL_RESETSETTINGS "Reset ComfyUI settings"
+!define LABEL_BASEPATH      "Remove base_path directory (from config)"
+!define TIP_STANDARD        "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
+!define TIP_CUSTOM          "Custom: choose specific items to remove"
+!define TIP_APPDATA         "Remove %APPDATA%\\ComfyUI (user data)"
+!define TIP_VENV            "Remove base_path\\.venv (Python environment)"
+!define TIP_UPDATECACHE     "Remove cached installer and updater files"
+!define TIP_RESETSETTINGS   "Remove base_path\\user\\default\\comfy.settings.json"
+!define TIP_BASEPATH        "Remove entire base_path directory (use with caution)"
+
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
 !macro customUnInstallCheckCommon
@@ -57,47 +76,47 @@
       Abort
     ${EndIf}
 
-    ${NSD_CreateLabel} 0 0 100% 12u "Choose what to remove"
+    ${NSD_CreateLabel} 0 0 100% 12u "${TITLE_CHOOSE}"
     Pop $1
-    ; Description label
-    ${NSD_CreateLabel} 0 14u 100% 24u "Hover/click options to see details."
+    ; Description label (default Standard)
+    ${NSD_CreateLabel} 0 14u 100% 24u "${DESC_STANDARD}"
     Pop $descLabel
 
-    ${NSD_CreateRadioButton} 0 36u 100% 12u "Standard"
+    ${NSD_CreateRadioButton} 0 36u 100% 12u "${LABEL_STANDARD}"
     Pop $radioRemoveStandard
-    ${NSD_CreateRadioButton} 0 52u 100% 12u "Custom"
+    ${NSD_CreateRadioButton} 0 52u 100% 12u "${LABEL_CUSTOM}"
     Pop $radioRemoveCustom
     ${NSD_SetState} $radioRemoveStandard 1
     ${NSD_OnClick} $radioRemoveStandard un.PresetFull_OnClick
     ${NSD_OnClick} $radioRemoveCustom un.PresetCustom_OnClick
 
-    ${NSD_CreateCheckBox} 10u 68u 100% 12u "Remove ComfyUI data in %APPDATA%"
+    ${NSD_CreateCheckBox} 10u 68u 100% 12u "${LABEL_APPDATA}"
     Pop $chkDeleteComfyUI
     StrCpy $isDeleteComfyUI "1"
     ${NSD_SetState} $chkDeleteComfyUI 1
     ${NSD_OnClick} $chkDeleteComfyUI un.Desc_ComfyData
 
     ; Move .venv to #2
-    ${NSD_CreateCheckBox} 10u 82u 100% 12u "Remove Python virtual env (.venv)"
+    ${NSD_CreateCheckBox} 10u 82u 100% 12u "${LABEL_VENV}"
     Pop $chkDeleteVenv
     StrCpy $isDeleteVenv "1"
     ${NSD_SetState} $chkDeleteVenv 1
     ${NSD_OnClick} $chkDeleteVenv un.Desc_Venv
 
-    ${NSD_CreateCheckBox} 10u 96u 100% 12u "Remove any temporary update files"
+    ${NSD_CreateCheckBox} 10u 96u 100% 12u "${LABEL_UPDATECACHE}"
     Pop $chkDeleteUpdateCache
     StrCpy $isDeleteUpdateCache "1"
     ${NSD_SetState} $chkDeleteUpdateCache 1
     ${NSD_OnClick} $chkDeleteUpdateCache un.Desc_UpdateCache
 
-    ${NSD_CreateCheckBox} 10u 110u 100% 12u "Reset ComfyUI settings"
+    ${NSD_CreateCheckBox} 10u 110u 100% 12u "${LABEL_RESETSETTINGS}"
     Pop $chkResetSettings
     StrCpy $isResetSettings "0"
     ${NSD_SetState} $chkResetSettings 0
     ${NSD_OnClick} $chkResetSettings un.Desc_ResetSettings
 
     ; base_path moved to bottom; add warning marker in label
-    ${NSD_CreateCheckBox} 10u 124u 100% 12u "Remove base_path directory (from config)"
+    ${NSD_CreateCheckBox} 10u 124u 100% 12u "${LABEL_BASEPATH}"
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
@@ -129,37 +148,37 @@
     ; uFlags: TTF_SUBCLASS(0x0010) | TTF_IDISHWND(0x0001) = 0x11
 
     ; Standard
-    System::Call '*(i 44, i 0x11, p $0, p $radioRemoveStandard, i 0, i 0, i 0, i 0, p 0, t "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall.", i 0) p .r8'
+    System::Call '*(i 44, i 0x11, p $0, p $radioRemoveStandard, i 0, i 0, i 0, i 0, p 0, t "${TIP_STANDARD}", i 0) p .r8'
     SendMessage $9 0x0404 0 $8
     System::Free $8
 
     ; Custom
-    System::Call '*(i 44, i 0x11, p $0, p $radioRemoveCustom, i 0, i 0, i 0, i 0, p 0, t "Custom: choose specific items to remove", i 0) p .r8'
+    System::Call '*(i 44, i 0x11, p $0, p $radioRemoveCustom, i 0, i 0, i 0, i 0, p 0, t "${TIP_CUSTOM}", i 0) p .r8'
     SendMessage $9 0x0404 0 $8
     System::Free $8
 
     ; AppData
-    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteComfyUI, i 0, i 0, i 0, i 0, p 0, t "Remove %APPDATA%\\ComfyUI (user data)", i 0) p .r8'
+    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteComfyUI, i 0, i 0, i 0, i 0, p 0, t "${TIP_APPDATA}", i 0) p .r8'
     SendMessage $9 0x0404 0 $8
     System::Free $8
 
     ; venv
-    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteVenv, i 0, i 0, i 0, i 0, p 0, t "Remove base_path\\.venv (Python environment)", i 0) p .r8'
+    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteVenv, i 0, i 0, i 0, i 0, p 0, t "${TIP_VENV}", i 0) p .r8'
     SendMessage $9 0x0404 0 $8
     System::Free $8
 
     ; Updater files
-    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteUpdateCache, i 0, i 0, i 0, i 0, p 0, t "Remove cached installer and updater files", i 0) p .r8'
+    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteUpdateCache, i 0, i 0, i 0, i 0, p 0, t "${TIP_UPDATECACHE}", i 0) p .r8'
     SendMessage $9 0x0404 0 $8
     System::Free $8
 
     ; Reset settings
-    System::Call '*(i 44, i 0x11, p $0, p $chkResetSettings, i 0, i 0, i 0, i 0, p 0, t "Remove base_path\\user\\default\\comfy.settings.json", i 0) p .r8'
+    System::Call '*(i 44, i 0x11, p $0, p $chkResetSettings, i 0, i 0, i 0, i 0, p 0, t "${TIP_RESETSETTINGS}", i 0) p .r8'
     SendMessage $9 0x0404 0 $8
     System::Free $8
 
     ; Remove base path
-    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteBasePath, i 0, i 0, i 0, i 0, p 0, t "Remove entire base_path directory (use with caution)", i 0) p .r8'
+    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteBasePath, i 0, i 0, i 0, i 0, p 0, t "${TIP_BASEPATH}", i 0) p .r8'
     SendMessage $9 0x0404 0 $8
     System::Free $8
   FunctionEnd
