@@ -99,37 +99,45 @@
     nsDialogs::Show
   FunctionEnd
 
-  Function un.SetCheckboxesEnabled
+  Function un.SetCheckboxesVisible
     Exch $0
-    EnableWindow $chkDeleteComfyUI $0
-    EnableWindow $chkDeleteBasePath $0
-    EnableWindow $chkDeleteUpdateCache $0
-    EnableWindow $chkResetSettings $0
-    EnableWindow $chkDeleteVenv $0
+    ${If} $0 == 0
+      ShowWindow $chkDeleteComfyUI ${SW_HIDE}
+      ShowWindow $chkDeleteBasePath ${SW_HIDE}
+      ShowWindow $chkDeleteUpdateCache ${SW_HIDE}
+      ShowWindow $chkResetSettings ${SW_HIDE}
+      ShowWindow $chkDeleteVenv ${SW_HIDE}
+    ${Else}
+      ShowWindow $chkDeleteComfyUI ${SW_SHOW}
+      ShowWindow $chkDeleteBasePath ${SW_SHOW}
+      ShowWindow $chkDeleteUpdateCache ${SW_SHOW}
+      ShowWindow $chkResetSettings ${SW_SHOW}
+      ShowWindow $chkDeleteVenv ${SW_SHOW}
+    ${EndIf}
     Pop $0
   FunctionEnd
 
   Function un.PresetFull_OnClick
     Pop $0
     Push 0
-    Call un.SetCheckboxesEnabled
+    Call un.SetCheckboxesVisible
   FunctionEnd
 
   Function un.PresetCustom_OnClick
     Pop $0
     Push 1
-    Call un.SetCheckboxesEnabled
+    Call un.SetCheckboxesVisible
   FunctionEnd
 
   Function un.ExtraUninstallPage_Leave
     ; If Full preset selected, apply selections on leave
     ${NSD_GetState} $radioRemoveStandard $1
-    ${If} $1 == 1
+    ${If} $1 == 0
       ${NSD_SetState} $chkDeleteComfyUI 1
-      ${NSD_SetState} $chkDeleteBasePath 1
-      ${NSD_SetState} $chkDeleteUpdateCache 1
-      ${NSD_SetState} $chkResetSettings 1
       ${NSD_SetState} $chkDeleteVenv 1
+      ${NSD_SetState} $chkDeleteUpdateCache 1
+      ${NSD_SetState} $chkResetSettings 0
+      ${NSD_SetState} $chkDeleteBasePath 0
     ${EndIf}
 
     ${NSD_GetState} $chkDeleteComfyUI $0
