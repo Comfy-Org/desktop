@@ -256,6 +256,13 @@
       StrCpy $isDeleteComfyUI "0"
     ${EndIf}
 
+    ${NSD_GetState} $chkDeleteVenv $0
+    ${If} $0 == 1
+      StrCpy $isDeleteVenv "1"
+    ${Else}
+      StrCpy $isDeleteVenv "0"
+    ${EndIf}
+
     ${NSD_GetState} $chkDeleteBasePath $0
     ${If} $0 == 1
       StrCpy $isDeleteBasePath "1"
@@ -269,17 +276,12 @@
     ${Else}
       StrCpy $isDeleteUpdateCache "0"
     ${EndIf}
+
     ${NSD_GetState} $chkResetSettings $0
     ${If} $0 == 1
       StrCpy $isResetSettings "1"
     ${Else}
       StrCpy $isResetSettings "0"
-    ${EndIf}
-    ${NSD_GetState} $chkDeleteVenv $0
-    ${If} $0 == 1
-      StrCpy $isDeleteVenv "1"
-    ${Else}
-      StrCpy $isDeleteVenv "0"
     ${EndIf}
   FunctionEnd
 !endif
