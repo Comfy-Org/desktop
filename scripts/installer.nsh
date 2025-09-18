@@ -180,6 +180,7 @@
     var /global prefix
     var /global prefixLength
     var /global prefixFirstLetter
+    var /global basePath
 
     FileRead $0 $line
 
@@ -213,27 +214,26 @@
 
       ${If} $R2 == $prefix
         StrCpy $2 $line 1024 $R3 ; Strip off whitespace padding
-        StrCpy $3 $2 1024 $prefixLength ; Strip off prefix
+        StrCpy $basePath $2 1024 $prefixLength ; Strip off prefix
 
-        ; $3 now contains value of base_path
         ${if} $isDeleteBasePath == "1"
-          DetailPrint "Removing base_path directory: $3"
-          RMDir /r /REBOOTOK "$3"
+          DetailPrint "Removing base_path directory: $basePath"
+          RMDir /r /REBOOTOK "$basePath"
           ${ExitDo}
         ${endIf}
 
         ${if} $isDeleteVenv == "1"
-          StrCpy $4 "$3\.venv"
+          StrCpy $4 "$basePath\.venv"
           DetailPrint "Removing Python virtual env: $4"
           RMDir /r /REBOOTOK "$4"
         ${endIf}
 
-        StrCpy $5 "$3\uv-cache"
+        StrCpy $5 "$basePath\uv-cache"
         DetailPrint "Removing cache directory: $5"
         RMDir /r /REBOOTOK "$5"
 
         ${if} $isResetSettings == "1"
-          StrCpy $6 "$3\user\default\comfy.settings.json"
+          StrCpy $6 "$basePath\user\default\comfy.settings.json"
           DetailPrint "Removing user preferences: $6"
           Delete "$6"
         ${endIf}
