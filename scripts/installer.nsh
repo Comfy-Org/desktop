@@ -12,13 +12,6 @@
 !define LABEL_UPDATECACHE   "Remove any temporary update files"
 !define LABEL_RESETSETTINGS "Reset ComfyUI settings"
 !define LABEL_BASEPATH      "Remove base_path directory (from config)"
-!define TIP_STANDARD        "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
-!define TIP_CUSTOM          "Custom: choose specific items to remove"
-!define TIP_APPDATA         "Remove %APPDATA%\\ComfyUI (user data)"
-!define TIP_VENV            "Remove base_path\\.venv (Python environment)"
-!define TIP_UPDATECACHE     "Remove cached installer and updater files"
-!define TIP_RESETSETTINGS   "Remove base_path\\user\\default\\comfy.settings.json"
-!define TIP_BASEPATH        "Remove entire base_path directory (use with caution)"
 
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
@@ -128,57 +121,7 @@
     Push 0
     Call un.SetCheckboxesVisible
 
-    ; Attach tooltips (isolated function)
-    Push $0
-    Call un.AttachTooltips
-
     nsDialogs::Show
-  FunctionEnd
-
-  Function un.AttachTooltips
-    ; Stack: dialog HWND
-    Pop $0
-    ; Create tooltip window (WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP)
-    System::Call 'user32::CreateWindowEx(i 0, t "tooltips_class32", t "", i 0x80000000|0x2|0x1, i 0, i 0, i 0, i 0, p $0, p 0, p 0, p 0) p .r9'
-    ; TTM_SETMAXTIPWIDTH to wrap at ~300px
-    SendMessage $9 0x0418 0 300
-    ; Helper macro inline: add TOOLINFOA for a control
-    ; uFlags: TTF_SUBCLASS(0x0010) | TTF_IDISHWND(0x0001) = 0x11
-
-    ; Standard
-    System::Call '*(i 44, i 0x11, p $0, p $radioRemoveStandard, i 0, i 0, i 0, i 0, p 0, t "${TIP_STANDARD}", i 0) p .r8'
-    SendMessage $9 0x0404 0 $8
-    System::Free $8
-
-    ; Custom
-    System::Call '*(i 44, i 0x11, p $0, p $radioRemoveCustom, i 0, i 0, i 0, i 0, p 0, t "${TIP_CUSTOM}", i 0) p .r8'
-    SendMessage $9 0x0404 0 $8
-    System::Free $8
-
-    ; AppData
-    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteComfyUI, i 0, i 0, i 0, i 0, p 0, t "${TIP_APPDATA}", i 0) p .r8'
-    SendMessage $9 0x0404 0 $8
-    System::Free $8
-
-    ; venv
-    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteVenv, i 0, i 0, i 0, i 0, p 0, t "${TIP_VENV}", i 0) p .r8'
-    SendMessage $9 0x0404 0 $8
-    System::Free $8
-
-    ; Updater files
-    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteUpdateCache, i 0, i 0, i 0, i 0, p 0, t "${TIP_UPDATECACHE}", i 0) p .r8'
-    SendMessage $9 0x0404 0 $8
-    System::Free $8
-
-    ; Reset settings
-    System::Call '*(i 44, i 0x11, p $0, p $chkResetSettings, i 0, i 0, i 0, i 0, p 0, t "${TIP_RESETSETTINGS}", i 0) p .r8'
-    SendMessage $9 0x0404 0 $8
-    System::Free $8
-
-    ; Remove base path
-    System::Call '*(i 44, i 0x11, p $0, p $chkDeleteBasePath, i 0, i 0, i 0, i 0, p 0, t "${TIP_BASEPATH}", i 0) p .r8'
-    SendMessage $9 0x0404 0 $8
-    System::Free $8
   FunctionEnd
 
   Function un.SetCheckboxesVisible
