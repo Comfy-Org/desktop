@@ -46,6 +46,18 @@
 ; Uninstall - Config / Functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Resolve basePath at uninstaller startup
+!macro customUnInit
+  Call un.ResolveBasePath
+!macroend
+
+; Insert custom pages: options, then conditional confirmation
+!macro customUnWelcomePage
+  !insertmacro MUI_UNPAGE_WELCOME
+  UninstPage custom un.ExtraUninstallPage_Create un.ExtraUninstallPage_Leave
+  UninstPage custom un.ConfirmDeleteBasePath_Create un.ConfirmDeleteBasePath_Leave
+!macroend
+
 !ifdef BUILD_UNINSTALLER
   ${UnStrRep}
 
@@ -68,18 +80,6 @@
   Var /GLOBAL isDeleteVenv
   Var /GLOBAL chkDeleteVenv
   Var /GLOBAL confirmCheckbox
-
-  ; Resolve basePath at uninstaller startup
-  !macro customUnInit
-    Call un.ResolveBasePath
-  !macroend
-
-  ; Insert custom pages: options, then conditional confirmation
-  !macro customUnWelcomePage
-    !insertmacro MUI_UNPAGE_WELCOME
-    UninstPage custom un.ExtraUninstallPage_Create un.ExtraUninstallPage_Leave
-    UninstPage custom un.ConfirmDeleteBasePath_Create un.ConfirmDeleteBasePath_Leave
-  !macroend
 
   ; Create uninstall options page
   Function un.ExtraUninstallPage_Create
