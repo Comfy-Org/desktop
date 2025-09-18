@@ -98,7 +98,7 @@
     ${NSD_OnClick} $radioRemoveStandard un.PresetFull_OnClick
     ${NSD_OnClick} $radioRemoveCustom un.PresetCustom_OnClick
 
-    ${NSD_CreateLabel} 0 54u 100% 12u "$basePath"
+    ${NSD_CreateLabel} 0 56u 100% 12u "ComfyUI Path: $basePath"
     Pop $basePathLabel
 
     ${NSD_CreateCheckBox} 10u 68u 100% 12u "${LABEL_APPDATA}"
