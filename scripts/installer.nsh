@@ -4,14 +4,14 @@
 ; Centralized strings, to be converted to i18n when practical
 !define TITLE_CHOOSE        "Choose what to remove"
 !define DESC_STANDARD       "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
-!define DESC_CUSTOM         "Custom: choose specific items to remove."
+!define DESC_CUSTOM         "Custom allows you to select which components to uninstall."
 !define LABEL_STANDARD      "Standard"
 !define LABEL_CUSTOM        "Custom"
-!define LABEL_APPDATA       "Remove ComfyUI data in %APPDATA%"
-!define LABEL_VENV          "Remove Python virtual env (.venv)"
+!define LABEL_APPDATA       "Delete logs and Desktop settings"
+!define LABEL_VENV          "Remove the ComfyUI Python virtual environment (.venv)"
 !define LABEL_UPDATECACHE   "Remove any temporary update files"
-!define LABEL_RESETSETTINGS "Reset ComfyUI settings"
-!define LABEL_BASEPATH      "Remove base_path directory (from config)"
+!define LABEL_RESETSETTINGS "Completely reset ComfyUI settings"
+!define LABEL_BASEPATH      "Remove all models / created content from"
 
 ; The following is used to add the "/SD" flag to MessageBox so that the
 ; machine can restart if the uninstaller fails.
@@ -107,7 +107,7 @@
     ${NSD_SetState} $chkResetSettings 0
     ${NSD_OnClick} $chkResetSettings un.Desc_ResetSettings
 
-    ${NSD_CreateCheckBox} 10u 124u 100% 12u "${LABEL_BASEPATH}"
+    ${NSD_CreateCheckBox} 10u 124u 100% 12u "${LABEL_BASEPATH}: "
     Pop $chkDeleteBasePath
     StrCpy $isDeleteBasePath "0"
     ${NSD_SetState} $chkDeleteBasePath 0
