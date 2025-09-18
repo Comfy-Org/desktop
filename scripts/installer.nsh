@@ -113,10 +113,6 @@
     ${NSD_SetState} $chkDeleteBasePath 0
     ${NSD_OnClick} $chkDeleteBasePath un.Desc_BasePath
 
-    ; Description label (default to Standard description)
-    ${NSD_CreateLabel} 10u 142u 100% 20u "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
-    Pop $descLabel
-
     ; Hide all checkboxes by default (shown when Custom is selected)
     Push 0
     Call un.SetCheckboxesVisible
