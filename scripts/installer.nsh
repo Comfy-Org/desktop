@@ -70,10 +70,11 @@
     StrCpy $isDeleteComfyUI "0"
     ${NSD_SetState} $chkDeleteComfyUI 0
 
-    ${NSD_CreateCheckBox} 10u 86u 100% 12u "Remove base_path directory (from config)"
-    Pop $chkDeleteBasePath
-    StrCpy $isDeleteBasePath "0"
-    ${NSD_SetState} $chkDeleteBasePath 0
+    ; Move .venv to #2
+    ${NSD_CreateCheckBox} 10u 86u 100% 12u "Remove Python virtual env (.venv)"
+    Pop $chkDeleteVenv
+    StrCpy $isDeleteVenv "0"
+    ${NSD_SetState} $chkDeleteVenv 0
 
     ${NSD_CreateCheckBox} 10u 100u 100% 12u "Remove any temporary update files"
     Pop $chkDeleteUpdateCache
@@ -85,10 +86,17 @@
     StrCpy $isResetSettings "0"
     ${NSD_SetState} $chkResetSettings 0
 
-    ${NSD_CreateCheckBox} 10u 128u 100% 12u "Remove Python virtual env (.venv)"
-    Pop $chkDeleteVenv
-    StrCpy $isDeleteVenv "0"
-    ${NSD_SetState} $chkDeleteVenv 0
+    ; Warning icon next to base_path removal
+    System::Call 'user32::LoadIcon(p 0, i 32515) p .r9' ; IDI_EXCLAMATION
+    nsDialogs::CreateControl "STATIC" 0x50000003 10u 128u 12u 12u ""
+    Pop $1
+    SendMessage $1 0x0170 $9 0 ; STM_SETICON
+
+    ; base_path moved to bottom and indented to make room for icon
+    ${NSD_CreateCheckBox} 26u 128u 100% 12u "Remove base_path directory (from config)"
+    Pop $chkDeleteBasePath
+    StrCpy $isDeleteBasePath "0"
+    ${NSD_SetState} $chkDeleteBasePath 0
 
     nsDialogs::Show
   FunctionEnd
