@@ -81,6 +81,9 @@
     ${NSD_CreateLabel} 0 0 100% 24u "${DESC_STANDARD}"
     Pop $descLabel
 
+    ${NSD_CreateLabel} 0 24u 100% 12u "$basePath"
+    Pop $descLabel
+
     ${NSD_CreateRadioButton} 0 24u 100% 12u "${LABEL_STANDARD}"
     Pop $radioRemoveStandard
     ${NSD_CreateRadioButton} 0 40u 100% 12u "${LABEL_CUSTOM}"
