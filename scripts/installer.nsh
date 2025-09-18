@@ -140,12 +140,12 @@
 
   Function un.Desc_ComfyData
     Pop $0
-    ${NSD_SetText} $descLabel "Removes %APPDATA%\\ComfyUI (user data)."
+    ${NSD_SetText} $descLabel "Removes %APPDATA%\ComfyUI (user data)."
   FunctionEnd
 
   Function un.Desc_Venv
     Pop $0
-    ${NSD_SetText} $descLabel "Removes base_path\\.venv (Python virtual environment)."
+    ${NSD_SetText} $descLabel "Removes base_path\.venv (Python virtual environment)."
   FunctionEnd
 
   Function un.Desc_UpdateCache
@@ -155,7 +155,7 @@
 
   Function un.Desc_ResetSettings
     Pop $0
-    ${NSD_SetText} $descLabel "Removes base_path\\user\\default\\comfy.settings.json only."
+    ${NSD_SetText} $descLabel "Removes base_path\user\default\comfy.settings.json only."
   FunctionEnd
 
   Function un.Desc_BasePath
