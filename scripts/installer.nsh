@@ -3,8 +3,8 @@
 
 ; Centralized strings, to be converted to i18n when practical
 !define TITLE_CHOOSE        "Choose what to remove"
-!define DESC_STANDARD       "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
-!define DESC_CUSTOM         "Custom allows you to select which components to uninstall."
+!define DESC_STANDARD       "Standard uninstall removes the app itself, its managed python packages, and some settings only for the desktop app. It does not remove model files or content that was created."
+!define DESC_CUSTOM         "Custom allows you to select which components to uninstall. The detected install path is:"
 !define LABEL_STANDARD      "Standard"
 !define LABEL_CUSTOM        "Custom"
 !define LABEL_APPDATA       "Delete logs and Desktop settings"
@@ -78,12 +78,12 @@
     ${EndIf}
 
     ; Description label (default Standard)
-    ${NSD_CreateLabel} 0 14u 100% 24u "${DESC_STANDARD}"
+    ${NSD_CreateLabel} 0 0 100% 24u "${DESC_STANDARD}"
     Pop $descLabel
 
-    ${NSD_CreateRadioButton} 0 36u 100% 12u "${LABEL_STANDARD}"
+    ${NSD_CreateRadioButton} 0 24u 100% 12u "${LABEL_STANDARD}"
     Pop $radioRemoveStandard
-    ${NSD_CreateRadioButton} 0 52u 100% 12u "${LABEL_CUSTOM}"
+    ${NSD_CreateRadioButton} 0 40u 100% 12u "${LABEL_CUSTOM}"
     Pop $radioRemoveCustom
     ${NSD_SetState} $radioRemoveStandard 1
     ${NSD_OnClick} $radioRemoveStandard un.PresetFull_OnClick
@@ -155,7 +155,7 @@
     Pop $0
     Push 0
     Call un.SetCheckboxesVisible
-    ${NSD_SetText} $descLabel "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
+    ${NSD_SetText} $descLabel "${DESC_STANDARD}"
   FunctionEnd
 
   Function un.PresetCustom_OnClick
