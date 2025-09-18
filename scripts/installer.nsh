@@ -107,7 +107,6 @@
 
   Function un.PresetFull_OnClick
     Pop $0
-    ; Disable checkboxes without changing their state
     Push 0
     Call un.SetCheckboxesEnabled
   FunctionEnd
