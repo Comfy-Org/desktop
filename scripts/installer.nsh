@@ -209,15 +209,19 @@
 
         ; $3 now contains value of base_path
         ${if} $isDeleteVenv == "1"
+          DetailPrint "Removing Python virtual env: $3\.venv"
           RMDir /r /REBOOTOK "$3\\.venv"
         ${endIf}
         ${if} $isDeleteBasePath == "1"
+          DetailPrint "Removing base_path directory: $3"
           RMDir /r /REBOOTOK "$3"
           ${ExitDo}
         ${endIf}
 
+        DetailPrint "Removing cache directory: $3\uv-cache"
         RMDir /r /REBOOTOK "$3\uv-cache"
         ${if} $isResetSettings == "1"
+          DetailPrint "Removing user preferences: $3\user\default\comfy.settings.json"
           Delete "$3\user\default\comfy.settings.json"
         ${endIf}
 
@@ -229,6 +233,7 @@
     FileClose $0
   ${endIf}
   ${if} $isDeleteComfyUI == "1"
+    DetailPrint "Removing ComfyUI AppData: $APPDATA\ComfyUI"
     RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
   ${endIf}
 
@@ -239,13 +244,16 @@
     ; APP_INSTALLER_STORE_FILE is defined by electron-builder; it is the relative path
     ; to the copy of the installer stored under %LOCALAPPDATA% for update flows
     !ifdef APP_INSTALLER_STORE_FILE
+      DetailPrint "Deleting cached installer: $LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
       Delete "$LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
     !endif
     ; APP_PACKAGE_STORE_FILE is defined when using a web/remote package; it is the
     ; cached app package stored under %LOCALAPPDATA%
     !ifdef APP_PACKAGE_STORE_FILE
+      DetailPrint "Deleting cached package: $LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}"
       Delete "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}"
     !endif
+    DetailPrint "Removing update cache dir: $LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
     RMDir /r /REBOOTOK "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
     ${if} $installMode == "all"
       SetShellVarContext all
@@ -255,6 +263,8 @@
   ; Attempt to remove install dir if empty; keep if not empty
   ClearErrors
   RMDir $INSTDIR
-  IfErrors 0 +2
+  IfErrors +3 0
+  DetailPrint "Removed install dir: $INSTDIR"
+  Goto +2
   DetailPrint "Install dir not empty; leaving in place."
 !macroend
