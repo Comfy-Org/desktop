@@ -218,23 +218,24 @@
         ; $3 now contains value of base_path
         ${if} $isDeleteBasePath == "1"
           DetailPrint "Removing base_path directory: $3"
-
           RMDir /r /REBOOTOK "$3"
           ${ExitDo}
         ${endIf}
 
         ${if} $isDeleteVenv == "1"
-          DetailPrint "Removing Python virtual env: $3\.venv"
-
-          RMDir /r /REBOOTOK "$3\\.venv"
+          StrCpy $4 "$3\.venv"
+          DetailPrint "Removing Python virtual env: $4"
+          RMDir /r /REBOOTOK "$4"
         ${endIf}
 
-        DetailPrint "Removing cache directory: $3\uv-cache"
-        RMDir /r /REBOOTOK "$3\uv-cache"
-        ${if} $isResetSettings == "1"
-          DetailPrint "Removing user preferences: $3\user\default\comfy.settings.json"
+        StrCpy $5 "$3\uv-cache"
+        DetailPrint "Removing cache directory: $5"
+        RMDir /r /REBOOTOK "$5"
 
-          Delete "$3\user\default\comfy.settings.json"
+        ${if} $isResetSettings == "1"
+          StrCpy $6 "$3\user\default\comfy.settings.json"
+          DetailPrint "Removing user preferences: $6"
+          Delete "$6"
         ${endIf}
 
         ${ExitDo} ; No need to continue, break the cycle
@@ -244,10 +245,11 @@
 
     FileClose $0
   ${endIf}
-  ${if} $isDeleteComfyUI == "1"
-    DetailPrint "Removing ComfyUI AppData: $APPDATA\ComfyUI"
 
-    RMDir /r /REBOOTOK "$APPDATA\ComfyUI"
+  ${if} $isDeleteComfyUI == "1"
+    StrCpy $7 "$APPDATA\ComfyUI"
+    DetailPrint "Removing ComfyUI AppData: $7"
+    RMDir /r /REBOOTOK "$7"
   ${endIf}
 
   ${if} $isDeleteUpdateCache == "1"
@@ -258,21 +260,22 @@
     ; APP_INSTALLER_STORE_FILE is defined by electron-builder; it is the relative path
     ; to the copy of the installer stored under %LOCALAPPDATA% for update flows
     !ifdef APP_INSTALLER_STORE_FILE
-      DetailPrint "Deleting cached installer: $LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
-
-      Delete "$LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
+      StrCpy $8 "$LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
+      DetailPrint "Deleting cached installer: $8"
+      Delete "$8"
     !endif
 
     ; APP_PACKAGE_STORE_FILE is defined when using a web/remote package; it is the
     ; cached app package stored under %LOCALAPPDATA%
     !ifdef APP_PACKAGE_STORE_FILE
-      DetailPrint "Deleting cached package: $LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}"
-      Delete "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}"
+      StrCpy $9 "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}"
+      DetailPrint "Deleting cached package: $9"
+      Delete "$9"
     !endif
 
-    DetailPrint "Removing update cache dir: $LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
-
-    RMDir /r /REBOOTOK "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
+    StrCpy $R5 "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
+    DetailPrint "Removing update cache dir: $R5"
+    RMDir /r /REBOOTOK "$R5"
     ${if} $installMode == "all"
       SetShellVarContext all
     ${endif}
