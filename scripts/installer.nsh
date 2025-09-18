@@ -69,14 +69,14 @@
   !macroend
 
   Function un.ExtraUninstallPage_Create
+    !insertmacro MUI_HEADER_TEXT "${TITLE_CHOOSE}" ""
+
     nsDialogs::Create 1018
     Pop $0
     ${If} $0 == error
       Abort
     ${EndIf}
 
-    ${NSD_CreateLabel} 0 0 100% 12u "${TITLE_CHOOSE}"
-    Pop $1
     ; Description label (default Standard)
     ${NSD_CreateLabel} 0 14u 100% 24u "${DESC_STANDARD}"
     Pop $descLabel
