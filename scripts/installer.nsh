@@ -56,16 +56,16 @@
       Abort
     ${EndIf}
 
-    ${NSD_CreateLabel} 0 0 100% 12u "Uninstall options"
+    ${NSD_CreateLabel} 0 0 100% 12u "Choose what to remove"
     Pop $1
-    ${NSD_CreateLabel} 0 14u 100% 24u ""
+    ${NSD_CreateLabel} 0 14u 100% 24u "Standard uninstall removes the app itself, its managed python packages, and the app settings. If you have custom model paths, you will need to re-add them if you reinstall."
     Pop $1
 
     ${NSD_CreateRadioButton} 0 36u 100% 12u "Standard"
     Pop $radioRemoveStandard
     ${NSD_CreateRadioButton} 0 52u 100% 12u "Custom"
     Pop $radioRemoveCustom
-    ${NSD_SetState} $radioRemoveCustom 1
+    ${NSD_SetState} $radioRemoveStandard 1
     ${NSD_OnClick} $radioRemoveStandard un.PresetFull_OnClick
     ${NSD_OnClick} $radioRemoveCustom un.PresetCustom_OnClick
 
