@@ -77,7 +77,7 @@ export function registerPathHandlers() {
       const result: PathValidationResult = {
         isValid: true,
         freeSpace: -1,
-        requiredSpace: requiredSpace,
+        requiredSpace,
         isOneDrive: false,
         isNonDefaultDrive: false,
         parentMissing: false,
