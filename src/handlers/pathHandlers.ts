@@ -133,7 +133,7 @@ export function registerPathHandlers() {
 
         // Check available disk space
         const disks = await si.fsSize();
-        if (disks) {
+        if (disks.length) {
           log.verbose('SystemInformation [fsSize]:', disks);
           const disk = disks.find((disk) => inputPath.startsWith(disk.mount));
           log.verbose('SystemInformation [disk]:', disk);
