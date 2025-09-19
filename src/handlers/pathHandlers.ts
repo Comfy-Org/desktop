@@ -133,10 +133,14 @@ export function registerPathHandlers() {
 
         // Check available disk space
         const disks = await si.fsSize();
-        log.verbose('SystemInformation [fsSize]:', disks);
-        const disk = disks.find((disk) => inputPath.startsWith(disk.mount));
-        log.verbose('SystemInformation [disk]:', disk);
-        if (disk) result.freeSpace = disk.available;
+        if (disks) {
+          log.verbose('SystemInformation [fsSize]:', disks);
+          const disk = disks.find((disk) => inputPath.startsWith(disk.mount));
+          log.verbose('SystemInformation [disk]:', disk);
+          if (disk) result.freeSpace = disk.available;
+        } else {
+          log.warn('SystemInformation [fsSize] is undefined. Skipping disk space check.');
+        }
       } catch (error) {
         log.error('Error validating install path:', error);
         result.error = `${error}`;
