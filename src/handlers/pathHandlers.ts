@@ -140,6 +140,7 @@ export function registerPathHandlers() {
           if (disk) result.freeSpace = disk.available;
         } else {
           log.warn('SystemInformation [fsSize] is undefined. Skipping disk space check.');
+          result.freeSpace = result.requiredSpace;
         }
       } catch (error) {
         log.error('Error validating install path:', error);
