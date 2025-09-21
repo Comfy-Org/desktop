@@ -450,7 +450,27 @@
 ################################################################################
 
 !macro customRemoveFiles
-  ${ifNot} ${isUpdated}
+  ${if} ${isUpdated}
+    # START Default electron-builder behaviour
+    CreateDirectory "$PLUGINSDIR\old-install"
+
+    Push ""
+    Call un.atomicRMDir
+    Pop $R0
+
+    ${if} $R0 != 0
+      DetailPrint "File is busy, aborting: $R0"
+
+      # Attempt to restore previous directory
+      Push ""
+      Call un.restoreFiles
+      Pop $R0
+
+      Abort `Can't rename "$INSTDIR" to "$PLUGINSDIR\old-install".`
+    ${endif}
+    # END Default electron-builder behaviour
+
+  ${else}
     Call un.ResolveBasePath
 
     ${if} $basePath != ""
