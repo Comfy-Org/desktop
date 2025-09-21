@@ -4,6 +4,11 @@
 !include 'nsDialogs.nsh'
 !include 'WinMessages.nsh'
 
+; Per-user install
+!macro customInstallMode
+  StrCpy $isForceCurrentInstall "1"
+!macroend
+
 !ifdef BUILD_UNINSTALLER
   ; Default to showing details in uninstaller InstFiles page
   ShowUninstDetails show
