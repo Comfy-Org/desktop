@@ -30,7 +30,7 @@
 
 ; Wrapper: RMDir with logging + reboot detection (prints to details)
 ; Usage: !insertmacro RMDIR_LOGGED "<path>" "<friendly label>"
-!macro RMDIR_LOGGED _path _label
+!macro RMDIR_LOGGED _path _description
   Push $0
   Push $1
   Push $2
@@ -40,19 +40,19 @@
   !insertmacro GET_REBOOTFLAG_TO_VAR $0
 
   ; Reset flag to detect if this call sets it (schedule-on-reboot)
-  DetailPrint "Removing ${_label}: ${_path}"
+  DetailPrint "Removing ${_description}: ${_path}"
   SetRebootFlag false
   ClearErrors
   RMDir /r /REBOOTOK "${_path}"
 
   ${If} ${Errors}
-    DetailPrint "[Error] Failed to remove ${_label}: ${_path}"
+    DetailPrint "[Error] Failed to remove ${_description}: ${_path}"
   ${Else}
     !insertmacro GET_REBOOTFLAG_TO_VAR $2
     ${If} $2 == "1"
-      DetailPrint "[Reboot] Scheduled removal of ${_label}: ${_path}"
+      DetailPrint "[Reboot] Scheduled removal of ${_description}: ${_path}"
     ${Else}
-      DetailPrint "[OK] Removed ${_label}: ${_path}"
+      DetailPrint "[OK] Removed ${_description}: ${_path}"
     ${EndIf}
   ${EndIf}
 
