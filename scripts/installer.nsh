@@ -451,6 +451,8 @@
 
 !macro customRemoveFiles
   ${if} ${isUpdated}
+    # App is updating, rather than uninstalling
+  
     # START Default electron-builder behaviour
     CreateDirectory "$PLUGINSDIR\old-install"
 
@@ -469,8 +471,8 @@
       Abort `Can't rename "$INSTDIR" to "$PLUGINSDIR\old-install".`
     ${endif}
     # END Default electron-builder behaviour
-
   ${else}
+    # Manually uninstalling the app
     Call un.ResolveBasePath
 
     ${if} $basePath != ""
@@ -510,7 +512,7 @@
       ${endif}
     ${endIf}
 
-    # Attempt to remove install dir if empty; keep if not empty
+    # Attempt to remove install dir if empty
     ClearErrors
     RMDir $INSTDIR
     IfErrors +3 0
