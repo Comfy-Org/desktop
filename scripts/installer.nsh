@@ -477,22 +477,6 @@
       SetShellVarContext current
     ${endif}
 
-    ; APP_INSTALLER_STORE_FILE is defined by electron-builder; it is the relative path
-    ; to the copy of the installer stored under %LOCALAPPDATA% for update flows
-    !ifdef APP_INSTALLER_STORE_FILE
-      StrCpy $8 "$LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
-      DetailPrint "Deleting cached installer: $8"
-      Delete "$8"
-    !endif
-
-    ; APP_PACKAGE_STORE_FILE is defined when using a web/remote package; it is the
-    ; cached app package stored under %LOCALAPPDATA%
-    !ifdef APP_PACKAGE_STORE_FILE
-      StrCpy $9 "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}"
-      DetailPrint "Deleting cached package: $9"
-      Delete "$9"
-    !endif
-
     StrCpy $R5 "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
     !insertmacro RMDIR_LOGGED "$R5" "Updater cache"
     ${if} $installMode == "all"
