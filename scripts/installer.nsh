@@ -4,17 +4,17 @@
 !include 'nsDialogs.nsh'
 !include 'WinMessages.nsh'
 
-; Per-user install
+# Per-user install
 !macro customInstallMode
   StrCpy $isForceCurrentInstall "1"
 !macroend
 
 !ifdef BUILD_UNINSTALLER
-  ; Default to showing details in uninstaller InstFiles page
+  # Default to showing details in uninstaller InstFiles page
   ShowUninstDetails show
 !endif
 
-; Utility: Capture current NSIS reboot flag into a variable ("0" or "1")
+# Utility: Capture current NSIS reboot flag into a variable ("0" or "1")
 !macro GET_REBOOTFLAG_TO_VAR _outVar
   !define _LBL_SET "rf_set_${__LINE__}"
   !define _LBL_DONE "rf_done_${__LINE__}"
@@ -28,18 +28,18 @@
   !undef _LBL_DONE
 !macroend
 
-; Wrapper: RMDir with logging + reboot detection (prints to details)
-; Usage: !insertmacro RMDIR_LOGGED "<path>" "<friendly label>"
+# Wrapper: RMDir with logging + reboot detection (prints to details)
+# Usage: !insertmacro RMDIR_LOGGED "<path>" "<friendly label>"
 !macro RMDIR_LOGGED _path _description
   Push $0
   Push $1
   Push $2
   Push $3
 
-  ; Capture previous reboot flag state
+  # Capture previous reboot flag state
   !insertmacro GET_REBOOTFLAG_TO_VAR $0
 
-  ; Reset flag to detect if this call sets it (schedule-on-reboot)
+  # Reset flag to detect if this call sets it (schedule-on-reboot)
   DetailPrint "Removing ${_description}: ${_path}"
   SetRebootFlag false
   ClearErrors
@@ -56,7 +56,7 @@
     ${EndIf}
   ${EndIf}
 
-  ; Restore reboot flag to (prev OR new)
+  # Restore reboot flag to (prev OR new)
   ${If} $0 == "1"
   ${OrIf} $2 == "1"
     SetRebootFlag true
@@ -68,7 +68,7 @@
   Pop $0
 !macroend
 
-; Centralized strings, to be converted to i18n when practical
+# Centralized strings, to be converted to i18n when practical
 !define TITLE_CHOOSE         "Choose what to remove"
 !define DESC_STANDARD        "Standard uninstall removes the app itself, its managed python packages, and some settings only for the desktop app. It does not remove model files or content that was created."
 !define DESC_CUSTOM          "Custom allows you to select which components to uninstall. The detected install path is:"
@@ -83,8 +83,8 @@
 !define LABEL_NOT_FOUND      "Not found"
 !define LABEL_CONFIRM_DELETE "Yes, delete the ComfyUI Folder"
 
-; The following is used to add the "/SD" flag to MessageBox so that the
-; machine can restart if the uninstaller fails.
+# The following is used to add the "/SD" flag to MessageBox so that the
+# machine can restart if the uninstaller fails.
 !macro customUnInstallCheckCommon
   IfErrors 0 +3
   DetailPrint `Uninstall was not successful. Not able to launch uninstaller!`
@@ -106,16 +106,16 @@
   !insertmacro customUnInstallCheckCommon
 !macroend
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Uninstall - Config / Functions
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+################################################################################
+# Uninstall - Config / Functions
+################################################################################
 
-; Resolve basePath at uninstaller startup
+# Resolve basePath at uninstaller startup
 !macro customUnInit
   Call un.ResolveBasePath
 !macroend
 
-; Insert custom pages: options, then conditional confirmation
+# Insert custom pages: options, then conditional confirmation
 !macro customUnWelcomePage
   !insertmacro MUI_UNPAGE_WELCOME
   UninstPage custom un.ExtraUninstallPage_Create un.ExtraUninstallPage_Leave
@@ -145,7 +145,7 @@
   Var /GLOBAL chkDeleteVenv
   Var /GLOBAL confirmCheckbox
 
-  ; Create uninstall options page
+  # Create uninstall options page
   Function un.ExtraUninstallPage_Create
     !insertmacro MUI_HEADER_TEXT "${TITLE_CHOOSE}" ""
 
@@ -155,7 +155,7 @@
       Abort
     ${EndIf}
 
-    ; Description label (default Standard)
+    # Description label (default Standard)
     ${NSD_CreateLabel} 0 0 100% 24u "${DESC_STANDARD}"
     Pop $descLabel
 
@@ -197,7 +197,7 @@
     ${NSD_SetState} $chkDeleteBasePath 0
     ${NSD_OnClick} $chkDeleteBasePath un.Desc_BasePath
 
-    ; ComfyUI Path
+    # ComfyUI Path
     ${If} $basePath != ""
       StrCpy $1 "${LABEL_COMFYUI_PATH}: $basePath"
     ${Else}
@@ -207,7 +207,7 @@
     ${NSD_CreateLabel} 0 126u 100% 12u "$1"
     Pop $basePathLabel
 
-    ; Disable checkboxes if basePath is not found
+    # Disable checkboxes if basePath is not found
     ${If} $basePath == ""
       EnableWindow $chkResetSettings 0
       EnableWindow $chkDeleteVenv 0
@@ -217,7 +217,7 @@
       ${NSD_SetState} $chkDeleteBasePath 0
     ${EndIf}
 
-    ; Hide all checkboxes by default (shown when Custom is selected)
+    # Hide all checkboxes by default (shown when Custom is selected)
     Push 0
     Call un.SetCheckboxesVisible
 
@@ -284,7 +284,7 @@
   FunctionEnd
 
   Function un.ExtraUninstallPage_Leave
-    ; If Full preset selected, apply selections on leave
+    # If Full preset selected, apply selections on leave
     ${NSD_GetState} $radioRemoveStandard $1
     ${If} $1 == 1
       ${NSD_SetState} $chkDeleteComfyUI 1
@@ -330,7 +330,7 @@
     ${EndIf}
   FunctionEnd
   
-  ; Confirmation page after options (only shown if base_path is selected)
+  # Confirmation page after options (only shown if base_path is selected)
   Function un.ConfirmDeleteBasePath_Create
     ${IfNot} $isDeleteBasePath == "1"
       Abort
@@ -341,17 +341,17 @@
       Abort
     ${EndIf}
 
-    ; Warning title
+    # Warning title
     ${NSD_CreateLabel} 0 0 100% 24u "Are you sure?"
     Pop $1
-    ; Create bold 16pt font and apply to first label
+    # Create bold 16pt font and apply to first label
     System::Call 'gdi32::CreateFont(i -16, i 0, i 0, i 0, i 700, i 0, i 0, i 0, i 0, i 0, i 0, i 0, t "MS Shell Dlg") p .r9'
     SendMessage $1 ${WM_SETFONT} $9 1
 
     ${NSD_CreateLabel} 0 24u 100% 24u "This will PERMANENTLY delete the folder below. It is used to store models, LoRAs inputs, outputs, and other data."
     ${NSD_CreateLabel} 0 48u 100% 24u "$basePath"
     Pop $2
-    ; Create bold 10pt font and apply to first label
+    # Create bold 10pt font and apply to first label
     System::Call 'gdi32::CreateFont(i -12, i 0, i 0, i 0, i 700, i 0, i 0, i 0, i 0, i 0, i 0, i 0, t "MS Shell Dlg") p .r9'
     SendMessage $2 ${WM_SETFONT} $9 1
 
@@ -368,7 +368,7 @@
     ${EndIf}
   FunctionEnd
 
-  ; Resolve $basePath from $APPDATA\ComfyUI\config.json (sets empty if not found)
+  # Resolve $basePath from $APPDATA\ComfyUI\config.json (sets empty if not found)
   Function un.ResolveBasePath
     StrCpy $basePath ""
     ClearErrors
@@ -382,7 +382,7 @@
       FileRead $0 $3
       IfErrors close
 
-      ; scan for "basePath"
+      # scan for "basePath"
       StrCpy $R2 -1
       scan:
         IntOp $R2 $R2 + 1
@@ -433,7 +433,7 @@
         IntOp $R1 $R1 - 1
         IntOp $R6 $R9 + 1
         StrCpy $basePath $3 $R1 $R6
-        ; Normalize JSON doubled backslashes to single backslashes
+        # Normalize JSON doubled backslashes to single backslashes
         ${UnStrRep} $basePath $basePath "\\" "\"
         Goto close
 
@@ -443,9 +443,9 @@
   FunctionEnd
 !endif
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Uninstall - Excute
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+################################################################################
+# Uninstall - Excute
+################################################################################
 
 !macro customRemoveFiles
   ${ifNot} ${isUpdated}
@@ -473,7 +473,7 @@
   ${endIf}
 
   ${if} $isDeleteComfyUI == "1"
-    ; Use built-in electron-builder app data removal
+    # Use built-in electron-builder app data removal
     !define DELETE_APP_DATA_ON_UNINSTALL "1"
   ${endIf}
 
@@ -489,7 +489,7 @@
     ${endif}
   ${endIf}
 
-  ; Attempt to remove install dir if empty; keep if not empty
+  # Attempt to remove install dir if empty; keep if not empty
   ClearErrors
   RMDir $INSTDIR
   IfErrors +3 0
