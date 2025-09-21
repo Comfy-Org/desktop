@@ -492,30 +492,30 @@
         ${endIf}
       ${endIf}
     ${endIf}
+
+    ${if} $isDeleteComfyUI == "1"
+      # Use built-in electron-builder app data removal
+      !define DELETE_APP_DATA_ON_UNINSTALL "1"
+    ${endIf}
+
+    ${if} $isDeleteUpdateCache == "1"
+      ${if} $installMode == "all"
+        SetShellVarContext current
+      ${endif}
+
+      StrCpy $R5 "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
+      !insertmacro RMDIR_LOGGED "$R5" "Updater cache"
+      ${if} $installMode == "all"
+        SetShellVarContext all
+      ${endif}
+    ${endIf}
+
+    # Attempt to remove install dir if empty; keep if not empty
+    ClearErrors
+    RMDir $INSTDIR
+    IfErrors +3 0
+    DetailPrint "Removed install dir: $INSTDIR"
+    Goto +2
+    DetailPrint "Install dir not empty; leaving in place."
   ${endIf}
-
-  ${if} $isDeleteComfyUI == "1"
-    # Use built-in electron-builder app data removal
-    !define DELETE_APP_DATA_ON_UNINSTALL "1"
-  ${endIf}
-
-  ${if} $isDeleteUpdateCache == "1"
-    ${if} $installMode == "all"
-      SetShellVarContext current
-    ${endif}
-
-    StrCpy $R5 "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
-    !insertmacro RMDIR_LOGGED "$R5" "Updater cache"
-    ${if} $installMode == "all"
-      SetShellVarContext all
-    ${endif}
-  ${endIf}
-
-  # Attempt to remove install dir if empty; keep if not empty
-  ClearErrors
-  RMDir $INSTDIR
-  IfErrors +3 0
-  DetailPrint "Removed install dir: $INSTDIR"
-  Goto +2
-  DetailPrint "Install dir not empty; leaving in place."
 !macroend
