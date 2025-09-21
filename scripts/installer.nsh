@@ -4,6 +4,65 @@
 !include 'nsDialogs.nsh'
 !include 'WinMessages.nsh'
 
+!ifdef BUILD_UNINSTALLER
+  ; Default to showing details in uninstaller InstFiles page
+  ShowUninstDetails show
+!endif
+
+; Utility: Capture current NSIS reboot flag into a variable ("0" or "1")
+!macro GET_REBOOTFLAG_TO_VAR _outVar
+  !define _LBL_SET "rf_set_${__LINE__}"
+  !define _LBL_DONE "rf_done_${__LINE__}"
+  StrCpy ${_outVar} "0"
+  IfRebootFlag ${_LBL_SET}
+  Goto ${_LBL_DONE}
+  ${_LBL_SET}:
+    StrCpy ${_outVar} "1"
+  ${_LBL_DONE}:
+  !undef _LBL_SET
+  !undef _LBL_DONE
+!macroend
+
+; Wrapper: RMDir with logging + reboot detection (prints to details)
+; Usage: !insertmacro RMDIR_LOGGED "<path>" "<friendly label>"
+!macro RMDIR_LOGGED _path _label
+  Push $0
+  Push $1
+  Push $2
+  Push $3
+
+  ; Capture previous reboot flag state
+  !insertmacro GET_REBOOTFLAG_TO_VAR $0
+
+  ; Reset flag to detect if this call sets it (schedule-on-reboot)
+  DetailPrint "Removing ${_label}: ${_path}"
+  SetRebootFlag false
+  ClearErrors
+  RMDir /r /REBOOTOK "${_path}"
+
+  ${If} ${Errors}
+    DetailPrint "[Error] Failed to remove ${_label}: ${_path}"
+  ${Else}
+    !insertmacro GET_REBOOTFLAG_TO_VAR $2
+    ${If} $2 == "1"
+      DetailPrint "[Reboot] Scheduled removal of ${_label}: ${_path}"
+    ${Else}
+      DetailPrint "[OK] Removed ${_label}: ${_path}"
+    ${EndIf}
+  ${EndIf}
+
+  ; Restore reboot flag to (prev OR new)
+  ${If} $0 == "1"
+  ${OrIf} $2 == "1"
+    SetRebootFlag true
+  ${EndIf}
+
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
+!macroend
+
 ; Centralized strings, to be converted to i18n when practical
 !define TITLE_CHOOSE         "Choose what to remove"
 !define DESC_STANDARD        "Standard uninstall removes the app itself, its managed python packages, and some settings only for the desktop app. It does not remove model files or content that was created."
@@ -389,18 +448,15 @@
 
     ${if} $basePath != ""
       ${if} $isDeleteBasePath == "1"
-        DetailPrint "Removing base_path directory: $basePath"
-        RMDir /r /REBOOTOK "$basePath"
+        !insertmacro RMDIR_LOGGED "$basePath" "ComfyUI data path (models, output, etc)"
       ${else}
         ${if} $isDeleteVenv == "1"
           StrCpy $4 "$basePath\.venv"
-          DetailPrint "Removing Python virtual env: $4"
-          RMDir /r /REBOOTOK "$4"
+          !insertmacro RMDIR_LOGGED "$4" "Python virtual environment"
         ${endIf}
 
         StrCpy $5 "$basePath\uv-cache"
-        DetailPrint "Removing cache directory: $5"
-        RMDir /r /REBOOTOK "$5"
+        !insertmacro RMDIR_LOGGED "$5" "Legacy package cache"
 
         ${if} $isResetSettings == "1"
           StrCpy $6 "$basePath\user\default\comfy.settings.json"
@@ -413,8 +469,7 @@
 
   ${if} $isDeleteComfyUI == "1"
     StrCpy $7 "$APPDATA\ComfyUI"
-    DetailPrint "Removing ComfyUI AppData: $7"
-    RMDir /r /REBOOTOK "$7"
+    !insertmacro RMDIR_LOGGED "$7" "ComfyUI logs & desktop settings"
   ${endIf}
 
   ${if} $isDeleteUpdateCache == "1"
@@ -439,8 +494,7 @@
     !endif
 
     StrCpy $R5 "$LOCALAPPDATA\@comfyorgcomfyui-electron-updater"
-    DetailPrint "Removing update cache dir: $R5"
-    RMDir /r /REBOOTOK "$R5"
+    !insertmacro RMDIR_LOGGED "$R5" "Updater cache"
     ${if} $installMode == "all"
       SetShellVarContext all
     ${endif}
