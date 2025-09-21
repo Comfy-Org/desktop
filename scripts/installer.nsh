@@ -18,12 +18,14 @@
 !macro GET_REBOOTFLAG_TO_VAR _outVar
   !define _LBL_SET "rf_set_${__LINE__}"
   !define _LBL_DONE "rf_done_${__LINE__}"
+
   StrCpy ${_outVar} "0"
   IfRebootFlag ${_LBL_SET}
   Goto ${_LBL_DONE}
   ${_LBL_SET}:
     StrCpy ${_outVar} "1"
   ${_LBL_DONE}:
+
   !undef _LBL_SET
   !undef _LBL_DONE
 !macroend
