@@ -473,8 +473,8 @@
   ${endIf}
 
   ${if} $isDeleteComfyUI == "1"
-    StrCpy $7 "$APPDATA\ComfyUI"
-    !insertmacro RMDIR_LOGGED "$7" "ComfyUI logs & desktop settings"
+    ; Use built-in electron-builder app data removal
+    !define DELETE_APP_DATA_ON_UNINSTALL "1"
   ${endIf}
 
   ${if} $isDeleteUpdateCache == "1"
