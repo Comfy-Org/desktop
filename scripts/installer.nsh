@@ -31,6 +31,7 @@
   # Skip finish page during updates
   Function FinishPagePreCheck
     ${if} ${isUpdated}
+      ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "--updated"
       Abort
     ${endif}
   FunctionEnd
