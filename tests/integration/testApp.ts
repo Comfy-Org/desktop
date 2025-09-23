@@ -3,7 +3,6 @@ import electronPath, { type BrowserWindow } from 'electron';
 import { _electron as electron } from 'playwright';
 
 import { createDesktopScreenshot } from '../shared/utils';
-import { TestEnvironment } from './testEnvironment';
 
 // eslint-disable-next-line @typescript-eslint/no-base-to-string
 const executablePath = String(electronPath);
