@@ -131,6 +131,7 @@ export class AppWindow {
   }
 
   public send(channel: string, data: unknown): void {
+    if (this.window.isDestroyed()) return;
     if (!this.isReady()) {
       this.messageQueue.push({ channel, data });
       return;
