@@ -15,7 +15,7 @@ test.describe('Troubleshooting - cannot start server', () => {
 
     await expect(serverStart.troubleshootButton).toBeVisible({ timeout: 30 * 1000 });
     await expect(window).toHaveScreenshot('cannot-start-server-troubleshoot.png', {
-      mask: [serverStart.status.error],
+      mask: [serverStart.status.errorDesktopVersion],
     });
     await serverStart.troubleshootButton.click();
 
