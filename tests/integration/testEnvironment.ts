@@ -29,26 +29,19 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async breakInstallPath() {
-    console.log('TestEnvironment.breakInstallPath: Breaking install path');
-
     const config = await this.readConfig();
     config.basePath = `${config.basePath}-invalid`;
     await writeFile(this.configPath, JSON.stringify(config, null, 2), { flush: true });
     this.#haveBrokenInstallPath = true;
-
-    console.log('TestEnvironment.breakInstallPath: Config file contents:', await readFile(this.configPath, 'utf8'));
   }
 
   async restoreInstallPath() {
-    console.log('TestEnvironment.restoreInstallPath: Restoring install path');
     if (!this.#haveBrokenInstallPath) return;
     this.#haveBrokenInstallPath = false;
 
     const config = await this.readConfig();
     config.basePath = config.basePath?.replace(/-invalid$/, '');
     await writeFile(this.configPath, JSON.stringify(config, null, 2), { flush: true });
-
-    console.log('TestEnvironment.restoreInstallPath: Config file contents:', await readFile(this.configPath, 'utf8'));
   }
 
   async breakVenv() {

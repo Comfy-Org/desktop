@@ -4,17 +4,13 @@ import { expect, test } from '../testExtensions';
 
 test.describe('Troubleshooting - broken install path', () => {
   test.beforeEach(async ({ app }) => {
-    console.log('Troubleshooting.spec.ts: Breaking install path');
     await app.testEnvironment.breakInstallPath();
-    console.log('Troubleshooting.spec.ts: Install path broken');
   });
 
   test('Troubleshooting page loads when base path is invalid', async ({ troubleshooting, window }) => {
-    console.log('Troubleshooting.spec.ts: START Troubleshooting page loads when base path is invalid');
     await troubleshooting.expectReady();
     await expect(troubleshooting.basePathCard.rootEl).toBeVisible();
     await expect(window).toHaveScreenshot('troubleshooting.png');
-    console.log('Troubleshooting.spec.ts: END Troubleshooting page loads when base path is invalid');
   });
 
   test('Refresh button is disabled whilst refreshing', async ({ troubleshooting }) => {
