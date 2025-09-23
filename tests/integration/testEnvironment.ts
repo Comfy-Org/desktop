@@ -31,7 +31,7 @@ export class TestEnvironment implements AsyncDisposable {
   async breakInstallPath() {
     const config = await this.readConfig();
     config.basePath = `${config.basePath}-invalid`;
-    await writeFile(this.configPath, JSON.stringify(config, null, 2));
+    await writeFile(this.configPath, JSON.stringify(config, null, 2), { flush: true });
     this.#haveBrokenInstallPath = true;
   }
 
@@ -41,7 +41,7 @@ export class TestEnvironment implements AsyncDisposable {
 
     const config = await this.readConfig();
     config.basePath = config.basePath?.replace(/-invalid$/, '');
-    await writeFile(this.configPath, JSON.stringify(config, null, 2));
+    await writeFile(this.configPath, JSON.stringify(config, null, 2), { flush: true });
   }
 
   async breakVenv() {
@@ -77,7 +77,7 @@ export class TestEnvironment implements AsyncDisposable {
       delete launchArgs.cpu;
       comfySettings['Comfy.Server.LaunchArgs'] = launchArgs;
 
-      await fs.writeFile(filePath, JSON.stringify(comfySettings, null, 2));
+      await fs.writeFile(filePath, JSON.stringify(comfySettings, null, 2), { flush: true });
     } catch (error) {
       this.#haveBrokenServerStart = false;
       throw error;
@@ -94,7 +94,7 @@ export class TestEnvironment implements AsyncDisposable {
       const comfySettings = JSON.parse(json);
       comfySettings['Comfy.Server.LaunchArgs'].cpu = '';
 
-      await fs.writeFile(filePath, JSON.stringify(comfySettings, null, 2));
+      await fs.writeFile(filePath, JSON.stringify(comfySettings, null, 2), { flush: true });
     } catch (error) {
       this.#haveBrokenServerStart = true;
       throw error;
