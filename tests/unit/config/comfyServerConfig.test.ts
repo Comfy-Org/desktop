@@ -20,7 +20,7 @@ async function createTmpDir() {
 
 async function copyFixture(fixturePath: string, targetPath: string) {
   const content = await readFile(path.join('tests/assets/extra_models_paths', fixturePath), 'utf8');
-  await writeFile(targetPath, content, 'utf8');
+  await writeFile(targetPath, content, { encoding: 'utf8', flush: true });
 }
 
 describe('ComfyServerConfig', () => {
