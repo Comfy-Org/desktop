@@ -109,6 +109,7 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async deleteEverything() {
+    console.warn('Playwright test environment clean up: deleteEverything');
     await this.deleteAppData();
     await this.deleteInstallLocation();
   }
