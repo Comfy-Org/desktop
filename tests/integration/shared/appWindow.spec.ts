@@ -8,6 +8,7 @@ test('App window has title', async ({ app }) => {
 test('App quits when window is closed', async ({ app }) => {
   const window = await app.firstWindow();
 
+  const closePromise = app.app.waitForEvent('close');
   await window.close();
-  await app.app.waitForEvent('close');
+  await closePromise;
 });
