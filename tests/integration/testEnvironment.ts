@@ -23,6 +23,13 @@ export class TestEnvironment implements AsyncDisposable {
   #haveBrokenVenv = false;
   #haveBrokenServerStart = false;
 
+  #disposed: boolean = false;
+
+  constructor(
+    /** Set to `true` to automatically wipe all install data at test end. */
+    readonly destroyEnvironmentOnDispose: boolean = false
+  ) {}
+
   async readConfig() {
     const config = await readFile(this.configPath, 'utf8');
     return JSON.parse(config) as DesktopSettings;
@@ -128,6 +135,11 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+
+    if (this.destroyEnvironmentOnDispose) await this.deleteEverything();
+
     await this.restoreInstallPath();
     await this.restoreVenv();
     await this.restoreServerStart();

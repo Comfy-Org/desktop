@@ -3,8 +3,8 @@ import { getDefaultInstallLocation } from 'tests/shared/utils';
 import { expect, test } from '../testExtensions';
 
 test.describe('Troubleshooting - broken install path', () => {
-  test.beforeEach(async ({ app }) => {
-    await app.testEnvironment.breakInstallPath();
+  test.beforeEach(async ({ testEnvironment }) => {
+    await testEnvironment.breakInstallPath();
   });
 
   test('Troubleshooting page loads when base path is invalid', async ({ troubleshooting, window }) => {

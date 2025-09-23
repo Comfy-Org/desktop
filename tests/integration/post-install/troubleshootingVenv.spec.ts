@@ -1,8 +1,8 @@
 import { expect, test } from '../testExtensions';
 
 test.describe('Troubleshooting - broken venv', () => {
-  test.beforeEach(async ({ app }) => {
-    await app.testEnvironment.breakVenv();
+  test.beforeEach(async ({ testEnvironment }) => {
+    await testEnvironment.breakVenv();
   });
 
   test('Troubleshooting page loads when venv is broken', async ({ troubleshooting, window }) => {

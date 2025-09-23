@@ -32,9 +32,6 @@ async function attachScreenshot(testInfo: TestInfo, name: string) {
  * Base class for desktop e2e tests.
  */
 export class TestApp implements AsyncDisposable {
-  /** The test environment. */
-  readonly testEnvironment: TestEnvironment = new TestEnvironment();
-
   /** Remove the install directory when disposed. */
   shouldDisposeTestEnvironment: boolean = false;
 
@@ -116,8 +113,5 @@ export class TestApp implements AsyncDisposable {
     this.#disposed = true;
 
     await this.close();
-    if (this.shouldDisposeTestEnvironment) await this.testEnvironment.deleteEverything();
-
-    await this.testEnvironment[Symbol.asyncDispose]();
   }
 }

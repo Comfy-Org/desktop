@@ -6,8 +6,8 @@ import { expect, test } from '../testExtensions';
 // - Only works on CPU runner
 
 test.describe('Troubleshooting - cannot start server', () => {
-  test.beforeEach(async ({ app }) => {
-    await app.testEnvironment.breakServerStart();
+  test.beforeEach(async ({ testEnvironment }) => {
+    await testEnvironment.breakServerStart();
   });
 
   test('Troubleshooting page is offered when server cannot start', async ({ serverStart, troubleshooting, window }) => {
