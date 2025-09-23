@@ -32,9 +32,6 @@ async function attachScreenshot(testInfo: TestInfo, name: string) {
  * Base class for desktop e2e tests.
  */
 export class TestApp implements AsyncDisposable {
-  /** Remove the install directory when disposed. */
-  shouldDisposeTestEnvironment: boolean = false;
-
   private constructor(
     readonly app: ElectronApplication,
     readonly testInfo: TestInfo
