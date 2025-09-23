@@ -11,25 +11,29 @@
 
 # Custom finish page that skips when in update mode
 !macro customFinishPage
-  ${if} ${isUpdated}
-    # Skip finish page during updates - just complete silently
-  ${else}
-    # Show normal finish page for fresh installs
-    !ifndef HIDE_RUN_AFTER_FINISH
-      Function StartApp
-        ${if} ${isUpdated}
-          StrCpy $1 "--updated"
-        ${else}
-          StrCpy $1 ""
-        ${endif}
-        ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
-      FunctionEnd
+  !ifndef HIDE_RUN_AFTER_FINISH
+    Function StartApp
+      ${if} ${isUpdated}
+        StrCpy $1 "--updated"
+      ${else}
+        StrCpy $1 ""
+      ${endif}
+      ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+    FunctionEnd
 
-      !define MUI_FINISHPAGE_RUN
-      !define MUI_FINISHPAGE_RUN_FUNCTION "StartApp"
-    !endif
-    !insertmacro MUI_PAGE_FINISH
-  ${endif}
+    !define MUI_FINISHPAGE_RUN
+    !define MUI_FINISHPAGE_RUN_FUNCTION "StartApp"
+  !endif
+
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE FinishPagePreCheck
+  !insertmacro MUI_PAGE_FINISH
+
+  # Skip finish page during updates
+  Function FinishPagePreCheck
+    ${if} ${isUpdated}
+      Abort
+    ${endif}
+  FunctionEnd
 !macroend
 
 !ifdef BUILD_UNINSTALLER
