@@ -136,7 +136,6 @@ export class TestEnvironment implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    console.log('Playwright test environment clean up: [Symbol.asyncDispose]', this.#disposed);
     if (this.#disposed) return;
     this.#disposed = true;
 
