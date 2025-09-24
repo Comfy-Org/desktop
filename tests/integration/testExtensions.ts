@@ -69,7 +69,7 @@ export const test = baseTest.extend<DesktopTestOptions & DesktopTestFixtures>({
     await testEnvironment.deleteLogsIfPresent();
   },
   testEnvironment: async ({ disposeTestEnvironment }, use) => {
-    const testEnvironment = new TestEnvironment(disposeTestEnvironment);
+    await using testEnvironment = new TestEnvironment(disposeTestEnvironment);
     await use(testEnvironment);
   },
   window: async ({ app }, use, testInfo) => {
