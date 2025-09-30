@@ -4,6 +4,9 @@
 !include 'nsDialogs.nsh'
 !include 'WinMessages.nsh'
 
+# Define allowToChangeInstallationDirectory to show the directory page
+!define allowToChangeInstallationDirectory
+
 # Per-user install
 !macro customInstallMode
   StrCpy $isForceCurrentInstall "1"
