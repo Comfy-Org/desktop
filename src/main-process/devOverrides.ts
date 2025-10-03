@@ -13,6 +13,8 @@ export class DevOverrides {
   public readonly COMFY_PORT?: string;
   /** The URL of the development server to use. */
   public readonly DEV_SERVER_URL?: string;
+  /** The URL of the ComfyUI dev server (main app, not installer). */
+  public readonly DEV_COMFY_URL?: string;
   /** Whether to use an external server instead of starting one locally. */
   public readonly USE_EXTERNAL_SERVER?: string;
   /** When DEV_SERVER_URL is set, whether to automatically open dev tools on app start. */
@@ -25,6 +27,7 @@ export class DevOverrides {
       log.info('Developer environment variable overrides enabled.');
 
       this.DEV_SERVER_URL = process.env.DEV_SERVER_URL;
+      this.DEV_COMFY_URL = process.env.DEV_COMFY_URL;
       this.COMFY_HOST = process.env.COMFY_HOST;
       this.COMFY_PORT = process.env.COMFY_PORT;
       this.USE_EXTERNAL_SERVER = process.env.USE_EXTERNAL_SERVER;
