@@ -20,7 +20,6 @@ import { URL } from 'node:url';
 import { ElectronError } from '@/infrastructure/electronError';
 import type { Page } from '@/infrastructure/interfaces';
 import { type IAppState, useAppState } from '@/main-process/appState';
-import type { DevOverrides } from '@/main-process/devOverrides';
 import { clamp } from '@/utils';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
@@ -52,12 +51,12 @@ export class AppWindow {
   public readonly customWindowEnabled: boolean =
     process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom';
 
-  /** Always returns `undefined` in production. When running unpackaged, returns `DEV_SERVER_URL` if set, otherwise `undefined`. */
-  private get devUrlOverride() {
-    if (!app.isPackaged) return process.env.DEV_SERVER_URL;
-  }
-
-  public constructor(private readonly overrides?: DevOverrides) {
+  public constructor(
+    /** The URL of the development server for the Desktop UI. */
+    private readonly devUrlOverride: string | undefined,
+    /** The URL of the ComfyUI development server (main app). */
+    private readonly frontendUrlOverride: string | undefined
+  ) {
     const installed = useDesktopConfig().get('installState') === 'installed';
     const { workAreaSize } = screen.getPrimaryDisplay();
     const { width, height } = installed ? workAreaSize : { width: 1024, height: 768 };
@@ -163,8 +162,7 @@ export class AppWindow {
 
   public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.listen === '0.0.0.0' ? 'localhost' : serverArgs.listen;
-    // Check for DEV_COMFY_URL first (main app dev server), then fall back to constructed URL
-    const url = this.overrides?.DEV_COMFY_URL ?? `http://${host}:${serverArgs.port}`;
+    const url = this.frontendUrlOverride ?? `http://${host}:${serverArgs.port}`;
     await this.window.loadURL(url);
   }
 
@@ -219,9 +217,8 @@ export class AppWindow {
   public async loadPage(page: Page): Promise<void> {
     this.appState.currentPage = page;
 
-    const { devUrlOverride } = this;
-    if (devUrlOverride) {
-      const url = `${devUrlOverride}/${page}`;
+    if (this.devUrlOverride) {
+      const url = `${this.devUrlOverride}/${page}`;
       /**
        * rendererReady should be set by the frontend via electronAPI. However,
        * for some reason, the event is not being received if we load the app
