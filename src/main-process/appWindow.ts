@@ -55,7 +55,9 @@ export class AppWindow {
     /** The URL of the development server for the Desktop UI. */
     private readonly devUrlOverride: string | undefined,
     /** The URL of the ComfyUI development server (main app). */
-    private readonly frontendUrlOverride: string | undefined
+    private readonly frontendUrlOverride: string | undefined,
+    /** Whether to automatically open dev tools on app start. */
+    private readonly autoOpenDevTools: boolean
   ) {
     const installed = useDesktopConfig().get('installState') === 'installed';
     const { workAreaSize } = screen.getPrimaryDisplay();
@@ -227,7 +229,7 @@ export class AppWindow {
        */
       this.rendererReady = true;
       log.info(`Loading development server ${url}`);
-      if (process.env.DEV_TOOLS_AUTO === 'true') this.window.webContents.openDevTools();
+      if (this.autoOpenDevTools) this.window.webContents.openDevTools();
       await this.window.loadURL(url);
     } else {
       // TODO: Remove this temporary workaround when RENDERER_READY is reworked.
