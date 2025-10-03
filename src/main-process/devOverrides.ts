@@ -11,9 +11,9 @@ export class DevOverrides {
   public readonly COMFY_HOST?: string;
   /** The port to use for the ComfyUI server. */
   public readonly COMFY_PORT?: string;
-  /** The URL of the development server to use. */
+  /** Forces the Desktop UI to be loaded from this URL (e.g. vite dev server). */
   public readonly DEV_SERVER_URL?: string;
-  /** The URL of the ComfyUI dev server (main app, not installer). */
+  /** Loads the ComfyUI frontend from this URL (e.g. vite dev server). */
   public readonly DEV_COMFY_URL?: string;
   /** Whether to use an external server instead of starting one locally. */
   public readonly USE_EXTERNAL_SERVER?: string;
