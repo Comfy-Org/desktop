@@ -14,7 +14,7 @@ export class DevOverrides {
   /** Forces the Desktop UI to be loaded from this URL (e.g. vite dev server). */
   public readonly DEV_SERVER_URL?: string;
   /** Loads the ComfyUI frontend from this URL (e.g. vite dev server). */
-  public readonly DEV_COMFY_URL?: string;
+  public readonly DEV_FRONTEND_URL?: string;
   /** Whether to use an external server instead of starting one locally. */
   public readonly USE_EXTERNAL_SERVER?: string;
   /** When DEV_SERVER_URL is set, whether to automatically open dev tools on app start. */
@@ -27,7 +27,7 @@ export class DevOverrides {
       log.info('Developer environment variable overrides enabled.');
 
       this.DEV_SERVER_URL = process.env.DEV_SERVER_URL;
-      this.DEV_COMFY_URL = process.env.DEV_COMFY_URL;
+      this.DEV_FRONTEND_URL = process.env.DEV_FRONTEND_URL;
       this.COMFY_HOST = process.env.COMFY_HOST;
       this.COMFY_PORT = process.env.COMFY_PORT;
       this.USE_EXTERNAL_SERVER = process.env.USE_EXTERNAL_SERVER;

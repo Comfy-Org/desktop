@@ -38,7 +38,7 @@ export class DesktopApp implements HasTelemetry {
     private readonly overrides: DevOverrides,
     private readonly config: DesktopConfig
   ) {
-    this.appWindow = new AppWindow(overrides.DEV_SERVER_URL, overrides.DEV_COMFY_URL);
+    this.appWindow = new AppWindow(overrides.DEV_SERVER_URL, overrides.DEV_FRONTEND_URL);
   }
 
   /** Load start screen - basic spinner */
