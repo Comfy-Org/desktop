@@ -20,6 +20,7 @@ import { URL } from 'node:url';
 import { ElectronError } from '@/infrastructure/electronError';
 import type { Page } from '@/infrastructure/interfaces';
 import { type IAppState, useAppState } from '@/main-process/appState';
+import type { DevOverrides } from '@/main-process/devOverrides';
 import { clamp } from '@/utils';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
@@ -56,7 +57,7 @@ export class AppWindow {
     if (!app.isPackaged) return process.env.DEV_SERVER_URL;
   }
 
-  public constructor() {
+  public constructor(private readonly overrides?: DevOverrides) {
     const installed = useDesktopConfig().get('installState') === 'installed';
     const { workAreaSize } = screen.getPrimaryDisplay();
     const { width, height } = installed ? workAreaSize : { width: 1024, height: 768 };
@@ -162,7 +163,8 @@ export class AppWindow {
 
   public async loadComfyUI(serverArgs: ServerArgs) {
     const host = serverArgs.listen === '0.0.0.0' ? 'localhost' : serverArgs.listen;
-    const url = this.devUrlOverride ?? `http://${host}:${serverArgs.port}`;
+    // Check for DEV_COMFY_URL first (main app dev server), then fall back to constructed URL
+    const url = this.overrides?.DEV_COMFY_URL ?? `http://${host}:${serverArgs.port}`;
     await this.window.loadURL(url);
   }
 
