@@ -69,7 +69,7 @@ describe('AppWindow.isOnPage', () => {
         }) as unknown as BrowserWindow
     );
 
-    appWindow = new AppWindow();
+    appWindow = new AppWindow(undefined, undefined);
   });
 
   it('should handle file protocol URLs with hash correctly', () => {
