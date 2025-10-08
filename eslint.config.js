@@ -82,5 +82,38 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
     },
+  },
+
+  // Forbid import of Electron's any-typed ipcMain / ipcRenderer.
+  {
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'electron',
+              importNames: ['ipcMain', 'ipcRenderer'],
+              message: "Import strictIpcMain/strictIpcRenderer from '@/ipc/strictIpc' instead of Electron's IPC.",
+            },
+            {
+              name: 'electron/main',
+              importNames: ['ipcMain'],
+              message: "Import strictIpcMain from '@/ipc/strictIpc' instead of Electron's IPC.",
+            },
+            {
+              name: 'electron/renderer',
+              importNames: ['ipcRenderer'],
+              message: "Import strictIpcRenderer from '@/ipc/strictIpc' instead of Electron's IPC.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Override restricted imports for strictIpc.ts.
+  {
+    files: ['src/ipc/strictIpc.ts'],
+    rules: { 'no-restricted-imports': 'off' },
   }
 );
