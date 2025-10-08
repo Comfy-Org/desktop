@@ -57,6 +57,7 @@ export class Troubleshooting implements Disposable {
     });
 
     // Validate installation
+    // @ts-expect-error We should not return anything here.
     ipcMain.handle(IPC_CHANNELS.VALIDATE_INSTALLATION, async () => {
       getTelemetry().track('installation_manager:installation_validate');
       return await installation.validate();
