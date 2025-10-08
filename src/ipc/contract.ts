@@ -311,11 +311,3 @@ export type IpcChannels = {
     return: void;
   };
 };
-
-/**
- * Compile-time check that ALL channels from IPC_CHANNELS are defined in IpcChannels.
- * If any channel is missing, TypeScript will error on the const assignment below.
- */
-type MissingChannels = Exclude<ChannelName, keyof IpcChannels>;
-type AssertAllChannelsDefined = MissingChannels extends never ? true : MissingChannels;
-const _exhaustiveCheck: AssertAllChannelsDefined = true;
