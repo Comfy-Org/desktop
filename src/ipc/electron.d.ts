@@ -5,13 +5,7 @@
  * based on the IPC channel contract defined in ./contract.ts.
  *
  * Zero runtime overhead - this is purely a compile-time enhancement.
- *
- * Note: This file uses inline type imports to maintain its status as an ambient
- * declaration file, which is required for proper module augmentation.
  */
-
-/// <reference types="electron" />
-
 declare namespace Electron {
   interface IpcMain {
     /**
