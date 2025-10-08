@@ -2,8 +2,9 @@ import todesktop from '@todesktop/runtime';
 import { app, dialog } from 'electron';
 import log from 'electron-log/main';
 
-import { IPC_CHANNELS } from '../constants';
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
+
+import { IPC_CHANNELS } from '../constants';
 
 export function registerAppHandlers() {
   ipcMain.handle(IPC_CHANNELS.QUIT, () => {

@@ -1,6 +1,7 @@
-import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { IPC_CHANNELS } from '../constants';
 

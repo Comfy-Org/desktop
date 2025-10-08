@@ -8,6 +8,7 @@ import path from 'node:path';
 import si from 'systeminformation';
 
 import { useComfySettings } from '@/config/comfySettings';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { DesktopConfig, useDesktopConfig } from '@/store/desktopConfig';
 
 import { IPC_CHANNELS } from '../constants';
@@ -15,7 +16,6 @@ import { AppWindow } from '../main-process/appWindow';
 import { InstallOptions } from '../preload';
 import { compareVersions } from '../utils';
 import { captureSentryException } from './sentry';
-import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 let instance: ITelemetry | null = null;
 export interface ITelemetry {

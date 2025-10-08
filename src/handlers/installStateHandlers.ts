@@ -1,8 +1,9 @@
 import { BrowserWindow } from 'electron';
 
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
+
 import { IPC_CHANNELS } from '../constants';
 import { useAppState } from '../main-process/appState';
-import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 /**
  * Register IPC handlers for install state management

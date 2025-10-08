@@ -18,6 +18,7 @@ import { URL } from 'node:url';
 
 import { ElectronError } from '@/infrastructure/electronError';
 import type { Page } from '@/infrastructure/interfaces';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { type IAppState, useAppState } from '@/main-process/appState';
 import { clamp } from '@/utils';
 
@@ -26,7 +27,6 @@ import { getAppResourcesPath } from '../install/resourcePaths';
 import type { ElectronContextMenuOptions } from '../preload';
 import { AppWindowSettings } from '../store/AppWindowSettings';
 import { useDesktopConfig } from '../store/desktopConfig';
-import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.
