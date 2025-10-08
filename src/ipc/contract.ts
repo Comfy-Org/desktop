@@ -4,6 +4,16 @@ import type { InstallValidation, PathValidationResult, SystemPaths, TorchDeviceT
 import type { DesktopWindowStyle } from '../store/desktopSettings';
 
 /**
+ * Extract parameter types for a given channel
+ */
+export type IpcChannelParams<T extends keyof IpcChannels> = IpcChannels[T]['params'];
+
+/**
+ * Extract return type for a given channel
+ */
+export type IpcChannelReturn<T extends keyof IpcChannels> = IpcChannels[T]['return'];
+
+/**
  * Central IPC contract defining all Electron IPC channels with their parameter and return types.
  *
  * Each channel maps to an object with:
@@ -211,18 +221,3 @@ export interface IpcChannels {
     return: boolean;
   };
 }
-
-/**
- * Extract channel names as a union type
- */
-export type IpcChannelName = keyof IpcChannels;
-
-/**
- * Extract parameter types for a given channel
- */
-export type IpcChannelParams<T extends IpcChannelName> = IpcChannels[T]['params'];
-
-/**
- * Extract return type for a given channel
- */
-export type IpcChannelReturn<T extends IpcChannelName> = IpcChannels[T]['return'];
