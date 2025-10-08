@@ -310,13 +310,12 @@ describe('DesktopApp', () => {
     desktopApp.installation = mockInstallation;
 
     // Mock IPC handler registration for COMPLETE_VALIDATION
-    vi.mocked(ipcMain.handleOnce).mockImplementationOnce(
-      (channel: string, handler: (event: IpcMainInvokeEvent, ...args: any[]) => any) => {
-        // Simulate completion by calling the handler
-        setTimeout(() => handler({} as IpcMainInvokeEvent, {}), 0);
-        return vi.fn();
-      }
-    );
+    vi.mocked(ipcMain.handleOnce).mockImplementationOnce(((
+      channel: string,
+      handler: (event: IpcMainInvokeEvent, ...args: any[]) => unknown
+    ): void => {
+      setTimeout(() => handler({} as IpcMainInvokeEvent, {}), 0);
+    }) as any);
 
     await desktopApp.showTroubleshootingPage();
 

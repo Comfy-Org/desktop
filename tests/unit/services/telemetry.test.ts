@@ -1,4 +1,4 @@
-import { IpcMainEvent, ipcMain } from 'electron';
+import { IpcMainEvent, IpcMainInvokeEvent, ipcMain } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -252,14 +252,14 @@ describe('promptMetricsConsent', () => {
     vi.mocked(useComfySettings().get).mockReturnValue(settingsValue);
 
     if (mockConsent !== undefined) {
-      vi.mocked(ipcMain.handleOnce).mockImplementation(
-        (channel: string, handler: (event: IpcMainEvent, ...args: any[]) => any) => {
-          if (channel === IPC_CHANNELS.SET_METRICS_CONSENT) {
-            // Call the handler with the mock consent value and return its result
-            return handler(null!, mockConsent);
-          }
+      vi.mocked(ipcMain.handleOnce).mockImplementation(((
+        channel: string,
+        handler: (event: IpcMainInvokeEvent, ...args: any[]) => unknown
+      ): void => {
+        if (channel === IPC_CHANNELS.SET_METRICS_CONSENT) {
+          handler({} as IpcMainInvokeEvent, mockConsent);
         }
-      );
+      }) as any);
     }
 
     // @ts-expect-error - appWindow is a mock and doesn't implement all of AppWindow
