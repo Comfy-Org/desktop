@@ -21,12 +21,16 @@ export class TestInstallWizard {
     this.getStartedButton = this.getButton('Get Started');
     this.installButton = this.getButton('Install');
 
-    this.cpuToggle = this.window.locator('#cpu-mode');
-    this.installLocationInput = this.getInput('', true);
+    // Updated selectors for frontend v1.27.x
+    this.cpuToggle = this.window.getByRole('button', { name: 'CPU' });
+    // The install path input is the visible textbox on Step 2
+    // Prefer placeholder to avoid ambiguity with hidden inputs
+    this.installLocationInput = this.window.getByPlaceholder(/ComfyUI/);
 
-    this.selectGpuTitle = this.window.getByText('Select GPU');
-    this.installLocationTitle = this.window.getByText('Choose Installation Location');
-    this.migrateTitle = this.window.getByText('Migrate from Existing Installation');
+    this.selectGpuTitle = this.window.getByText('Choose your hardware setup');
+    this.installLocationTitle = this.window.getByText('Choose where to install ComfyUI');
+    // Migration is now an accordion section on the install location step
+    this.migrateTitle = this.window.getByText('Migrate from existing installation');
     this.desktopSettingsTitle = this.window.getByText('Desktop App Settings');
   }
 
