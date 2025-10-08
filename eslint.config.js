@@ -113,7 +113,7 @@ export default tseslint.config(
   },
   // Override restricted imports for strictIpc.ts.
   {
-    files: ['src/ipc/strictIpc.ts'],
+    files: ['src/infrastructure/ipcChannels.ts'],
     rules: { 'no-restricted-imports': 'off' },
   }
 );
