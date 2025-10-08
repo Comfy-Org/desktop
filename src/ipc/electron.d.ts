@@ -6,7 +6,8 @@
  *
  * Zero runtime overhead - this is purely a compile-time enhancement.
  */
-declare namespace Electron {
+
+namespace Electron {
   interface IpcMain {
     /**
      * Type-safe version of ipcMain.handle
@@ -58,5 +59,3 @@ declare namespace Electron {
     ): Promise<import('./contract').IpcChannelReturn<T>>;
   }
 }
-
-export {};
