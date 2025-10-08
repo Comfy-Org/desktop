@@ -7,7 +7,6 @@ import log from 'electron-log/main';
 import { LogFile } from './constants';
 import { DesktopApp } from './desktopApp';
 import { removeAnsiCodesTransform, replaceFileLoggingTransform } from './infrastructure/structuredLogging';
-import './ipc/electron';
 import { initializeAppState } from './main-process/appState';
 import { DevOverrides } from './main-process/devOverrides';
 import SentryLogging from './services/sentry';

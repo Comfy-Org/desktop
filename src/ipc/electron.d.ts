@@ -1,5 +1,5 @@
 /**
- * Module augmentation for Electron IPC to provide compile-time type safety.
+ * Type augmentation for Electron IPC to provide compile-time type safety.
  *
  * This augmentation enhances ipcMain.handle and ipcRenderer.invoke with generic types
  * based on the IPC channel contract defined in ./contract.ts.
@@ -9,6 +9,9 @@
  * Note: This file uses inline type imports to maintain its status as an ambient
  * declaration file, which is required for proper module augmentation.
  */
+
+/// <reference types="electron" />
+
 declare namespace Electron {
   interface IpcMain {
     /**
