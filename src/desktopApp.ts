@@ -246,6 +246,7 @@ export class DesktopApp implements HasTelemetry {
       if (!this.appState.loaded) {
         await this.appWindow.loadPage('maintenance');
       }
+      // @ts-expect-error API says this should return false; always treated as falsy.
       await new Promise((resolve) => ipcMain.handleOnce(IPC_CHANNELS.COMPLETE_VALIDATION, resolve));
     } catch (error) {
       DesktopApp.fatalError({
