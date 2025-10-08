@@ -193,13 +193,13 @@ const electronAPI = {
       console.log(`Sending start download message to main process`, { url, path, filename });
       return ipcRenderer.invoke(IPC_CHANNELS.START_DOWNLOAD, { url, path, filename });
     },
-    cancelDownload: (url: string): Promise<boolean> => {
+    cancelDownload: (url: string): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.CANCEL_DOWNLOAD, url);
     },
-    pauseDownload: (url: string): Promise<boolean> => {
+    pauseDownload: (url: string): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.PAUSE_DOWNLOAD, url);
     },
-    resumeDownload: (url: string): Promise<boolean> => {
+    resumeDownload: (url: string): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.RESUME_DOWNLOAD, url);
     },
     deleteModel: (filename: string, path: string): Promise<boolean> => {

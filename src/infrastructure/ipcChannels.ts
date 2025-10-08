@@ -269,17 +269,17 @@ export interface IpcChannels {
 
   [IPC_CHANNELS.PAUSE_DOWNLOAD]: {
     params: [url: string];
-    return: boolean;
+    return: void;
   };
 
   [IPC_CHANNELS.RESUME_DOWNLOAD]: {
     params: [url: string];
-    return: boolean;
+    return: void;
   };
 
   [IPC_CHANNELS.CANCEL_DOWNLOAD]: {
     params: [url: string];
-    return: boolean;
+    return: void;
   };
 
   [IPC_CHANNELS.GET_ALL_DOWNLOADS]: {
