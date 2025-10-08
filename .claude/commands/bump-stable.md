@@ -15,7 +15,8 @@ Please update the version of ComfyUI to the latest:
    - Context: The patch is used to removes the frontend package, as the desktop app includes it in the build process instead.
 7. Update `assets/requirements/windows_nvidia.compiled` and `assets/requirements/windows_cpu.compiled`, and `assets/requirements/macos.compiled` accordingly. You just need to update the comfycomfyui-frontend-package, [comfyui-workflow-templates](https://github.com/Comfy-Org/workflow_templates), [comfyui-embedded-docs](https://github.com/Comfy-Org/embedded-docs) versions.
 8. Please make a PR by checking out a new branch from main, adding a commit message and then use GH CLI to create a PR.
-   - Make the versions in the PR body as links to the relevant github releases
+   - Make the versions in the PR body as links to the relevant github releases - our tags prefix the semver with `v`, e.g. `v0.13.4`
+     - Verify the links actually work - report any failure immediately to the human: ❌
    - Include only the PR body lines that were updated
    - PR Title: Update ComfyUI core to v{VERSION}
    - PR Body:
