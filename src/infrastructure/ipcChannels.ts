@@ -1,10 +1,20 @@
 import { ipcMain, ipcRenderer } from 'electron';
 
-import { IPC_CHANNELS } from '@/constants';
+import type { IPC_CHANNELS } from '@/constants';
 import type { InstallStageInfo } from '@/main-process/installStages';
 import type { DownloadState } from '@/models/DownloadManager';
 import type { InstallValidation, PathValidationResult, SystemPaths, TorchDeviceType } from '@/preload';
 import type { DesktopWindowStyle } from '@/store/desktopSettings';
+
+/**
+ * Type-safe version of Electron's {@link Electron.IpcMain}.
+ */
+export const strictIpcMain: StrictIpcMain = ipcMain;
+
+/**
+ * Type-safe version of Electron's {@link Electron.IpcRenderer}.
+ */
+export const strictIpcRenderer: StrictIpcRenderer = ipcRenderer;
 
 /**
  * Type-safe version of Electron's {@link Electron.IpcMain}.
@@ -84,10 +94,10 @@ type IpcChannelReturn<T extends keyof IpcChannels> = IpcChannels[T]['return'];
  * ALL IPC channels. Channel names are derived from IPC_CHANNELS to maintain a single source of truth.
  *
  * Each channel maps to an object with:
- * - params: A tuple of parameter types for the channel
- * - return: The return type (void for one-way send/on channels)
+ * params: A tuple of parameter types for the channel
+ * return: The return type (void for one-way send/on channels)
  */
-export type IpcChannels = {
+export interface IpcChannels {
   [IPC_CHANNELS.IS_PACKAGED]: {
     params: [];
     return: boolean;
@@ -367,14 +377,4 @@ export type IpcChannels = {
     params: [stage: unknown];
     return: void;
   };
-};
-
-/**
- * Type-safe version of Electron's {@link Electron.IpcMain}.
- */
-export const strictIpcMain: StrictIpcMain = ipcMain;
-
-/**
- * Type-safe version of Electron's {@link Electron.IpcRenderer}.
- */
-export const strictIpcRenderer: StrictIpcRenderer = ipcRenderer;
+}
