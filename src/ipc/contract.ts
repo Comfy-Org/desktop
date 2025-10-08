@@ -1,7 +1,13 @@
+import { IPC_CHANNELS } from '../constants';
 import type { InstallStageInfo } from '../main-process/installStages';
 import type { DownloadState } from '../models/DownloadManager';
 import type { InstallValidation, PathValidationResult, SystemPaths, TorchDeviceType } from '../preload';
 import type { DesktopWindowStyle } from '../store/desktopSettings';
+
+/**
+ * Type representing all channel names from IPC_CHANNELS as a union.
+ */
+type ChannelName = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 
 /**
  * Extract parameter types for a given channel
@@ -16,208 +22,295 @@ export type IpcChannelReturn<T extends keyof IpcChannels> = IpcChannels[T]['retu
 /**
  * Central IPC contract defining all Electron IPC channels with their parameter and return types.
  *
+ * This type extends {@link IPC_CHANNELS} from constants.ts by adding type information for
+ * ALL IPC channels. Channel names are derived from IPC_CHANNELS to maintain a single source of truth.
+ *
  * Each channel maps to an object with:
- * - params: A tuple of parameter types for ipcRenderer.invoke/ipcMain.handle
- * - return: The return type of the handler
+ * - params: A tuple of parameter types for the channel
+ * - return: The return type (void for one-way send/on channels)
+ *
+ * The intersection with Record<ChannelName, ...> ensures EVERY channel from IPC_CHANNELS
+ * must be defined. If any channel is missing, TypeScript will error.
  */
-export interface IpcChannels {
-  'is-packaged': {
+export type IpcChannels = Record<ChannelName, { params: unknown[]; return: unknown }> & {
+  [IPC_CHANNELS.IS_PACKAGED]: {
     params: [];
     return: boolean;
   };
 
-  'get-electron-version': {
+  [IPC_CHANNELS.GET_ELECTRON_VERSION]: {
     params: [];
     return: string;
   };
 
-  'get-base-path': {
+  [IPC_CHANNELS.GET_BASE_PATH]: {
     params: [];
     return: string | undefined;
   };
 
-  'set-base-path': {
+  [IPC_CHANNELS.SET_BASE_PATH]: {
     params: [];
     return: boolean;
   };
 
-  'get-model-config-path': {
+  [IPC_CHANNELS.GET_MODEL_CONFIG_PATH]: {
     params: [];
     return: string;
   };
 
-  'get-gpu': {
+  [IPC_CHANNELS.GET_GPU]: {
     params: [];
     return: TorchDeviceType | undefined;
   };
 
-  'set-window-style': {
+  [IPC_CHANNELS.SET_WINDOW_STYLE]: {
     params: [style: DesktopWindowStyle];
     return: void;
   };
 
-  'get-window-style': {
+  [IPC_CHANNELS.GET_WINDOW_STYLE]: {
     params: [];
     return: DesktopWindowStyle | undefined;
   };
 
-  quit: {
+  [IPC_CHANNELS.QUIT]: {
     params: [];
     return: void;
   };
 
-  'restart-app': {
+  [IPC_CHANNELS.RESTART_APP]: {
     params: [options: { customMessage?: string; delay?: number }];
     return: void;
   };
 
-  reinstall: {
+  [IPC_CHANNELS.REINSTALL]: {
     params: [];
     return: void;
   };
 
-  'restart-core': {
+  [IPC_CHANNELS.RESTART_CORE]: {
     params: [];
     return: boolean;
   };
 
-  'check-for-updates': {
+  [IPC_CHANNELS.CHECK_FOR_UPDATES]: {
     params: [options?: object];
     return: { isUpdateAvailable: boolean; version?: string };
   };
 
-  'restart-and-install': {
+  [IPC_CHANNELS.RESTART_AND_INSTALL]: {
     params: [options?: object];
     return: void;
   };
 
-  'get-system-paths': {
+  [IPC_CHANNELS.GET_SYSTEM_PATHS]: {
     params: [];
     return: SystemPaths;
   };
 
-  'validate-install-path': {
+  [IPC_CHANNELS.VALIDATE_INSTALL_PATH]: {
     params: [path: string, bypassSpaceCheck?: boolean];
     return: PathValidationResult;
   };
 
-  'validate-comfyui-source': {
+  [IPC_CHANNELS.VALIDATE_COMFYUI_SOURCE]: {
     params: [path: string];
     return: { isValid: boolean; error?: string };
   };
 
-  'show-directory-picker': {
+  [IPC_CHANNELS.SHOW_DIRECTORY_PICKER]: {
     params: [];
     return: string;
   };
 
-  'check-blackwell': {
+  [IPC_CHANNELS.CHECK_BLACKWELL]: {
     params: [];
     return: boolean;
   };
 
-  'can-access-url': {
+  [IPC_CHANNELS.CAN_ACCESS_URL]: {
     params: [url: string, options?: { timeout?: number }];
     return: boolean;
   };
 
-  'get-install-stage': {
+  [IPC_CHANNELS.GET_INSTALL_STAGE]: {
     params: [];
     return: InstallStageInfo;
   };
 
-  'get-validation-state': {
+  [IPC_CHANNELS.GET_VALIDATION_STATE]: {
     params: [];
     return: InstallValidation;
   };
 
-  'start-validation': {
+  [IPC_CHANNELS.VALIDATE_INSTALLATION]: {
     params: [];
     return: void;
   };
 
-  'complete-validation': {
+  [IPC_CHANNELS.COMPLETE_VALIDATION]: {
     params: [];
     return: boolean;
   };
 
-  'uv-install-requirements': {
+  [IPC_CHANNELS.UV_INSTALL_REQUIREMENTS]: {
     params: [];
     return: boolean;
   };
 
-  'uv-clear-cache': {
+  [IPC_CHANNELS.UV_CLEAR_CACHE]: {
     params: [];
     return: boolean;
   };
 
-  'uv-delete-venv': {
+  [IPC_CHANNELS.UV_RESET_VENV]: {
     params: [];
     return: boolean;
   };
 
-  'start-troubleshooting': {
+  [IPC_CHANNELS.START_TROUBLESHOOTING]: {
     params: [];
     return: void;
   };
 
-  'execute-terminal-command': {
+  [IPC_CHANNELS.TERMINAL_WRITE]: {
     params: [command: string];
     return: string;
   };
 
-  'resize-terminal': {
+  [IPC_CHANNELS.TERMINAL_RESIZE]: {
     params: [cols: number, rows: number];
     return: void;
   };
 
-  'restore-terminal': {
+  [IPC_CHANNELS.TERMINAL_RESTORE]: {
     params: [];
     return: { buffer: string[]; size: { cols: number; rows: number } };
   };
 
-  'start-download': {
+  [IPC_CHANNELS.START_DOWNLOAD]: {
     params: [details: { url: string; path: string; filename: string }];
     return: boolean;
   };
 
-  'pause-download': {
+  [IPC_CHANNELS.PAUSE_DOWNLOAD]: {
     params: [url: string];
     return: boolean;
   };
 
-  'resume-download': {
+  [IPC_CHANNELS.RESUME_DOWNLOAD]: {
     params: [url: string];
     return: boolean;
   };
 
-  'cancel-download': {
+  [IPC_CHANNELS.CANCEL_DOWNLOAD]: {
     params: [url: string];
     return: boolean;
   };
 
-  'get-all-downloads': {
+  [IPC_CHANNELS.GET_ALL_DOWNLOADS]: {
     params: [];
     return: DownloadState[];
   };
 
-  'delete-model': {
+  [IPC_CHANNELS.DELETE_MODEL]: {
     params: [details: { filename: string; path: string }];
     return: boolean;
   };
 
-  'set-metrics-consent': {
+  [IPC_CHANNELS.SET_METRICS_CONSENT]: {
     params: [consent: boolean];
     return: void;
   };
 
-  'disable-custom-nodes': {
+  [IPC_CHANNELS.DISABLE_CUSTOM_NODES]: {
     params: [];
     return: void;
   };
 
-  'dialog-click-button': {
+  [IPC_CHANNELS.DIALOG_CLICK_BUTTON]: {
     params: [returnValue: string];
     return: boolean;
   };
-}
+
+  // One-way channels (send/on pattern) - not used with invoke/handle
+  [IPC_CHANNELS.LOADING_PROGRESS]: {
+    params: [progress: { status: string; message?: string }];
+    return: void;
+  };
+
+  [IPC_CHANNELS.RENDERER_READY]: {
+    params: [];
+    return: void;
+  };
+
+  [IPC_CHANNELS.LOG_MESSAGE]: {
+    params: [level: string, message: string, ...args: unknown[]];
+    return: void;
+  };
+
+  [IPC_CHANNELS.DOWNLOAD_PROGRESS]: {
+    params: [progress: unknown];
+    return: void;
+  };
+
+  [IPC_CHANNELS.OPEN_PATH]: {
+    params: [path: string];
+    return: void;
+  };
+
+  [IPC_CHANNELS.OPEN_LOGS_PATH]: {
+    params: [];
+    return: void;
+  };
+
+  [IPC_CHANNELS.OPEN_DEV_TOOLS]: {
+    params: [];
+    return: void;
+  };
+
+  [IPC_CHANNELS.TERMINAL_ON_OUTPUT]: {
+    params: [data: string];
+    return: void;
+  };
+
+  [IPC_CHANNELS.INSTALL_COMFYUI]: {
+    params: [options: unknown];
+    return: void;
+  };
+
+  [IPC_CHANNELS.CHANGE_THEME]: {
+    params: [theme: string];
+    return: void;
+  };
+
+  [IPC_CHANNELS.SHOW_CONTEXT_MENU]: {
+    params: [menu: unknown];
+    return: void;
+  };
+
+  [IPC_CHANNELS.VALIDATION_UPDATE]: {
+    params: [update: unknown];
+    return: void;
+  };
+
+  [IPC_CHANNELS.CANCEL_VALIDATION]: {
+    params: [];
+    return: void;
+  };
+
+  [IPC_CHANNELS.TRACK_EVENT]: {
+    params: [eventName: string, properties?: Record<string, unknown>];
+    return: void;
+  };
+
+  [IPC_CHANNELS.INCREMENT_USER_PROPERTY]: {
+    params: [property: string, value: number];
+    return: void;
+  };
+
+  [IPC_CHANNELS.INSTALL_STAGE_UPDATE]: {
+    params: [stage: unknown];
+    return: void;
+  };
+};
