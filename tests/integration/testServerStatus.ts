@@ -13,7 +13,8 @@ export class TestServerStatus {
     this.loading = window.getByText('Loading...');
     this.settingUpPython = window.getByText('Setting up Python Environment...');
     this.startingComfyUI = window.getByText('Starting ComfyUI server...');
-    this.finishing = window.getByText('Finishing...');
+    // "Finishing" state has been renamed in the new UI
+    this.finishing = window.getByText('Loading Human Interface');
     this.error = window.getByText('Unable to start ComfyUI Desktop');
 
     this.errorDesktopVersion = this.error.locator('span');
