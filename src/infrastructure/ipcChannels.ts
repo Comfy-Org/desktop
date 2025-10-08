@@ -1,6 +1,6 @@
 import { ipcMain, ipcRenderer } from 'electron';
 
-import type { IPC_CHANNELS } from '@/constants';
+import type { IPC_CHANNELS, ProgressStatus } from '@/constants';
 import type { InstallStageInfo } from '@/main-process/installStages';
 import type { DownloadState } from '@/models/DownloadManager';
 import type { InstallValidation, PathValidationResult, SystemPaths, TorchDeviceType } from '@/preload';
@@ -299,7 +299,7 @@ export interface IpcChannels {
   };
 
   [IPC_CHANNELS.LOADING_PROGRESS]: {
-    params: [progress: { status: string; message?: string }];
+    params: [progress: { status: ProgressStatus; message?: string }];
     return: void;
   };
 
