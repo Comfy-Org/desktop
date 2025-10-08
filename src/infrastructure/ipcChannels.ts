@@ -7,6 +7,7 @@ import type {
   DownloadProgressUpdate,
   ElectronContextMenuOptions,
   ElectronOverlayOptions,
+  InstallOptions,
   InstallValidation,
   PathValidationResult,
   SystemPaths,
@@ -347,7 +348,7 @@ export interface IpcChannels {
   };
 
   [IPC_CHANNELS.INSTALL_COMFYUI]: {
-    params: [options: unknown];
+    params: [options: InstallOptions];
     return: void;
   };
 
