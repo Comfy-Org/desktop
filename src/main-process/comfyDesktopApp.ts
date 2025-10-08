@@ -148,6 +148,7 @@ export class ComfyDesktopApp implements HasTelemetry {
     });
 
     ipcMain.removeHandler(IPC_CHANNELS.TERMINAL_RESTORE);
+    // @ts-expect-error Returning undefined is an error and will throw in frontend component lifecycle.
     ipcMain.handle(IPC_CHANNELS.TERMINAL_RESTORE, () => {
       return this.terminal?.restore();
     });
