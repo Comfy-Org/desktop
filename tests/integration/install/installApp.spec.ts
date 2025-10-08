@@ -16,10 +16,7 @@ test.describe('Install App', () => {
     await installWizard.installLocationInput.fill(installLocation.path);
     await installWizard.clickNext();
 
-    // Install stepper screens
-    await expect(installWizard.migrateTitle).toBeVisible();
-    await installWizard.clickNext();
-
+    // Install stepper screens (migration is part of install location now)
     await expect(installWizard.desktopSettingsTitle).toBeVisible();
     await installWizard.installButton.click();
 
