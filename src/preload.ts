@@ -153,6 +153,7 @@ const electronAPI = {
    * - Model config path: The path to the model config yaml file.
    */
   getBasePath: (): Promise<string> => {
+    // @ts-expect-error - ipcRenderer.invoke returns a Promise<string | undefined>
     return ipcRenderer.invoke(IPC_CHANNELS.GET_BASE_PATH);
   },
   /**
@@ -310,7 +311,7 @@ const electronAPI = {
      * @returns The last GPU detected by `validateHardware` - runs during installation
      */
     getDetectedGpu: async (): Promise<GpuType | undefined> => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      // @ts-expect-error - ipcRenderer.invoke returns a Promise<TorchDeviceType | undefined>
       return await ipcRenderer.invoke(IPC_CHANNELS.GET_GPU);
     },
     /** Sets the window style */
