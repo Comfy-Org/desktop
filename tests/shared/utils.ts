@@ -1,4 +1,3 @@
-import envPaths from 'env-paths';
 import { exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { access, constants } from 'node:fs/promises';
@@ -23,15 +22,19 @@ export async function pathExists(path: string, permission: FilePermission = File
   }
 }
 
+/**
+ * Get the path to the ComfyUI app data directory. Precisely matches Electron's app.getPath('userData').
+ * @returns The path to the ComfyUI app data directory.
+ */
 export function getComfyUIAppDataPath() {
   switch (process.platform) {
     case 'win32':
       if (!process.env.APPDATA) throw new Error('APPDATA environment variable is not set.');
       return path.join(process.env.APPDATA, 'ComfyUI');
     case 'darwin':
-      return envPaths('ComfyUI').data;
+      return path.join(homedir(), 'Library', 'Application Support', 'ComfyUI');
     default:
-      return envPaths('ComfyUI').config;
+      return path.join(homedir(), '.config', 'ComfyUI');
   }
 }
 
