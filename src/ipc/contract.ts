@@ -28,11 +28,8 @@ export type IpcChannelReturn<T extends keyof IpcChannels> = IpcChannels[T]['retu
  * Each channel maps to an object with:
  * - params: A tuple of parameter types for the channel
  * - return: The return type (void for one-way send/on channels)
- *
- * The intersection with Record<ChannelName, ...> ensures EVERY channel from IPC_CHANNELS
- * must be defined. If any channel is missing, TypeScript will error.
  */
-export type IpcChannels = Record<ChannelName, { params: unknown[]; return: unknown }> & {
+export type IpcChannels = {
   [IPC_CHANNELS.IS_PACKAGED]: {
     params: [];
     return: boolean;
@@ -314,3 +311,11 @@ export type IpcChannels = Record<ChannelName, { params: unknown[]; return: unkno
     return: void;
   };
 };
+
+/**
+ * Compile-time check that ALL channels from IPC_CHANNELS are defined in IpcChannels.
+ * If any channel is missing, TypeScript will error on the const assignment below.
+ */
+type MissingChannels = Exclude<ChannelName, keyof IpcChannels>;
+type AssertAllChannelsDefined = MissingChannels extends never ? true : MissingChannels;
+const _exhaustiveCheck: AssertAllChannelsDefined = true;
