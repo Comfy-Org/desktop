@@ -3,7 +3,15 @@ import { ipcMain, ipcRenderer } from 'electron';
 import type { IPC_CHANNELS, ProgressStatus } from '@/constants';
 import type { InstallStageInfo } from '@/main-process/installStages';
 import type { DownloadState } from '@/models/DownloadManager';
-import type { InstallValidation, PathValidationResult, SystemPaths, TorchDeviceType } from '@/preload';
+import type {
+  DownloadProgressUpdate,
+  ElectronContextMenuOptions,
+  ElectronOverlayOptions,
+  InstallValidation,
+  PathValidationResult,
+  SystemPaths,
+  TorchDeviceType,
+} from '@/preload';
 import type { DesktopWindowStyle } from '@/store/desktopSettings';
 
 /**
@@ -314,7 +322,7 @@ export interface IpcChannels {
   };
 
   [IPC_CHANNELS.DOWNLOAD_PROGRESS]: {
-    params: [progress: unknown];
+    params: [progress: DownloadProgressUpdate];
     return: void;
   };
 
@@ -344,17 +352,17 @@ export interface IpcChannels {
   };
 
   [IPC_CHANNELS.CHANGE_THEME]: {
-    params: [theme: string];
+    params: [theme: ElectronOverlayOptions];
     return: void;
   };
 
   [IPC_CHANNELS.SHOW_CONTEXT_MENU]: {
-    params: [menu: unknown];
+    params: [menu?: ElectronContextMenuOptions];
     return: void;
   };
 
   [IPC_CHANNELS.VALIDATION_UPDATE]: {
-    params: [update: unknown];
+    params: [update: InstallValidation];
     return: void;
   };
 
@@ -374,7 +382,7 @@ export interface IpcChannels {
   };
 
   [IPC_CHANNELS.INSTALL_STAGE_UPDATE]: {
-    params: [stage: unknown];
+    params: [stage: InstallStageInfo];
     return: void;
   };
 }
