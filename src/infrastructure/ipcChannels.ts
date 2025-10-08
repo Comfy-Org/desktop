@@ -7,9 +7,8 @@ import type { InstallValidation, PathValidationResult, SystemPaths, TorchDeviceT
 import type { DesktopWindowStyle } from '@/store/desktopSettings';
 
 /**
- * Strict alternatives to Electron's IPC objects that only expose
- * the typed IPC contract. Using these avoids the permissive
- * Electron overloads that accept string/any and defeat type safety.
+ * Type-safe version of Electron's {@link Electron.IpcMain}.
+ * Uses explicitly-typed channels and params, catching type errors at compile time.
  */
 interface StrictIpcMain extends Electron.IpcMain {
   handle<T extends keyof IpcChannels>(
@@ -43,6 +42,10 @@ interface StrictIpcMain extends Electron.IpcMain {
   removeListener<T extends keyof IpcChannels>(channel: T, listener: (...args: IpcChannelParams<T>) => unknown): this;
 }
 
+/**
+ * Type-safe version of Electron's {@link Electron.IpcRenderer}.
+ * Uses explicitly-typed channels and params, catching type errors at compile time.
+ */
 interface StrictIpcRenderer extends Electron.IpcRenderer {
   invoke<T extends keyof IpcChannels>(channel: T, ...args: IpcChannelParams<T>): Promise<IpcChannelReturn<T>>;
 
@@ -367,5 +370,12 @@ export type IpcChannels = {
   };
 };
 
+/**
+ * Type-safe version of Electron's {@link Electron.IpcMain}.
+ */
 export const strictIpcMain: StrictIpcMain = ipcMain;
+
+/**
+ * Type-safe version of Electron's {@link Electron.IpcRenderer}.
+ */
 export const strictIpcRenderer: StrictIpcRenderer = ipcRenderer;
