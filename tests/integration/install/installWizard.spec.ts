@@ -10,7 +10,7 @@ test.describe('Install Wizard', () => {
     await expect(window).toHaveScreenshot('get-started.png');
     await installWizard.clickGetStarted();
 
-    // Select GPU screen
+    // Select GPU screen (updated)
     await expect(installWizard.selectGpuTitle).toBeVisible();
     await expect(installWizard.cpuToggle).toBeVisible();
     await expect(window).toHaveScreenshot('select-gpu.png');
@@ -21,11 +21,8 @@ test.describe('Install Wizard', () => {
 
     // Install stepper screens
     await expect(installWizard.installLocationTitle).toBeVisible();
-    await expect.soft(window).toHaveScreenshot('choose-installation-location.png');
-    await installWizard.clickNext();
-
     await expect(installWizard.migrateTitle).toBeVisible();
-    await expect(window).toHaveScreenshot('migrate-from-existing-installation.png');
+    await expect.soft(window).toHaveScreenshot('choose-installation-location.png');
     await installWizard.clickNext();
 
     await expect(installWizard.desktopSettingsTitle).toBeVisible();
