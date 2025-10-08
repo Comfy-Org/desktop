@@ -6,7 +6,6 @@ import {
   Tray,
   app,
   dialog,
-  ipcMain,
   nativeTheme,
   screen,
   shell,
@@ -27,6 +26,7 @@ import { getAppResourcesPath } from '../install/resourcePaths';
 import type { ElectronContextMenuOptions } from '../preload';
 import { AppWindowSettings } from '../store/AppWindowSettings';
 import { useDesktopConfig } from '../store/desktopConfig';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 /**
  * Creates a single application window that displays the renderer and encapsulates all the logic for sending messages to the renderer.

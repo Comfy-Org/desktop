@@ -1,4 +1,4 @@
-import { Notification, app, dialog, ipcMain, shell } from 'electron';
+import { Notification, app, dialog, shell } from 'electron';
 import log from 'electron-log/main';
 
 import { IPC_CHANNELS, InstallStage, ProgressStatus } from '../constants';
@@ -17,6 +17,7 @@ import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment
 import { createProcessCallbacks } from './createProcessCallbacks';
 import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 /** High-level / UI control over the installation of ComfyUI server. */
 export class InstallationManager implements HasTelemetry {

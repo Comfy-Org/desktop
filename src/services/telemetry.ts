@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 import log from 'electron-log/main';
 import mixpanel, { PropertyDict } from 'mixpanel';
 import { randomUUID } from 'node:crypto';
@@ -15,6 +15,7 @@ import { AppWindow } from '../main-process/appWindow';
 import { InstallOptions } from '../preload';
 import { compareVersions } from '../utils';
 import { captureSentryException } from './sentry';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 let instance: ITelemetry | null = null;
 export interface ITelemetry {

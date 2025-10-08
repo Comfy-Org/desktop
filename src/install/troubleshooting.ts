@@ -1,8 +1,8 @@
-import { ipcMain } from 'electron';
 import log from 'electron-log/main';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 import { IPC_CHANNELS } from '@/constants';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import type { AppWindow } from '@/main-process/appWindow';
 import type { ComfyInstallation } from '@/main-process/comfyInstallation';
 import type { InstallValidation } from '@/preload';

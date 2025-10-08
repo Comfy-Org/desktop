@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { IPC_CHANNELS } from '../constants';
 import { canAccessUrl } from '../utils';

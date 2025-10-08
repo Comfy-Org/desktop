@@ -1,8 +1,10 @@
-import { app, dialog, ipcMain, shell } from 'electron';
+import { app, dialog, shell } from 'electron';
 import log from 'electron-log/main';
 import fs from 'node:fs';
 import path from 'node:path';
 import si from 'systeminformation';
+
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 import { ComfyServerConfig } from '../config/comfyServerConfig';

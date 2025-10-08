@@ -1,9 +1,10 @@
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 
 import { IPC_CHANNELS } from '../constants';
 import type { TorchDeviceType } from '../preload';
 import { useDesktopConfig } from '../store/desktopConfig';
 import type { DesktopWindowStyle } from '../store/desktopSettings';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 /**
  * Handles information about the app and current state in IPC channels.

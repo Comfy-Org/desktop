@@ -1,8 +1,9 @@
 import todesktop from '@todesktop/runtime';
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 import log from 'electron-log/main';
 
 import { useComfySettings } from '@/config/comfySettings';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { DEFAULT_SERVER_ARGS, IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { DownloadManager } from '../models/DownloadManager';
