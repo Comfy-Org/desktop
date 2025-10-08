@@ -30,11 +30,5 @@ export type StrictIpcRenderer = Omit<Electron.IpcRenderer, 'invoke'> & {
   invoke<T extends keyof IpcChannels>(channel: T, ...args: IpcChannelParams<T>): Promise<IpcChannelReturn<T>>;
 };
 
-export const strictIpcMain: StrictIpcMain = ipcMain as unknown as StrictIpcMain;
-export const strictIpcRenderer: StrictIpcRenderer = ipcRenderer as unknown as StrictIpcRenderer;
-
-// Optional helpers for convenience (opt-in usage):
-export const handle = strictIpcMain.handle.bind(strictIpcMain) as StrictIpcMain['handle'];
-export const handleOnce = strictIpcMain.handleOnce.bind(strictIpcMain) as StrictIpcMain['handleOnce'];
-export const removeHandler = strictIpcMain.removeHandler.bind(strictIpcMain) as StrictIpcMain['removeHandler'];
-export const invoke = strictIpcRenderer.invoke.bind(strictIpcRenderer) as StrictIpcRenderer['invoke'];
+export const strictIpcMain: StrictIpcMain = ipcMain;
+export const strictIpcRenderer: StrictIpcRenderer = ipcRenderer;
