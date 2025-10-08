@@ -16,9 +16,6 @@ setup('Post-install Setup', async ({ installWizard, installedApp, serverStart, a
   await expect(installWizard.installLocationTitle).toBeVisible();
   await installWizard.clickNext();
 
-  await expect(installWizard.migrateTitle).toBeVisible();
-  await installWizard.clickNext();
-
   await expect(installWizard.desktopSettingsTitle).toBeVisible();
   await installWizard.installButton.click();
 
