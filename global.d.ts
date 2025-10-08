@@ -1,4 +1,4 @@
-import type { IpcChannelParams, IpcChannelReturn } from '@/ipc/contract';
+import type { IpcChannelParams, IpcChannelReturn } from '@/infrastructure/ipcChannels';
 
 import type { ElectronAPI } from './src/preload';
 

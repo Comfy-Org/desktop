@@ -1,7 +1,7 @@
-import { assertType, describe, expectTypeOf, test } from 'vitest';
+import { describe, expectTypeOf, test } from 'vitest';
 
 import { IPC_CHANNELS } from '@/constants';
-import type { IpcChannels } from '@/ipc/contract';
+import type { IpcChannels } from '@/infrastructure/ipcChannels';
 
 type ChannelName = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 

@@ -4,10 +4,6 @@ import type { DownloadState } from '../models/DownloadManager';
 import type { InstallValidation, PathValidationResult, SystemPaths, TorchDeviceType } from '../preload';
 import type { DesktopWindowStyle } from '../store/desktopSettings';
 
-/**
- * Type representing all channel names from IPC_CHANNELS as a union.
- */
-type ChannelName = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 
 /**
  * Extract parameter types for a given channel
