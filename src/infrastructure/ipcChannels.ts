@@ -4,7 +4,6 @@ import type { DownloadState } from '../models/DownloadManager';
 import type { InstallValidation, PathValidationResult, SystemPaths, TorchDeviceType } from '../preload';
 import type { DesktopWindowStyle } from '../store/desktopSettings';
 
-
 /**
  * Extract parameter types for a given channel
  */
