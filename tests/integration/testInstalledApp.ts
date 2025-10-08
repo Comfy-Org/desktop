@@ -15,7 +15,8 @@ export class TestInstalledApp {
     this.vueApp = window.locator('#vue-app');
     this.uiBlockedSpinner = this.vueApp.locator('.p-progressspinner');
 
-    this.firstTimeTemplateWorkflowText = window.getByText('Get started with a template');
+    // Use canvas container as a stable readiness indicator instead of text
+    this.firstTimeTemplateWorkflowText = this.graphCanvas.canvasContainer;
   }
 
   /** Waits until the app is completely loaded. */
