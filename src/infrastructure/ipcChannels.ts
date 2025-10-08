@@ -288,7 +288,6 @@ export type IpcChannels = {
     return: boolean;
   };
 
-  // One-way channels (send/on pattern) - not used with invoke/handle
   [IPC_CHANNELS.LOADING_PROGRESS]: {
     params: [progress: { status: string; message?: string }];
     return: void;
