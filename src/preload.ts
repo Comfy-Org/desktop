@@ -222,7 +222,7 @@ const electronAPI = {
      * Writes the data to the terminal
      * @param data The command to execute
      */
-    write: (data: string): Promise<string> => {
+    write: (data: string): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_WRITE, data);
     },
     /**

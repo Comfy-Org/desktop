@@ -248,7 +248,7 @@ export interface IpcChannels {
 
   [IPC_CHANNELS.TERMINAL_WRITE]: {
     params: [command: string];
-    return: string;
+    return: void;
   };
 
   [IPC_CHANNELS.TERMINAL_RESIZE]: {
