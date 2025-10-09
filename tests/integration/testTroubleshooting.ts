@@ -40,4 +40,16 @@ export class TestTroubleshooting {
   getTaskCard(regex: RegExp) {
     return this.window.locator('div.task-div').filter({ hasText: regex });
   }
+
+  async expectInstallValid(timeout = 30 * 1000, interval = 2000) {
+    await expect(async () => {
+      const isBasePathOk = await this.window.evaluate(async () => {
+        const api = document.defaultView?.electronAPI;
+        if (!api) return false;
+        const validation = await api.Validation.getStatus();
+        return validation.basePath === 'OK';
+      });
+      expect(isBasePathOk).toBe(true);
+    }).toPass({ timeout, intervals: [interval] });
+  }
 }
