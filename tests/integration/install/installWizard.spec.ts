@@ -10,7 +10,7 @@ test.describe('Install Wizard', () => {
     await expect(window).toHaveScreenshot('get-started.png');
     await installWizard.clickGetStarted();
 
-    // Select GPU screen (updated)
+    // Select GPU screen
     await expect(installWizard.selectGpuTitle).toBeVisible();
     await expect(installWizard.cpuToggle).toBeVisible();
     await expect(window).toHaveScreenshot('select-gpu.png');
