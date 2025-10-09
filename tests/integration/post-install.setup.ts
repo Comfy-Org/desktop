@@ -21,7 +21,8 @@ setup('Post-install Setup', async ({ installWizard, installedApp, serverStart, a
 
   await serverStart.expectServerStarts(5 * 1000);
 
-  // Install maximises the window - restore it
+  // Force app window position to be saved
+  await app.maximizeWindow();
   await app.restoreWindow();
 
   // When the terminal is hidden and no error is shown, the install is successful
