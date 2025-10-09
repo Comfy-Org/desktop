@@ -319,6 +319,8 @@ export class AppWindow {
       { leading: true, trailing: true }
     );
 
+    updateBounds();
+
     this.window.on('resize', updateBounds);
     this.window.on('move', updateBounds);
     this.window.on('close', () => log.info('App window closed.'));

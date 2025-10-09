@@ -11,7 +11,7 @@ test.describe('Troubleshooting - broken venv', () => {
     await expect(window).toHaveScreenshot('troubleshooting-venv.png');
   });
 
-  test('Can fix venv', async ({ troubleshooting, serverStart, installedApp }) => {
+  test('Can fix venv', async ({ troubleshooting, installedApp }) => {
     test.slow();
 
     await troubleshooting.expectReady();
@@ -28,10 +28,6 @@ test.describe('Troubleshooting - broken venv', () => {
     await expect(installPythonPackagesCard.isRunningIndicator).toBeVisible();
 
     // Venv fixed - server should start
-    // TODO: Reduce from 3 minutes to 1.5 minutes
-    // https://github.com/Comfy-Org/desktop/issues/1115
-    await serverStart.expectServerStarts(3 * 60 * 1000);
-
-    await installedApp.waitUntilLoaded();
+    await installedApp.waitUntilLoaded(3 * 60 * 1000);
   });
 });

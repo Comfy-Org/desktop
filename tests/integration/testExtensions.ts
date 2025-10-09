@@ -16,7 +16,9 @@ export { expect } from '@playwright/test';
 export function assertPlaywrightEnabled() {
   if (env.CI || env.COMFYUI_ENABLE_VOLATILE_TESTS === '1') return;
 
-  throw new Error('COMFYUI_ENABLE_VOLATILE_TESTS must be set to "1"  to run tests.');
+  throw new Error(
+    'COMFYUI_ENABLE_VOLATILE_TESTS must be set to "1"  to run tests. WARNING: THIS SETTING DESTROYS DATA.'
+  );
 }
 
 async function attachIfExists(testInfo: TestInfo, fullPath: string) {
