@@ -21,7 +21,7 @@ test.describe('Troubleshooting - broken install path', () => {
     await troubleshooting.expectReady();
   });
 
-  test('Can fix install path', async ({ troubleshooting, app, serverStart }) => {
+  test('Can fix install path', async ({ troubleshooting, app, installedApp }) => {
     await troubleshooting.expectReady();
     const { basePathCard } = troubleshooting;
     await expect(basePathCard.rootEl).toBeVisible();
@@ -37,10 +37,7 @@ test.describe('Troubleshooting - broken install path', () => {
 
     await basePathCard.button.click();
 
-    // Wait for install to be valid via IPC
-    await troubleshooting.expectInstallValid();
-
-    // Base path fixed - server should start
-    await serverStart.expectServerStarts();
+    // Venv fixed - server should start
+    await installedApp.waitUntilLoaded(2 * 60 * 1000);
   });
 });
