@@ -61,11 +61,6 @@ export class TestApp implements AsyncDisposable {
     return window.evaluate((window) => window.isMaximized());
   }
 
-  async maximizeWindow() {
-    const window = await this.browserWindow();
-    await window.evaluate((window) => window.maximize());
-  }
-
   async restoreWindow() {
     const window = await this.browserWindow();
     await window.evaluate((window) => window.restore());
