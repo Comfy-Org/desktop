@@ -17,9 +17,6 @@ test.describe('Install App', () => {
     await installWizard.clickNext();
 
     // Install stepper screens
-    await expect(installWizard.migrateTitle).toBeVisible();
-    await installWizard.clickNext();
-
     await expect(installWizard.desktopSettingsTitle).toBeVisible();
     await installWizard.installButton.click();
 

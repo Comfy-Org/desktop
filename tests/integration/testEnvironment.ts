@@ -82,6 +82,7 @@ export class TestEnvironment implements AsyncDisposable {
       if (!launchArgs) throw new Error('Could not reach launch args from comfy.settings.json');
 
       delete launchArgs.cpu;
+      launchArgs['invalid-arg'] = '';
       comfySettings['Comfy.Server.LaunchArgs'] = launchArgs;
 
       await fs.writeFile(filePath, JSON.stringify(comfySettings, null, 2), { flush: true });
@@ -100,6 +101,7 @@ export class TestEnvironment implements AsyncDisposable {
 
       const comfySettings = JSON.parse(json);
       comfySettings['Comfy.Server.LaunchArgs'].cpu = '';
+      delete comfySettings['Comfy.Server.LaunchArgs']['invalid-arg'];
 
       await fs.writeFile(filePath, JSON.stringify(comfySettings, null, 2), { flush: true });
     } catch (error) {

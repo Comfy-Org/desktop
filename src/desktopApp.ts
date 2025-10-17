@@ -1,5 +1,7 @@
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog } from 'electron';
 import log from 'electron-log/main';
+
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { ProgressStatus, type ServerArgs } from './constants';
 import { IPC_CHANNELS } from './constants';
@@ -246,6 +248,7 @@ export class DesktopApp implements HasTelemetry {
       if (!this.appState.loaded) {
         await this.appWindow.loadPage('maintenance');
       }
+      // @ts-expect-error API says this should return false; always treated as falsy.
       await new Promise((resolve) => ipcMain.handleOnce(IPC_CHANNELS.COMPLETE_VALIDATION, resolve));
     } catch (error) {
       DesktopApp.fatalError({

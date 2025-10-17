@@ -1,5 +1,7 @@
-import { Notification, app, dialog, ipcMain, shell } from 'electron';
+import { Notification, app, dialog, shell } from 'electron';
 import log from 'electron-log/main';
+
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { IPC_CHANNELS, InstallStage, ProgressStatus } from '../constants';
 import { PythonImportVerificationError } from '../infrastructure/pythonImportVerificationError';

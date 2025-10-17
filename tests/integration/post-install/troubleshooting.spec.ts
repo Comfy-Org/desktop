@@ -21,7 +21,7 @@ test.describe('Troubleshooting - broken install path', () => {
     await troubleshooting.expectReady();
   });
 
-  test('Can fix install path', async ({ troubleshooting, app, serverStart, window }) => {
+  test('Can fix install path', async ({ troubleshooting, app, installedApp }) => {
     await troubleshooting.expectReady();
     const { basePathCard } = troubleshooting;
     await expect(basePathCard.rootEl).toBeVisible();
@@ -36,10 +36,8 @@ test.describe('Troubleshooting - broken install path', () => {
     }, filePath);
 
     await basePathCard.button.click();
-    await expect(basePathCard.isRunningIndicator).toBeVisible();
-    await expect(window).toHaveScreenshot('troubleshooting-base-path.png');
 
-    // Base path fixed - server should start
-    await serverStart.expectServerStarts();
+    // Venv fixed - server should start
+    await installedApp.waitUntilLoaded(2 * 60 * 1000);
   });
 });

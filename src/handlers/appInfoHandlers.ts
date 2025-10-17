@@ -1,4 +1,6 @@
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
+
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { IPC_CHANNELS } from '../constants';
 import type { TorchDeviceType } from '../preload';

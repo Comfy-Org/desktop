@@ -6,7 +6,6 @@ import {
   Tray,
   app,
   dialog,
-  ipcMain,
   nativeTheme,
   screen,
   shell,
@@ -19,6 +18,7 @@ import { URL } from 'node:url';
 
 import { ElectronError } from '@/infrastructure/electronError';
 import type { Page } from '@/infrastructure/interfaces';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { type IAppState, useAppState } from '@/main-process/appState';
 import { clamp } from '@/utils';
 
@@ -318,6 +318,8 @@ export class AppWindow {
       256,
       { leading: true, trailing: true }
     );
+
+    updateBounds();
 
     this.window.on('resize', updateBounds);
     this.window.on('move', updateBounds);

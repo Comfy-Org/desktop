@@ -1,4 +1,6 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import { BrowserWindow } from 'electron';
+
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { IPC_CHANNELS } from '../constants';
 import { useAppState } from '../main-process/appState';

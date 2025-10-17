@@ -66,6 +66,8 @@ describe('AppWindow.isOnPage', () => {
           webContents: mockWebContents,
           on: vi.fn(),
           once: vi.fn(),
+          isMaximized: vi.fn(() => false),
+          getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1024, height: 768 })),
         }) as unknown as BrowserWindow
     );
 

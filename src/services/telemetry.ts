@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 import log from 'electron-log/main';
 import mixpanel, { PropertyDict } from 'mixpanel';
 import { randomUUID } from 'node:crypto';
@@ -8,6 +8,7 @@ import path from 'node:path';
 import si from 'systeminformation';
 
 import { useComfySettings } from '@/config/comfySettings';
+import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { DesktopConfig, useDesktopConfig } from '@/store/desktopConfig';
 
 import { IPC_CHANNELS } from '../constants';

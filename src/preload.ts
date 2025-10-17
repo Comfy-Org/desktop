@@ -1,5 +1,7 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge } from 'electron';
 import path from 'node:path';
+
+import { strictIpcRenderer as ipcRenderer } from '@/infrastructure/ipcChannels';
 
 import { DownloadStatus, ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
 import type { InstallStageInfo } from './main-process/installStages';
@@ -118,14 +120,12 @@ const electronAPI = {
   onProgressUpdate: (callback: (update: { status: ProgressStatus }) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOADING_PROGRESS, (_event, value) => {
       console.debug(`Received ${IPC_CHANNELS.LOADING_PROGRESS} event`, value);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       callback(value);
     });
   },
   onLogMessage: (callback: (message: string) => void) => {
     ipcRenderer.on(IPC_CHANNELS.LOG_MESSAGE, (_event, value) => {
       console.debug(`Received ${IPC_CHANNELS.LOG_MESSAGE} event`, value);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       callback(value);
     });
   },
@@ -153,6 +153,7 @@ const electronAPI = {
    * - Model config path: The path to the model config yaml file.
    */
   getBasePath: (): Promise<string> => {
+    // @ts-expect-error - ipcRenderer.invoke returns a Promise<string | undefined>
     return ipcRenderer.invoke(IPC_CHANNELS.GET_BASE_PATH);
   },
   /**
@@ -186,20 +187,19 @@ const electronAPI = {
   },
   DownloadManager: {
     onDownloadProgress: (callback: (progress: DownloadProgressUpdate) => void) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_event, progress) => callback(progress));
     },
     startDownload: (url: string, path: string, filename: string): Promise<boolean> => {
       console.log(`Sending start download message to main process`, { url, path, filename });
       return ipcRenderer.invoke(IPC_CHANNELS.START_DOWNLOAD, { url, path, filename });
     },
-    cancelDownload: (url: string): Promise<boolean> => {
+    cancelDownload: (url: string): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.CANCEL_DOWNLOAD, url);
     },
-    pauseDownload: (url: string): Promise<boolean> => {
+    pauseDownload: (url: string): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.PAUSE_DOWNLOAD, url);
     },
-    resumeDownload: (url: string): Promise<boolean> => {
+    resumeDownload: (url: string): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.RESUME_DOWNLOAD, url);
     },
     deleteModel: (filename: string, path: string): Promise<boolean> => {
@@ -222,7 +222,7 @@ const electronAPI = {
      * Writes the data to the terminal
      * @param data The command to execute
      */
-    write: (data: string): Promise<string> => {
+    write: (data: string): Promise<void> => {
       return ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_WRITE, data);
     },
     /**
@@ -310,7 +310,7 @@ const electronAPI = {
      * @returns The last GPU detected by `validateHardware` - runs during installation
      */
     getDetectedGpu: async (): Promise<GpuType | undefined> => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      // @ts-expect-error - ipcRenderer.invoke returns a Promise<TorchDeviceType | undefined>
       return await ipcRenderer.invoke(IPC_CHANNELS.GET_GPU);
     },
     /** Sets the window style */

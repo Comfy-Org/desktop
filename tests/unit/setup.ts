@@ -26,6 +26,7 @@ type ElectronMock = PartialMock<typeof Electron> & {
   app: Partial<Electron.App>;
   dialog: Partial<Electron.Dialog>;
   ipcMain: Partial<Electron.IpcMain>;
+  ipcRenderer: Partial<Electron.IpcRenderer>;
 };
 
 export const quitMessage = /^Test exited via app\.quit\(\)$/;
@@ -57,6 +58,13 @@ export const electronMock: ElectronMock = {
     handle: vi.fn(),
     handleOnce: vi.fn(),
     removeHandler: vi.fn(),
+  },
+  ipcRenderer: {
+    invoke: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
+    once: vi.fn(),
+    send: vi.fn(),
   },
 };
 
