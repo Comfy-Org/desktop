@@ -236,7 +236,7 @@ export class AppWindow {
       if (page === 'maintenance') this.rendererReady = true;
 
       const appResourcesPath = getAppResourcesPath();
-      const frontendPath = path.join(appResourcesPath, 'ComfyUI', 'web_custom_versions', 'desktop_app');
+      const frontendPath = path.join(appResourcesPath, 'desktop-ui');
       try {
         await this.window.loadFile(path.join(frontendPath, 'index.html'), { hash: page });
       } catch (error) {
