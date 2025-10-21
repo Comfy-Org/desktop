@@ -104,7 +104,7 @@
   },
   "license": "GPL-3.0-only",
   "dependencies": {
-    "@comfyorg/desktop-ui": "^0.0.1",
+    "@comfyorg/desktop-ui": "^0.0.2",
     "@sentry/electron": "^5.4.0",
     "@sentry/vite-plugin": "^2.22.6",
     "@todesktop/runtime": "^1.6.4",
