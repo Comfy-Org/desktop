@@ -225,6 +225,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@comfyorg/comfyui-electron@workspace:."
   dependencies:
+    "@comfyorg/desktop-ui": "npm:^0.0.1"
     "@electron/fuses": "npm:^1.8.0"
     "@electron/notarize": "npm:^2.4.0"
     "@electron/rebuild": "npm:^3.7.1"
@@ -280,6 +281,13 @@ __metadata:
     yaml: "npm:^2.6.0"
   languageName: unknown
   linkType: soft
+
+"@comfyorg/desktop-ui@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "@comfyorg/desktop-ui@npm:0.0.1"
+  checksum: 10c0/8cbffe0ad92a95414ff903fe37d83be958f8c3420277525104611431e4ee98bb9983f4c6c6c2372d822b068f02419909385b3be49b38ef77ba6e6f48478b5af5
+  languageName: node
+  linkType: hard
 
 "@cspotcode/source-map-support@npm:^0.8.0":
   version: 0.8.1
