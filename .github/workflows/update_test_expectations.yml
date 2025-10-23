@@ -50,5 +50,5 @@ jobs:
           git fetch origin ${{ github.head_ref }}
           git checkout -B ${{ github.head_ref }} origin/${{ github.head_ref }}
           git add tests
-          git commit -m "Update test expectations [skip ci]" || echo "No changes to commit"
+          git commit -m "Update test expectations" || echo "No changes to commit"
           git push origin HEAD:${{ github.head_ref }}
