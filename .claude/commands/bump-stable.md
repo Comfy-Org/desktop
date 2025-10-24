@@ -15,7 +15,8 @@ Please update the version of ComfyUI to the latest:
    - Context: The patch is used to removes the frontend package, as the desktop app includes it in the build process instead.
 7. Update `assets/requirements/windows_nvidia.compiled` and `assets/requirements/windows_cpu.compiled`, and `assets/requirements/macos.compiled` accordingly. You just need to update the comfycomfyui-frontend-package, [comfyui-workflow-templates](https://github.com/Comfy-Org/workflow_templates), [comfyui-embedded-docs](https://github.com/Comfy-Org/embedded-docs) versions.
 8. Please make a PR by checking out a new branch from main, adding a commit message and then use GH CLI to create a PR.
-   - Make the versions in the PR body as links to the relevant github releases
+   - Make the versions in the PR body as links to the relevant github releases - our tags prefix the semver with `v`, e.g. `v0.13.4`
+     - Verify the links actually work - report any failure immediately to the human: ❌
    - Include only the PR body lines that were updated
    - PR Title: Update ComfyUI core to v{VERSION}
    - PR Body:
@@ -29,14 +30,15 @@ Please update the version of ComfyUI to the latest:
 9. Wait for all tests to pass, actively monitoring and checking the PR status periodically until tests complete, then squash-merge the PR (only if required, use the `--admin` flag).
    - If ANY test fails for any reason, stop here and report the failure(s) to the human - use emoji in your report e.g.: ❌
 10. Switch to main branch and git pull
-11. Bump the version using `npm version` with the `--no-git-tag-version` arg
-12. Create a version bump PR with the title `vVERSION` e.g. `v0.4.10`. It must have the `Release` label, and no content in the PR description.
-13. Squash-merge the PR (only if required, use the `--admin` flag) - do not wait for tests, as bumping package version will not cause test breakage.
-14. Publish a GitHub Release:
+11. Switch to a new branch based on main: `increment-version-0.4.10`
+12. Bump the version using `npm version` with the `--no-git-tag-version` arg
+13. Create a version bump PR with the title `vVERSION` e.g. `v0.4.10`. It must have the `Release` label, and no content in the PR description.
+14. Squash-merge the PR using the `--admin` flag - do not wait for tests, as bumping package version will not cause test breakage.
+15. Publish a GitHub Release:
     - Set to pre-release (not latest)
     - The tag should be `vVERSION` e.g. `v0.4.10`
     - Use GitHub's generate release notes option
-15. Remove merged local branches
+16. Remove merged local branches
 
 ## Commit messages
 

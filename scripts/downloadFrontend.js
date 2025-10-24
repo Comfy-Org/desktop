@@ -87,3 +87,17 @@ if (frontend.optionalBranch) {
 
   await downloadAndExtractFrontend();
 }
+
+// Copy desktop-ui package to assets
+console.log('Copying desktop-ui package...');
+const desktopUiSource = 'node_modules/@comfyorg/desktop-ui/dist';
+const desktopUiTarget = 'assets/desktop-ui';
+
+try {
+  await fs.mkdir(desktopUiTarget, { recursive: true });
+  await fs.cp(desktopUiSource, desktopUiTarget, { recursive: true });
+  console.log('Desktop UI copied successfully!');
+} catch (error) {
+  console.error('Error copying desktop-ui:', error.message);
+  process.exit(1);
+}

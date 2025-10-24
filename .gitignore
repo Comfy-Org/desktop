@@ -112,6 +112,7 @@ assets/cpython*.tar.gz
 assets/python
 assets/requirements.*
 assets/user
+assets/desktop-ui
 
 # Sentry Config File
 .env.sentry-build-plugin
