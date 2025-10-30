@@ -33,12 +33,7 @@ test('Can install app', async ({ installWizard, installedApp, serverStart, testE
 
     // Confirm post-install app state is as expected
     await expect(installedApp.firstTimeTemplateWorkflowText).toBeVisible({ timeout: 30 * 1000 });
-    await window.emulateMedia({ reducedMotion: 'reduce' });
     const templatesGrid = window.getByTestId('template-workflows-content');
-    await expect(window).toHaveScreenshot('installApp.png', {
-      animations: 'disabled',
-      caret: 'hide',
-      mask: [templatesGrid],
-    });
+    await expect(window).toHaveScreenshot('installApp.png', { mask: [templatesGrid] });
   });
 });
