@@ -1,7 +1,7 @@
 import { expect, test } from '../testExtensions';
 
 test.describe('Install App', () => {
-test('Can install app', async ({ installWizard, installedApp, serverStart, testEnvironment, window }) => {
+  test('Can install app', async ({ installWizard, installedApp, serverStart, testEnvironment, window }) => {
     test.slow();
 
     await installWizard.clickGetStarted();
