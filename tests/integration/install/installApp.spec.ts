@@ -1,7 +1,7 @@
 import { expect, test } from '../testExtensions';
 
 test.describe('Install App', () => {
-test.skip('Can install app', async ({ installWizard, installedApp, serverStart, testEnvironment, window }) => {
+test('Can install app', async ({ installWizard, installedApp, serverStart, testEnvironment, window }) => {
     test.slow();
 
     await installWizard.clickGetStarted();
@@ -33,6 +33,12 @@ test.skip('Can install app', async ({ installWizard, installedApp, serverStart, 
 
     // Confirm post-install app state is as expected
     await expect(installedApp.firstTimeTemplateWorkflowText).toBeVisible({ timeout: 30 * 1000 });
-    await expect(window).toHaveScreenshot('installApp.png');
+    await window.emulateMedia({ reducedMotion: 'reduce' });
+    const templatesGrid = window.getByTestId('template-workflows-content');
+    await expect(window).toHaveScreenshot('installApp.png', {
+      animations: 'disabled',
+      caret: 'hide',
+      mask: [templatesGrid],
+    });
   });
 });
