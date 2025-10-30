@@ -80,7 +80,7 @@ body:
         </details>
       render: powershell
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: Browser Logs
@@ -97,7 +97,7 @@ body:
 
         </details>
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: Settings JSON
@@ -112,7 +112,7 @@ body:
 
         </details>
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: Other
