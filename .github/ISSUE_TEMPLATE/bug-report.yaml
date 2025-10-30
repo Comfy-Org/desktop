@@ -2,6 +2,7 @@ name: Bug Report
 description: 'Something is not behaving as expected.'
 title: '[Bug]: '
 labels: ['Potential Bug']
+type: Bug
 body:
   - type: markdown
     attributes:
