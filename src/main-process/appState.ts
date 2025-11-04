@@ -4,6 +4,8 @@ import { EventEmitter } from 'node:events';
 import { InstallStage } from '@/constants';
 import { AppStartError } from '@/infrastructure/appStartError';
 import type { Page } from '@/infrastructure/interfaces';
+import { getUvState } from '@/uv-parser/uvState';
+import type { IUvState } from '@/uv-parser/uvStateInterfaces';
 
 import { type InstallStageInfo, createInstallStageInfo } from './installStages';
 
@@ -31,6 +33,8 @@ export interface IAppState extends Pick<EventEmitter<AppStateEvents>, 'on' | 'on
   readonly loaded: boolean;
   /** The last page the app loaded from the desktop side. @see {@link AppWindow.loadPage} */
   currentPage?: Page;
+  /** UV process state manager for tracking package installations. */
+  readonly uvState: IUvState;
   /** Current installation stage information. */
   readonly installStage: InstallStageInfo;
 
@@ -50,10 +54,15 @@ class AppState extends EventEmitter<AppStateEvents> implements IAppState {
   ipcRegistered = false;
   loaded = false;
   currentPage?: Page;
+  readonly uvState: IUvState;
   installStage: InstallStageInfo;
 
   constructor() {
     super();
+    // Initialize install stage to idle
+    this.installStage = createInstallStageInfo(InstallStage.IDLE, { progress: 0 });
+    // Initialize UV state
+    this.uvState = getUvState();
     // Initialize install stage to idle
     this.installStage = createInstallStageInfo(InstallStage.IDLE, { progress: 0 });
   }
