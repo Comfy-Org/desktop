@@ -83,29 +83,6 @@ const buildRestrictedPaths = (): RestrictedPathEntry[] => {
   return entries;
 };
 
-const getRestrictedPathFlags = (inputPath?: string): { insideAppInstallDir: boolean; insideUpdaterCache: boolean } => {
-  const normalizedInput = normalizePathForComparison(inputPath);
-  if (!normalizedInput) {
-    return { insideAppInstallDir: false, insideUpdaterCache: false };
-  }
-
-  let insideAppInstallDir = false;
-  let insideUpdaterCache = false;
-
-  for (const restricted of buildRestrictedPaths()) {
-    if (!isPathInside(normalizedInput, restricted.path)) continue;
-    if (restricted.type === 'updaterCache') {
-      insideUpdaterCache = true;
-    } else {
-      insideAppInstallDir = true;
-    }
-
-    if (insideAppInstallDir && insideUpdaterCache) break;
-  }
-
-  return { insideAppInstallDir, insideUpdaterCache };
-};
-
 export function registerPathHandlers() {
   ipcMain.on(IPC_CHANNELS.OPEN_LOGS_PATH, (): void => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -183,19 +160,29 @@ export function registerPathHandlers() {
       };
 
       try {
-        const { insideAppInstallDir, insideUpdaterCache } = getRestrictedPathFlags(inputPath);
-        result.isInsideAppInstallDir = insideAppInstallDir;
-        result.isInsideUpdaterCache = insideUpdaterCache;
+        const normalizedInput = normalizePathForComparison(inputPath);
+        if (normalizedInput) {
+          for (const restricted of buildRestrictedPaths()) {
+            if (!isPathInside(normalizedInput, restricted.path)) continue;
+            if (restricted.type === 'updaterCache') {
+              result.isInsideUpdaterCache = true;
+            } else {
+              result.isInsideAppInstallDir = true;
+            }
 
-        if (insideAppInstallDir || insideUpdaterCache) {
-          log.warn(
-            'VALIDATE_INSTALL_PATH [restricted]: inputPath: [',
-            inputPath,
-            '], insideAppInstallDir: ',
-            insideAppInstallDir,
-            ' insideUpdaterCache: ',
-            insideUpdaterCache
-          );
+            if (result.isInsideAppInstallDir && result.isInsideUpdaterCache) break;
+          }
+
+          if (result.isInsideAppInstallDir || result.isInsideUpdaterCache) {
+            log.warn(
+              'VALIDATE_INSTALL_PATH [restricted]: inputPath: [',
+              inputPath,
+              '], insideAppInstallDir: ',
+              result.isInsideAppInstallDir,
+              ' insideUpdaterCache: ',
+              result.isInsideUpdaterCache
+            );
+          }
         }
 
         if (process.platform === 'win32') {
