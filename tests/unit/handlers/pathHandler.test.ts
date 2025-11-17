@@ -262,6 +262,18 @@ describe('PathHandlers', () => {
       });
     });
 
+    it('rejects paths inside the app bundle directory', async () => {
+      mockFileSystem({ exists: true, writable: true });
+      const nestedAppPath = path.join(MOCK_PATHS.appPath, 'user-data');
+
+      const result = await validateHandler({}, nestedAppPath);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+        isInsideUpdaterCache: false,
+      });
+    });
+
     it('Windows: should handle and log errors during validation', async () => {
       if (process.platform !== 'win32') {
         return;
@@ -327,6 +339,55 @@ describe('PathHandlers', () => {
         exists: true,
         freeSpace: LOW_FREE_SPACE,
         requiredSpace: WIN_REQUIRED_SPACE,
+      });
+    });
+
+    it('Windows: rejects paths inside the LocalAppData install directory', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      const installDir = path.resolve(MOCK_PATHS.appData, '..', 'Local', 'Programs', 'comfyui-electron', 'data');
+
+      const result = await validateHandler({}, installDir);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+        isInsideUpdaterCache: false,
+      });
+    });
+
+    it('Windows: rejects paths inside the updater cache (new namespace)', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      const updaterPath = path.resolve(
+        MOCK_PATHS.appData,
+        '..',
+        'Local',
+        '@comfyorgcomfyui-electron-updater',
+        'payload'
+      );
+
+      const result = await validateHandler({}, updaterPath);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideUpdaterCache: true,
+      });
+    });
+
+    it('Windows: rejects paths inside the updater cache (legacy namespace)', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      const updaterPath = path.resolve(MOCK_PATHS.appData, '..', 'Local', 'comfyui-electron-updater', 'payload');
+
+      const result = await validateHandler({}, updaterPath);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideUpdaterCache: true,
       });
     });
 

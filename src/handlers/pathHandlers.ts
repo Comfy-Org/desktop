@@ -14,6 +14,98 @@ import type { PathValidationResult, SystemPaths } from '../preload';
 export const WIN_REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
 export const MAC_REQUIRED_SPACE = 5 * 1024 * 1024 * 1024; // 5GB in bytes
 
+type RestrictedPathType = 'appPath' | 'resourcesPath' | 'installDir' | 'updaterCache';
+
+interface RestrictedPathEntry {
+  type: RestrictedPathType;
+  path: string;
+}
+
+const normalizePathForComparison = (targetPath?: string): string | undefined => {
+  if (!targetPath) return undefined;
+  const trimmed = targetPath.trim();
+  if (!trimmed) return undefined;
+  const resolvedPath = path.resolve(trimmed);
+  return process.platform === 'win32' ? resolvedPath.toLowerCase() : resolvedPath;
+};
+
+const isPathInside = (candidate: string, parent: string): boolean => {
+  if (candidate === parent) return true;
+  const relative = path.relative(parent, candidate);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+};
+
+const getLocalAppDataCandidates = (): string[] => {
+  if (process.platform !== 'win32') {
+    return [];
+  }
+
+  const candidates = new Set<string>();
+  if (process.env.LOCALAPPDATA) {
+    candidates.add(process.env.LOCALAPPDATA);
+  }
+
+  try {
+    const appData = app.getPath('appData');
+    if (appData) {
+      candidates.add(path.resolve(appData, '..', 'Local'));
+    }
+  } catch {
+    // Ignore failures; fall back to environment variables only.
+  }
+
+  return [...candidates];
+};
+
+const buildRestrictedPaths = (): RestrictedPathEntry[] => {
+  const entries: RestrictedPathEntry[] = [];
+  const seen = new Set<string>();
+
+  const addRestrictedPath = (type: RestrictedPathType, rawPath?: string) => {
+    const normalized = normalizePathForComparison(rawPath);
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    entries.push({ type, path: normalized });
+  };
+
+  addRestrictedPath('appPath', app.getAppPath());
+  addRestrictedPath('resourcesPath', process.resourcesPath);
+
+  if (process.platform === 'win32') {
+    for (const localPath of getLocalAppDataCandidates()) {
+      addRestrictedPath('installDir', path.resolve(localPath, 'Programs', 'comfyui-electron'));
+      for (const folder of ['@comfyorgcomfyui-electron-updater', 'comfyui-electron-updater']) {
+        addRestrictedPath('updaterCache', path.resolve(localPath, folder));
+      }
+    }
+  }
+
+  return entries;
+};
+
+const getRestrictedPathFlags = (inputPath?: string): { insideAppInstallDir: boolean; insideUpdaterCache: boolean } => {
+  const normalizedInput = normalizePathForComparison(inputPath);
+  if (!normalizedInput) {
+    return { insideAppInstallDir: false, insideUpdaterCache: false };
+  }
+
+  let insideAppInstallDir = false;
+  let insideUpdaterCache = false;
+
+  for (const restricted of buildRestrictedPaths()) {
+    if (!isPathInside(normalizedInput, restricted.path)) continue;
+    if (restricted.type === 'updaterCache') {
+      insideUpdaterCache = true;
+    } else {
+      insideAppInstallDir = true;
+    }
+
+    if (insideAppInstallDir && insideUpdaterCache) break;
+  }
+
+  return { insideAppInstallDir, insideUpdaterCache };
+};
+
 export function registerPathHandlers() {
   ipcMain.on(IPC_CHANNELS.OPEN_LOGS_PATH, (): void => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -86,9 +178,26 @@ export function registerPathHandlers() {
         parentMissing: false,
         exists: false,
         cannotWrite: false,
+        isInsideAppInstallDir: false,
+        isInsideUpdaterCache: false,
       };
 
       try {
+        const { insideAppInstallDir, insideUpdaterCache } = getRestrictedPathFlags(inputPath);
+        result.isInsideAppInstallDir = insideAppInstallDir;
+        result.isInsideUpdaterCache = insideUpdaterCache;
+
+        if (insideAppInstallDir || insideUpdaterCache) {
+          log.warn(
+            'VALIDATE_INSTALL_PATH [restricted]: inputPath: [',
+            inputPath,
+            '], insideAppInstallDir: ',
+            insideAppInstallDir,
+            ' insideUpdaterCache: ',
+            insideUpdaterCache
+          );
+        }
+
         if (process.platform === 'win32') {
           // Check if path is in OneDrive
           const { OneDrive } = process.env;
@@ -149,14 +258,16 @@ export function registerPathHandlers() {
         result.error = `${error}`;
       }
 
-      result.isValid =
+      const hasBlockingIssues =
         result.cannotWrite ||
         result.parentMissing ||
         (!bypassSpaceCheck && result.freeSpace < requiredSpace) ||
-        result.error ||
-        result.isOneDrive
-          ? false
-          : true;
+        Boolean(result.error) ||
+        result.isOneDrive ||
+        result.isInsideAppInstallDir ||
+        result.isInsideUpdaterCache;
+
+      result.isValid = !hasBlockingIssues;
 
       log.verbose('VALIDATE_INSTALL_PATH [result]: ', result);
       return result;

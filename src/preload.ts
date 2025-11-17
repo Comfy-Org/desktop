@@ -87,6 +87,10 @@ export type PathValidationResult = {
   isOneDrive?: boolean;
   /** `true` if the selected path is on a non-default drive. */
   isNonDefaultDrive?: boolean;
+  /** `true` if the selected path is inside the desktop app bundle/install directory. */
+  isInsideAppInstallDir?: boolean;
+  /** `true` if the selected path is inside the updater cache directory that gets deleted on updates. */
+  isInsideUpdaterCache?: boolean;
   /** The amount of free space in the path. `-1` if this could not be determined. */
   freeSpace: number;
   /** The amount of space in bytes required to install ComfyUI. */
