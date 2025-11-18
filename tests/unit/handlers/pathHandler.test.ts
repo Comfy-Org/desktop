@@ -192,6 +192,18 @@ describe('PathHandlers', () => {
       });
     });
 
+    it('rejects paths inside the desktop install root directory', async () => {
+      mockFileSystem({ exists: true, writable: true });
+      const installRootChild = path.resolve(MOCK_PATHS.appPath, '..', 'config');
+
+      const result = await validateHandler({}, installRootChild);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+        isInsideUpdaterCache: false,
+      });
+    });
+
     it('Windows: rejects path with insufficient disk space', async () => {
       if (process.platform !== 'win32') {
         return;

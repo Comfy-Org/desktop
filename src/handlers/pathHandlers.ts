@@ -68,8 +68,24 @@ const buildRestrictedPaths = (): RestrictedPathEntry[] => {
     entries.push({ type, path: normalized });
   };
 
-  addRestrictedPath('appPath', app.getAppPath());
-  addRestrictedPath('resourcesPath', process.resourcesPath);
+  const addInstallRootCandidates = (type: RestrictedPathType, rawPath?: string) => {
+    const normalized = normalizePathForComparison(rawPath);
+    if (!normalized) return;
+    const immediateParent = path.resolve(normalized, '..');
+    addRestrictedPath(type, immediateParent);
+    const parentBasename = path.basename(immediateParent).toLowerCase();
+    if (parentBasename === 'resources') {
+      addRestrictedPath(type, path.resolve(immediateParent, '..'));
+    }
+  };
+
+  const appPath = app.getAppPath();
+  addRestrictedPath('appPath', appPath);
+  addInstallRootCandidates('installDir', appPath);
+
+  const resourcesPath = process.resourcesPath;
+  addRestrictedPath('resourcesPath', resourcesPath);
+  addInstallRootCandidates('installDir', resourcesPath);
 
   if (process.platform === 'win32') {
     for (const localPath of getLocalAppDataCandidates()) {
