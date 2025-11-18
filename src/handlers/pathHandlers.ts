@@ -21,10 +21,23 @@ interface RestrictedPathEntry {
   path: string;
 }
 
+const getWindowsSystemDrivePrefix = (): string => {
+  const envValue = process.env.SystemDrive?.trim();
+  if (envValue && /^[a-z]:/i.test(envValue)) {
+    return envValue.slice(0, 2);
+  }
+  return 'C:';
+};
+
+const getWindowsSystemDriveRoot = (): string => `${getWindowsSystemDrivePrefix()}\\`;
+
 const normalizePathForComparison = (targetPath?: string): string | undefined => {
   if (!targetPath) return undefined;
-  const trimmed = targetPath.trim();
+  let trimmed = targetPath.trim();
   if (!trimmed) return undefined;
+  if (process.platform === 'win32' && trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    trimmed = `${getWindowsSystemDrivePrefix()}${trimmed}`;
+  }
   const resolvedPath = path.resolve(trimmed);
   const caseInsensitivePlatform = process.platform === 'win32' || process.platform === 'darwin';
   return caseInsensitivePlatform ? resolvedPath.toLowerCase() : resolvedPath;
@@ -36,27 +49,25 @@ const isPathInside = (candidate: string, parent: string): boolean => {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 };
 
-const getLocalAppDataCandidates = (): string[] => {
-  if (process.platform !== 'win32') {
-    return [];
+const normalizeMountPoint = (mount?: string): string | undefined => {
+  if (!mount) return undefined;
+  const trimmed = mount.trim();
+  if (!trimmed) return undefined;
+
+  // Windows' systeminformation mounts sometimes come through as "C:". Append a
+  // trailing separator so path.resolve() treats the value as the drive root.
+  if (/^[a-z]:$/i.test(trimmed)) {
+    return normalizePathForComparison(`${trimmed}\\`);
   }
 
-  const candidates = new Set<string>();
-  if (process.env.LOCALAPPDATA) {
-    candidates.add(process.env.LOCALAPPDATA);
-  }
-
-  try {
-    // app.getPath('appData') returns Roaming. The updater/install roots sit beside it.
-    const appData = app.getPath('appData');
-    if (appData) {
-      candidates.add(path.resolve(appData, '..', 'Local'));
+  if (process.platform === 'win32') {
+    const normalized = trimmed.replaceAll('/', '\\');
+    if (normalized === '\\') {
+      return normalizePathForComparison(getWindowsSystemDriveRoot());
     }
-  } catch {
-    // Ignore failures; fall back to environment variables only.
   }
 
-  return [...candidates];
+  return normalizePathForComparison(trimmed);
 };
 
 const buildRestrictedPaths = (): RestrictedPathEntry[] => {
@@ -70,53 +81,48 @@ const buildRestrictedPaths = (): RestrictedPathEntry[] => {
     entries.push({ type, path: normalized });
   };
 
-  const maybeAddBundleParents = (type: RestrictedPathType, candidate: string) => {
-    // macOS bundles replace everything under .app on update. Climb from Resources → Contents → *.app.
-    const basename = path.basename(candidate).toLowerCase();
-    if (basename === 'resources') {
-      const contentsPath = path.resolve(candidate, '..');
-      addRestrictedPath(type, contentsPath);
-      maybeAddBundleParents(type, contentsPath);
-      return;
+  // 1. The actual application install directory (dynamic)
+  // On Windows/Linux, this is the folder containing the executable.
+  // On macOS, this is the .app bundle.
+  const exePath = app.getPath('exe');
+  if (process.platform === 'darwin') {
+    // Walk up until we find the .app bundle
+    let current = exePath;
+    while (current && current !== '/' && !current.endsWith('.app')) {
+      current = path.dirname(current);
     }
-
-    if (basename === 'contents') {
-      const bundleRoot = path.resolve(candidate, '..');
-      // Only consider typical macOS bundle directories.
-      if (bundleRoot.toLowerCase().endsWith('.app')) {
-        addRestrictedPath(type, bundleRoot);
-      }
+    if (current.endsWith('.app')) {
+      addRestrictedPath('appInstallDir', current);
+    } else {
+      // Fallback if not in a bundle: just protect the exe's folder
+      addRestrictedPath('appInstallDir', path.dirname(exePath));
     }
-  };
+  } else {
+    addRestrictedPath('appInstallDir', path.dirname(exePath));
+  }
 
-  const addInstallRootCandidates = (type: RestrictedPathType, rawPath?: string) => {
-    if (!rawPath) return;
-    const normalized = normalizePathForComparison(rawPath);
-    if (!normalized) return;
-    const immediateParent = path.resolve(rawPath, '..');
-    addRestrictedPath(type, immediateParent);
-    maybeAddBundleParents(type, immediateParent);
-  };
-
-  const appPath = app.getAppPath();
-  addInstallRootCandidates('appInstallDir', appPath);
-
-  const resourcesPath = process.resourcesPath;
-  addInstallRootCandidates('appInstallDir', resourcesPath);
+  // 2. The "resources" directory (often contains app.asar)
+  // This is usually inside the install dir, but good to be explicit.
+  addRestrictedPath('appInstallDir', process.resourcesPath);
 
   if (process.platform === 'win32') {
-    // Desktop installs and auto-updates live under LocalAppData. Treat every root we control
-    // there as restricted so user data can't be dropped inside paths that get replaced/deleted.
-    for (const localPath of getLocalAppDataCandidates()) {
-      addRestrictedPath('appInstallDir', path.resolve(localPath, 'Programs', 'comfyui-electron'));
-      for (const folder of ['@comfyorgcomfyui-electron-updater', 'comfyui-electron-updater']) {
-        addRestrictedPath('updaterCache', path.resolve(localPath, folder));
-      }
+    const localAppData = process.env.LOCALAPPDATA;
+    if (localAppData) {
+      // 3. Legacy/default install location for user-scope installs.
+      // Even if current builds install elsewhere (e.g., ToDesktop-created folders),
+      // we keep this older comfyui-electron path blacklisted so anyone still on that
+      // target won't accidentally store data where the app lives.
+      addRestrictedPath('appInstallDir', path.join(localAppData, 'Programs', 'comfyui-electron'));
+
+      // 4. Updater cache directories
+      // These are hardcoded by electron-updater to be in LocalAppData
+      addRestrictedPath('updaterCache', path.join(localAppData, 'comfyui-electron-updater'));
+      addRestrictedPath('updaterCache', path.join(localAppData, '@comfyorgcomfyui-electron-updater'));
     }
-    const { OneDrive } = process.env;
-    if (OneDrive) {
-      // OneDrive sync deletions will conflict with installs. Treat the root as restricted.
-      addRestrictedPath('oneDrive', OneDrive);
+
+    // 5. OneDrive
+    if (process.env.OneDrive) {
+      addRestrictedPath('oneDrive', process.env.OneDrive);
     }
   }
 
@@ -291,7 +297,7 @@ export function registerPathHandlers() {
         if (disks.length) {
           log.verbose('SystemInformation [fsSize]:', disks);
           const disk = disks.find((disk) => {
-            const normalizedMount = normalizePathForComparison(disk.mount);
+            const normalizedMount = normalizeMountPoint(disk.mount);
             return normalizedMount && normalizedPath && isPathInside(normalizedPath, normalizedMount);
           });
           log.verbose('SystemInformation [disk]:', disk);
