@@ -533,7 +533,7 @@ describe('PathHandlers', () => {
       const result = await getSystemPathsHandler({});
       expect(result).toEqual({
         appData: '/mock/appData',
-        appPath: '/mock/app/path',
+        appPath: MOCK_PATHS.appPath,
         defaultInstallPath: path.join('/mock/documents', 'ComfyUI'),
       });
     });
