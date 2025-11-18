@@ -22,7 +22,7 @@ const MOCK_PATHS = {
   logs: '/mock/logs/path',
   documents: '/mock/documents',
   appData: '/mock/appData',
-  appPath: '/mock/app/path',
+  appPath: path.join('/mock', 'ComfyUI Desktop.app', 'Contents', 'Resources', 'app.asar'),
 } as const;
 
 // Add this mock for OneDrive environment variable
@@ -286,6 +286,36 @@ describe('PathHandlers', () => {
       });
     });
 
+    it('Mac: rejects paths inside the app bundle root directory', async () => {
+      if (process.platform !== 'darwin') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true, isDirectory: true });
+      const bundleRoot = path.resolve(MOCK_PATHS.appPath, '..', '..', '..');
+      const bundleChild = path.join(bundleRoot, 'user-data');
+
+      const result = await validateHandler({}, bundleChild);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+      });
+    });
+
+    it('Mac: rejects bundle paths regardless of case', async () => {
+      if (process.platform !== 'darwin') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true, isDirectory: true });
+      const bundleRoot = path.resolve(MOCK_PATHS.appPath, '..', '..', '..');
+      const weirdCasingPath = path.join(bundleRoot.toUpperCase(), 'user-data');
+
+      const result = await validateHandler({}, weirdCasingPath);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+      });
+    });
+
     it('Windows: should handle and log errors during validation', async () => {
       if (process.platform !== 'win32') {
         return;
@@ -360,6 +390,23 @@ describe('PathHandlers', () => {
       }
       mockFileSystem({ exists: true, writable: true });
       const installDir = path.resolve(MOCK_PATHS.appData, '..', 'Local', 'Programs', 'comfyui-electron', 'data');
+
+      const result = await validateHandler({}, installDir);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+        isInsideUpdaterCache: false,
+      });
+    });
+
+    it('Windows: rejects LocalAppData install directory paths regardless of case', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      const installDir = path
+        .resolve(MOCK_PATHS.appData, '..', 'Local', 'Programs', 'comfyui-electron', 'data')
+        .toUpperCase();
 
       const result = await validateHandler({}, installDir);
       expect(result).toMatchObject({

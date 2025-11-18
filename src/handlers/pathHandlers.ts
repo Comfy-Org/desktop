@@ -14,7 +14,7 @@ import type { PathValidationResult, SystemPaths } from '../preload';
 export const WIN_REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
 export const MAC_REQUIRED_SPACE = 5 * 1024 * 1024 * 1024; // 5GB in bytes
 
-type RestrictedPathType = 'appPath' | 'resourcesPath' | 'installDir' | 'updaterCache';
+type RestrictedPathType = 'appInstallDir' | 'updaterCache' | 'oneDrive';
 
 interface RestrictedPathEntry {
   type: RestrictedPathType;
@@ -26,7 +26,8 @@ const normalizePathForComparison = (targetPath?: string): string | undefined => 
   const trimmed = targetPath.trim();
   if (!trimmed) return undefined;
   const resolvedPath = path.resolve(trimmed);
-  return process.platform === 'win32' ? resolvedPath.toLowerCase() : resolvedPath;
+  const caseInsensitivePlatform = process.platform === 'win32' || process.platform === 'darwin';
+  return caseInsensitivePlatform ? resolvedPath.toLowerCase() : resolvedPath;
 };
 
 const isPathInside = (candidate: string, parent: string): boolean => {
@@ -46,6 +47,7 @@ const getLocalAppDataCandidates = (): string[] => {
   }
 
   try {
+    // app.getPath('appData') returns Roaming. The updater/install roots sit beside it.
     const appData = app.getPath('appData');
     if (appData) {
       candidates.add(path.resolve(appData, '..', 'Local'));
@@ -68,35 +70,91 @@ const buildRestrictedPaths = (): RestrictedPathEntry[] => {
     entries.push({ type, path: normalized });
   };
 
-  const addInstallRootCandidates = (type: RestrictedPathType, rawPath?: string) => {
-    const normalized = normalizePathForComparison(rawPath);
-    if (!normalized) return;
-    const immediateParent = path.resolve(normalized, '..');
-    addRestrictedPath(type, immediateParent);
-    const parentBasename = path.basename(immediateParent).toLowerCase();
-    if (parentBasename === 'resources') {
-      addRestrictedPath(type, path.resolve(immediateParent, '..'));
+  const maybeAddBundleParents = (type: RestrictedPathType, candidate: string) => {
+    // macOS bundles replace everything under .app on update. Climb from Resources → Contents → *.app.
+    const basename = path.basename(candidate).toLowerCase();
+    if (basename === 'resources') {
+      const contentsPath = path.resolve(candidate, '..');
+      addRestrictedPath(type, contentsPath);
+      maybeAddBundleParents(type, contentsPath);
+      return;
+    }
+
+    if (basename === 'contents') {
+      const bundleRoot = path.resolve(candidate, '..');
+      // Only consider typical macOS bundle directories.
+      if (bundleRoot.toLowerCase().endsWith('.app')) {
+        addRestrictedPath(type, bundleRoot);
+      }
     }
   };
 
+  const addInstallRootCandidates = (type: RestrictedPathType, rawPath?: string) => {
+    if (!rawPath) return;
+    const normalized = normalizePathForComparison(rawPath);
+    if (!normalized) return;
+    const immediateParent = path.resolve(rawPath, '..');
+    addRestrictedPath(type, immediateParent);
+    maybeAddBundleParents(type, immediateParent);
+  };
+
   const appPath = app.getAppPath();
-  addRestrictedPath('appPath', appPath);
-  addInstallRootCandidates('installDir', appPath);
+  addInstallRootCandidates('appInstallDir', appPath);
 
   const resourcesPath = process.resourcesPath;
-  addRestrictedPath('resourcesPath', resourcesPath);
-  addInstallRootCandidates('installDir', resourcesPath);
+  addInstallRootCandidates('appInstallDir', resourcesPath);
 
   if (process.platform === 'win32') {
+    // Desktop installs and auto-updates live under LocalAppData. Treat every root we control
+    // there as restricted so user data can't be dropped inside paths that get replaced/deleted.
     for (const localPath of getLocalAppDataCandidates()) {
-      addRestrictedPath('installDir', path.resolve(localPath, 'Programs', 'comfyui-electron'));
+      addRestrictedPath('appInstallDir', path.resolve(localPath, 'Programs', 'comfyui-electron'));
       for (const folder of ['@comfyorgcomfyui-electron-updater', 'comfyui-electron-updater']) {
         addRestrictedPath('updaterCache', path.resolve(localPath, folder));
       }
     }
+    const { OneDrive } = process.env;
+    if (OneDrive) {
+      // OneDrive sync deletions will conflict with installs. Treat the root as restricted.
+      addRestrictedPath('oneDrive', OneDrive);
+    }
   }
 
   return entries;
+};
+
+interface PathRestrictionFlags {
+  normalizedPath?: string;
+  isInsideAppInstallDir: boolean;
+  isInsideUpdaterCache: boolean;
+  isOneDrive: boolean;
+}
+
+const evaluatePathRestrictions = (inputPath: string): PathRestrictionFlags => {
+  const normalizedPath = normalizePathForComparison(inputPath);
+  const flags: PathRestrictionFlags = {
+    normalizedPath,
+    isInsideAppInstallDir: false,
+    isInsideUpdaterCache: false,
+    isOneDrive: false,
+  };
+
+  if (!normalizedPath) return flags;
+
+  for (const restricted of buildRestrictedPaths()) {
+    if (!isPathInside(normalizedPath, restricted.path)) continue;
+    if (restricted.type === 'updaterCache') {
+      flags.isInsideUpdaterCache = true;
+    } else if (restricted.type === 'oneDrive') {
+      flags.isOneDrive = true;
+    } else {
+      flags.isInsideAppInstallDir = true;
+    }
+
+    if (flags.isInsideAppInstallDir && flags.isInsideUpdaterCache && flags.isOneDrive) break;
+  }
+
+  return flags;
 };
 
 export function registerPathHandlers() {
@@ -176,48 +234,31 @@ export function registerPathHandlers() {
       };
 
       try {
-        const normalizedInput = normalizePathForComparison(inputPath);
-        if (normalizedInput) {
-          for (const restricted of buildRestrictedPaths()) {
-            if (!isPathInside(normalizedInput, restricted.path)) continue;
-            if (restricted.type === 'updaterCache') {
-              result.isInsideUpdaterCache = true;
-            } else {
-              result.isInsideAppInstallDir = true;
-            }
+        const restrictionFlags = evaluatePathRestrictions(inputPath);
+        const normalizedPath = restrictionFlags.normalizedPath;
+        result.isInsideAppInstallDir = restrictionFlags.isInsideAppInstallDir;
+        result.isInsideUpdaterCache = restrictionFlags.isInsideUpdaterCache;
+        result.isOneDrive ||= restrictionFlags.isOneDrive;
 
-            if (result.isInsideAppInstallDir && result.isInsideUpdaterCache) break;
-          }
-
-          if (result.isInsideAppInstallDir || result.isInsideUpdaterCache) {
-            log.warn(
-              'VALIDATE_INSTALL_PATH [restricted]: inputPath: [',
-              inputPath,
-              '], insideAppInstallDir: ',
-              result.isInsideAppInstallDir,
-              ' insideUpdaterCache: ',
-              result.isInsideUpdaterCache
-            );
-          }
+        if (result.isInsideAppInstallDir || result.isInsideUpdaterCache || result.isOneDrive) {
+          log.warn(
+            'VALIDATE_INSTALL_PATH [restricted]: inputPath: [',
+            inputPath,
+            '], insideAppInstallDir: ',
+            result.isInsideAppInstallDir,
+            ' insideUpdaterCache: ',
+            result.isInsideUpdaterCache,
+            ' insideOneDrive: ',
+            restrictionFlags.isOneDrive
+          );
         }
 
         if (process.platform === 'win32') {
-          // Check if path is in OneDrive
-          const { OneDrive } = process.env;
-          if (OneDrive) {
-            const normalizedInput = path.resolve(inputPath).toLowerCase();
-            const normalizedOneDrive = path.resolve(OneDrive).toLowerCase();
-            // Check if the normalized OneDrive path is a parent of the input path
-            log.verbose('normalizedInput [', normalizedInput, ']', 'normalizedOneDrive [', normalizedOneDrive, ']');
-            if (normalizedInput.startsWith(normalizedOneDrive)) {
-              result.isOneDrive = true;
-            }
-          }
-
           // Check if path is on non-default drive
           const systemDrive = process.env.SystemDrive || 'C:';
           log.verbose('systemDrive [', systemDrive, ']');
-          if (!inputPath.toUpperCase().startsWith(systemDrive)) {
+          // Compare using the normalized (lowercase) paths so user casing tricks cannot bypass the check.
+          if (normalizedPath && !normalizedPath.startsWith(systemDrive.toLowerCase())) {
             result.isNonDefaultDrive = true;
           }
         }
@@ -249,7 +290,10 @@ export function registerPathHandlers() {
         const disks = await si.fsSize();
         if (disks.length) {
           log.verbose('SystemInformation [fsSize]:', disks);
-          const disk = disks.find((disk) => inputPath.startsWith(disk.mount));
+          const disk = disks.find((disk) => {
+            const normalizedMount = normalizePathForComparison(disk.mount);
+            return normalizedMount && normalizedPath && isPathInside(normalizedPath, normalizedMount);
+          });
           log.verbose('SystemInformation [disk]:', disk);
           if (disk) result.freeSpace = disk.available;
         } else {
