@@ -12,7 +12,7 @@
 - **TypeScript**: Primary language
 - **Vite**: Build tool and bundler
 - **Node.js**: Runtime (use nvm)
-- **Yarn**: Package manager
+- **pnpm**: Package manager
 - **Vitest**: Unit testing
 - **Playwright**: E2E testing
 - **ESLint**: Linting
@@ -23,39 +23,39 @@
 ### Code Quality (ALWAYS RUN AFTER CHANGES)
 
 ```bash
-yarn lint              # Check & auto-fix ESLint issues
-yarn format            # Auto-format code
-yarn typescript        # TypeScript type checking
+pnpm lint              # Check & auto-fix ESLint issues
+pnpm format            # Auto-format code
+pnpm typescript        # TypeScript type checking
 ```
 
 ### Development
 
 ```bash
-yarn start             # Build and launch app with file watching
-yarn make:assets       # Download ComfyUI dependencies
-yarn clean             # Remove build artifacts
+pnpm start             # Build and launch app with file watching
+pnpm make:assets       # Download ComfyUI dependencies
+pnpm clean             # Remove build artifacts
 ```
 
 ### Testing
 
 ```bash
-yarn test:unit         # Run unit tests (Vitest)
-yarn test:e2e          # Run E2E tests (Playwright)
-yarn test:e2e:update   # Update Playwright snapshots
+pnpm test:unit         # Run unit tests (Vitest)
+pnpm test:e2e          # Run E2E tests (Playwright)
+pnpm test:e2e:update   # Update Playwright snapshots
 ```
 
 ### Building
 
 ```bash
-yarn make              # Build platform package
-yarn make:nvidia       # Build with NVIDIA GPU support
-yarn vite:compile      # Compile with Vite
+pnpm make              # Build platform package
+pnpm make:nvidia       # Build with NVIDIA GPU support
+pnpm vite:compile      # Compile with Vite
 ```
 
 ### Troubleshooting
 
 - If you encounter errors regarding `NODE_MODULE_VERSION`, try running `npx electron-rebuild` before other troubleshooting steps.
-  - If that still fails, try `yarn rebuild`
+  - If that still fails, try `pnpm exec electron-rebuild`
 
 ## Custom testing
 
@@ -144,9 +144,9 @@ This project must maintain exceptionally high type standards. The `any` type mus
 
 ## Before Committing
 
-1. Use `yarn format` to ensure consistent formatting
-1. Run `yarn lint` and `yarn typescript` to check code quality
-1. Run `yarn test:unit` to ensure unit tests pass
-1. Consider running `yarn test:e2e` for UI changes
+1. Use `pnpm format` to ensure consistent formatting
+1. Run `pnpm lint` and `pnpm typescript` to check code quality
+1. Run `pnpm test:unit` to ensure unit tests pass
+1. Consider running `pnpm test:e2e` for UI changes
 
 This is a sophisticated Electron application with comprehensive testing, automated CI/CD, cross-platform support, and professional development practices.

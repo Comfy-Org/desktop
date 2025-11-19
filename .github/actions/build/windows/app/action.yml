@@ -24,10 +24,10 @@ runs:
       with:
         node-version-file: '.nvmrc'
 
-    - name: Install Yarn
-      run: npm install -g yarn@4.5.0
+    - name: Install pnpm
+      run: npm install -g pnpm@10.22.0
 
-    - run: yarn install --immutable
+    - run: pnpm install
       shell: cmd
 
     - name: Rebuild node-pty
@@ -48,7 +48,7 @@ runs:
     - name: Install ComfyUI and create standalone package
       run: |
         set -x
-        yarn make:assets
+        pnpm make:assets
       shell: bash
 
     - name: Make app
@@ -58,7 +58,7 @@ runs:
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: yarn run make
+      run: pnpm run make
 
     - name: Print SignLogs
       if: ${{inputs.sign-and-publish == 'true' && always()}}

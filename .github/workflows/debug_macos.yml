@@ -21,10 +21,10 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Install Yarn
-        run: npm install -g yarn@4.5.0
+      - name: Install pnpm
+        run: npm install -g pnpm@10.22.0
 
-      - run: yarn install
+      - run: pnpm install
 
       - name: Build Comfy
         uses: ./.github/actions/build/macos/comfy
@@ -35,7 +35,7 @@ jobs:
         env:
           PUBLISH: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: yarn run make
+        run: pnpm run make
 
       - name: Upload Build
         uses: actions/upload-artifact@v5

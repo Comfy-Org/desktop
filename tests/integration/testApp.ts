@@ -1,5 +1,6 @@
-import type { ElectronApplication, JSHandle, TestInfo } from '@playwright/test';
+import type { JSHandle, TestInfo } from '@playwright/test';
 import electronPath, { type BrowserWindow } from 'electron';
+import type { ElectronApplication } from 'playwright';
 import { _electron as electron } from 'playwright';
 
 import { createDesktopScreenshot } from '../shared/utils';

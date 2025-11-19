@@ -7,7 +7,7 @@ Unit tests are run with vitest. Tests are run in parallel.
 ### Running
 
 ```bash
-yarn run test:unit
+pnpm test:unit
 ```
 
 ## End-to-End Tests
@@ -29,7 +29,7 @@ To run tests properly outside of CI, set env var `COMFYUI_ENABLE_VOLATILE_TESTS=
 ### Running
 
 ```bash
-yarn run test:e2e
+pnpm test:e2e
 ```
 
 > [!NOTE]

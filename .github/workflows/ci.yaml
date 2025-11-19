@@ -37,20 +37,20 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Install Yarn
-        run: npm install -g yarn@4.5.0
+      - name: Install pnpm
+        run: npm install -g pnpm@10.22.0
 
       - name: Install Dependencies
-        run: yarn install
+        run: pnpm install
 
       - name: Run type check
-        run: yarn tsc --noEmit --strict
+        run: pnpm typecheck
 
       - name: Check lint
-        run: yarn lint:check
+        run: pnpm lint:check
 
       - name: Run Unit Tests
-        run: yarn run test:unit
+        run: pnpm test:unit
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238
@@ -64,4 +64,4 @@ jobs:
           verbose: true
 
       - name: Check Prettier Formatting
-        run: yarn run format:check
+        run: pnpm run format:check
