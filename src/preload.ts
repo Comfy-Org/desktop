@@ -4,6 +4,7 @@ import path from 'node:path';
 import { strictIpcRenderer as ipcRenderer } from '@/infrastructure/ipcChannels';
 
 import { DownloadStatus, ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
+import type { RestrictedPathType } from './handlers/pathHandlers';
 import type { InstallStageInfo } from './main-process/installStages';
 import type { DownloadState } from './main_types';
 import type { DesktopInstallState, DesktopWindowStyle } from './main_types';
@@ -107,6 +108,10 @@ export interface InstallValidation {
   installState: DesktopInstallState;
 
   basePath?: ValidationIssueState;
+  /** `true` if the stored base path is accessible but in an unsafe location (inside the app bundle, updater cache, or OneDrive). */
+  unsafeBasePath?: boolean;
+  /** The primary reason why the base path is considered unsafe, if known. */
+  unsafeBasePathReason?: RestrictedPathType;
   venvDirectory?: ValidationIssueState;
   pythonInterpreter?: ValidationIssueState;
   pythonPackages?: ValidationIssueState;

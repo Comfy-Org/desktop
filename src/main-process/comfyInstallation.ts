@@ -3,6 +3,7 @@ import { rm } from 'node:fs/promises';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings, useComfySettings } from '../config/comfySettings';
+import { evaluatePathRestrictions } from '../handlers/pathHandlers';
 import type { DesktopInstallState } from '../main_types';
 import type { InstallValidation } from '../preload';
 import { type ITelemetry, getTelemetry } from '../services/telemetry';
@@ -112,12 +113,40 @@ export class ComfyInstallation {
     // Validate base path
     const basePath = useDesktopConfig().get('basePath');
     if (basePath && (await pathAccessible(basePath))) {
-      await this.updateBasePathAndVenv(basePath);
+      const restrictionFlags = evaluatePathRestrictions(basePath);
+      const isUnsafeBasePath =
+        restrictionFlags.isInsideAppInstallDir || restrictionFlags.isInsideUpdaterCache || restrictionFlags.isOneDrive;
 
-      validation.basePath = 'OK';
+      if (isUnsafeBasePath) {
+        log.error('"base_path" is in an unsafe location (inside app install directory, updater cache, or OneDrive).', {
+          basePath,
+          restrictionFlags,
+        });
+
+        validation.basePath = 'error';
+        validation.unsafeBasePath = true;
+        if (restrictionFlags.isInsideAppInstallDir) {
+          validation.unsafeBasePathReason = 'appInstallDir';
+        } else if (restrictionFlags.isInsideUpdaterCache) {
+          validation.unsafeBasePathReason = 'updaterCache';
+        } else if (restrictionFlags.isOneDrive) {
+          validation.unsafeBasePathReason = 'oneDrive';
+        }
+      } else {
+        await this.updateBasePathAndVenv(basePath);
+
+        validation.basePath = 'OK';
+      }
+
       this.onUpdate?.(validation);
+    } else {
+      log.error('"base_path" is inaccessible or undefined.');
+      validation.basePath = 'error';
+    }
+    this.onUpdate?.(validation);
 
-      // Validate virtual environment
+    // Validate virtual environment only when the base path is valid and safe
+    if (validation.basePath !== 'error') {
       const venv = this.virtualEnvironment;
       if (await venv.exists()) {
         validation.venvDirectory = 'OK';
@@ -155,11 +184,8 @@ export class ComfyInstallation {
         log.warn('Virtual environment is missing.');
         validation.venvDirectory = 'error';
       }
-    } else {
-      log.error('"base_path" is inaccessible or undefined.');
-      validation.basePath = 'error';
+      this.onUpdate?.(validation);
     }
-    this.onUpdate?.(validation);
 
     // Git
     validation.git = (await canExecuteShellCommand('git --help')) ? 'OK' : 'error';

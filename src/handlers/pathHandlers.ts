@@ -14,7 +14,7 @@ import type { PathValidationResult, SystemPaths } from '../preload';
 export const WIN_REQUIRED_SPACE = 10 * 1024 * 1024 * 1024; // 10GB in bytes
 export const MAC_REQUIRED_SPACE = 5 * 1024 * 1024 * 1024; // 5GB in bytes
 
-type RestrictedPathType = 'appInstallDir' | 'updaterCache' | 'oneDrive';
+export type RestrictedPathType = 'appInstallDir' | 'updaterCache' | 'oneDrive';
 
 interface RestrictedPathEntry {
   type: RestrictedPathType;
@@ -129,14 +129,14 @@ const buildRestrictedPaths = (): RestrictedPathEntry[] => {
   return entries;
 };
 
-interface PathRestrictionFlags {
+export interface PathRestrictionFlags {
   normalizedPath?: string;
   isInsideAppInstallDir: boolean;
   isInsideUpdaterCache: boolean;
   isOneDrive: boolean;
 }
 
-const evaluatePathRestrictions = (inputPath: string): PathRestrictionFlags => {
+export const evaluatePathRestrictions = (inputPath: string): PathRestrictionFlags => {
   const normalizedPath = normalizePathForComparison(inputPath);
   const flags: PathRestrictionFlags = {
     normalizedPath,
