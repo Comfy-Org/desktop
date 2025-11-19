@@ -89,7 +89,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout PR
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ needs.get-pr-details.outputs.head_sha }}
@@ -107,21 +107,21 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Checkout ComfyUI
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        uses: actions/checkout@v5
         with:
           repository: comfyanonymous/ComfyUI
           ref: v${{ steps.versions.outputs.comfyui_version }}
           path: assets/ComfyUI
 
       - name: Checkout ComfyUI-Manager
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        uses: actions/checkout@v5
         with:
           repository: ltdrdata/ComfyUI-Manager
           ref: ${{ steps.versions.outputs.manager_commit }}
           path: assets/ComfyUI/custom_nodes/ComfyUI-Manager
 
       - name: Setup Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -152,7 +152,7 @@ jobs:
           ${{ env.UV_CMD_WINDOWS_NVIDIA }}
 
       - name: Upload Windows requirements
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: windows-requirements
           path: |
@@ -166,7 +166,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout PR
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ needs.get-pr-details.outputs.head_sha }}
@@ -183,21 +183,21 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Checkout ComfyUI
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        uses: actions/checkout@v5
         with:
           repository: comfyanonymous/ComfyUI
           ref: v${{ steps.versions.outputs.comfyui_version }}
           path: assets/ComfyUI
 
       - name: Checkout ComfyUI-Manager
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        uses: actions/checkout@v5
         with:
           repository: ltdrdata/ComfyUI-Manager
           ref: ${{ steps.versions.outputs.manager_commit }}
           path: assets/ComfyUI/custom_nodes/ComfyUI-Manager
 
       - name: Setup Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -221,7 +221,7 @@ jobs:
           ${{ env.UV_CMD_MACOS }}
 
       - name: Upload macOS requirements
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: macos-requirements
           path: assets/requirements/macos.compiled
@@ -233,7 +233,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ needs.get-pr-details.outputs.head_sha }}
@@ -245,13 +245,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Download Windows requirements
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: windows-requirements
           path: assets/requirements/
 
       - name: Download macOS requirements
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: macos-requirements
           path: assets/requirements/

@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Github checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build
         uses: ./.github/actions/build/windows/app
@@ -31,7 +31,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: tests

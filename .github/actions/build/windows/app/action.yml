@@ -19,11 +19,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Use Node.js 20.x
-      uses: JP250552/setup-node@0c618ceb2e48275dc06e86901822fd966ce75ba2
+    - name: Use Node.js 24.x
+      uses: actions/setup-node@v6
       with:
-        node-version: '20.x'
-        corepack: true
+        node-version-file: '.nvmrc'
+
+    - name: Install Yarn
+      run: npm install -g yarn@4.5.0
 
     - run: yarn install --immutable
       shell: cmd
@@ -39,7 +41,7 @@ runs:
         (Get-Content node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js) -replace [Regex]::Escape('await execute({ ...internalOptions, hash: "sha1'), [Regex]::Escape('//await execute({ ...internalOptions, hash: "sha1') | Out-File -encoding ASCII node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
