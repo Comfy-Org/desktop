@@ -316,7 +316,6 @@ export function registerPathHandlers() {
         result.parentMissing ||
         (!bypassSpaceCheck && result.freeSpace < requiredSpace) ||
         Boolean(result.error) ||
-        result.isNonDefaultDrive ||
         result.isOneDrive ||
         result.isInsideAppInstallDir ||
         result.isInsideUpdaterCache;

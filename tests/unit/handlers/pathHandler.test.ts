@@ -380,7 +380,7 @@ describe('PathHandlers', () => {
       const result = await validateHandler({}, String.raw`D:\ComfyUI`);
 
       expect(result).toMatchObject({
-        isValid: false,
+        isValid: true,
         exists: true,
         isOneDrive: false,
         isNonDefaultDrive: true,
