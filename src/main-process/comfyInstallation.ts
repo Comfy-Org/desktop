@@ -194,7 +194,7 @@ export class ComfyInstallation {
 
     // Visual C++ Redistributable
     if (process.platform === 'win32') {
-      const vcDllPath = `${process.env.SYSTEMROOT}\\System32\\vcruntime140.dll`;
+      const vcDllPath = String.raw`${process.env.SYSTEMROOT}\System32\vcruntime140.dll`;
       validation.vcRedist = (await pathAccessible(vcDllPath)) ? 'OK' : 'error';
       if (validation.vcRedist !== 'OK') log.warn(`Visual C++ Redistributable was not found [${vcDllPath}]`);
     } else {

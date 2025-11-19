@@ -251,7 +251,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return `source "${this.venvPath}/bin/activate"${EOL}`;
     }
     if (process.platform === 'win32') {
-      return `Set-ExecutionPolicy Unrestricted -Scope Process -Force${EOL}& "${this.venvPath}\\Scripts\\activate.ps1"${EOL}Set-ExecutionPolicy Default -Scope Process -Force${EOL}`;
+      return String.raw`Set-ExecutionPolicy Unrestricted -Scope Process -Force${EOL}& "${this.venvPath}\Scripts\activate.ps1"${EOL}Set-ExecutionPolicy Default -Scope Process -Force${EOL}`;
     }
     throw new Error(`Unsupported platform: ${process.platform}`);
   }

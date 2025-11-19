@@ -18,7 +18,7 @@ export class InstallWizard implements HasTelemetry {
     public installOptions: InstallOptions,
     readonly telemetry: ITelemetry
   ) {
-    this.migrationItemIds = new Set(installOptions.migrationItemIds ?? []);
+    this.migrationItemIds = new Set(installOptions.migrationItemIds);
   }
 
   get migrationSource(): string | undefined {
