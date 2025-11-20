@@ -1,0 +1,9 @@
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - '@sentry/cli'
+  - '@todesktop/cli'
+  - dtrace-provider
+  - electron
+  - esbuild
+  - node-pty
+  - protobufjs
