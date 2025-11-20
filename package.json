@@ -83,7 +83,7 @@
     "@typescript-eslint/parser": "^8.20.0",
     "diff": "^7.0.0",
     "electron": "39.2.3",
-    "electron-builder": "^25.1.8",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.17.0",
     "eslint-plugin-import": "^2.25.0",
     "eslint-plugin-unicorn": "^56.0.1",
