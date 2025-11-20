@@ -5,3 +5,4 @@ assets
 .vite
 scripts/shims
 .env_*
+pnpm-lock.yaml
