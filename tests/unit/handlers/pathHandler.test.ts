@@ -119,23 +119,7 @@ const getRegisteredHandler = <T extends (...args: never[]) => unknown>(
   return handler as unknown as HandlerType<T>;
 };
 
-type ElectronPathName =
-  | 'home'
-  | 'appData'
-  | 'userData'
-  | 'sessionData'
-  | 'temp'
-  | 'exe'
-  | 'module'
-  | 'desktop'
-  | 'documents'
-  | 'downloads'
-  | 'music'
-  | 'pictures'
-  | 'videos'
-  | 'recent'
-  | 'logs'
-  | 'crashDumps';
+type ElectronPathName = Parameters<typeof app.getPath>[0];
 
 const mockPaths = (overrides: Partial<Record<ElectronPathName, string>> = {}) => {
   vi.mocked(app.getPath).mockImplementation((name: ElectronPathName): string => {
