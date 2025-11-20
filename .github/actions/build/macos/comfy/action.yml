@@ -18,7 +18,7 @@ runs:
       shell: sh
       run: |
         python -m pip install --upgrade pip
-        yarn make:assets
+        pnpm make:assets
 
     - name: Unzip Sign Lib/Bin Rezip
       if: ${{inputs.sign-and-publish == 'true'}}

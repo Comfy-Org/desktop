@@ -25,22 +25,22 @@ jobs:
           node-version-file: '.nvmrc'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install Yarn
-        run: npm install -g yarn@4.5.0
+      - name: Install pnpm
+        run: npm install -g pnpm@10.22.0
 
-      - name: Cache yarn dependencies
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install
 
       - name: Build types
-        run: yarn run vite:types
+        run: pnpm run vite:types
 
       - name: Publish package
         run: npm publish --access public

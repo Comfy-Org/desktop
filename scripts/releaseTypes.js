@@ -10,9 +10,9 @@ try {
   const branchName = `version-bump-${isoDate}-${timestamp}`;
   execSync(`git checkout -b ${branchName} -t origin/main`, { stdio: 'inherit' });
 
-  // Run npm version patch and capture the output
+  // Run pnpm version patch and capture the output
   console.log('Bumping version...');
-  execSync('yarn version patch', { stdio: 'inherit' });
+  execSync('pnpm version patch', { stdio: 'inherit' });
 
   // Read the new version from package.json
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

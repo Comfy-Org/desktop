@@ -14,8 +14,7 @@
     "assets/requirements/**",
     "assets/uv/**",
     ".vite/**",
-    ".yarnrc.yml",
-    ".yarn/**",
+    "pnpm-lock.yaml",
     ".husky/**"
   ],
   "extraResources": [{ "from": "./assets" }],
@@ -24,8 +23,7 @@
     "!dist/**",
     "!src/**",
     "!scripts/**",
-    "!.yarn/**",
-    "!.yarnrc.yml",
+    "!pnpm-lock.yaml",
     "!.husky/**"
   ],
   "mac": {

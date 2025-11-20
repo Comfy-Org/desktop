@@ -1,6 +1,5 @@
 # ComfyUI Desktop
 
-[![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
 ![Beta](https://img.shields.io/badge/beta-blue.svg)
 
 # USER GUIDE
@@ -146,20 +145,18 @@ nvm install 24
 nvm use 24
 ```
 
-### Yarn
+### pnpm
 
-This project uses `yarn` as its package manager. If you do not already have a `yarn` binary available on your PATH, run:
+This project uses `pnpm` as its package manager. If you do not already have `pnpm` available on your PATH, run:
 
 ```bash
-# corepack is a set of utilities included with all recent distributions of node
-corepack enable
-yarn set version 4.5.0 # Look at the packageManager key in package.json for the exact version.
+npm install -g pnpm@10.22.0
 ```
 
-This will install a usable `yarn` binary. Then, in the root directory of this repo (ie adjacent to the top-level package.json file), run:
+Then, in the root directory of this repo (ie adjacent to the top-level package.json file), run:
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ## ComfyUI Assets
@@ -168,7 +165,7 @@ Before you can start the electron application, you need to download the ComfyUI 
 
 ### ComfyUI and other dependencies
 
-First, initialize the application resources by running `yarn make:assets`:
+First, initialize the application resources by running `pnpm make:assets`:
 
 This command will install ComfyUI and ComfyUI-Manager under `assets/`. The exact versions of each package is defined in `package.json`.
 
@@ -176,16 +173,16 @@ You can then run `start` to build and launch the app. A watcher will also be sta
 
 ```bash
 deactivate # Deactivate your existing python env to avoid influencing the
-yarn start
+pnpm start
 ```
 
 You can also build the package and/or distributables using the `make` command:
 
 ```bash
 # build the platform-dependent package and any distributables
-yarn make
+pnpm make
 # build cross-platform, e.g. windows from linux
-yarn make --windows
+pnpm make --windows
 ```
 
 ### Compiled Requirements
@@ -232,10 +229,10 @@ npx electron-rebuild
 or if that fails
 
 ```
-yarn add -D @electron/rebuild
+pnpm add -D @electron/rebuild
 rm -rf node_modules
-rm yarn.lock
-yarn install
+rm pnpm-lock.yaml
+pnpm install
 npx electron-rebuild
 ```
 
@@ -299,13 +296,13 @@ Applying the "Update Compiled Requirements" label to an open PR will automatical
 A number of utility scripts are defined under the "scripts" field of package.json. For example, to clean up the build artifacts you can run:
 
 ```bash
-yarn clean
+pnpm clean
 
-# Remove files created by yarn make:assets
-yarn clean:assets
+# Remove files created by pnpm make:assets
+pnpm clean:assets
 
 # clean:slate also removes node_modules
-yarn clean:slate
+pnpm clean:slate
 ```
 
 ## Crash Reports & Metrics

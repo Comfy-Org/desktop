@@ -19,9 +19,9 @@ execAndLog(`git clone ${managerRepo} assets/ComfyUI/custom_nodes/ComfyUI-Manager
 execAndLog(
   `cd assets/ComfyUI/custom_nodes/ComfyUI-Manager && git ${noWarning} checkout ${pkg.config.managerCommit} && cd ../../..`
 );
-execAndLog(`yarn run make:frontend`);
-execAndLog(`yarn run download:uv all`);
-execAndLog(`yarn run patch:core:frontend`);
+execAndLog(`pnpm run make:frontend`);
+execAndLog(`pnpm run download:uv all`);
+execAndLog(`pnpm run patch:core:frontend`);
 /**
  * Run a command and log the output.
  * @param {string} command The command to run.
