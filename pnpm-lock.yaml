@@ -51,8 +51,8 @@ importers:
         specifier: ^0.18.0
         version: 0.18.1
       node-pty:
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: 1.1.0-beta39
+        version: 1.1.0-beta39
       systeminformation:
         specifier: ^5.24.8
         version: 5.27.11
@@ -3941,6 +3941,9 @@ packages:
   node-addon-api@1.7.2:
     resolution: {integrity: sha512-ibPK3iA+vaY1eEjESkQkM0BbCqFOaZMiXRTtdB0u7b4djtY6JnsjvPdUHVMg6xQt3B8fpTTWHI9A+ADjM9frzg==}
 
+  node-addon-api@7.1.1:
+    resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
   node-api-version@0.2.1:
     resolution: {integrity: sha512-2xP/IGGMmmSQpI1+O/k72jF/ykvZ89JeuKX3TLJAYPDVLUalrshrLHkeVcCCZqG/eEa635cr8IBYzgnDvM2O8Q==}
 
@@ -3958,8 +3961,8 @@ packages:
     engines: {node: ^12.13 || ^14.13 || >=16}
     hasBin: true
 
-  node-pty@1.0.0:
-    resolution: {integrity: sha512-wtBMWWS7dFZm/VgqElrTvtfMq4GzJ6+edFI0Y0zyzygUSZMgZdraDUMUhCIvkjhJjme15qWmbyJbtAx4ot4uZA==}
+  node-pty@1.1.0-beta39:
+    resolution: {integrity: sha512-1xnN2dbS0QngT4xenpS/6Q77QtaDQo5vE6f4slATgZsFIv3NP4ObE7vAjYnZtMFG5OEh3jyDRZc+hy1DjDF7dg==}
 
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
@@ -9857,7 +9860,8 @@ snapshots:
       rimraf: 2.4.5
     optional: true
 
-  nan@2.23.1: {}
+  nan@2.23.1:
+    optional: true
 
   nanoid@3.3.11: {}
 
@@ -9874,6 +9878,8 @@ snapshots:
 
   node-addon-api@1.7.2:
     optional: true
+
+  node-addon-api@7.1.1: {}
 
   node-api-version@0.2.1:
     dependencies:
@@ -9902,9 +9908,9 @@ snapshots:
       - bluebird
       - supports-color
 
-  node-pty@1.0.0:
+  node-pty@1.1.0-beta39:
     dependencies:
-      nan: 2.23.1
+      node-addon-api: 7.1.1
 
   node-releases@2.0.27: {}
 

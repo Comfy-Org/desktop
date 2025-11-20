@@ -121,7 +121,7 @@
     "joi": "^18.0.2",
     "lodash": "4.17.21",
     "mixpanel": "^0.18.0",
-    "node-pty": "^1.0.0",
+    "node-pty": "1.1.0-beta39",
     "systeminformation": "^5.24.8",
     "tar": "^7.4.3",
     "tmp": "^0.2.3",
