@@ -38,6 +38,12 @@ importers:
       electron-store:
         specifier: 8.2.0
         version: 8.2.0
+      extract-zip:
+        specifier: ^2.0.1
+        version: 2.0.1
+      joi:
+        specifier: ^18.0.2
+        version: 18.0.2
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -3490,8 +3496,8 @@ packages:
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
 
-  joi@18.0.1:
-    resolution: {integrity: sha512-IiQpRyypSnLisQf3PwuN2eIHAsAIGZIrLZkd4zdvIar2bDyhM91ubRjy8a3eYablXsh9BeI/c7dmPYHca5qtoA==}
+  joi@18.0.2:
+    resolution: {integrity: sha512-RuCOQMIt78LWnktPoeBL0GErkNaJPTBGcYuyaBvUOQSpcpcLfWrHPPihYdOGbV5pam9VTWbeoF7TsGiHugcjGA==}
     engines: {node: '>= 20'}
 
   join-component@1.1.0:
@@ -9447,7 +9453,7 @@ snapshots:
 
   jju@1.4.0: {}
 
-  joi@18.0.1:
+  joi@18.0.2:
     dependencies:
       '@hapi/address': 5.1.1
       '@hapi/formula': 3.0.2
@@ -11223,7 +11229,7 @@ snapshots:
   wait-on@8.0.5:
     dependencies:
       axios: 1.13.2
-      joi: 18.0.1
+      joi: 18.0.2
       lodash: 4.17.21
       minimist: 1.2.8
       rxjs: 7.8.2
