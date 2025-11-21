@@ -16,7 +16,7 @@ jobs:
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
         shell: bash
 
-      - name: Use Node.js 24.x
+      - name: Use Node.js 22.21.1
         uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'

@@ -134,15 +134,15 @@ If you're using other toolsets, you may need their corresponding Spectre-mitigat
 
 ### Node
 
-We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage node versions. This project uses node v24.x.
+We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage node versions. This project uses node v22.21.1.
 
 #### Windows
 
 Microsoft recommends [nvm-windows](https://github.com/coreybutler/nvm-windows) on their [Node.js on Windows page](https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows#install-nvm-windows-nodejs-and-npm).
 
 ```ps1
-nvm install 24
-nvm use 24
+nvm install 22.21.1
+nvm use 22.21.1
 ```
 
 ### pnpm

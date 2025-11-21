@@ -90,7 +90,7 @@ We have testing configured with Vitest. Use vitest to create any tests you need.
 ## Development Setup
 
 - **Python 3.12+** with virtual environment support required
-- **Node.js v24.x** (use nvm for version management)
+- **Node.js v22.21.1** (use nvm for version management)
 - **Visual Studio 2019+** with C++ workload (Windows)
 - **Spectre-mitigated libraries** for node-gyp compilation
 
