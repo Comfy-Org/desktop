@@ -314,9 +314,8 @@ export function registerPathHandlers() {
       const hasBlockingIssues =
         result.cannotWrite ||
         result.parentMissing ||
-        (!bypassSpaceCheck && result.freeSpace < requiredSpace) ||
+        (!bypassSpaceCheck && result.freeSpace >= 0 && result.freeSpace < requiredSpace) ||
         Boolean(result.error) ||
-        result.isNonDefaultDrive ||
         result.isOneDrive ||
         result.isInsideAppInstallDir ||
         result.isInsideUpdaterCache;
