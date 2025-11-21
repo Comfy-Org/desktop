@@ -26,7 +26,7 @@
     "clean:uv": "rimraf assets/uv",
     "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz & pnpm run clean:assets:git && pnpm run clean:uv",
     "clean:assets:git": "rimraf assets/ComfyUI/.git assets/ComfyUI/custom_nodes/ComfyUI-Manager/.git",
-    "clean:slate": "pnpm run clean & pnpm run clean:assets & rimraf node_modules",
+    "clean:slate": "pnpm run clean && pnpm run clean:assets && pnpm exec rimraf node_modules",
     "download:uv": "node scripts/downloadUV.js",
     "download-frontend": "node scripts/downloadFrontend.js",
     "make:frontend": "pnpm run download-frontend",
