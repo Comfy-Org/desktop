@@ -12,6 +12,25 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
 
   console.log('Before Yarn Install', os.platform());
 
+  // Ensure the Yarn version defined in packageManager is available (Corepack is bundled with Node).
+  const yarnVersion = pkgJson?.packageManager?.startsWith('yarn@')
+    ? pkgJson.packageManager.split('@')[1]
+    : null;
+  if (yarnVersion) {
+    console.log(`Ensuring corepack uses yarn@${yarnVersion}`);
+    const enableResult = spawnSync('corepack', ['enable'], { shell: true, stdio: 'inherit' });
+    if (enableResult.status !== 0) {
+      console.warn('corepack enable failed; install may still pick up a global Yarn');
+    }
+    const prepareResult = spawnSync('corepack', ['prepare', `yarn@${yarnVersion}`, '--activate'], {
+      shell: true,
+      stdio: 'inherit',
+    });
+    if (prepareResult.status !== 0) {
+      console.warn(`corepack prepare yarn@${yarnVersion} failed; install may still pick up a global Yarn`);
+    }
+  }
+
   if (os.platform() === 'win32') {
     // ToDesktop currently does not have the min 3.12 python installed.
     // Download the installer then install it

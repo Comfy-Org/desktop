@@ -4,7 +4,7 @@
   "icon": "./assets/UI/Comfy_Logo_x512.png",
   "appBuilderLibVersion": "25.1.8",
   "schemaVersion": 1,
-  "uploadSizeLimit": 500,
+  "uploadSizeLimit": 601,
   "appPath": ".",
   "appFiles": [
     "src/**",
