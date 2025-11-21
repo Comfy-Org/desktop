@@ -41,7 +41,6 @@
     "notarize": "node debug/notarize.js",
     "package": "yarn run vite:compile && todesktop build --code-sign=false --async",
     "patch:core:frontend": "node scripts/patchComfyUI.js requirements",
-    "postinstall": "node .husky/install.mjs",
     "publish": "yarn run vite:compile && todesktop build",
     "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
     "reset-install": "node scripts/resetInstall.js",
