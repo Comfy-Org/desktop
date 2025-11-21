@@ -85,17 +85,20 @@ const buildRestrictedPaths = (): RestrictedPathEntry[] => {
   // On Windows/Linux, this is the folder containing the executable.
   // On macOS, this is the .app bundle.
   const exePath = app.getPath('exe');
+  const resolvedExePath = path.resolve(exePath);
   if (process.platform === 'darwin') {
     // Walk up until we find the .app bundle
-    let current = exePath;
+    let current = resolvedExePath;
     while (current && current !== '/' && !current.endsWith('.app')) {
-      current = path.dirname(current);
+      const next = path.dirname(current);
+      if (next === current) break; // Guard against dirname('.') or other non-progress cases
+      current = next;
     }
     if (current.endsWith('.app')) {
       addRestrictedPath('appInstallDir', current);
     } else {
       // Fallback if not in a bundle: just protect the exe's folder
-      addRestrictedPath('appInstallDir', path.dirname(exePath));
+      addRestrictedPath('appInstallDir', path.dirname(resolvedExePath));
     }
   } else {
     addRestrictedPath('appInstallDir', path.dirname(exePath));
