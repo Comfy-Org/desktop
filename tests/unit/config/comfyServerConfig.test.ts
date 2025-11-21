@@ -23,6 +23,16 @@ async function copyFixture(fixturePath: string, targetPath: string) {
   await writeFile(targetPath, content, { encoding: 'utf8', flush: true });
 }
 
+function stubPlatform(platform: NodeJS.Platform) {
+  const originalDescriptor = Object.getOwnPropertyDescriptor(process, 'platform');
+  Object.defineProperty(process, 'platform', { ...originalDescriptor, value: platform });
+  return () => {
+    if (originalDescriptor) {
+      Object.defineProperty(process, 'platform', originalDescriptor);
+    }
+  };
+}
+
 describe('ComfyServerConfig', () => {
   const mockUserDataPath = '/fake/user/data';
   let tempDir = '';
@@ -131,10 +141,14 @@ describe('ComfyServerConfig', () => {
     });
 
     it.each(['win32', 'darwin', 'linux'] as const)('should include platform-specific header for %s', (platform) => {
-      vi.stubGlobal('process', { platform });
-      const testConfig = { test: { path: '/test' } };
-      const generatedYaml = ComfyServerConfig.generateConfigFileContent(testConfig);
-      expect(generatedYaml).toContain(`# ComfyUI extra_model_paths.yaml for ${platform}`);
+      const restorePlatform = stubPlatform(platform);
+      try {
+        const testConfig = { test: { path: '/test' } };
+        const generatedYaml = ComfyServerConfig.generateConfigFileContent(testConfig);
+        expect(generatedYaml).toContain(`# ComfyUI extra_model_paths.yaml for ${platform}`);
+      } finally {
+        restorePlatform();
+      }
     });
 
     it('should handle empty configs', () => {
@@ -186,16 +200,24 @@ describe('ComfyServerConfig', () => {
 
   describe('getBaseConfig', () => {
     it.each(['win32', 'darwin', 'linux'] as const)('should return platform-specific config for %s', (platform) => {
-      vi.stubGlobal('process', { platform });
-      const platformConfig = ComfyServerConfig.getBaseConfig();
+      const restorePlatform = stubPlatform(platform);
+      try {
+        const platformConfig = ComfyServerConfig.getBaseConfig();
 
-      expect(platformConfig.custom_nodes).toBe('custom_nodes/');
-      expect(platformConfig.is_default).toBe('true');
+        expect(platformConfig.custom_nodes).toBe('custom_nodes/');
+        expect(platformConfig.is_default).toBe('true');
+      } finally {
+        restorePlatform();
+      }
     });
 
     it('should throw for unknown platforms', () => {
-      vi.stubGlobal('process', { platform: 'invalid' });
-      expect(() => ComfyServerConfig.getBaseConfig()).toThrow('No base config found for invalid');
+      const restorePlatform = stubPlatform('invalid' as NodeJS.Platform);
+      try {
+        expect(() => ComfyServerConfig.getBaseConfig()).toThrow('No base config found for invalid');
+      } finally {
+        restorePlatform();
+      }
     });
   });
 
