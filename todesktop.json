@@ -15,6 +15,7 @@
     "assets/requirements/**",
     "assets/uv/**",
     ".vite/**",
+    "node_modules/**",
     ".npmrc",
     "pnpm-lock.yaml",
     ".husky/**"
