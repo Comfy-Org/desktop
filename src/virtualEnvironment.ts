@@ -364,6 +364,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 25 }));
 
+    log.info(
+      `Installing compiled requirements from ${this.requirementsCompiledPath} (expecting comfyui-workflow-templates)`
+    );
     const installCmd = getPipInstallArgs({
       requirementsFile: this.requirementsCompiledPath,
       indexStrategy: 'unsafe-best-match',
@@ -618,6 +621,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     );
 
     log.info(`Installing ComfyUI requirements from ${this.comfyUIRequirementsPath}`);
+    log.info('Expecting comfyui-workflow-templates from ComfyUI requirements');
     const installCmd = getPipInstallArgs({
       requirementsFile: this.comfyUIRequirementsPath,
       packages: [],
