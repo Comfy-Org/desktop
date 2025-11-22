@@ -9,22 +9,6 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
    * appDir - string - the path to the app directory
    * hookName - string - the name of the hook ("todesktop:beforeInstall" or "todesktop:afterPack")
    */
-
-  console.log('Before dependency install', os.platform());
-
-
-  const run = (cmd, args) => spawnSync(cmd, args, { cwd: appDir, stdio: 'inherit', shell: true });
-
-  let res = run('pnpm', pnpmArgs);
-  if (res.status !== 0) {
-    console.warn('pnpm not available directly; retrying via corepack...');
-    res = run('corepack', ['pnpm', ...pnpmArgs]);
-  }
-
-  if (res.status !== 0) {
-    console.warn('pnpm install failed; ToDesktop may fall back to Yarn install.');
-  }
-
   if (os.platform() === 'win32') {
     // ToDesktop currently does not have the min 3.12 python installed.
     // Download the installer then install it
