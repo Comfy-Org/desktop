@@ -364,11 +364,6 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 25 }));
 
-    // pytorch nightly is required for MPS
-    if (process.platform === 'darwin') {
-      return this.manualInstall(callbacks);
-    }
-
     const installCmd = getPipInstallArgs({
       requirementsFile: this.requirementsCompiledPath,
       indexStrategy: 'unsafe-best-match',
