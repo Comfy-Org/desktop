@@ -26,17 +26,6 @@ async function removeDotBinDirectories(root) {
   }
 }
 
-function makeWritableRecursive(targetPath) {
-  try {
-    const result = spawnSync('chmod', ['-R', 'u+w', targetPath], { stdio: 'inherit' });
-    if (result.status !== 0) {
-      console.warn(`chmod returned ${result.status} for ${targetPath}`);
-    }
-  } catch (error) {
-    console.warn(`Failed to chmod ${targetPath}:`, error);
-  }
-}
-
 module.exports = async ({ appOutDir, packager, outDir }) => {
   /**
    * appPkgName - string - the name of the app package
@@ -87,9 +76,6 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
         console.warn(`Failed to chmod ${helper}:`, error);
       }
     }
-
-    // Hack: make everything owner-writable to avoid codesign failures on read-only files
-    makeWritableRecursive(appPath);
   }
 
   if (os.platform() === 'win32') {
