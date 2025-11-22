@@ -10,7 +10,31 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
    * hookName - string - the name of the hook ("todesktop:beforeInstall" or "todesktop:afterPack")
    */
 
-  console.log('Before Yarn Install', os.platform());
+  console.log('Before dependency install', os.platform());
+
+  // Ensure production node_modules exists in the packaged app by doing an offline pnpm install
+  // using the bundled .pnpm-store and lockfile. This avoids relying on ToDesktop's Yarn cache.
+  const appStoreDir = path.join(appDir, '.pnpm-store');
+  const pnpmArgs = [
+    'install',
+    '--prod',
+    '--frozen-lockfile',
+    '--offline',
+    '--ignore-scripts',
+    `--store-dir=${appStoreDir}`,
+  ];
+
+  const run = (cmd, args) => spawnSync(cmd, args, { cwd: appDir, stdio: 'inherit', shell: true });
+
+  let res = run('pnpm', pnpmArgs);
+  if (res.status !== 0) {
+    console.warn('pnpm not available directly; retrying via corepack...');
+    res = run('corepack', ['pnpm', ...pnpmArgs]);
+  }
+
+  if (res.status !== 0) {
+    console.warn('pnpm install failed; ToDesktop may fall back to Yarn install.');
+  }
 
   if (os.platform() === 'win32') {
     // ToDesktop currently does not have the min 3.12 python installed.

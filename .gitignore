@@ -39,6 +39,9 @@ jspm_packages/
 # TypeScript v1 declaration files
 typings/
 
+# pnpm offline store
+.pnpm-store/
+
 # TypeScript cache
 *.tsbuildinfo
 dist

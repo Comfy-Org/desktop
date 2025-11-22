@@ -15,9 +15,10 @@
     "assets/requirements/**",
     "assets/uv/**",
     ".vite/**",
-    "node_modules/**",
     ".npmrc",
     "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    ".pnpm-store/**",
     ".husky/**"
   ],
   "extraResources": [{ "from": "./assets" }],
