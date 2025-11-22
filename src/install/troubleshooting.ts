@@ -2,6 +2,7 @@ import log from 'electron-log/main';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 import { IPC_CHANNELS } from '@/constants';
+import { evaluatePathRestrictions } from '@/handlers/pathHandlers';
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import type { AppWindow } from '@/main-process/appWindow';
 import type { ComfyInstallation } from '@/main-process/comfyInstallation';
@@ -105,6 +106,20 @@ export class Troubleshooting implements Disposable {
       if (response.canceled || !(response.filePaths.length > 0)) return false;
 
       const basePath = response.filePaths[0];
+      const restrictionFlags = evaluatePathRestrictions(basePath);
+      const isUnsafeBasePath =
+        restrictionFlags.isInsideAppInstallDir || restrictionFlags.isInsideUpdaterCache || restrictionFlags.isOneDrive;
+      if (isUnsafeBasePath) {
+        log.warn(
+          'SET_BASE_PATH: selected base path is in an unsafe location (inside app install directory, updater cache, or OneDrive).',
+          {
+            basePath,
+            restrictionFlags,
+          }
+        );
+        return false;
+      }
+
       useDesktopConfig().set('basePath', basePath);
       const result = await ComfyServerConfig.setBasePathInDefaultConfig(basePath);
 

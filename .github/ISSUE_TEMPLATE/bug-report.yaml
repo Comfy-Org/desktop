@@ -2,6 +2,7 @@ name: Bug Report
 description: 'Something is not behaving as expected.'
 title: '[Bug]: '
 labels: ['Potential Bug']
+type: Bug
 body:
   - type: markdown
     attributes:
@@ -80,7 +81,7 @@ body:
         </details>
       render: powershell
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: Browser Logs
@@ -97,7 +98,7 @@ body:
 
         </details>
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: Settings JSON
@@ -112,7 +113,7 @@ body:
 
         </details>
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: Other

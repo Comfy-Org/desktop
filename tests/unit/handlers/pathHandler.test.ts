@@ -22,16 +22,22 @@ const MOCK_PATHS = {
   logs: '/mock/logs/path',
   documents: '/mock/documents',
   appData: '/mock/appData',
-  appPath: '/mock/app/path',
+  appPath: path.join('/mock', 'ComfyUI Desktop.app', 'Contents', 'Resources', 'app.asar'),
+  exe: path.join('/mock', 'ComfyUI Desktop.app', 'Contents', 'MacOS', 'ComfyUI Desktop'),
 } as const;
+const MOCK_RESOURCES_PATH = path.dirname(MOCK_PATHS.appPath);
 
 // Add this mock for OneDrive environment variable
 const MOCK_ONEDRIVE = String.raw`C:\Users\Test\OneDrive`;
 const MOCK_SYSTEM_DRIVE = String.raw`C:`;
+const MOCK_LOCAL_APP_DATA = path.win32.join('C:', 'Users', 'Test', 'AppData', 'Local');
 const originalEnv = process.env;
+const electronProcess = process as NodeJS.Process & { resourcesPath?: string };
+const originalResourcesPath = electronProcess.resourcesPath;
 
 afterEach(() => {
   process.env = originalEnv;
+  electronProcess.resourcesPath = originalResourcesPath;
 });
 
 electronMock.app.getPath = vi.fn((name: string) => {
@@ -44,6 +50,8 @@ electronMock.app.getPath = vi.fn((name: string) => {
       return '/mock/documents';
     case 'appData':
       return '/mock/appData';
+    case 'exe':
+      return MOCK_PATHS.exe;
     default:
       return `/mock/${name}`;
   }
@@ -86,9 +94,10 @@ const mockFileSystem = ({ exists = true, writable = true, isDirectory = false, c
   vi.mocked(fs.statSync).mockReturnValue({
     isDirectory: () => isDirectory,
   } as unknown as fs.Stats);
-  vi.mocked(fs.readdirSync).mockReturnValue(
-    Array.from({ length: contentLength }, () => ({ name: 'mock-file' }) as fs.Dirent)
-  );
+  vi.mocked(fs.readdirSync).mockImplementation(() => {
+    const entries = Array.from({ length: contentLength }, () => 'mock-file');
+    return entries as unknown as ReturnType<typeof fs.readdirSync>;
+  });
   if (writable) {
     vi.mocked(fs.accessSync).mockReturnValue();
   } else {
@@ -143,8 +152,14 @@ describe('PathHandlers', () => {
     );
     vi.mocked(app.getAppPath).mockReturnValue(MOCK_PATHS.appPath);
     vi.mocked(shell.openPath).mockResolvedValue('');
+    electronProcess.resourcesPath = MOCK_RESOURCES_PATH;
 
-    process.env = { ...originalEnv, OneDrive: MOCK_ONEDRIVE, SystemDrive: MOCK_SYSTEM_DRIVE };
+    process.env = {
+      ...originalEnv,
+      OneDrive: MOCK_ONEDRIVE,
+      SystemDrive: MOCK_SYSTEM_DRIVE,
+      LOCALAPPDATA: MOCK_LOCAL_APP_DATA,
+    };
 
     registerPathHandlers();
   });
@@ -159,7 +174,12 @@ describe('PathHandlers', () => {
     beforeEach(() => {
       validateHandler = getRegisteredHandler(IPC_CHANNELS.VALIDATE_INSTALL_PATH);
       mockDiskSpace(DEFAULT_FREE_SPACE);
-      process.env = { ...originalEnv, OneDrive: MOCK_ONEDRIVE, SystemDrive: MOCK_SYSTEM_DRIVE };
+      process.env = {
+        ...originalEnv,
+        OneDrive: MOCK_ONEDRIVE,
+        SystemDrive: MOCK_SYSTEM_DRIVE,
+        LOCALAPPDATA: MOCK_LOCAL_APP_DATA,
+      };
     });
 
     it('Windows: accepts valid install path with sufficient space', async () => {
@@ -189,6 +209,18 @@ describe('PathHandlers', () => {
         exists: false,
         freeSpace: DEFAULT_FREE_SPACE,
         cannotWrite: false,
+      });
+    });
+
+    it('rejects paths inside the desktop install root directory', async () => {
+      mockFileSystem({ exists: true, writable: true });
+      const installRootChild = path.resolve(MOCK_PATHS.appPath, '..', 'config');
+
+      const result = await validateHandler({}, installRootChild);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+        isInsideUpdaterCache: false,
       });
     });
 
@@ -262,6 +294,48 @@ describe('PathHandlers', () => {
       });
     });
 
+    it('rejects paths inside the app bundle directory', async () => {
+      mockFileSystem({ exists: true, writable: true });
+      const nestedAppPath = path.join(MOCK_PATHS.appPath, 'user-data');
+
+      const result = await validateHandler({}, nestedAppPath);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+        isInsideUpdaterCache: false,
+      });
+    });
+
+    it('Mac: rejects paths inside the app bundle root directory', async () => {
+      if (process.platform !== 'darwin') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true, isDirectory: true });
+      const bundleRoot = path.resolve(MOCK_PATHS.appPath, '..', '..', '..');
+      const bundleChild = path.join(bundleRoot, 'user-data');
+
+      const result = await validateHandler({}, bundleChild);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+      });
+    });
+
+    it('Mac: rejects bundle paths regardless of case', async () => {
+      if (process.platform !== 'darwin') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true, isDirectory: true });
+      const bundleRoot = path.resolve(MOCK_PATHS.appPath, '..', '..', '..');
+      const weirdCasingPath = path.join(bundleRoot.toUpperCase(), 'user-data');
+
+      const result = await validateHandler({}, weirdCasingPath);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+      });
+    });
+
     it('Windows: should handle and log errors during validation', async () => {
       if (process.platform !== 'win32') {
         return;
@@ -306,7 +380,7 @@ describe('PathHandlers', () => {
       const result = await validateHandler({}, String.raw`D:\ComfyUI`);
 
       expect(result).toMatchObject({
-        isValid: false,
+        isValid: true,
         exists: true,
         isOneDrive: false,
         isNonDefaultDrive: true,
@@ -327,6 +401,64 @@ describe('PathHandlers', () => {
         exists: true,
         freeSpace: LOW_FREE_SPACE,
         requiredSpace: WIN_REQUIRED_SPACE,
+      });
+    });
+
+    it('Windows: rejects paths inside the LocalAppData install directory', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      const installDir = path.win32.join(MOCK_LOCAL_APP_DATA, 'Programs', 'comfyui-electron', 'data');
+
+      const result = await validateHandler({}, installDir);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+        isInsideUpdaterCache: false,
+      });
+    });
+
+    it('Windows: rejects LocalAppData install directory paths regardless of case', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      const installDir = path.win32.join(MOCK_LOCAL_APP_DATA, 'Programs', 'comfyui-electron', 'data').toUpperCase();
+
+      const result = await validateHandler({}, installDir);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideAppInstallDir: true,
+        isInsideUpdaterCache: false,
+      });
+    });
+
+    it('Windows: rejects paths inside the updater cache (new namespace)', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      const updaterPath = path.win32.join(MOCK_LOCAL_APP_DATA, '@comfyorgcomfyui-electron-updater', 'payload');
+
+      const result = await validateHandler({}, updaterPath);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideUpdaterCache: true,
+      });
+    });
+
+    it('Windows: rejects paths inside the updater cache (legacy namespace)', async () => {
+      if (process.platform !== 'win32') {
+        return;
+      }
+      mockFileSystem({ exists: true, writable: true });
+      const updaterPath = path.win32.join(MOCK_LOCAL_APP_DATA, 'comfyui-electron-updater', 'payload');
+
+      const result = await validateHandler({}, updaterPath);
+      expect(result).toMatchObject({
+        isValid: false,
+        isInsideUpdaterCache: true,
       });
     });
 
@@ -413,7 +545,7 @@ describe('PathHandlers', () => {
       const result = await getSystemPathsHandler({});
       expect(result).toEqual({
         appData: '/mock/appData',
-        appPath: '/mock/app/path',
+        appPath: MOCK_PATHS.appPath,
         defaultInstallPath: path.join('/mock/documents', 'ComfyUI'),
       });
     });
