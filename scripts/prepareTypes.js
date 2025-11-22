@@ -30,4 +30,7 @@ if (!fs.existsSync(distDir)) {
 // Write the new package.json to the dist directory
 fs.writeFileSync(path.join(distDir, 'package.json'), JSON.stringify(typesPackage, null, 2));
 
-console.log('Types package.json has been prepared in the dist directory');
+// Create an empty yarn.lock file
+fs.writeFileSync(path.join(distDir, 'yarn.lock'), '');
+
+console.log('Types package.json and yarn.lock have been prepared in the dist directory');

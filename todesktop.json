@@ -3,9 +3,8 @@
   "id": "241012ess7yxs0e",
   "icon": "./assets/UI/Comfy_Logo_x512.png",
   "appBuilderLibVersion": "25.1.8",
-  "rebuildLibrary": "@electron/rebuild",
   "schemaVersion": 1,
-  "uploadSizeLimit": 800,
+  "uploadSizeLimit": 500,
   "appPath": ".",
   "appFiles": [
     "src/**",
@@ -15,7 +14,8 @@
     "assets/requirements/**",
     "assets/uv/**",
     ".vite/**",
-    "pnpm-lock.yaml",
+    ".yarnrc.yml",
+    ".yarn/**",
     ".husky/**"
   ],
   "extraResources": [{ "from": "./assets" }],
@@ -24,7 +24,8 @@
     "!dist/**",
     "!src/**",
     "!scripts/**",
-    "!pnpm-lock.yaml",
+    "!.yarn/**",
+    "!.yarnrc.yml",
     "!.husky/**"
   ],
   "mac": {

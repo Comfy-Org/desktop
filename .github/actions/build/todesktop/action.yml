@@ -21,21 +21,20 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Use Node.js 22.21.1
-      uses: actions/setup-node@v6
+    - name: Use Node.js 20.x
+      uses: JP250552/setup-node@0c618ceb2e48275dc06e86901822fd966ce75ba2
       with:
-        node-version-file: '.nvmrc'
+        node-version: '20.x'
+        corepack: true
 
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4.2.0
-      with:
-        version: 10.22.0
+    - run: yarn install --immutable
+      shell: bash
 
-    - run: pnpm install
+    - run: yarn set version --yarn-path self
       shell: bash
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v4
       with:
         python-version: '3.12'
 
@@ -43,8 +42,8 @@ runs:
       shell: bash
       run: |
         set -x
-        pnpm make:assets
-        pnpm clean:assets:git
+        yarn make:assets
+        yarn clean:assets:git
 
     - name: Make app
       shell: bash
@@ -56,10 +55,10 @@ runs:
       run: |
         if [ "${{ inputs.STAGING }}" = "true" ]; then
           echo "🚧 Building STAGING version..."
-          pnpm run publish:staging
+          yarn run publish:staging
         else
           echo "🚀 Building PRODUCTION version..."
-          pnpm run publish | tee build.log
+          yarn run publish | tee build.log
           
           # Extract build ID from the log
           BUILD_URL=$(grep "Build complete!" build.log | head -n1 | cut -d' ' -f3)

@@ -389,16 +389,16 @@ createDesktopScreenshot(filename: string): Promise<string>  // Full desktop scre
 export COMFYUI_ENABLE_VOLATILE_TESTS=1
 
 # Run all integration tests
-pnpm test:e2e
+yarn test:e2e
 
 # Run specific test file
-pnpm exec playwright test tests/integration/install/installWizard.spec.ts
+yarn playwright test tests/integration/install/installWizard.spec.ts
 
 # Run with UI mode for debugging
-pnpm exec playwright test --ui
+yarn playwright test --ui
 
 # Update screenshots
-pnpm test:e2e:update
+yarn test:e2e:update
 ```
 
 ### CI Environment

@@ -17,32 +17,36 @@ jobs:
       (github.event.pull_request.merged == true &&
       contains(github.event.pull_request.labels.*.name, 'ReleaseTypes'))
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Use Node.js 22.21.1
-        uses: actions/setup-node@v6
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4.2.0
-        with:
-          version: 10.22.0
+      - name: Enable Corepack
+        run: corepack enable
 
-      - name: Cache pnpm store
+      - name: Enable Corepack and pin Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.5.0 --activate
+          yarn --version
+
+      - name: Cache yarn dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.local/share/pnpm/store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          path: .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-
+            ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: pnpm install
+        run: yarn install --immutable
 
       - name: Build types
-        run: pnpm run vite:types
+        run: yarn run vite:types
 
       - name: Publish package
         run: npm publish --access public

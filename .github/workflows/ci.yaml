@@ -30,29 +30,36 @@ jobs:
         os: [macos-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Use Node.js 22.21.1
-        uses: actions/setup-node@v6
+      - name: Use Node.js 20.x
+        uses: JP250552/setup-node@0c618ceb2e48275dc06e86901822fd966ce75ba2
         with:
-          node-version-file: '.nvmrc'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4.2.0
-        with:
-          version: 10.22.0
+          node-version: '20.x'
+          corepack: true
 
       - name: Install Dependencies
-        run: pnpm install
+        run: yarn install
 
       - name: Run type check
-        run: pnpm typecheck
+        run: yarn tsc --noEmit --strict
 
       - name: Check lint
-        run: pnpm lint:check
+        run: yarn lint:check
 
       - name: Run Unit Tests
-        run: pnpm test:unit
+        run: yarn run test:unit
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238
+        with:
+          directory: ./coverage/
+          fail_ci_if_error: false
+          files: ./cobertura-coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
 
       - name: Check Prettier Formatting
-        run: pnpm run format:check
+        run: yarn run format:check

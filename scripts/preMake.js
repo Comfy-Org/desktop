@@ -20,7 +20,7 @@ const preMake = () => {
   }
 
   if (os.platform() === 'darwin') {
-    spawnSync('pnpm run make:assets', [''], { shell: true, stdio: 'inherit' });
+    spawnSync('yarn run make:assets', [''], { shell: true, stdio: 'inherit' });
   }
 
   if (os.platform() === 'win32') {
@@ -30,7 +30,7 @@ const preMake = () => {
       { shell: true, stdio: 'pipe' }
     ).stdout.toString();
     const localPythonModulePath = `PATH=${result.replaceAll('\\', '\\\\').trim()};%PATH%`;
-    spawnSync(`set ${localPythonModulePath} && pnpm run make:assets`, [''], {
+    spawnSync(`set ${localPythonModulePath} && yarn run make:assets`, [''], {
       shell: true,
       stdio: 'inherit',
     });

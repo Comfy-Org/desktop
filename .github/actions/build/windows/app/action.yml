@@ -19,17 +19,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Use Node.js 22.21.1
-      uses: actions/setup-node@v6
+    - name: Use Node.js 20.x
+      uses: JP250552/setup-node@0c618ceb2e48275dc06e86901822fd966ce75ba2
       with:
-        node-version-file: '.nvmrc'
+        node-version: '20.x'
+        corepack: true
 
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4.2.0
-      with:
-        version: 10.22.0
-
-    - run: pnpm install
+    - run: yarn install --immutable
       shell: cmd
 
     - name: Rebuild node-pty
@@ -43,14 +39,14 @@ runs:
         (Get-Content node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js) -replace [Regex]::Escape('await execute({ ...internalOptions, hash: "sha1'), [Regex]::Escape('//await execute({ ...internalOptions, hash: "sha1') | Out-File -encoding ASCII node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v4
       with:
         python-version: '3.12'
 
     - name: Install ComfyUI and create standalone package
       run: |
         set -x
-        pnpm make:assets
+        yarn make:assets
       shell: bash
 
     - name: Make app
@@ -60,7 +56,7 @@ runs:
         DEBUG: electron-forge:*
         PUBLISH: ${{ inputs.sign-and-publish }}
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: pnpm run make
+      run: yarn run make
 
     - name: Print SignLogs
       if: ${{inputs.sign-and-publish == 'true' && always()}}

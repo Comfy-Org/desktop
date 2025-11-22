@@ -424,7 +424,7 @@ export class AppWindow {
         click: () => {
           this.show();
           // Mac Only
-          if (process.platform === 'darwin' && app.dock) {
+          if (process.platform === 'darwin') {
             app.dock.show().catch((error) => {
               log.error('Error showing dock', error);
             });
@@ -442,7 +442,7 @@ export class AppWindow {
         click: () => {
           this.hide();
           // Mac Only
-          if (process.platform === 'darwin' && app.dock) {
+          if (process.platform === 'darwin') {
             app.dock.hide();
           }
         },

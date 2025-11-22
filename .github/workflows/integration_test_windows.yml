@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Github checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Build
         uses: ./.github/actions/build/windows/app
@@ -22,7 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Build
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: comfyui-electron-win32-debug-build-${{ env.sha_short }}
           path: dist/*.zip
@@ -34,7 +34,7 @@ jobs:
         run: npm run test:e2e
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: test-results
