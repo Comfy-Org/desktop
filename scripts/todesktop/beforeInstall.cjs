@@ -39,39 +39,45 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
       return result.status === 0 && output.startsWith(expectedPrefix);
     };
 
-    const resolvePython313 = () => {
-      const candidates = [process.env.PYTHON_3_13, pythonFrameworkBin, '/opt/homebrew/bin/python3.13', '/usr/local/bin/python3.13', 'python3.13'];
+    const resolvePython312 = () => {
+      const candidates = [
+        process.env.PYTHON_3_12,
+        pythonFrameworkBin,
+        '/opt/homebrew/bin/python3.12',
+        '/usr/local/bin/python3.12',
+        'python3.12',
+      ];
       for (const bin of candidates) {
         if (bin && versionMatches(bin)) return bin;
       }
       return null;
     };
 
-    let pythonBin = resolvePython313();
+    let pythonBin = resolvePython312();
 
     if (!pythonBin) {
       console.log(`[ToDesktop macOS] Installing Python ${pythonMajorMinor}.x with Homebrew (${pythonFormula})`);
       const brewAvailable = spawnSync('brew', ['--version'], { shell: true, stdio: 'ignore' }).status === 0;
       if (!brewAvailable) {
-        console.error('[ToDesktop macOS] Homebrew not available; cannot install python@3.13');
+        console.error(`[ToDesktop macOS] Homebrew not available; cannot install ${pythonFormula}`);
         return;
       }
 
       const brewResult = spawnSync('brew', ['install', pythonFormula], { shell: true, stdio: 'inherit' });
       if (brewResult.status !== 0) {
-        console.error('[ToDesktop macOS] Failed to install python@3.13 with Homebrew');
+        console.error(`[ToDesktop macOS] Failed to install ${pythonFormula} with Homebrew`);
         return;
       }
 
       const prefixResult = spawnSync('brew', ['--prefix', pythonFormula], { shell: true, encoding: 'utf8' });
       const prefix = prefixResult.stdout && prefixResult.stdout.trim();
-      const brewBin = prefix ? path.join(prefix, 'bin', 'python3.13') : null;
+      const brewBin = prefix ? path.join(prefix, 'bin', 'python3.12') : null;
       if (brewBin && versionMatches(brewBin)) pythonBin = brewBin;
-      if (!pythonBin) pythonBin = resolvePython313();
+      if (!pythonBin) pythonBin = resolvePython312();
     }
 
     if (!pythonBin) {
-      console.error('[ToDesktop macOS] Python 3.13 not found after installation attempts');
+      console.error(`[ToDesktop macOS] Python ${pythonMajorMinor} not found after installation attempts`);
       return;
     }
 
