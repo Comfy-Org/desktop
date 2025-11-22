@@ -3,6 +3,29 @@ const fs = require('fs/promises');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
+// Hacky patch for emergency release
+async function removeDotBinDirectories(root) {
+  const queue = [root];
+  while (queue.length) {
+    const dir = queue.pop();
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (!entry.isDirectory()) continue;
+      if (entry.name === '.bin') {
+        await fs.rm(fullPath, { recursive: true, force: true });
+        continue;
+      }
+      queue.push(fullPath);
+    }
+  }
+}
+
 module.exports = async ({ appOutDir, packager, outDir }) => {
   /**
    * appPkgName - string - the name of the app package
@@ -37,8 +60,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     // Move rest of items to the resource folder
     await fs.cp(assetPath, resourcePath, { recursive: true });
     await fs.cp(nodeModulesPath, path.join(resourcePath, 'node_modules'), { recursive: true });
-    // Remove dev-time shims that break macOS signing when missing targets
-    await fs.rm(path.join(resourcePath, 'node_modules', '.bin'), { recursive: true, force: true });
+    await removeDotBinDirectories(path.join(resourcePath, 'node_modules'));
     // Remove other OS's UV
     await fs.rm(path.join(resourcePath, 'uv', 'win'), { recursive: true, force: true });
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
@@ -66,7 +88,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     // Move rest of items to the resource folder
     await fs.cp(assetPath, resourcePath, { recursive: true });
     await fs.cp(nodeModulesPath, path.join(resourcePath, 'node_modules'), { recursive: true });
-    await fs.rm(path.join(resourcePath, 'node_modules', '.bin'), { recursive: true, force: true });
+    await removeDotBinDirectories(path.join(resourcePath, 'node_modules'));
     // Remove other OS's UV
     await fs.rm(path.join(resourcePath, 'uv', 'macos'), { recursive: true, force: true });
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
