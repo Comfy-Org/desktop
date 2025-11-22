@@ -42,6 +42,16 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
     await fs.chmod(path.join(resourcePath, 'uv', 'macos', 'uv'), '755');
     await fs.chmod(path.join(resourcePath, 'uv', 'macos', 'uvx'), '755');
+    // Ensure node-pty spawn helpers are executable on macOS
+    const nodePtyPath = path.join(resourcePath, 'node_modules', 'node-pty');
+    for (const arch of ['darwin-arm64', 'darwin-x64']) {
+      const helper = path.join(nodePtyPath, 'prebuilds', arch, 'spawn-helper');
+      try {
+        await fs.chmod(helper, '755');
+      } catch (error) {
+        console.warn(`Failed to chmod ${helper}:`, error);
+      }
+    }
   }
 
   if (os.platform() === 'win32') {
