@@ -27,8 +27,8 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
   }
 
   if (os.platform() === 'darwin') {
-    const pythonMajorMinor = '3.13';
-    const pythonFormula = 'python@3.13';
+    const pythonMajorMinor = '3.12';
+    const pythonFormula = 'python@3.12';
     const expectedPrefix = `Python ${pythonMajorMinor}`;
     const pythonFrameworkBin = `/Library/Frameworks/Python.framework/Versions/${pythonMajorMinor}/bin/python3`;
     const venvPath = '/tmp/todesktop-python';
