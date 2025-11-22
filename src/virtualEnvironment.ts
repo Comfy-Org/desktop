@@ -751,9 +751,18 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return 'package-upgrade';
     }
 
-    const result = coreOk && managerOk ? 'OK' : 'error';
-    log.debug('hasRequirements result:', result);
-    return result;
+    if (!coreOk || !managerOk) {
+      log.info('Requirements are out of date. Treating as package upgrade.', {
+        coreOk,
+        managerOk,
+        upgradeCore,
+        upgradeManager,
+      });
+      return 'package-upgrade';
+    }
+
+    log.debug('hasRequirements result:', 'OK');
+    return 'OK';
   }
 
   /**
