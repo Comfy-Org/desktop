@@ -773,6 +773,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       'numpy',
       'PIL',
       'sqlalchemy',
+      'comfyui_workflow_templates',
     ]);
 
     return verification.success;
