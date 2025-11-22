@@ -25,4 +25,12 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
       stdio: 'ignore',
     });
   }
+
+  if (os.platform() === 'darwin') {
+    // Ensure distutils-compatible tooling for node-gyp (node-pty build).
+    spawnSync('python3', ['-m', 'pip', 'install', '--upgrade', 'packaging', 'setuptools'], {
+      shell: true,
+      stdio: 'inherit',
+    });
+  }
 };
