@@ -7,3 +7,6 @@ onlyBuiltDependencies:
   - esbuild
   - node-pty
   - protobufjs
+
+patchedDependencies:
+  node-pty@1.1.0-beta39: patches/node-pty@1.1.0-beta39.patch
