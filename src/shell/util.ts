@@ -6,9 +6,9 @@ export function getDefaultShell(): string {
       // Use full path to avoid e.g. https://github.com/Comfy-Org/desktop/issues/584
       return `${process.env.SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
     case 'darwin':
-      return 'zsh';
+      return process.env.SHELL ?? '/bin/zsh';
     default: // Linux and others
-      return 'bash';
+      return process.env.SHELL ?? '/bin/bash';
   }
 }
 
