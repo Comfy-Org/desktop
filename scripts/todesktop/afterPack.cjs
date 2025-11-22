@@ -22,6 +22,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const appPath = path.join(`${appOutDir}`, `${appName}.app`);
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
+    const nodeModulesPath = path.join(mainPath, 'app-wrapper', 'app', 'node_modules');
     const resourcePath = path.join(appPath, 'Contents', 'Resources');
     // Remove these Git folders that mac's codesign is choking on. Need a more recursive way to just find all folders with '.git' and delete
     await fs.rm(path.join(assetPath, 'ComfyUI', '.git'), { recursive: true, force: true });
@@ -35,6 +36,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     });
     // Move rest of items to the resource folder
     await fs.cp(assetPath, resourcePath, { recursive: true });
+    await fs.cp(nodeModulesPath, path.join(resourcePath, 'node_modules'), { recursive: true });
     // Remove other OS's UV
     await fs.rm(path.join(resourcePath, 'uv', 'win'), { recursive: true, force: true });
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
@@ -47,9 +49,11 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     const appPath = path.join(`${appOutDir}`, `${appName}.exe`);
     const mainPath = path.dirname(outDir);
     const assetPath = path.join(mainPath, 'app-wrapper', 'app', 'assets');
+    const nodeModulesPath = path.join(mainPath, 'app-wrapper', 'app', 'node_modules');
     const resourcePath = path.join(path.dirname(appPath), 'resources');
     // Move rest of items to the resource folder
     await fs.cp(assetPath, resourcePath, { recursive: true });
+    await fs.cp(nodeModulesPath, path.join(resourcePath, 'node_modules'), { recursive: true });
     // Remove other OS's UV
     await fs.rm(path.join(resourcePath, 'uv', 'macos'), { recursive: true, force: true });
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
