@@ -1,8 +1,17 @@
 import { Configuration } from 'electron-builder';
 
 const debugConfig: Configuration = {
-  files: ['node_modules', 'package.json', '.vite/**'],
+  files: [
+    'package.json',
+    '.vite/**',
+    'node_modules/**', // bundle runtime deps for main/preload
+    '!**/.pnpm-store/**', // avoid shipping the pnpm cache
+  ],
   extraResources: [
+    // Keep runtime deps available even if electron-builder pruning misses them.
+    { from: './node_modules', to: 'node_modules' },
+    // Ship the prebuilt desktop UI downloaded by make:frontend.
+    { from: './assets/desktop-ui', to: 'desktop-ui' },
     { from: './assets/ComfyUI', to: 'ComfyUI' },
     { from: './assets/uv', to: 'uv' },
     { from: './assets/UI', to: 'UI' },
