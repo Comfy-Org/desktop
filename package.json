@@ -43,7 +43,6 @@
     "notarize": "node debug/notarize.js",
     "package": "pnpm run vite:compile && todesktop build --code-sign=false --async",
     "patch:core:frontend": "node scripts/patchComfyUI.js requirements",
-    "prepare": "node .husky/install.mjs",
     "publish": "pnpm run vite:compile && todesktop build",
     "publish:staging": "pnpm run vite:compile && todesktop build --config=./todesktop.staging.json --async",
     "reset-install": "node scripts/resetInstall.js",
