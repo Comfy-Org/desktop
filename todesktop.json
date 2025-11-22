@@ -20,15 +20,36 @@
     ".npmrc",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
-    ".husky/**"
+    ".husky/**",
+    "!**/.git/**"
   ],
   "extraResources": [
-    { "from": "./assets/desktop-ui", "to": "desktop-ui" },
-    { "from": "./assets/ComfyUI", "to": "ComfyUI" },
-    { "from": "./assets/requirements", "to": "requirements" },
-    { "from": "./assets/override.txt", "to": "override.txt" },
-    { "from": "./assets/uv", "to": "uv" },
-    { "from": "./assets/UI", "to": "UI" }
+    {
+      "from": "./assets/desktop-ui",
+      "to": "desktop-ui",
+      "filter": ["**/*", "!**/.git/**"]
+    },
+    {
+      "from": "./assets/ComfyUI",
+      "to": "ComfyUI",
+      "filter": ["**/*", "!**/.git/**"]
+    },
+    {
+      "from": "./assets/requirements",
+      "to": "requirements",
+      "filter": ["**/*", "!**/.git/**"]
+    },
+    {
+      "from": "./assets/override.txt",
+      "to": "override.txt",
+      "filter": ["**/*", "!**/.git/**"]
+    },
+    {
+      "from": "./assets/uv",
+      "to": "uv",
+      "filter": ["**/*", "!**/.git/**"]
+    },
+    { "from": "./assets/UI", "to": "UI", "filter": ["**/*", "!**/.git/**"] }
   ],
   "filesForDistribution": [
     "!assets/**",
