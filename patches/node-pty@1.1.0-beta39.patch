@@ -1,6 +1,0 @@
-diff --git a/prebuilds/darwin-arm64/spawn-helper b/prebuilds/darwin-arm64/spawn-helper
-old mode 100644
-new mode 100755
-diff --git a/prebuilds/darwin-x64/spawn-helper b/prebuilds/darwin-x64/spawn-helper
-old mode 100644
-new mode 100755
