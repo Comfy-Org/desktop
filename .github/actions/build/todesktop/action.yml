@@ -34,6 +34,10 @@ runs:
     - run: pnpm install
       shell: bash
 
+    - name: Build frontend assets
+      shell: bash
+      run: pnpm run make:frontend
+
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
