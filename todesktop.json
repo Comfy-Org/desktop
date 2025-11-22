@@ -22,7 +22,15 @@
     "pnpm-workspace.yaml",
     ".husky/**"
   ],
-  "extraResources": [{ "from": "./assets" }],
+  "extraResources": [
+    { "from": "./node_modules", "to": "node_modules" },
+    { "from": "./assets/desktop-ui", "to": "desktop-ui" },
+    { "from": "./assets/ComfyUI", "to": "ComfyUI" },
+    { "from": "./assets/requirements", "to": "requirements" },
+    { "from": "./assets/override.txt", "to": "override.txt" },
+    { "from": "./assets/uv", "to": "uv" },
+    { "from": "./assets/UI", "to": "UI" }
+  ],
   "filesForDistribution": [
     "!assets/**",
     "!dist/**",
