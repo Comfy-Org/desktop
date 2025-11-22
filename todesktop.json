@@ -14,11 +14,12 @@
     "assets/UI/**",
     "assets/requirements/**",
     "assets/uv/**",
+    "assets/desktop-ui/**",
     ".vite/**",
+    "package.json",
     ".npmrc",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
-    ".pnpm-store/**",
     ".husky/**"
   ],
   "extraResources": [{ "from": "./assets" }],
