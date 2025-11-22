@@ -5,7 +5,6 @@ const debugConfig: Configuration = {
     'package.json',
     '.vite/**',
     'node_modules/**', // bundle runtime deps for main/preload
-    '!**/.pnpm-store/**', // avoid shipping the pnpm cache
   ],
   extraResources: [
     // Keep runtime deps available even if electron-builder pruning misses them.

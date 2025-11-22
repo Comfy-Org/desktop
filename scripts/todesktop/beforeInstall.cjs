@@ -12,17 +12,6 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
 
   console.log('Before dependency install', os.platform());
 
-  // Ensure production node_modules exists in the packaged app by doing an offline pnpm install
-  // using the bundled .pnpm-store and lockfile. This avoids relying on ToDesktop's Yarn cache.
-  const appStoreDir = path.join(appDir, '.pnpm-store');
-  const pnpmArgs = [
-    'install',
-    '--prod',
-    '--frozen-lockfile',
-    '--offline',
-    '--ignore-scripts',
-    `--store-dir=${appStoreDir}`,
-  ];
 
   const run = (cmd, args) => spawnSync(cmd, args, { cwd: appDir, stdio: 'inherit', shell: true });
 
