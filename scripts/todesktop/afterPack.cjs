@@ -37,6 +37,8 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     // Move rest of items to the resource folder
     await fs.cp(assetPath, resourcePath, { recursive: true });
     await fs.cp(nodeModulesPath, path.join(resourcePath, 'node_modules'), { recursive: true });
+    // Remove dev-time shims that break macOS signing when missing targets
+    await fs.rm(path.join(resourcePath, 'node_modules', '.bin'), { recursive: true, force: true });
     // Remove other OS's UV
     await fs.rm(path.join(resourcePath, 'uv', 'win'), { recursive: true, force: true });
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
@@ -64,6 +66,7 @@ module.exports = async ({ appOutDir, packager, outDir }) => {
     // Move rest of items to the resource folder
     await fs.cp(assetPath, resourcePath, { recursive: true });
     await fs.cp(nodeModulesPath, path.join(resourcePath, 'node_modules'), { recursive: true });
+    await fs.rm(path.join(resourcePath, 'node_modules', '.bin'), { recursive: true, force: true });
     // Remove other OS's UV
     await fs.rm(path.join(resourcePath, 'uv', 'macos'), { recursive: true, force: true });
     await fs.rm(path.join(resourcePath, 'uv', 'linux'), { recursive: true, force: true });
