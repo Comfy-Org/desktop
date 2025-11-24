@@ -3,6 +3,10 @@ name: Publish Staging Application
 on:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-staging-todesktop:
     if: |
