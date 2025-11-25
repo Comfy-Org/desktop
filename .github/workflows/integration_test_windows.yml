@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
-# Keep Windows e2e runs independent from top-level workflow concurrency to avoid cancellation.
 concurrency:
-  group: windows-e2e-${{ github.event.pull_request.number || github.ref }}
+  # Ensure the Windows e2e run doesn't share a group with other reusable callers
+  group: ${{ github.workflow_ref }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
