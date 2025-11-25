@@ -43,7 +43,7 @@ click==8.1.7
 comfyui-embedded-docs==0.3.1
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.7.9
+comfyui-workflow-templates==0.7.20
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 cryptography==43.0.3
