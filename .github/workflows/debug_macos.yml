@@ -4,11 +4,6 @@ on:
   workflow_dispatch:
   workflow_call:
 
-concurrency:
-  # Ensure the macOS build run doesn't cancel other reusable callers
-  group: ${{ github.workflow_ref }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build-macos-debug:
     runs-on: macos-latest
