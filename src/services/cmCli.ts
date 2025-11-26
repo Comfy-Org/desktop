@@ -11,11 +11,19 @@ import { HasTelemetry, ITelemetry, trackEvent } from './telemetry';
 
 export class CmCli implements HasTelemetry {
   private readonly cliPath: string;
+  private readonly moduleName = 'comfyui_manager.cm_cli';
   constructor(
     private readonly virtualEnvironment: VirtualEnvironment,
     readonly telemetry: ITelemetry
   ) {
     this.cliPath = path.join(getAppResourcesPath(), 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager', 'cm-cli.py');
+  }
+
+  private async buildCommandArgs(args: string[]): Promise<string[]> {
+    if (await pathAccessible(this.cliPath)) {
+      return [this.cliPath, ...args];
+    }
+    return ['-m', this.moduleName, ...args];
   }
 
   public async runCommandAsync(
@@ -31,8 +39,9 @@ export class CmCli implements HasTelemetry {
       COMFYUI_PATH: this.virtualEnvironment.basePath,
       ...env,
     };
+    const commandArgs = await this.buildCommandArgs(args);
     const { exitCode } = await this.virtualEnvironment.runPythonCommandAsync(
-      [this.cliPath, ...args],
+      commandArgs,
       {
         onStdout: (message) => {
           output += message;

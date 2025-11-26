@@ -19,10 +19,10 @@ This desktop app is a packaged way to use [ComfyUI](https://github.com/comfyanon
 
 - Stable version of ComfyUI from [releases](https://github.com/comfyanonymous/ComfyUI/releases)
 - [ComfyUI_frontend](https://github.com/Comfy-Org/ComfyUI_frontend)
-- [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager)
+- [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager) (installed via pip when `--enable-manager` is set; legacy custom node is only cloned for older ComfyUI versions)
 - [uv](https://github.com/astral-sh/uv)
 
-On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager, and the uv executable as well as some desktop specific features.
+On startup, it will install all the necessary python dependencies with uv and start the ComfyUI server. The app will automatically update with stable releases of ComfyUI, ComfyUI-Manager (pip), and the uv executable as well as some desktop specific features.
 
 Developers, read on.
 
@@ -33,7 +33,7 @@ Developers, read on.
 The desktop application comes bundled with:
 
 - ComfyUI source code
-- ComfyUI-Manager
+- ComfyUI-Manager (pip package or legacy custom node, depending on the bundled ComfyUI version)
 - Electron, Chromium binaries, and node modules
 
 **Windows**
@@ -170,7 +170,7 @@ Before you can start the electron application, you need to download the ComfyUI 
 
 First, initialize the application resources by running `yarn make:assets`:
 
-This command will install ComfyUI and ComfyUI-Manager under `assets/`. The exact versions of each package is defined in `package.json`.
+This command will install ComfyUI under `assets/`. If the bundled ComfyUI version contains `manager_requirements.txt`, ComfyUI-Manager will be installed via pip at runtime; otherwise the legacy custom node is cloned for compatibility. The exact versions of each package is defined in `package.json`.
 
 You can then run `start` to build and launch the app. A watcher will also be started; it will automatically rebuild the app when a source file is changed:
 
@@ -198,12 +198,12 @@ You can generate the compiled requirements files by running the following comman
 
 ```powershell
 ## Nvidia Cuda requirements
-uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_nvidia.compiled --override assets\override.txt `
+uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\manager_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_nvidia.compiled --override assets\override.txt `
 --index-url https://pypi.org/simple `
 --extra-index-url https://download.pytorch.org/whl/cu129
 
 ## CPU requirements
-uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\ComfyUI-Manager\requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_cpu.compiled `
+uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\manager_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_cpu.compiled `
 --index-url https://pypi.org/simple
 ```
 
@@ -211,9 +211,11 @@ uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\custom_nodes\Comfy
 
 ```bash
 ## macOS requirements
-uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/macos.compiled --override assets/override.txt \
+uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/manager_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets/requirements/macos.compiled --override assets/override.txt \
 --index-url https://pypi.org/simple
 ```
+
+If you are working with a legacy ComfyUI bundle that does not include `manager_requirements.txt`, replace that path in the commands above with `assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt`.
 
 ### Troubleshooting
 

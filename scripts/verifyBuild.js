@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+ 
+ 
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -7,28 +7,45 @@ import path from 'node:path';
  * Verify the app build for the current platform.
  * Check that all required paths are present.
  */
-const PATHS = {
+/**
+ * @typedef {{ base: string; required: string[] }} VerifyConfig
+ */
+
+const PATHS = /** @type {Record<'mac' | 'windows', VerifyConfig>} */ ({
   mac: {
     base: 'dist/mac-arm64/ComfyUI.app/Contents/Resources',
-    required: ['ComfyUI', 'ComfyUI/custom_nodes/ComfyUI-Manager', 'UI', 'uv/macos/uv', 'uv/macos/uvx'],
+    required: ['ComfyUI', 'UI', 'uv/macos/uv', 'uv/macos/uvx'],
   },
   windows: {
     base: 'dist/win-unpacked/resources',
     required: [
       // Add Windows-specific paths here
       'ComfyUI',
-      'ComfyUI/custom_nodes/ComfyUI-Manager',
       'UI',
       'uv/win/uv.exe',
       'uv/win/uvx.exe',
     ],
   },
-};
+});
 
+/**
+ * @param {VerifyConfig} config
+ */
 function verifyConfig(config) {
+  const required = config.required.map(String);
+  const managerRequirementsPath = path.join(config.base, 'ComfyUI', 'manager_requirements.txt');
+  const legacyManagerPath = path.join(config.base, 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager');
+  if (fs.existsSync(managerRequirementsPath)) {
+    required.push('ComfyUI/manager_requirements.txt');
+  } else if (fs.existsSync(legacyManagerPath)) {
+    required.push('ComfyUI/custom_nodes/ComfyUI-Manager');
+  } else {
+    required.push('ComfyUI/manager_requirements.txt');
+  }
+
   const missingPaths = [];
 
-  for (const requiredPath of config.required) {
+  for (const requiredPath of required) {
     const fullPath = path.join(config.base, requiredPath);
     if (!fs.existsSync(fullPath)) {
       missingPaths.push(requiredPath);
