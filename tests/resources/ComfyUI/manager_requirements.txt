@@ -1,0 +1,1 @@
+# Dummy manager requirements file for tests

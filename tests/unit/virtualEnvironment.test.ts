@@ -1,5 +1,6 @@
 import log from 'electron-log/main';
 import { type ChildProcess, spawn } from 'node:child_process';
+import path from 'node:path';
 import { test as baseTest, describe, expect, vi } from 'vitest';
 
 import type { ITelemetry } from '@/services/telemetry';
@@ -27,10 +28,12 @@ const mockTelemetry: ITelemetry = {
 
 const test = baseTest.extend<TestFixtures>({
   virtualEnv: async ({}, use) => {
+    const resourcesPath = path.join(__dirname, '../resources');
+
     // Mock process.resourcesPath since app.isPackaged is true
     vi.stubGlobal('process', {
       ...process,
-      resourcesPath: '/test/resources',
+      resourcesPath,
     });
 
     const virtualEnv = new VirtualEnvironment('/mock/venv', {
