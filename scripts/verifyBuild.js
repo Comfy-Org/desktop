@@ -30,7 +30,7 @@ const PATHS = /** @type {Record<'mac' | 'windows', VerifyConfig>} */ ({
  * @param {VerifyConfig} config
  */
 function verifyConfig(config) {
-  const required = config.required.map(String);
+  const required = [...config.required];
   const managerRequirementsPath = path.join(config.base, 'ComfyUI', 'manager_requirements.txt');
   const legacyManagerPath = path.join(config.base, 'ComfyUI', 'custom_nodes', 'ComfyUI-Manager');
   if (fs.existsSync(managerRequirementsPath)) {
