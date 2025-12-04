@@ -136,8 +136,7 @@ describe('ComfyServerConfig', () => {
     });
 
     it.each(['win32', 'darwin', 'linux'] as const)('should include platform-specific header for %s', (platform) => {
-      const originalProcess = process;
-      vi.stubGlobal('process', { ...originalProcess, platform });
+      vi.stubGlobal('process', { ...process, platform });
       const testConfig = { test: { path: '/test' } };
       const generatedYaml = ComfyServerConfig.generateConfigFileContent(testConfig);
       expect(generatedYaml).toContain(`# ComfyUI extra_model_paths.yaml for ${platform}`);
@@ -192,8 +191,7 @@ describe('ComfyServerConfig', () => {
 
   describe('getBaseConfig', () => {
     it.each(['win32', 'darwin', 'linux'] as const)('should return platform-specific config for %s', (platform) => {
-      const originalProcess = process;
-      vi.stubGlobal('process', { ...originalProcess, platform });
+      vi.stubGlobal('process', { ...process, platform });
       const platformConfig = ComfyServerConfig.getBaseConfig();
 
       expect(platformConfig.custom_nodes).toBe('custom_nodes/');
@@ -201,8 +199,7 @@ describe('ComfyServerConfig', () => {
     });
 
     it('should throw for unknown platforms', () => {
-      const originalProcess = process;
-      vi.stubGlobal('process', { ...originalProcess, platform: 'invalid' });
+      vi.stubGlobal('process', { ...process, platform: 'invalid' });
       expect(() => ComfyServerConfig.getBaseConfig()).toThrow('No base config found for invalid');
     });
   });
