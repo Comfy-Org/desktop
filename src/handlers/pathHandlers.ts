@@ -89,7 +89,9 @@ const buildRestrictedPaths = (): RestrictedPathEntry[] => {
     // Walk up until we find the .app bundle
     let current = exePath;
     while (current && current !== '/' && !current.endsWith('.app')) {
-      current = path.dirname(current);
+      const next = path.dirname(current);
+      if (next === current) break; // Guard against dirname('.') or other non-progress cases
+      current = next;
     }
     if (current.endsWith('.app')) {
       addRestrictedPath('appInstallDir', current);
