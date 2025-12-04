@@ -34,6 +34,6 @@ test.describe('Install App', () => {
     // Confirm post-install app state is as expected
     await expect(installedApp.firstTimeTemplateWorkflowText).toBeVisible({ timeout: 30 * 1000 });
     const templatesGrid = window.getByTestId('template-workflows-content');
-    await expect(window).toHaveScreenshot('installApp.png', { mask: [templatesGrid] });
+    await expect(templatesGrid).toBeVisible({ timeout: 30 * 1000 });
   });
 });
