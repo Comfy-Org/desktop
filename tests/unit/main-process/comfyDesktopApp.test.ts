@@ -125,6 +125,7 @@ describe('ComfyDesktopApp', () => {
       expect(result).toEqual({
         listen: DEFAULT_SERVER_ARGS.listen,
         port: '8188',
+        'enable-manager': '',
       });
     });
 
@@ -138,6 +139,7 @@ describe('ComfyDesktopApp', () => {
       expect(result).toEqual({
         listen: 'localhost',
         port: '8188', // Still uses findAvailablePort result
+        'enable-manager': '',
       });
     });
 
@@ -152,6 +154,7 @@ describe('ComfyDesktopApp', () => {
       expect(result).toEqual({
         listen: DEFAULT_SERVER_ARGS.listen,
         port: DEFAULT_SERVER_ARGS.port,
+        'enable-manager': '',
       });
     });
   });
