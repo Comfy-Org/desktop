@@ -118,6 +118,7 @@ assets/desktop-ui
 .env.sentry-build-plugin
 # Playwright test results
 test-results
+playwright-report
 
 # Python venv
 venv/

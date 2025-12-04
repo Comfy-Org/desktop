@@ -50,7 +50,7 @@ colorama==0.4.6
 comfyui-embedded-docs==0.3.1
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.7.20
+comfyui-workflow-templates==0.7.25
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 cryptography==44.0.0

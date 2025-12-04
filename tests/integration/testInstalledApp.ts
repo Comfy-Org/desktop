@@ -9,6 +9,7 @@ export class TestInstalledApp {
   readonly uiBlockedSpinner;
 
   readonly firstTimeTemplateWorkflowText;
+  readonly templatesGrid;
 
   constructor(readonly window: Page) {
     this.graphCanvas = new TestGraphCanvas(window);
@@ -17,6 +18,7 @@ export class TestInstalledApp {
 
     // Use canvas container as a stable readiness indicator instead of text
     this.firstTimeTemplateWorkflowText = this.graphCanvas.canvasContainer;
+    this.templatesGrid = this.window.getByTestId('template-workflows-content');
   }
 
   /** Waits until the app is completely loaded. */

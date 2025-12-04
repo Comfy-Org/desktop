@@ -5,7 +5,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 
@@ -36,6 +36,11 @@ describe('ComfyServerConfig', () => {
       if (key === 'userData') return '/fake/user/data';
       throw new Error(`Unexpected getPath key: ${key}`);
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   afterAll(async () => {
@@ -131,7 +136,7 @@ describe('ComfyServerConfig', () => {
     });
 
     it.each(['win32', 'darwin', 'linux'] as const)('should include platform-specific header for %s', (platform) => {
-      vi.stubGlobal('process', { platform });
+      vi.stubGlobal('process', { ...process, platform });
       const testConfig = { test: { path: '/test' } };
       const generatedYaml = ComfyServerConfig.generateConfigFileContent(testConfig);
       expect(generatedYaml).toContain(`# ComfyUI extra_model_paths.yaml for ${platform}`);
@@ -186,7 +191,7 @@ describe('ComfyServerConfig', () => {
 
   describe('getBaseConfig', () => {
     it.each(['win32', 'darwin', 'linux'] as const)('should return platform-specific config for %s', (platform) => {
-      vi.stubGlobal('process', { platform });
+      vi.stubGlobal('process', { ...process, platform });
       const platformConfig = ComfyServerConfig.getBaseConfig();
 
       expect(platformConfig.custom_nodes).toBe('custom_nodes/');
@@ -194,7 +199,7 @@ describe('ComfyServerConfig', () => {
     });
 
     it('should throw for unknown platforms', () => {
-      vi.stubGlobal('process', { platform: 'invalid' });
+      vi.stubGlobal('process', { ...process, platform: 'invalid' });
       expect(() => ComfyServerConfig.getBaseConfig()).toThrow('No base config found for invalid');
     });
   });
