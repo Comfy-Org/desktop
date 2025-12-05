@@ -154,6 +154,7 @@ export interface ServerArgs {
 export const DEFAULT_SERVER_ARGS: ServerArgs = {
   listen: '127.0.0.1',
   port: '8000',
+  'enable-manager': '',
 };
 
 export enum DownloadStatus {

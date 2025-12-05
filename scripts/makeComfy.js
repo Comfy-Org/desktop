@@ -1,4 +1,6 @@
 import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import pkg from './getPackage.js';
 
@@ -15,10 +17,17 @@ if (pkg.config.comfyUI.optionalBranch) {
   // Checkout tag as branch.
   execAndLog(`git ${noWarning} clone ${comfyRepo} --depth 1 --branch v${pkg.config.comfyUI.version} assets/ComfyUI`);
 }
-execAndLog(`git clone ${managerRepo} assets/ComfyUI/custom_nodes/ComfyUI-Manager`);
-execAndLog(
-  `cd assets/ComfyUI/custom_nodes/ComfyUI-Manager && git ${noWarning} checkout ${pkg.config.managerCommit} && cd ../../..`
-);
+const assetsComfyPath = path.join('assets', 'ComfyUI');
+const managerRequirementsPath = path.join(assetsComfyPath, 'manager_requirements.txt');
+
+if (fs.existsSync(managerRequirementsPath)) {
+  console.log('Detected manager_requirements.txt, skipping legacy ComfyUI-Manager clone.');
+} else {
+  execAndLog(`git clone ${managerRepo} assets/ComfyUI/custom_nodes/ComfyUI-Manager`);
+  execAndLog(
+    `cd assets/ComfyUI/custom_nodes/ComfyUI-Manager && git ${noWarning} checkout ${pkg.config.managerCommit} && cd ../../..`
+  );
+}
 execAndLog(`yarn run make:frontend`);
 execAndLog(`yarn run download:uv all`);
 execAndLog(`yarn run patch:core:frontend`);

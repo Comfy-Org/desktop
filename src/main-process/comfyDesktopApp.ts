@@ -46,8 +46,7 @@ export class ComfyDesktopApp implements HasTelemetry {
   async buildServerArgs({ useExternalServer, COMFY_HOST, COMFY_PORT }: DevOverrides): Promise<ServerArgs> {
     // Shallow-clone the setting launch args to avoid mutation.
     const serverArgs: ServerArgs = {
-      listen: DEFAULT_SERVER_ARGS.listen,
-      port: DEFAULT_SERVER_ARGS.port,
+      ...DEFAULT_SERVER_ARGS,
       ...useComfySettings().get('Comfy.Server.LaunchArgs'),
     };
 
