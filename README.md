@@ -1,6 +1,5 @@
 # ComfyUI Desktop
 
-[![codecov](https://codecov.io/github/Comfy-Org/electron/graph/badge.svg?token=S64WJWD2ZX)](https://codecov.io/github/Comfy-Org/electron)
 ![Beta](https://img.shields.io/badge/beta-blue.svg)
 
 # USER GUIDE
