@@ -29,7 +29,7 @@ if (frontend.optionalBranch) {
   try {
     execAndLog(`git clone ${frontendRepo} --depth 1 --branch ${frontend.optionalBranch} ${frontendDir}`);
     execAndLog(`npm ci`, frontendDir);
-    execAndLog(`npm run build`, frontendDir);
+    execAndLog(`npm run build`, frontendDir, { DISTRIBUTION: 'desktop' });
     await fs.mkdir('assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
     await fs.cp(path.join(frontendDir, 'dist'), 'assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
     await fs.rm(frontendDir, { recursive: true });
@@ -42,9 +42,14 @@ if (frontend.optionalBranch) {
    * Run a command and log the output.
    * @param {string} command The command to run.
    * @param {string | undefined} cwd The working directory.
+   * @param {Record<string, string>} env Additional environment variables.
    */
-  function execAndLog(command, cwd) {
-    const output = execSync(command, { cwd, encoding: 'utf8' });
+  function execAndLog(command, cwd, env = {}) {
+    const output = execSync(command, {
+      cwd,
+      encoding: 'utf8',
+      env: { ...process.env, ...env }
+    });
     console.log(output);
   }
 } else {
