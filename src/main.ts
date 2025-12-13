@@ -9,6 +9,7 @@ import { DesktopApp } from './desktopApp';
 import { removeAnsiCodesTransform, replaceFileLoggingTransform } from './infrastructure/structuredLogging';
 import { initializeAppState } from './main-process/appState';
 import { DevOverrides } from './main-process/devOverrides';
+import { parseComfyProtocolUrl } from './protocol/protocolParser';
 import SentryLogging from './services/sentry';
 import { getTelemetry } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
@@ -17,6 +18,7 @@ import { rotateLogFiles } from './utils';
 // Synchronous pre-start configuration
 dotenv.config();
 initalizeLogging();
+registerProtocolHandler();
 
 const telemetry = getTelemetry();
 initializeAppState();
@@ -27,12 +29,30 @@ quitWhenAllWindowsAreClosed();
 trackAppQuitEvents();
 initializeSentry();
 
+// Store reference to the desktop app for protocol handling
+let desktopAppInstance: DesktopApp | undefined;
+
 // Async config & app start
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   log.info('App already running. Exiting...');
   app.quit();
 } else {
+  // Handle second instance (protocol URLs from browser)
+  app.on('second-instance', (event, commandLine) => {
+    log.info('Received second instance message with command line:', commandLine);
+
+    // Look for comfy:// URLs in command line arguments
+    const protocolUrl = commandLine.find((arg) => arg.startsWith('comfy://'));
+    if (protocolUrl) {
+      log.info('Protocol URL detected:', protocolUrl);
+      const action = parseComfyProtocolUrl(protocolUrl);
+      if (action && desktopAppInstance) {
+        desktopAppInstance.handleProtocolAction(action);
+      }
+    }
+  });
+
   startApp().catch((error) => {
     log.error('Unhandled exception in app startup', error);
     app.exit(2020);
@@ -70,6 +90,19 @@ async function startApp() {
   }
 
   const desktopApp = new DesktopApp(overrides, config);
+  desktopAppInstance = desktopApp; // Store reference for protocol handling
+
+  // Handle protocol URL if app was launched with one
+  const protocolUrl = process.argv.find((arg) => arg.startsWith('comfy://'));
+  if (protocolUrl) {
+    log.info('App launched with protocol URL:', protocolUrl);
+    const action = parseComfyProtocolUrl(protocolUrl);
+    if (action) {
+      // Queue the action to be handled after the app is ready
+      desktopApp.queueProtocolAction(action);
+    }
+  }
+
   await desktopApp.showLoadingPage();
   await desktopApp.start();
 }
@@ -111,4 +144,17 @@ function trackAppQuitEvents() {
 function initializeSentry() {
   log.verbose('Initializing Sentry');
   SentryLogging.init();
+}
+
+/** Register the comfy:// protocol handler. */
+function registerProtocolHandler() {
+  log.info('Registering comfy:// protocol handler');
+
+  // Register protocol in packaged app
+  if (app.isPackaged) {
+    app.setAsDefaultProtocolClient('comfy');
+  } else {
+    // For development, register with the current executable
+    app.setAsDefaultProtocolClient('comfy', process.execPath, [app.getAppPath()]);
+  }
 }
