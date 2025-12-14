@@ -48,7 +48,7 @@ if (frontend.optionalBranch) {
     const output = execSync(command, {
       cwd,
       encoding: 'utf8',
-      env: { ...process.env, ...env }
+      env: { ...process.env, ...env },
     });
     console.log(output);
   }
