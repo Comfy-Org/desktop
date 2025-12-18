@@ -1,3 +1,1 @@
-# Integration testing guide
-
-@README.md
+@tests/integration/AGENTS.md
