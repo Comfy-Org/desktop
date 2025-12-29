@@ -126,6 +126,54 @@ export async function rotateLogFiles(logDir: string, baseName: string, maxFiles 
 }
 
 const execAsync = promisify(exec);
+const AMD_WMI_QUERY =
+  'powershell.exe -c "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty PNPDeviceID"';
+const AMD_VENDOR_ID = '1002';
+const PCI_VENDOR_ID_REGEX = /ven_([\da-f]{4})/i;
+
+/**
+ * Checks whether a PNPDeviceID contains the specified PCI vendor ID.
+ * @param pnpDeviceId The PNPDeviceID string from WMI.
+ * @param vendorId The PCI vendor ID to match (hex).
+ * @return `true` if the vendor ID matches.
+ */
+function hasPciVendorId(pnpDeviceId: string, vendorId: string): boolean {
+  const match = pnpDeviceId.match(PCI_VENDOR_ID_REGEX);
+  return match?.[1]?.toUpperCase() === vendorId.toUpperCase();
+}
+
+/**
+ * Detects NVIDIA GPUs on Windows using nvidia-smi.
+ * @return `true` if nvidia-smi executes successfully.
+ */
+async function hasNvidiaGpuViaSmi(): Promise<boolean> {
+  try {
+    await execAsync('nvidia-smi');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Detects AMD GPUs on Windows by parsing PNPDeviceID values from CIM.
+ * @return `true` if an AMD GPU vendor ID is detected.
+ */
+async function hasAmdGpuViaWmi(): Promise<boolean> {
+  try {
+    const res = await execAsync(AMD_WMI_QUERY);
+    const stdout = res?.stdout?.trim();
+    if (!stdout) return false;
+
+    return stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .some((pnpDeviceId) => hasPciVendorId(pnpDeviceId, AMD_VENDOR_ID));
+  } catch {
+    return false;
+  }
+}
 
 interface HardwareValidation {
   isValid: boolean;
@@ -156,41 +204,35 @@ export async function validateHardware(): Promise<HardwareValidation> {
       return { isValid: true, gpu: 'mps' };
     }
 
-    // Windows NVIDIA GPU validation
+    // Windows GPU validation
     if (process.platform === 'win32') {
       const graphics = await si.graphics();
-      const hasNvidia = graphics.controllers.some((controller) => controller.vendor.toLowerCase().includes('nvidia'));
+      const hasNvidia = graphics.controllers.some((controller) => {
+        const details = `${controller.vendor ?? ''} ${controller.model ?? ''}`.toLowerCase();
+        return details.includes('nvidia');
+      });
 
       if (process.env.SKIP_HARDWARE_VALIDATION) {
         console.log('Skipping hardware validation');
+        if (hasNvidia) return { isValid: true, gpu: 'nvidia' };
+        if (await hasAmdGpuViaWmi()) return { isValid: true, gpu: 'amd' };
         return { isValid: true };
       }
 
-      if (!hasNvidia) {
-        try {
-          // wmic is unreliable. Check in PS.
-          const res = await execAsync(
-            'powershell.exe -c "$n = \'*NVIDIA*\'; Get-CimInstance win32_videocontroller | ? { $_.Name -like $n -or $_.VideoProcessor -like $n -or $_.AdapterCompatibility -like $n }"'
-          );
-          if (!res?.stdout) throw new Error('No NVIDIA GPU detected');
-        } catch {
-          try {
-            await execAsync('nvidia-smi');
-          } catch {
-            return {
-              isValid: false,
-              error: 'ComfyUI requires an NVIDIA GPU on Windows. No NVIDIA GPU was detected.',
-            };
-          }
-        }
-      }
+      if (hasNvidia) return { isValid: true, gpu: 'nvidia' };
 
-      return { isValid: true, gpu: 'nvidia' };
+      if (await hasNvidiaGpuViaSmi()) return { isValid: true, gpu: 'nvidia' };
+      if (await hasAmdGpuViaWmi()) return { isValid: true, gpu: 'amd' };
+
+      return {
+        isValid: false,
+        error: 'ComfyUI requires an NVIDIA or AMD GPU on Windows. No supported GPU was detected.',
+      };
     }
 
     return {
       isValid: false,
-      error: 'ComfyUI currently supports only Windows (NVIDIA GPU) and Apple Silicon Macs.',
+      error: 'ComfyUI currently supports only Windows (NVIDIA or AMD GPU) and Apple Silicon Macs.',
     };
   } catch (error) {
     log.error('Error validating hardware:', error);

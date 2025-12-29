@@ -185,6 +185,19 @@ export const NIGHTLY_CPU_TORCH_URL = TorchMirrorUrl.NightlyCpu;
 /** @deprecated Use {@link TorchMirrorUrl} instead. */
 export const DEFAULT_PYPI_INDEX_URL = TorchMirrorUrl.Default;
 
+export const AMD_ROCM_SDK_PACKAGES: string[] = [
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_core-0.1.dev0-py3-none-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_devel-0.1.dev0-py3-none-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_libraries_custom-0.1.dev0-py3-none-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm-0.1.dev0.tar.gz',
+];
+
+export const AMD_TORCH_PACKAGES: string[] = [
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torch-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchaudio-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchvision-0.24.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
+];
+
 /** The log files used by the desktop process. */
 export enum LogFile {
   /** The ComfyUI server log file. */

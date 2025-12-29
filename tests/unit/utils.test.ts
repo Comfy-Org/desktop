@@ -1,10 +1,27 @@
+import type { ChildProcess } from 'node:child_process';
+import { exec } from 'node:child_process';
 import type { Systeminformation } from 'systeminformation';
 import si from 'systeminformation';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { validateHardware } from '@/utils';
 
+vi.mock('node:child_process', () => ({
+  exec: vi.fn(),
+}));
 vi.mock('systeminformation');
+
+const execMock = vi.mocked(exec);
+
+const createChildProcess = (): ChildProcess =>
+  ({
+    kill: vi.fn(),
+    on: vi.fn(),
+  }) as unknown as ChildProcess;
+
+beforeEach(() => {
+  execMock.mockReset();
+});
 
 describe('validateHardware', () => {
   it('accepts Apple Silicon Mac', async () => {
@@ -36,28 +53,60 @@ describe('validateHardware', () => {
     expect(result).toStrictEqual({ isValid: true, gpu: 'nvidia' });
   });
 
-  it('rejects Windows with AMD GPU', async () => {
+  it('accepts Windows with AMD GPU', async () => {
     vi.stubGlobal('process', { ...process, platform: 'win32' });
-    // Simulate a system with an AMD GPU
     vi.mocked(si.graphics).mockResolvedValue({
-      controllers: [{ vendor: 'AMD', model: 'Radeon RX 6800' }],
+      controllers: [{ vendor: 'Intel', model: 'Iris Xe' }],
     } as Systeminformation.GraphicsData);
 
-    vi.mock('node:child_process', async () => {
-      const actual = await vi.importActual<typeof import('node:child_process')>('node:child_process');
-      return {
-        ...actual,
-        exec: (_cmd: string, callback: (error: Error | null, stdout: string, stderr: string) => void) => {
-          setImmediate(() => callback(new Error('mocked exec failure'), '', ''));
-          return { kill: () => {}, on: () => {} } as any;
-        },
-      };
-    });
+    execMock.mockImplementation(((
+      command: string,
+      callback: (error: Error | null, stdout: string, stderr: string) => void
+    ) => {
+      if (command.includes('nvidia-smi')) {
+        setImmediate(() => callback(new Error('mocked exec failure'), '', ''));
+        return createChildProcess();
+      }
+      if (command.includes('PNPDeviceID')) {
+        setImmediate(() => callback(null, 'PCI\\VEN_1002&DEV_73FF\r\n', ''));
+        return createChildProcess();
+      }
+
+      setImmediate(() => callback(null, '', ''));
+      return createChildProcess();
+    }) as typeof exec);
+
+    const result = await validateHardware();
+    expect(result).toStrictEqual({ isValid: true, gpu: 'amd' });
+  });
+
+  it('rejects Windows with unsupported GPU', async () => {
+    vi.stubGlobal('process', { ...process, platform: 'win32' });
+    vi.mocked(si.graphics).mockResolvedValue({
+      controllers: [{ vendor: 'Intel', model: 'Iris Xe' }],
+    } as Systeminformation.GraphicsData);
+
+    execMock.mockImplementation(((
+      command: string,
+      callback: (error: Error | null, stdout: string, stderr: string) => void
+    ) => {
+      if (command.includes('nvidia-smi')) {
+        setImmediate(() => callback(new Error('mocked exec failure'), '', ''));
+        return createChildProcess();
+      }
+      if (command.includes('PNPDeviceID')) {
+        setImmediate(() => callback(null, '', ''));
+        return createChildProcess();
+      }
+
+      setImmediate(() => callback(null, '', ''));
+      return createChildProcess();
+    }) as typeof exec);
 
     const result = await validateHardware();
     expect(result).toStrictEqual({
       isValid: false,
-      error: expect.stringContaining('No NVIDIA GPU was detected'),
+      error: expect.stringContaining('NVIDIA or AMD'),
     });
   });
 });

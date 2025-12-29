@@ -18,7 +18,7 @@ const openFolder = async (folderPath: string) => {
   ipcRenderer.send(IPC_CHANNELS.OPEN_PATH, path.join(basePath, folderPath));
 };
 
-export type GpuType = 'nvidia' | 'mps' | 'unsupported';
+export type GpuType = 'nvidia' | 'amd' | 'mps' | 'unsupported';
 export type TorchDeviceType = GpuType | 'cpu';
 
 export interface InstallOptions {
