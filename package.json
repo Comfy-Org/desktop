@@ -12,7 +12,7 @@
   "config": {
     "frontend": {
       "version": "1.34.9",
-      "optionalBranch": ""
+      "optionalBranch": "bl/amd-gpu-picker"
     },
     "comfyUI": {
       "version": "0.6.0",
