@@ -56,25 +56,8 @@ describe('validateHardware', () => {
   it('accepts Windows with AMD GPU', async () => {
     vi.stubGlobal('process', { ...process, platform: 'win32' });
     vi.mocked(si.graphics).mockResolvedValue({
-      controllers: [{ vendor: 'Intel', model: 'Iris Xe' }],
+      controllers: [{ vendorId: '1002', vendor: 'AMD' }],
     } as Systeminformation.GraphicsData);
-
-    execMock.mockImplementation(((
-      command: string,
-      callback: (error: Error | null, stdout: string, stderr: string) => void
-    ) => {
-      if (command.includes('nvidia-smi')) {
-        setImmediate(() => callback(new Error('mocked exec failure'), '', ''));
-        return createChildProcess();
-      }
-      if (command.includes('PNPDeviceID')) {
-        setImmediate(() => callback(null, 'PCI\\VEN_1002&DEV_73FF\r\n', ''));
-        return createChildProcess();
-      }
-
-      setImmediate(() => callback(null, '', ''));
-      return createChildProcess();
-    }) as typeof exec);
 
     const result = await validateHardware();
     expect(result).toStrictEqual({ isValid: true, gpu: 'amd' });
@@ -95,7 +78,7 @@ describe('validateHardware', () => {
         return createChildProcess();
       }
       if (command.includes('PNPDeviceID')) {
-        setImmediate(() => callback(null, '', ''));
+        setImmediate(() => callback(null, '["PCI\\\\VEN_8086&DEV_46A6"]\r\n', ''));
         return createChildProcess();
       }
 
