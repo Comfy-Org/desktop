@@ -8,7 +8,7 @@ Please read the [user guide](https://docs.comfy.org/installation/desktop)
 
 # Download
 
-Windows (NVIDIA) NSIS x64: [Download](https://download.comfy.org/windows/nsis/x64)
+Windows (NVIDIA/AMD) NSIS x64: [Download](https://download.comfy.org/windows/nsis/x64)
 
 macOS ARM: [Download](https://download.comfy.org/mac/dmg/arm64)
 
