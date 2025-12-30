@@ -379,12 +379,6 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 25 }));
 
-    if (this.selectedDevice === 'amd') {
-      log.info('Skipping compiled requirements for AMD GPU; using manual install.');
-      await this.manualInstall(callbacks);
-      return;
-    }
-
     const installCmd = getPipInstallArgs({
       requirementsFile: this.requirementsCompiledPath,
       indexStrategy: 'unsafe-best-match',

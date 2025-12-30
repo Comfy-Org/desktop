@@ -196,10 +196,14 @@ You can generate the compiled requirements files by running the following comman
 #### Windows
 
 ```powershell
-## Nvidia Cuda requirements
+## NVIDIA CUDA requirements
 uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\manager_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_nvidia.compiled --override assets\override.txt `
 --index-url https://pypi.org/simple `
 --extra-index-url https://download.pytorch.org/whl/cu129
+
+## AMD ROCm requirements
+uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\manager_requirements.txt assets\requirements\amd_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_amd.compiled --override assets\override_amd.txt `
+--index-url https://pypi.org/simple
 
 ## CPU requirements
 uv pip compile assets\ComfyUI\requirements.txt assets\ComfyUI\manager_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match -o assets\requirements\windows_cpu.compiled `
