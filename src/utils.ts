@@ -129,7 +129,7 @@ export async function rotateLogFiles(logDir: string, baseName: string, maxFiles 
 
 const execAsync = promisify(exec);
 const WMI_PNP_DEVICE_ID_QUERY =
-  'powershell.exe -NoProfile -NonInteractive -Command "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty PNPDeviceID"';
+  'powershell.exe -NoProfile -NonInteractive -Command "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty PNPDeviceID | ConvertTo-Json -Compress"';
 const PCI_VENDOR_ID_REGEX = /ven_([\da-f]{4})/i;
 const VENDOR_ID_REGEX = /([\da-f]{4})/i;
 type WindowsGpuType = Extract<GpuType, 'nvidia' | 'amd'>;
@@ -198,11 +198,14 @@ async function hasGpuViaWmi(vendorId: string): Promise<boolean> {
     const stdout = res?.stdout?.trim();
     if (!stdout) return false;
 
-    return stdout
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .some((pnpDeviceId) => hasPciVendorId(pnpDeviceId, vendorId));
+    const parsed = JSON.parse(stdout) as unknown;
+    const pnpDeviceIds: string[] = Array.isArray(parsed)
+      ? parsed.filter((entry): entry is string => typeof entry === 'string')
+      : typeof parsed === 'string'
+        ? [parsed]
+        : [];
+
+    return pnpDeviceIds.some((pnpDeviceId) => hasPciVendorId(pnpDeviceId, vendorId));
   } catch {
     return false;
   }
