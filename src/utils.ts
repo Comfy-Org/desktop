@@ -129,7 +129,7 @@ export async function rotateLogFiles(logDir: string, baseName: string, maxFiles 
 
 const execAsync = promisify(exec);
 const WMI_PNP_DEVICE_ID_QUERY =
-  'powershell.exe -c "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty PNPDeviceID"';
+  'powershell.exe -NoProfile -NonInteractive -Command "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty PNPDeviceID"';
 const PCI_VENDOR_ID_REGEX = /ven_([\da-f]{4})/i;
 const VENDOR_ID_REGEX = /([\da-f]{4})/i;
 type WindowsGpuType = Extract<GpuType, 'nvidia' | 'amd'>;
