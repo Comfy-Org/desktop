@@ -29,7 +29,12 @@ if (frontend.optionalBranch) {
   try {
     execAndLog(`git clone ${frontendRepo} --depth 1 --branch ${frontend.optionalBranch} ${frontendDir}`);
     execAndLog(`pnpm install --frozen-lockfile`, frontendDir, { COREPACK_ENABLE_STRICT: '0' });
-    execAndLog(`pnpm run build`, frontendDir, { COREPACK_ENABLE_STRICT: '0', DISTRIBUTION: 'desktop' });
+    // Run the build directly to avoid test-only typecheck failures.
+    execAndLog(`pnpm exec nx build`, frontendDir, {
+      COREPACK_ENABLE_STRICT: '0',
+      DISTRIBUTION: 'desktop',
+      NODE_OPTIONS: '--max-old-space-size=8192',
+    });
     await fs.mkdir('assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
     await fs.cp(path.join(frontendDir, 'dist'), 'assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
     await fs.rm(frontendDir, { recursive: true });
