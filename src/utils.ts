@@ -7,6 +7,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import si from 'systeminformation';
+import type { Systeminformation } from 'systeminformation';
 
 import type { GpuType } from './preload';
 
@@ -126,10 +127,13 @@ export async function rotateLogFiles(logDir: string, baseName: string, maxFiles 
 }
 
 const execAsync = promisify(exec);
-const AMD_WMI_QUERY =
+const WMI_PNP_DEVICE_ID_QUERY =
   'powershell.exe -c "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty PNPDeviceID"';
 const AMD_VENDOR_ID = '1002';
+const NVIDIA_VENDOR_ID = '10DE';
 const PCI_VENDOR_ID_REGEX = /ven_([\da-f]{4})/i;
+const VENDOR_ID_REGEX = /([\da-f]{4})/i;
+type WindowsGpuType = Extract<GpuType, 'nvidia' | 'amd'>;
 
 /**
  * Checks whether a PNPDeviceID contains the specified PCI vendor ID.
@@ -140,6 +144,35 @@ const PCI_VENDOR_ID_REGEX = /ven_([\da-f]{4})/i;
 function hasPciVendorId(pnpDeviceId: string, vendorId: string): boolean {
   const match = pnpDeviceId.match(PCI_VENDOR_ID_REGEX);
   return match?.[1]?.toUpperCase() === vendorId.toUpperCase();
+}
+
+function normalizeVendorId(value?: string): string | undefined {
+  if (!value) return undefined;
+  const match = value.match(VENDOR_ID_REGEX);
+  return match?.[1]?.toUpperCase();
+}
+
+function getWindowsGpuFromController(controller: Systeminformation.GraphicsControllerData): WindowsGpuType | undefined {
+  const vendorId = normalizeVendorId(controller.vendorId);
+  if (vendorId === NVIDIA_VENDOR_ID) return 'nvidia';
+  if (vendorId === AMD_VENDOR_ID) return 'amd';
+
+  const details = [controller.vendor, controller.model, controller.name, controller.subVendor]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  if (details.includes('nvidia')) return 'nvidia';
+  if (details.includes('amd') || details.includes('radeon') || details.includes('advanced micro devices')) return 'amd';
+  return undefined;
+}
+
+function getWindowsGpuFromGraphics(graphics: Systeminformation.GraphicsData): WindowsGpuType | undefined {
+  for (const controller of graphics.controllers) {
+    const detected = getWindowsGpuFromController(controller);
+    if (detected) return detected;
+  }
+  return undefined;
 }
 
 /**
@@ -156,12 +189,13 @@ async function hasNvidiaGpuViaSmi(): Promise<boolean> {
 }
 
 /**
- * Detects AMD GPUs on Windows by parsing PNPDeviceID values from CIM.
- * @return `true` if an AMD GPU vendor ID is detected.
+ * Detects GPUs on Windows by parsing PNPDeviceID values from CIM.
+ * @param vendorId The PCI vendor ID to match (hex).
+ * @return `true` if the vendor ID is detected.
  */
-async function hasAmdGpuViaWmi(): Promise<boolean> {
+async function hasGpuViaWmi(vendorId: string): Promise<boolean> {
   try {
-    const res = await execAsync(AMD_WMI_QUERY);
+    const res = await execAsync(WMI_PNP_DEVICE_ID_QUERY);
     const stdout = res?.stdout?.trim();
     if (!stdout) return false;
 
@@ -169,10 +203,26 @@ async function hasAmdGpuViaWmi(): Promise<boolean> {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean)
-      .some((pnpDeviceId) => hasPciVendorId(pnpDeviceId, AMD_VENDOR_ID));
+      .some((pnpDeviceId) => hasPciVendorId(pnpDeviceId, vendorId));
   } catch {
     return false;
   }
+}
+
+/**
+ * Detects AMD GPUs on Windows by parsing PNPDeviceID values from CIM.
+ * @return `true` if an AMD GPU vendor ID is detected.
+ */
+async function hasAmdGpuViaWmi(): Promise<boolean> {
+  return hasGpuViaWmi(AMD_VENDOR_ID);
+}
+
+/**
+ * Detects NVIDIA GPUs on Windows by parsing PNPDeviceID values from CIM.
+ * @return `true` if an NVIDIA GPU vendor ID is detected.
+ */
+async function hasNvidiaGpuViaWmi(): Promise<boolean> {
+  return hasGpuViaWmi(NVIDIA_VENDOR_ID);
 }
 
 interface HardwareValidation {
@@ -207,20 +257,19 @@ export async function validateHardware(): Promise<HardwareValidation> {
     // Windows GPU validation
     if (process.platform === 'win32') {
       const graphics = await si.graphics();
-      const hasNvidia = graphics.controllers.some((controller) => {
-        const details = `${controller.vendor ?? ''} ${controller.model ?? ''}`.toLowerCase();
-        return details.includes('nvidia');
-      });
+      const detectedGpu = getWindowsGpuFromGraphics(graphics);
 
       if (process.env.SKIP_HARDWARE_VALIDATION) {
         console.log('Skipping hardware validation');
-        if (hasNvidia) return { isValid: true, gpu: 'nvidia' };
+        if (detectedGpu) return { isValid: true, gpu: detectedGpu };
+        if (await hasNvidiaGpuViaWmi()) return { isValid: true, gpu: 'nvidia' };
         if (await hasAmdGpuViaWmi()) return { isValid: true, gpu: 'amd' };
         return { isValid: true };
       }
 
-      if (hasNvidia) return { isValid: true, gpu: 'nvidia' };
+      if (detectedGpu) return { isValid: true, gpu: detectedGpu };
 
+      if (await hasNvidiaGpuViaWmi()) return { isValid: true, gpu: 'nvidia' };
       if (await hasNvidiaGpuViaSmi()) return { isValid: true, gpu: 'nvidia' };
       if (await hasAmdGpuViaWmi()) return { isValid: true, gpu: 'amd' };
 
