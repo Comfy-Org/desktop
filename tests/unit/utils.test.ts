@@ -2,7 +2,7 @@ import type { ChildProcess } from 'node:child_process';
 import { exec } from 'node:child_process';
 import type { Systeminformation } from 'systeminformation';
 import si from 'systeminformation';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { validateHardware } from '@/utils';
 
@@ -19,8 +19,26 @@ const createChildProcess = (): ChildProcess =>
     on: vi.fn(),
   }) as unknown as ChildProcess;
 
+type ExecResponse = { error?: Error | null; stdout?: string; stderr?: string };
+
+const withExecResponses = (responses: Array<[RegExp, ExecResponse]>, fallback: ExecResponse = {}) => {
+  execMock.mockImplementation(((
+    command: string,
+    callback: (error: Error | null, stdout: string, stderr: string) => void
+  ) => {
+    const match = responses.find(([pattern]) => pattern.test(command));
+    const { error = null, stdout = '', stderr = '' } = match?.[1] ?? fallback;
+    setImmediate(() => callback(error ?? null, stdout, stderr));
+    return createChildProcess();
+  }) as typeof exec);
+};
+
 beforeEach(() => {
   execMock.mockReset();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe('validateHardware', () => {
@@ -69,22 +87,10 @@ describe('validateHardware', () => {
       controllers: [{ vendor: 'Intel', model: 'Iris Xe' }],
     } as Systeminformation.GraphicsData);
 
-    execMock.mockImplementation(((
-      command: string,
-      callback: (error: Error | null, stdout: string, stderr: string) => void
-    ) => {
-      if (command.includes('nvidia-smi')) {
-        setImmediate(() => callback(new Error('mocked exec failure'), '', ''));
-        return createChildProcess();
-      }
-      if (command.includes('PNPDeviceID')) {
-        setImmediate(() => callback(null, '["PCI\\\\VEN_8086&DEV_46A6"]\r\n', ''));
-        return createChildProcess();
-      }
-
-      setImmediate(() => callback(null, '', ''));
-      return createChildProcess();
-    }) as typeof exec);
+    withExecResponses([
+      [/nvidia-smi/, { error: new Error('mocked exec failure') }],
+      [/PNPDeviceID/, { stdout: '["PCI\\\\VEN_8086&DEV_46A6"]\r\n' }],
+    ]);
 
     const result = await validateHardware();
     expect(result).toStrictEqual({
