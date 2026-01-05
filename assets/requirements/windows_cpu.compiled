@@ -51,7 +51,7 @@ comfyui-embedded-docs==0.3.1
 comfyui-manager==4.0.3b7
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.7.63
+comfyui-workflow-templates==0.7.64
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 comfyui-workflow-templates-core==0.3.58
