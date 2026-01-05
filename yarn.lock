@@ -225,7 +225,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@comfyorg/comfyui-electron@workspace:."
   dependencies:
-    "@comfyorg/desktop-ui": "npm:0.0.4"
+    "@comfyorg/desktop-ui": "npm:0.0.6"
     "@electron/fuses": "npm:^1.8.0"
     "@electron/notarize": "npm:^2.4.0"
     "@electron/rebuild": "npm:^4.0.1"
@@ -282,10 +282,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@comfyorg/desktop-ui@npm:0.0.4":
-  version: 0.0.4
-  resolution: "@comfyorg/desktop-ui@npm:0.0.4"
-  checksum: 10c0/fe39ced618ea2b7a427f5f304002112d1821ec433c9158297a9ed9baf320a5c5c67219203b7baba60e8e72f6acef675c853ba7713baa2a66cc8f9bbe008c8ebc
+"@comfyorg/desktop-ui@npm:0.0.6":
+  version: 0.0.6
+  resolution: "@comfyorg/desktop-ui@npm:0.0.6"
+  checksum: 10c0/d121a8f8d54701daed0b2e6d12a104365e61303c2d12fd866baebb1e05928b764d69b71ecd04423943945ae4053ee0978f2e85054452f365b0f01c6b5d3f7401
   languageName: node
   linkType: hard
 
