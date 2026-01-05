@@ -235,8 +235,6 @@ rocm-sdk-core @ https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_cor
     # via
     #   -r assets/requirements/amd_requirements.txt
     #   rocm
-rocm-sdk-devel @ https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_devel-0.1.dev0-py3-none-win_amd64.whl
-    # via -r assets/requirements/amd_requirements.txt
 rocm-sdk-libraries-custom @ https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_libraries_custom-0.1.dev0-py3-none-win_amd64.whl
     # via
     #   -r assets/requirements/amd_requirements.txt
