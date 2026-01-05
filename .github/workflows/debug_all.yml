@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
+      - '.github/**'
       - '.prettierrc'
       - '.eslintrc.json'
       - '.prettierignore'
@@ -22,6 +23,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
+      - '.github/**'
       - '.prettierrc'
       - '.eslintrc.json'
       - '.prettierignore'
@@ -37,6 +39,10 @@ on:
       - 'CLAUDE.md'
       - '*_example'
       - 'tests/unit/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test-e2e-windows:

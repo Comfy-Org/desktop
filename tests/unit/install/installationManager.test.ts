@@ -1,3 +1,4 @@
+import { app } from 'electron';
 import fsPromises from 'node:fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -87,6 +88,7 @@ vi.mock('@/virtualEnvironment', () => {
       venvPath: 'valid/venv',
       comfyUIRequirementsPath: 'valid/requirements.txt',
       comfyUIManagerRequirementsPath: 'valid/manager-requirements.txt',
+      legacyComfyUIManagerRequirementsPath: 'valid/legacy-manager-requirements.txt',
     })),
   };
 });
@@ -177,6 +179,29 @@ describe('InstallationManager', () => {
             if (key === 'installState') return 'installed';
             if (key === 'basePath') return 'invalid/base';
           });
+        },
+        expectedErrors: ['basePath'],
+      },
+      {
+        scenario: 'detects unsafe base path inside app install root',
+        mockSetup: () => {
+          vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() =>
+            Promise.resolve(new ComfyInstallation('installed', 'valid/app/config', createMockTelemetry()))
+          );
+          vi.mocked(useDesktopConfig().get).mockImplementation((key: string) => {
+            if (key === 'installState') return 'installed';
+            if (key === 'basePath') return 'valid/app/config';
+          });
+          const originalGetPath = vi.mocked(app.getPath).getMockImplementation();
+          vi.mocked(app.getPath).mockImplementation((name) => {
+            if (name === 'exe') return 'valid/app/ComfyUI.exe';
+            return originalGetPath ? originalGetPath(name) : '/mock/app/path';
+          });
+          return () => {
+            if (originalGetPath) {
+              vi.mocked(app.getPath).mockImplementation(originalGetPath);
+            }
+          };
         },
         expectedErrors: ['basePath'],
       },

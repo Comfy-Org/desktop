@@ -17,7 +17,7 @@ export class TestServerStatus {
     this.finishing = window.getByText('Loading Human Interface');
     this.error = window.getByText('Unable to start ComfyUI Desktop');
 
-    this.errorDesktopVersion = this.error.locator('p.text-lg.text-neutral-400');
+    this.errorDesktopVersion = this.window.locator('[data-testid="startup-status-text"], p.text-lg.text-neutral-400');
   }
 
   async get() {

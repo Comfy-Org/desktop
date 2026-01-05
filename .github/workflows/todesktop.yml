@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   workflow_call:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-windows-debug:
     runs-on: windows-latest
@@ -17,9 +21,8 @@ jobs:
         shell: bash
 
       - name: Build
-        uses: ./.github/actions/build/windows/todesktop
+        uses: ./.github/actions/build/todesktop
         with:
-          build-targets: '--targets=@electron-forge/maker-zip'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TODESKTOP_ACCESS_TOKEN: ${{ secrets.TODESKTOP_ACCESS_TOKEN }}
           TODESKTOP_EMAIL: ${{ secrets.TODESKTOP_EMAIL }}

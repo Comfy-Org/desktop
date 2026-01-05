@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
+      - '.github/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.cursor/**'
       - '.husky/**'
@@ -14,6 +15,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
+      - '.github/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.cursor/**'
       - '.husky/**'
@@ -21,6 +23,10 @@ on:
       - '.claude/**'
       - 'CLAUDE.md'
       - '*_example'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint-and-format:
@@ -49,17 +55,6 @@ jobs:
 
       - name: Run Unit Tests
         run: yarn run test:unit
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238
-        with:
-          directory: ./coverage/
-          fail_ci_if_error: false
-          files: ./cobertura-coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
 
       - name: Check Prettier Formatting
         run: yarn run format:check

@@ -119,6 +119,9 @@ export const ELECTRON_BRIDGE_API = 'electronAPI';
 export const SENTRY_URL_ENDPOINT =
   'https://942cadba58d247c9cab96f45221aa813@o4507954455314432.ingest.us.sentry.io/4508007940685824';
 
+export const AMD_VENDOR_ID = '1002';
+export const NVIDIA_VENDOR_ID = '10DE';
+
 export interface MigrationItem {
   id: string;
   label: string;
@@ -154,6 +157,7 @@ export interface ServerArgs {
 export const DEFAULT_SERVER_ARGS: ServerArgs = {
   listen: '127.0.0.1',
   port: '8000',
+  'enable-manager': '',
 };
 
 export enum DownloadStatus {
@@ -183,6 +187,19 @@ export const CUDA_TORCH_URL = TorchMirrorUrl.Cuda;
 export const NIGHTLY_CPU_TORCH_URL = TorchMirrorUrl.NightlyCpu;
 /** @deprecated Use {@link TorchMirrorUrl} instead. */
 export const DEFAULT_PYPI_INDEX_URL = TorchMirrorUrl.Default;
+
+export const AMD_ROCM_SDK_PACKAGES: string[] = [
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_core-0.1.dev0-py3-none-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_devel-0.1.dev0-py3-none-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_libraries_custom-0.1.dev0-py3-none-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm-0.1.dev0.tar.gz',
+];
+
+export const AMD_TORCH_PACKAGES: string[] = [
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torch-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchaudio-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchvision-0.24.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
+];
 
 /** The log files used by the desktop process. */
 export enum LogFile {

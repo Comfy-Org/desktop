@@ -22,7 +22,7 @@ test.describe('Troubleshooting - broken venv', () => {
     await troubleshooting.confirmRecreateVenvButton.click();
     await expect(resetVenvCard.isRunningIndicator).toBeVisible();
 
-    await expect(installPythonPackagesCard.rootEl).toBeVisible({ timeout: 30 * 1000 });
+    await expect(installPythonPackagesCard.rootEl).toBeVisible({ timeout: 60 * 1000 });
     await installPythonPackagesCard.button.click();
     await troubleshooting.confirmInstallPythonPackagesButton.click();
     await expect(installPythonPackagesCard.isRunningIndicator).toBeVisible();

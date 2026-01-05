@@ -2,11 +2,12 @@ import { app } from 'electron';
 import log from 'electron-log/main';
 import pty from 'node-pty';
 import { ChildProcess, spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { readdir, rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
-import { InstallStage, TorchMirrorUrl } from './constants';
+import { AMD_ROCM_SDK_PACKAGES, AMD_TORCH_PACKAGES, InstallStage, TorchMirrorUrl } from './constants';
 import { PythonImportVerificationError } from './infrastructure/pythonImportVerificationError';
 import { useAppState } from './main-process/appState';
 import { createInstallStageInfo } from './main-process/installStages';
@@ -116,6 +117,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   readonly pythonInterpreterPath: string;
   readonly comfyUIRequirementsPath: string;
   readonly comfyUIManagerRequirementsPath: string;
+  readonly legacyComfyUIManagerRequirementsPath: string;
   readonly selectedDevice: TorchDeviceType;
   readonly telemetry: ITelemetry;
   readonly pythonMirror?: string;
@@ -186,12 +188,17 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     this.venvPath = path.join(basePath, '.venv');
     const resourcesPath = app.isPackaged ? path.join(process.resourcesPath) : path.join(app.getAppPath(), 'assets');
     this.comfyUIRequirementsPath = path.join(resourcesPath, 'ComfyUI', 'requirements.txt');
-    this.comfyUIManagerRequirementsPath = path.join(
+    const managerRequirementsPath = path.join(resourcesPath, 'ComfyUI', 'manager_requirements.txt');
+    this.legacyComfyUIManagerRequirementsPath = path.join(
       resourcesPath,
       'ComfyUI',
       'custom_nodes',
       'ComfyUI-Manager',
       'requirements.txt'
+    );
+    this.comfyUIManagerRequirementsPath = this.resolveManagerRequirementsPath(
+      managerRequirementsPath,
+      this.legacyComfyUIManagerRequirementsPath
     );
 
     this.cacheDir = path.join(basePath, 'uv-cache');
@@ -226,9 +233,17 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     function compiledRequirements() {
       if (process.platform === 'darwin') return 'macos';
       if (process.platform === 'win32') {
-        return selectedDevice === 'cpu' ? 'windows_cpu' : 'windows_nvidia';
+        if (selectedDevice === 'cpu') return 'windows_cpu';
+        if (selectedDevice === 'amd') return 'windows_amd';
+        return 'windows_nvidia';
       }
     }
+  }
+
+  private resolveManagerRequirementsPath(primary: string, legacy: string) {
+    if (existsSync(primary)) return primary;
+    if (existsSync(legacy)) return legacy;
+    return primary;
   }
 
   public async create(callbacks?: ProcessCallbacks): Promise<void> {
@@ -364,11 +379,6 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   public async installRequirements(callbacks?: ProcessCallbacks): Promise<void> {
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INSTALLING_REQUIREMENTS, { progress: 25 }));
 
-    // pytorch nightly is required for MPS
-    if (process.platform === 'darwin') {
-      return this.manualInstall(callbacks);
-    }
-
     const installCmd = getPipInstallArgs({
       requirementsFile: this.requirementsCompiledPath,
       indexStrategy: 'unsafe-best-match',
@@ -382,6 +392,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       );
       return this.manualInstall(callbacks);
     }
+
+    // Ensure Manager requirements are installed even if the compiled file did not include them.
+    await this.installComfyUIManagerRequirements(callbacks);
   }
 
   /**
@@ -593,6 +606,12 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       })
     );
 
+    if (this.selectedDevice === 'amd') {
+      await this.installAmdRocmSdk(callbacks);
+      await this.installAmdTorch(callbacks);
+      return;
+    }
+
     const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
     const config: PipInstallConfig = {
       packages: ['torch', 'torchvision', 'torchaudio'],
@@ -607,6 +626,46 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
 
     if (exitCode !== 0) {
       throw new Error(`Failed to install PyTorch: exit code ${exitCode}`);
+    }
+  }
+
+  /**
+   * Installs AMD ROCm SDK packages on Windows.
+   * @param callbacks The callbacks to use for the command.
+   */
+  private async installAmdRocmSdk(callbacks?: ProcessCallbacks): Promise<void> {
+    if (process.platform !== 'win32') {
+      throw new Error('AMD ROCm packages are currently supported only on Windows.');
+    }
+
+    const installArgs = getPipInstallArgs({
+      packages: AMD_ROCM_SDK_PACKAGES,
+    });
+
+    log.info('Installing AMD ROCm SDK packages.');
+    const { exitCode } = await this.runUvCommandAsync(installArgs, callbacks);
+    if (exitCode !== 0) {
+      throw new Error(`Failed to install AMD ROCm SDK packages: exit code ${exitCode}`);
+    }
+  }
+
+  /**
+   * Installs AMD ROCm PyTorch wheels on Windows.
+   * @param callbacks The callbacks to use for the command.
+   */
+  private async installAmdTorch(callbacks?: ProcessCallbacks): Promise<void> {
+    if (process.platform !== 'win32') {
+      throw new Error('AMD ROCm packages are currently supported only on Windows.');
+    }
+
+    const installArgs = getPipInstallArgs({
+      packages: AMD_TORCH_PACKAGES,
+    });
+
+    log.info('Installing AMD ROCm PyTorch packages.');
+    const { exitCode } = await this.runUvCommandAsync(installArgs, callbacks);
+    if (exitCode !== 0) {
+      throw new Error(`Failed to install AMD ROCm PyTorch packages: exit code ${exitCode}`);
     }
   }
 
@@ -645,6 +704,13 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
         message: 'Installing ComfyUI Manager requirements',
       })
     );
+
+    if (!(await pathAccessible(this.comfyUIManagerRequirementsPath))) {
+      throw new Error(
+        `Manager requirements file was not found at ${this.comfyUIManagerRequirementsPath}. ` +
+          `If you are using a legacy build, ensure the ComfyUI-Manager custom node is present at ${this.legacyComfyUIManagerRequirementsPath}.`
+      );
+    }
 
     log.info(`Installing ComfyUIManager requirements from ${this.comfyUIManagerRequirementsPath}`);
     const installCmd = getPipInstallArgs({
@@ -743,6 +809,12 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     };
 
     const coreOutput = await checkRequirements(this.comfyUIRequirementsPath);
+    if (!(await pathAccessible(this.comfyUIManagerRequirementsPath))) {
+      throw new Error(
+        `Manager requirements file was not found at ${this.comfyUIManagerRequirementsPath}. ` +
+          `If you are using a legacy build, ensure the ComfyUI-Manager custom node is present at ${this.legacyComfyUIManagerRequirementsPath}.`
+      );
+    }
     const managerOutput = await checkRequirements(this.comfyUIManagerRequirementsPath);
 
     const coreOk = hasAllPackages(coreOutput);
@@ -756,9 +828,18 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return 'package-upgrade';
     }
 
-    const result = coreOk && managerOk ? 'OK' : 'error';
-    log.debug('hasRequirements result:', result);
-    return result;
+    if (!coreOk || !managerOk) {
+      log.info('Requirements are out of date. Treating as package upgrade.', {
+        coreOk,
+        managerOk,
+        upgradeCore,
+        upgradeManager,
+      });
+      return 'package-upgrade';
+    }
+
+    log.debug('hasRequirements result:', 'OK');
+    return 'OK';
   }
 
   /**
