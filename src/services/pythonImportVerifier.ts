@@ -10,6 +10,8 @@ export interface ImportVerificationResult {
   missingImports?: string[];
 }
 
+const VERIFICATION_MARKER = '__COMFY_IMPORT_CHECK__';
+
 /** List of failed imports reported by the Python script */
 interface PythonValidationResult {
   success: boolean;
@@ -35,7 +37,7 @@ for module_name in ${JSON.stringify(imports)}:
         failed_imports.append(module_name)
 
 # Output results as JSON for easy parsing
-print(json.dumps({
+print(${JSON.stringify(VERIFICATION_MARKER)} + json.dumps({
     "failed_imports": failed_imports,
     "success": len(failed_imports) == 0
 }))
@@ -56,6 +58,14 @@ function getPythonVerificationSchema(): Joi.ObjectSchema<PythonValidationResult>
  * Parses and validates the output from the Python import test script.
  * Returns a discriminated union describing the outcome without side effects.
  */
+function extractMarkedJson(output: string): string | undefined {
+  const markerIndex = output.lastIndexOf(VERIFICATION_MARKER);
+  if (markerIndex === -1) return;
+  const afterMarker = output.slice(markerIndex + VERIFICATION_MARKER.length);
+  const line = afterMarker.split(/\r?\n/)[0];
+  return line.trim();
+}
+
 function interpretPythonValidationOutput(
   output: string
 ):
@@ -63,7 +73,8 @@ function interpretPythonValidationOutput(
   | { type: 'invalid_format'; message: string }
   | { type: 'ok'; value: PythonValidationResult } {
   try {
-    const parsedOutput: unknown = JSON.parse(output);
+    const candidate = extractMarkedJson(output) ?? output.trim();
+    const parsedOutput: unknown = JSON.parse(candidate);
     const verificationResult = getPythonVerificationSchema().validate(parsedOutput);
 
     if (verificationResult.error) {

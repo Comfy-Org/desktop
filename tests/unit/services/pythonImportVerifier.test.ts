@@ -4,6 +4,12 @@ import { describe, expect, test, vi } from 'vitest';
 import { runPythonImportVerifyScript } from '@/services/pythonImportVerifier';
 import type { ProcessCallbacks, VirtualEnvironment } from '@/virtualEnvironment';
 
+const VERIFICATION_MARKER = '__COMFY_IMPORT_CHECK__';
+
+function withMarker(payload: unknown): string {
+  return `${VERIFICATION_MARKER}${JSON.stringify(payload)}`;
+}
+
 function createMockVenv(
   options: {
     stdout?: string;
@@ -38,7 +44,9 @@ describe('runPythonImportVerifyScript', () => {
   });
 
   test('passes Python -c script with provided imports', async () => {
-    const { venv, captured } = createMockVenv({ stdout: JSON.stringify({ failed_imports: [], success: true }) });
+    const { venv, captured } = createMockVenv({
+      stdout: withMarker({ failed_imports: [], success: true }),
+    });
     const imports = ['yaml', 'torch', 'uv'];
 
     const result = await runPythonImportVerifyScript(venv, imports);
@@ -55,7 +63,9 @@ describe('runPythonImportVerifyScript', () => {
 
   test('returns missing imports when Python reports failures', async () => {
     const failed = ['toml', 'uv'];
-    const { venv } = createMockVenv({ stdout: JSON.stringify({ failed_imports: failed, success: false }) });
+    const { venv } = createMockVenv({
+      stdout: withMarker({ failed_imports: failed, success: false }),
+    });
     const result = await runPythonImportVerifyScript(venv, ['toml', 'uv', 'yaml']);
     expect(result).toEqual({ success: false, missingImports: failed, error: `Missing imports: ${failed.join(', ')}` });
     expect(log.error).toHaveBeenCalledWith(`Python import verification failed - missing modules: ${failed.join(', ')}`);
@@ -63,7 +73,7 @@ describe('runPythonImportVerifyScript', () => {
 
   test('handles invalid JSON format from Python (schema validation failure)', async () => {
     // failed_imports should be an array, not a string
-    const invalid = JSON.stringify({ failed_imports: 'not-an-array', success: true });
+    const invalid = withMarker({ failed_imports: 'not-an-array', success: true });
     const { venv } = createMockVenv({ stdout: invalid });
     const result = await runPythonImportVerifyScript(venv, ['yaml']);
     expect(result.success).toBe(false);
@@ -80,8 +90,15 @@ describe('runPythonImportVerifyScript', () => {
     expect(log.error).toHaveBeenCalledWith('Failed to parse verification output:', noisy);
   });
 
+  test('parses JSON after marker even with noisy output', async () => {
+    const output = `warning before\n${withMarker({ failed_imports: [], success: true })}\nmore noise`;
+    const { venv } = createMockVenv({ stdout: output });
+    const result = await runPythonImportVerifyScript(venv, ['yaml']);
+    expect(result).toEqual({ success: true });
+  });
+
   test('parses JSON from stderr as well as stdout', async () => {
-    const json = JSON.stringify({ failed_imports: [], success: true });
+    const json = withMarker({ failed_imports: [], success: true });
     const { venv } = createMockVenv({ stderr: json });
     const result = await runPythonImportVerifyScript(venv, ['yaml']);
     expect(result).toEqual({ success: true });
