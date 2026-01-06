@@ -66,6 +66,16 @@ function extractMarkedJson(output: string): string | undefined {
   return line.trim();
 }
 
+function extractTrailingJsonLine(output: string): string | undefined {
+  const lines = output.split(/\r?\n/).reverse();
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) continue;
+    return trimmed;
+  }
+}
+
 function interpretPythonValidationOutput(
   output: string
 ):
@@ -73,7 +83,7 @@ function interpretPythonValidationOutput(
   | { type: 'invalid_format'; message: string }
   | { type: 'ok'; value: PythonValidationResult } {
   try {
-    const candidate = extractMarkedJson(output) ?? output.trim();
+    const candidate = extractMarkedJson(output) ?? extractTrailingJsonLine(output) ?? output.trim();
     const parsedOutput: unknown = JSON.parse(candidate);
     const verificationResult = getPythonVerificationSchema().validate(parsedOutput);
 

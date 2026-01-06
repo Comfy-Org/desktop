@@ -97,6 +97,13 @@ describe('runPythonImportVerifyScript', () => {
     expect(result).toEqual({ success: true });
   });
 
+  test('parses trailing JSON line without marker', async () => {
+    const output = '[WARNING] failed to run amdgpu-arch: binary not found.\n{"failed_imports": [], "success": true}\n';
+    const { venv } = createMockVenv({ stdout: output });
+    const result = await runPythonImportVerifyScript(venv, ['yaml']);
+    expect(result).toEqual({ success: true });
+  });
+
   test('parses JSON from stderr as well as stdout', async () => {
     const json = withMarker({ failed_imports: [], success: true });
     const { venv } = createMockVenv({ stderr: json });
