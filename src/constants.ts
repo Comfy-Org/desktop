@@ -174,9 +174,9 @@ export enum TorchMirrorUrl {
   /** Regular PyPI index URL. */
   Default = 'https://pypi.org/simple/',
   /** PyTorch CUDA mirror. */
-  Cuda = 'https://download.pytorch.org/whl/cu129',
+  Cuda = 'https://download.pytorch.org/whl/cu130',
   /** PyTorch Nightly CUDA mirror. */
-  NightlyCuda = 'https://download.pytorch.org/whl/nightly/cu129',
+  NightlyCuda = 'https://download.pytorch.org/whl/nightly/cu130',
   /** PyTorch nightly CPU mirror. */
   NightlyCpu = 'https://download.pytorch.org/whl/nightly/cpu',
 }
