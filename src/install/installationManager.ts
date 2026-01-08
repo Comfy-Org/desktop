@@ -25,6 +25,16 @@ import { Troubleshooting } from './troubleshooting';
 const execAsync = promisify(exec);
 const NVIDIA_DRIVER_MIN_VERSION = '580';
 
+/**
+ * Extracts the NVIDIA driver version from `nvidia-smi` output.
+ * @param output The `nvidia-smi` output to parse.
+ * @returns The driver version, if present.
+ */
+export function parseNvidiaDriverVersionFromSmiOutput(output: string): string | undefined {
+  const match = output.match(/driver version\s*:\s*([\d.]+)/i);
+  return match?.[1];
+}
+
 /** High-level / UI control over the installation of ComfyUI server. */
 export class InstallationManager implements HasTelemetry {
   constructor(
@@ -414,8 +424,7 @@ export class InstallationManager implements HasTelemetry {
   private async getNvidiaDriverVersionFromSmiFallback(): Promise<string | undefined> {
     try {
       const { stdout } = await execAsync('nvidia-smi');
-      const match = stdout.match(/driver version\\s*:\\s*([\d.]+)/i);
-      return match?.[1];
+      return parseNvidiaDriverVersionFromSmiOutput(stdout);
     } catch (error) {
       log.debug('Failed to read NVIDIA driver version via nvidia-smi output.', error);
       return undefined;
