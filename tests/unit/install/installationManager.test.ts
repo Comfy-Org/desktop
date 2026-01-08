@@ -5,7 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 import { ComfySettings } from '@/config/comfySettings';
 import { IPC_CHANNELS } from '@/constants';
-import { InstallationManager, parseNvidiaDriverVersionFromSmiOutput } from '@/install/installationManager';
+import {
+  InstallationManager,
+  isNvidiaDriverBelowMinimum,
+  parseNvidiaDriverVersionFromSmiOutput,
+} from '@/install/installationManager';
 import type { AppWindow } from '@/main-process/appWindow';
 import { ComfyInstallation } from '@/main-process/comfyInstallation';
 import type { InstallValidation } from '@/preload';
@@ -301,5 +305,16 @@ describe('parseNvidiaDriverVersionFromSmiOutput', () => {
 `;
 
     expect(parseNvidiaDriverVersionFromSmiOutput(output)).toBe('591.59');
+  });
+});
+
+describe('isNvidiaDriverBelowMinimum', () => {
+  it.each([
+    { version: '579.0.0', expected: true, label: 'below 580' },
+    { version: '580.0.0', expected: false, label: 'at 580' },
+    { version: '580.0.1', expected: false, label: 'at a version of 580' },
+    { version: '581.0', expected: false, label: 'above 580' },
+  ])('returns $expected when $label', ({ version, expected }) => {
+    expect(isNvidiaDriverBelowMinimum(version, '580')).toBe(expected);
   });
 });

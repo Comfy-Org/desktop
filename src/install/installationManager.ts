@@ -35,6 +35,18 @@ export function parseNvidiaDriverVersionFromSmiOutput(output: string): string | 
   return match?.[1];
 }
 
+/**
+ * Returns `true` when the NVIDIA driver version is below the minimum.
+ * @param driverVersion The detected driver version.
+ * @param minimumVersion The minimum required driver version.
+ */
+export function isNvidiaDriverBelowMinimum(
+  driverVersion: string,
+  minimumVersion: string = NVIDIA_DRIVER_MIN_VERSION
+): boolean {
+  return compareVersions(driverVersion, minimumVersion) < 0;
+}
+
 /** High-level / UI control over the installation of ComfyUI server. */
 export class InstallationManager implements HasTelemetry {
   constructor(
@@ -390,7 +402,7 @@ export class InstallationManager implements HasTelemetry {
       (await this.getNvidiaDriverVersionFromSmi()) ?? (await this.getNvidiaDriverVersionFromSmiFallback());
     if (!driverVersion) return;
 
-    if (compareVersions(driverVersion, NVIDIA_DRIVER_MIN_VERSION) >= 0) return;
+    if (!isNvidiaDriverBelowMinimum(driverVersion)) return;
 
     await this.appWindow.showMessageBox({
       type: 'warning',
