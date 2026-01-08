@@ -181,6 +181,9 @@ export enum TorchMirrorUrl {
   NightlyCpu = 'https://download.pytorch.org/whl/nightly/cpu',
 }
 
+/** Legacy NVIDIA torch mirror used by older installs (CUDA 12.9). */
+export const LEGACY_NVIDIA_TORCH_MIRROR = 'https://download.pytorch.org/whl/cu129';
+
 /** @deprecated Use {@link TorchMirrorUrl} instead. */
 export const CUDA_TORCH_URL = TorchMirrorUrl.Cuda;
 /** @deprecated Use {@link TorchMirrorUrl} instead. */

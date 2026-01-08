@@ -3,6 +3,7 @@ import { rm } from 'node:fs/promises';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings, useComfySettings } from '../config/comfySettings';
+import { LEGACY_NVIDIA_TORCH_MIRROR, TorchMirrorUrl } from '../constants';
 import { evaluatePathRestrictions } from '../handlers/pathHandlers';
 import type { DesktopInstallState } from '../main_types';
 import type { InstallValidation } from '../preload';
@@ -85,7 +86,25 @@ export class ComfyInstallation {
     const basePath = config.get('basePath');
     if (state && basePath) {
       await ComfySettings.load(basePath);
+      await ComfyInstallation.migrateLegacyTorchMirrorIfNeeded();
       return new ComfyInstallation(state, basePath, getTelemetry());
+    }
+  }
+
+  private static async migrateLegacyTorchMirrorIfNeeded(): Promise<void> {
+    const selectedDevice = useDesktopConfig().get('selectedDevice');
+    if (selectedDevice !== 'nvidia') return;
+
+    const settings = useComfySettings();
+    const torchMirror = settings.get('Comfy-Desktop.UV.TorchInstallMirror');
+    if (!torchMirror || torchMirror !== LEGACY_NVIDIA_TORCH_MIRROR) return;
+
+    try {
+      settings.set('Comfy-Desktop.UV.TorchInstallMirror', TorchMirrorUrl.Cuda);
+      await settings.saveSettings();
+      log.info('Migrated legacy NVIDIA torch mirror from cu129 to cu130.');
+    } catch (error) {
+      log.warn('Failed to migrate legacy NVIDIA torch mirror to cu130.', error);
     }
   }
 
