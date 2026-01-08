@@ -7,7 +7,14 @@ import { readdir, rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
-import { AMD_ROCM_SDK_PACKAGES, AMD_TORCH_PACKAGES, InstallStage, TorchMirrorUrl } from './constants';
+import {
+  AMD_ROCM_SDK_PACKAGES,
+  AMD_TORCH_PACKAGES,
+  InstallStage,
+  NVIDIA_TORCH_PACKAGES,
+  NVIDIA_TORCH_VERSION,
+  TorchMirrorUrl,
+} from './constants';
 import { PythonImportVerificationError } from './infrastructure/pythonImportVerificationError';
 import { useAppState } from './main-process/appState';
 import { createInstallStageInfo } from './main-process/installStages';
@@ -630,6 +637,68 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   }
 
   /**
+   * Ensures NVIDIA installs use the recommended PyTorch packages.
+   * @param callbacks The callbacks to use for the command.
+   */
+  async ensureRecommendedNvidiaTorch(callbacks?: ProcessCallbacks): Promise<void> {
+    if (this.selectedDevice !== 'nvidia') return;
+
+    const installedVersion = await this.getTorchVersion();
+    if (installedVersion === NVIDIA_TORCH_VERSION) {
+      log.info('NVIDIA PyTorch already matches recommended version:', installedVersion);
+      return;
+    }
+
+    const config: PipInstallConfig = {
+      packages: NVIDIA_TORCH_PACKAGES,
+      indexUrl: TorchMirrorUrl.Cuda,
+    };
+
+    const installArgs = getPipInstallArgs(config);
+    log.info('Installing recommended NVIDIA PyTorch packages.', { installedVersion });
+    const { exitCode } = await this.runUvCommandAsync(installArgs, callbacks);
+
+    if (exitCode !== 0) {
+      throw new Error(`Failed to install recommended NVIDIA PyTorch packages: exit code ${exitCode}`);
+    }
+  }
+
+  /**
+   * Reads the installed torch version, if available.
+   * @returns The torch version string when available, otherwise `undefined`.
+   */
+  private async getTorchVersion(): Promise<string | undefined> {
+    let stdout = '';
+    let stderr = '';
+    const callbacks: ProcessCallbacks = {
+      onStdout: (data) => {
+        stdout += data;
+      },
+      onStderr: (data) => {
+        stderr += data;
+      },
+    };
+
+    const { exitCode } = await this.runPythonCommandAsync(
+      ['-c', 'import torch, sys; sys.stdout.write(torch.__version__)'],
+      callbacks
+    );
+
+    if (exitCode !== 0) {
+      log.warn('Failed to read torch version.', { exitCode, stderr });
+      return undefined;
+    }
+
+    const version = stdout.trim();
+    if (!version) {
+      log.warn('Torch version output was empty.', { stderr });
+      return undefined;
+    }
+
+    return version;
+  }
+
+  /**
    * Installs AMD ROCm SDK packages on Windows.
    * @param callbacks The callbacks to use for the command.
    */
@@ -838,8 +907,34 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return 'package-upgrade';
     }
 
+    if (await this.needsNvidiaTorchUpgrade()) {
+      log.info('NVIDIA PyTorch version out of date. Treating as package upgrade.');
+      return 'package-upgrade';
+    }
+
     log.debug('hasRequirements result:', 'OK');
     return 'OK';
+  }
+
+  /**
+   * Returns `true` when NVIDIA PyTorch should be upgraded to the recommended version.
+   * @returns `true` when NVIDIA PyTorch is out of date, otherwise `false`.
+   */
+  private async needsNvidiaTorchUpgrade(): Promise<boolean> {
+    if (this.selectedDevice !== 'nvidia') return false;
+
+    const installedVersion = await this.getTorchVersion();
+    if (!installedVersion) return false;
+
+    const needsUpgrade = installedVersion !== NVIDIA_TORCH_VERSION;
+    if (needsUpgrade) {
+      log.info('Detected NVIDIA PyTorch version mismatch.', {
+        installedVersion,
+        recommendedVersion: NVIDIA_TORCH_VERSION,
+      });
+    }
+
+    return needsUpgrade;
   }
 
   /**

@@ -354,6 +354,7 @@ export class InstallationManager implements HasTelemetry {
     try {
       await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
       await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
+      await installation.virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
       await installation.validate();
     } catch (error) {
       log.error('Error auto-updating packages:', error);
