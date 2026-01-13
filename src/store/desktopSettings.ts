@@ -1,3 +1,4 @@
+import type { TorchPinnedPackages, TorchUpdatePolicy } from '../constants';
 import type { GpuType, TorchDeviceType } from '../preload';
 
 export type DesktopInstallState = 'started' | 'installed' | 'upgraded';
@@ -35,4 +36,10 @@ export type DesktopSettings = {
   versionConsentedMetrics?: string;
   /** Whether the user has generated an image successfully. */
   hasGeneratedSuccessfully?: boolean;
+  /** How to handle NVIDIA PyTorch updates. */
+  torchUpdatePolicy?: TorchUpdatePolicy;
+  /** The pinned NVIDIA torch package versions when updates are disabled. */
+  torchPinnedPackages?: TorchPinnedPackages;
+  /** The last recommended NVIDIA torch version we prompted for. */
+  torchLastPromptedVersion?: string;
 };

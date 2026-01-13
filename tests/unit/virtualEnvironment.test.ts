@@ -3,6 +3,7 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import path from 'node:path';
 import { test as baseTest, describe, expect, vi } from 'vitest';
 
+import { TorchMirrorUrl } from '@/constants';
 import type { ITelemetry } from '@/services/telemetry';
 import { VirtualEnvironment } from '@/virtualEnvironment';
 
@@ -283,6 +284,40 @@ describe('VirtualEnvironment', () => {
       expect(uvEnv.VIRTUAL_ENV).toBe(envNoMirror.venvPath);
       expect('UV_PYTHON_INSTALL_MIRROR' in uvEnv).toBe(false);
       expect(uvEnv.UV_PYTHON_INSTALL_MIRROR).toBeUndefined();
+    });
+  });
+
+  describe('isUsingCustomTorchMirror', () => {
+    test('returns false when using default mirror for NVIDIA', () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+        torchMirror: TorchMirrorUrl.Cuda,
+      });
+
+      expect(env.isUsingCustomTorchMirror()).toBe(false);
+    });
+
+    test('returns true when using a custom mirror', () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+        torchMirror: 'https://download.pytorch.org/whl/cu128',
+      });
+
+      expect(env.isUsingCustomTorchMirror()).toBe(true);
     });
   });
 });

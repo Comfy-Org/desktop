@@ -5,7 +5,14 @@ import { promisify } from 'node:util';
 
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
-import { IPC_CHANNELS, InstallStage, ProgressStatus } from '../constants';
+import {
+  IPC_CHANNELS,
+  InstallStage,
+  NVIDIA_TORCH_RECOMMENDED_VERSION,
+  NVIDIA_TORCH_VERSION,
+  NVIDIA_TORCHVISION_VERSION,
+  ProgressStatus,
+} from '../constants';
 import { PythonImportVerificationError } from '../infrastructure/pythonImportVerificationError';
 import { useAppState } from '../main-process/appState';
 import type { AppWindow } from '../main-process/appWindow';
@@ -382,12 +389,77 @@ export class InstallationManager implements HasTelemetry {
       await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
       await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
       await this.warnIfNvidiaDriverTooOld(installation);
-      await installation.virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
+      await this.maybeUpdateNvidiaTorch(installation, callbacks);
       await installation.validate();
     } catch (error) {
       log.error('Error auto-updating packages:', error);
       await this.appWindow.loadPage('server-start');
     }
+  }
+
+  private async maybeUpdateNvidiaTorch(installation: ComfyInstallation, callbacks: ProcessCallbacks): Promise<void> {
+    const virtualEnvironment = installation.virtualEnvironment;
+    if (virtualEnvironment.selectedDevice !== 'nvidia') return;
+
+    if (virtualEnvironment.isUsingCustomTorchMirror()) {
+      log.info('Skipping NVIDIA PyTorch update because a custom torch mirror is configured.');
+      return;
+    }
+
+    const config = useDesktopConfig();
+    const updatePolicy = config.get('torchUpdatePolicy');
+    if (updatePolicy === 'pinned') {
+      log.info('Skipping NVIDIA PyTorch update because updates are pinned.');
+      return;
+    }
+
+    const installedVersions = await virtualEnvironment.getInstalledTorchPackageVersions();
+    if (!installedVersions) {
+      log.warn('Skipping NVIDIA PyTorch update because installed versions could not be read.');
+      return;
+    }
+
+    const isOutOfDate = await virtualEnvironment.isNvidiaTorchOutOfDate(installedVersions);
+    if (!isOutOfDate) return;
+
+    const recommendedVersion = NVIDIA_TORCH_RECOMMENDED_VERSION;
+    const lastPromptedVersion = config.get('torchLastPromptedVersion');
+
+    if (lastPromptedVersion !== recommendedVersion) {
+      const currentTorch = installedVersions.torch ?? 'unknown';
+      const currentTorchaudio = installedVersions.torchaudio ?? 'unknown';
+      const currentTorchvision = installedVersions.torchvision ?? 'unknown';
+
+      const { response } = await this.appWindow.showMessageBox({
+        type: 'question',
+        title: 'Update PyTorch?',
+        message:
+          'We can update PyTorch to the recommended NVIDIA build for performance improvements. This may change compatibility with some drivers or custom nodes.',
+        detail: [
+          `Current: torch ${currentTorch}, torchaudio ${currentTorchaudio}, torchvision ${currentTorchvision}`,
+          `Recommended: torch ${NVIDIA_TORCH_VERSION}, torchaudio ${NVIDIA_TORCH_VERSION}, torchvision ${NVIDIA_TORCHVISION_VERSION}`,
+          'You can keep your current versions. We will not ask again for this version.',
+        ].join('\n'),
+        buttons: ['Update PyTorch', 'Keep current version'],
+        defaultId: 0,
+        cancelId: 1,
+      });
+
+      config.set('torchLastPromptedVersion', recommendedVersion);
+
+      if (response !== 0) {
+        config.set('torchUpdatePolicy', 'pinned');
+        config.set('torchPinnedPackages', installedVersions);
+        virtualEnvironment.updateTorchUpdatePolicy('pinned', installedVersions);
+        return;
+      }
+
+      config.set('torchUpdatePolicy', 'auto');
+      config.delete('torchPinnedPackages');
+      virtualEnvironment.updateTorchUpdatePolicy('auto');
+    }
+
+    await virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
   }
 
   /**

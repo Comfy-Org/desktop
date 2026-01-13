@@ -72,6 +72,8 @@ export class ComfyInstallation {
       pythonMirror: useComfySettings().get('Comfy-Desktop.UV.PythonInstallMirror'),
       pypiMirror: useComfySettings().get('Comfy-Desktop.UV.PypiInstallMirror'),
       torchMirror: useComfySettings().get('Comfy-Desktop.UV.TorchInstallMirror'),
+      torchUpdatePolicy: useDesktopConfig().get('torchUpdatePolicy'),
+      torchPinnedPackages: useDesktopConfig().get('torchPinnedPackages'),
     });
   }
 
