@@ -49,7 +49,7 @@ interface PipInstallConfig {
   prerelease?: boolean;
   upgradePackages?: boolean;
   requirementsFile?: string;
-  indexStrategy?: 'compatible' | 'first-index' | 'unsafe-best-match';
+  indexStrategy?: 'compatible' | 'unsafe-best-match';
 }
 
 type TorchPackageName = 'torch' | 'torchaudio' | 'torchvision';
