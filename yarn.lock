@@ -266,6 +266,7 @@ __metadata:
     lodash: "npm:4.17.21"
     mixpanel: "npm:^0.18.0"
     node-pty: "npm:1.1.0-beta39"
+    posthog-node: "npm:^5.20.0"
     prettier: "npm:^3.3.3"
     rimraf: "npm:^6.0.1"
     systeminformation: "npm:^5.24.8"
@@ -2049,6 +2050,15 @@ __metadata:
   bin:
     playwright: cli.js
   checksum: 10c0/2fca0bb7b334f7a23c7c5dfa5dbe37b47794c56f39b747c8d74a2f95c339e7902a296f2f1dd32c47bdd723cfa92cee05219f1a5876725dc89a1871b9137a286d
+  languageName: node
+  linkType: hard
+
+"@posthog/core@npm:1.9.1":
+  version: 1.9.1
+  resolution: "@posthog/core@npm:1.9.1"
+  dependencies:
+    cross-spawn: "npm:^7.0.6"
+  checksum: 10c0/fc46bd4369c82834fc37e594d2432bb8eca1173d54896f229e9c88024b0597b89fbfc38b595c461a9a8eea3f2b4bc852f96d9acbafbeeb64e03de34c2dbbf8b2
   languageName: node
   linkType: hard
 
@@ -10169,6 +10179,15 @@ __metadata:
   version: 1.1.4
   resolution: "postgres-range@npm:1.1.4"
   checksum: 10c0/254494ef81df208e0adeae6b66ce394aba37914ea14c7ece55a45fb6691b7db04bee74c825380a47c887a9f87158fd3d86f758f9cc60b76d3a38ce5aca7912e8
+  languageName: node
+  linkType: hard
+
+"posthog-node@npm:^5.20.0":
+  version: 5.20.0
+  resolution: "posthog-node@npm:5.20.0"
+  dependencies:
+    "@posthog/core": "npm:1.9.1"
+  checksum: 10c0/07451d0ce900eb891251f15f288ada0f2a7f23f85445fb86d74793c2e6fd294b3e56acba37ed8b61b4249a4eb8d2304e212f254f1823fb24105b4ddcab15174a
   languageName: node
   linkType: hard
 
