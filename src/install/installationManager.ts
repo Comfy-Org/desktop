@@ -8,9 +8,9 @@ import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import {
   IPC_CHANNELS,
   InstallStage,
+  NVIDIA_TORCHVISION_VERSION,
   NVIDIA_TORCH_RECOMMENDED_VERSION,
   NVIDIA_TORCH_VERSION,
-  NVIDIA_TORCHVISION_VERSION,
   ProgressStatus,
 } from '../constants';
 import { PythonImportVerificationError } from '../infrastructure/pythonImportVerificationError';
@@ -438,22 +438,27 @@ export class InstallationManager implements HasTelemetry {
         detail: [
           `Current: torch ${currentTorch}, torchaudio ${currentTorchaudio}, torchvision ${currentTorchvision}`,
           `Recommended: torch ${NVIDIA_TORCH_VERSION}, torchaudio ${NVIDIA_TORCH_VERSION}, torchvision ${NVIDIA_TORCHVISION_VERSION}`,
-          'You can keep your current versions. We will not ask again for this version.',
+          'If you keep your current versions, we will not ask again for this version.',
         ].join('\n'),
-        buttons: ['Update PyTorch', 'Keep current version'],
+        buttons: ['Update PyTorch', 'Keep current version', 'Ask me later'],
         defaultId: 0,
-        cancelId: 1,
+        cancelId: 2,
       });
 
-      config.set('torchLastPromptedVersion', recommendedVersion);
+      if (response === 2) {
+        log.info('Deferring NVIDIA PyTorch update prompt.');
+        return;
+      }
 
       if (response !== 0) {
+        config.set('torchLastPromptedVersion', recommendedVersion);
         config.set('torchUpdatePolicy', 'pinned');
         config.set('torchPinnedPackages', installedVersions);
         virtualEnvironment.updateTorchUpdatePolicy('pinned', installedVersions);
         return;
       }
 
+      config.set('torchLastPromptedVersion', recommendedVersion);
       config.set('torchUpdatePolicy', 'auto');
       config.delete('torchPinnedPackages');
       virtualEnvironment.updateTorchUpdatePolicy('auto');

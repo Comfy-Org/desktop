@@ -12,12 +12,12 @@ import {
   AMD_TORCH_PACKAGES,
   InstallStage,
   LEGACY_NVIDIA_TORCH_MIRROR,
-  TorchPinnedPackages,
-  TorchUpdatePolicy,
   NVIDIA_TORCHVISION_VERSION,
   NVIDIA_TORCH_PACKAGES,
   NVIDIA_TORCH_VERSION,
   TorchMirrorUrl,
+  TorchPinnedPackages,
+  TorchUpdatePolicy,
 } from './constants';
 import { PythonImportVerificationError } from './infrastructure/pythonImportVerificationError';
 import { useAppState } from './main-process/appState';
@@ -108,7 +108,7 @@ function getDeviceDefaultTorchMirror(device: TorchDeviceType): string {
  * @returns The default torch mirror
  */
 function getDefaultTorchMirror(device: TorchDeviceType): string {
-  log.debug('Falling back to default torch mirror');
+  log.info('Falling back to default torch mirror');
   return getDeviceDefaultTorchMirror(device);
 }
 
