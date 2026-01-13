@@ -49,7 +49,7 @@ interface PipInstallConfig {
   prerelease?: boolean;
   upgradePackages?: boolean;
   requirementsFile?: string;
-  indexStrategy?: 'compatible' | 'unsafe-best-match';
+  indexStrategy?: 'compatible' | 'first-index' | 'unsafe-best-match';
 }
 
 type TorchPackageName = 'torch' | 'torchaudio' | 'torchvision';
@@ -398,7 +398,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
 
     const installCmd = getPipInstallArgs({
       requirementsFile: this.requirementsCompiledPath,
-      indexStrategy: 'unsafe-best-match',
+      indexStrategy: 'first-index',
       packages: [],
       indexUrl: this.pypiMirror,
       extraIndexUrl: this.pypiMirror ? TorchMirrorUrl.Default : undefined,
