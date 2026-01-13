@@ -401,6 +401,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       indexStrategy: 'unsafe-best-match',
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrl: this.pypiMirror ? TorchMirrorUrl.Default : undefined,
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -815,6 +816,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       requirementsFile: this.comfyUIRequirementsPath,
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrl: this.pypiMirror ? TorchMirrorUrl.Default : undefined,
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -846,6 +848,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       requirementsFile: this.comfyUIManagerRequirementsPath,
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrl: this.pypiMirror ? TorchMirrorUrl.Default : undefined,
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
