@@ -57,7 +57,7 @@ type TorchPackageVersions = Record<TorchPackageName, string | undefined>;
 
 const TORCH_PACKAGE_NAMES: TorchPackageName[] = ['torch', 'torchaudio', 'torchvision'];
 
-function getPipInstallArgs(config: PipInstallConfig): string[] {
+export function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
   if (config.upgradePackages) {
@@ -398,7 +398,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
 
     const installCmd = getPipInstallArgs({
       requirementsFile: this.requirementsCompiledPath,
-      indexStrategy: 'first-index',
+      indexStrategy: 'unsafe-best-match',
       packages: [],
       indexUrl: this.pypiMirror,
       extraIndexUrl: this.pypiMirror ? TorchMirrorUrl.Default : undefined,
