@@ -45,13 +45,13 @@ colorama==0.4.6
     #   click
     #   tqdm
     # from https://pypi.org/simple
-comfyui-embedded-docs==0.3.1
+comfyui-embedded-docs==0.4.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 comfyui-manager==4.0.3b5
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.7.64
+comfyui-workflow-templates==0.8.4
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 comfyui-workflow-templates-core==0.3.43
