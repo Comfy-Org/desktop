@@ -1,7 +1,6 @@
 # ComfyUI Desktop
 
 ![Beta](https://img.shields.io/badge/beta-blue.svg)
-<!-- snapshot refresh -->
 
 # USER GUIDE
 
