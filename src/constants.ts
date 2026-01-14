@@ -191,6 +191,15 @@ export const NIGHTLY_CPU_TORCH_URL = TorchMirrorUrl.NightlyCpu;
 /** @deprecated Use {@link TorchMirrorUrl} instead. */
 export const DEFAULT_PYPI_INDEX_URL = TorchMirrorUrl.Default;
 
+export const PYPI_FALLBACK_INDEX_URLS: string[] = [
+  'https://mirrors.aliyun.com/pypi/simple/',
+  'https://mirrors.ustc.edu.cn/pypi/simple/',
+  'https://mirrors.cloud.tencent.com/pypi/simple/',
+  'https://mirrors.huaweicloud.com/repository/pypi/simple/',
+  'https://mirror.sjtu.edu.cn/pypi/web/simple',
+  TorchMirrorUrl.Default,
+];
+
 export const AMD_ROCM_SDK_PACKAGES: string[] = [
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_core-0.1.dev0-py3-none-win_amd64.whl',
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_libraries_custom-0.1.dev0-py3-none-win_amd64.whl',

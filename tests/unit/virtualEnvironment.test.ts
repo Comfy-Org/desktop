@@ -158,7 +158,7 @@ describe('VirtualEnvironment', () => {
         requirementsFile: '/tmp/requirements.txt',
         packages: [],
         indexUrl: 'https://mirror.example/simple/',
-        extraIndexUrl: TorchMirrorUrl.Default,
+        extraIndexUrls: ['https://mirror-two.example/simple/', TorchMirrorUrl.Default],
         indexStrategy: 'unsafe-best-match',
       });
 
@@ -169,6 +169,8 @@ describe('VirtualEnvironment', () => {
         '/tmp/requirements.txt',
         '--index-url',
         'https://mirror.example/simple/',
+        '--extra-index-url',
+        'https://mirror-two.example/simple/',
         '--extra-index-url',
         TorchMirrorUrl.Default,
         '--index-strategy',
