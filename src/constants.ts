@@ -195,8 +195,6 @@ export const PYPI_FALLBACK_INDEX_URLS: string[] = [
   'https://mirrors.aliyun.com/pypi/simple/',
   'https://mirrors.ustc.edu.cn/pypi/simple/',
   'https://mirrors.cloud.tencent.com/pypi/simple/',
-  'https://mirrors.huaweicloud.com/repository/pypi/simple/',
-  'https://mirror.sjtu.edu.cn/pypi/web/simple',
   TorchMirrorUrl.Default,
 ];
 

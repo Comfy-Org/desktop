@@ -157,12 +157,10 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   }
 
   /**
-   * Returns extra index URLs to use when a primary PyPI mirror is configured.
-   * @returns The fallback index URLs, or `undefined` if no mirror is configured.
+   * Returns extra index URLs to use for pip installs.
+   * @returns The fallback index URLs, or `undefined` if none are configured.
    */
   private getPypiFallbackIndexUrls(): string[] | undefined {
-    if (!this.pypiMirror) return undefined;
-
     const fallbackUrls = PYPI_FALLBACK_INDEX_URLS.filter((url) => url !== this.pypiMirror);
     return fallbackUrls.length > 0 ? fallbackUrls : undefined;
   }
