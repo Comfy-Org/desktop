@@ -60,9 +60,11 @@ const TORCH_PACKAGE_NAMES: TorchPackageName[] = ['torch', 'torchaudio', 'torchvi
 
 export type RequirementsCheckStatus = 'ok' | 'missing' | 'upgrade' | 'error';
 
+export type RequirementsCheckReason = 'known-packages' | 'unknown-packages' | 'nvidia-torch';
+
 export type RequirementsCheckResult = {
   status: RequirementsCheckStatus;
-  reason?: string;
+  reason?: RequirementsCheckReason;
 };
 
 export function getPipInstallArgs(config: PipInstallConfig): string[] {

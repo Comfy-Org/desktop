@@ -199,7 +199,7 @@ describe('VirtualEnvironment', () => {
       );
     });
 
-    test('returns upgrade for manager upgrade case', async ({ virtualEnv }) => {
+    test('returns upgrade for manager upgrade case (uv/toml)', async ({ virtualEnv }) => {
       mockSpawnOutputOnce('Would make no changes\n');
       mockSpawnOutputOnce('Would install 1 package \n + chardet==5.2.0\n');
 
