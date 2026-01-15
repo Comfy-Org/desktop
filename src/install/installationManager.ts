@@ -98,7 +98,7 @@ export class InstallationManager implements HasTelemetry {
     // Convert from old format
     if (state === 'upgraded') installation.upgradeConfig();
 
-    // Install updated manager requirements
+    // Install updated requirements
     if (installation.needsRequirementsUpdate) await this.updatePackages(installation);
 
     // Resolve issues and re-run validation
