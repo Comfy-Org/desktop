@@ -35,4 +35,6 @@ export type DesktopSettings = {
   versionConsentedMetrics?: string;
   /** Whether the user has generated an image successfully. */
   hasGeneratedSuccessfully?: boolean;
+  /** Whether the NVIDIA driver warning dialog should be suppressed. */
+  suppressNvidiaDriverWarning?: boolean;
 };

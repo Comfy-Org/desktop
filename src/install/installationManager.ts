@@ -398,19 +398,28 @@ export class InstallationManager implements HasTelemetry {
     if (process.platform !== 'win32') return;
     if (installation.virtualEnvironment.selectedDevice !== 'nvidia') return;
 
+    const config = useDesktopConfig();
+    if (config.get('suppressNvidiaDriverWarning')) return;
+
     const driverVersion =
       (await this.getNvidiaDriverVersionFromSmi()) ?? (await this.getNvidiaDriverVersionFromSmiFallback());
     if (!driverVersion) return;
 
     if (!isNvidiaDriverBelowMinimum(driverVersion)) return;
 
-    await this.appWindow.showMessageBox({
+    const { checkboxChecked } = await this.appWindow.showMessageBox({
       type: 'warning',
       title: 'Update NVIDIA Driver',
       message: 'Your NVIDIA driver may be too old for PyTorch 2.9.1 + cu130.',
       detail: `Detected driver version: ${driverVersion}\nRecommended minimum: ${NVIDIA_DRIVER_MIN_VERSION}\n\nPlease consider updating your NVIDIA drivers and retrying if you run into issues.`,
       buttons: ['OK'],
+      checkboxLabel: "Don't show again",
+      checkboxChecked: false,
     });
+
+    if (checkboxChecked) {
+      config.set('suppressNvidiaDriverWarning', true);
+    }
   }
 
   /**
