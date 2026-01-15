@@ -691,7 +691,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    * Ensures NVIDIA installs use the recommended PyTorch packages.
    * @param callbacks The callbacks to use for the command.
    */
-  async ensureRecommendedNvidiaTorch(callbacks?: ProcessCallbacks): Promise<void> {
+  async ensureRecommendedNvidiaTorch(callbacks?: ProcessCallbacks, torchMirrorOverride?: string): Promise<void> {
     if (this.selectedDevice !== 'nvidia') return;
     if (this.shouldSkipNvidiaTorchUpgrade()) {
       log.info('Skipping NVIDIA PyTorch upgrade due to pinned policy or deferred updates.');
@@ -704,7 +704,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return;
     }
 
-    let torchMirror = this.torchMirror;
+    let torchMirror = torchMirrorOverride ?? this.torchMirror;
     if (!torchMirror) {
       log.info('Falling back to default torch mirror');
       torchMirror = getDeviceDefaultTorchMirror(this.selectedDevice);
