@@ -58,6 +58,13 @@ type TorchPackageVersions = Record<TorchPackageName, string | undefined>;
 
 const TORCH_PACKAGE_NAMES: TorchPackageName[] = ['torch', 'torchaudio', 'torchvision'];
 
+export type RequirementsCheckStatus = 'ok' | 'missing' | 'upgrade' | 'error';
+
+export type RequirementsCheckResult = {
+  status: RequirementsCheckStatus;
+  reason?: string;
+};
+
 export function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
@@ -327,7 +334,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
 
         const requirementsStatus = await this.hasRequirements();
 
-        if (requirementsStatus === 'OK') {
+        if (requirementsStatus.status === 'ok') {
           log.info('Skipping requirements installation - all requirements already installed');
         } else {
           log.info('Starting manual install - venv missing requirements');
@@ -888,11 +895,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    * Checks if the virtual environment has all the required packages of ComfyUI core.
    *
    * Parses the text output of `uv pip install --dry-run -r requirements.txt`.
-   * @returns `'OK'` if pip install does not detect any missing packages,
-   * `'package-upgrade'` if only known upgrade packages are missing,
-   * or `'error'` when any other combination of packages are missing.
+   * @returns Result describing whether requirements are satisfied, missing, or require a known upgrade path.
    */
-  async hasRequirements(): Promise<'OK' | 'error' | 'package-upgrade'> {
+  async hasRequirements(): Promise<RequirementsCheckResult> {
     const checkRequirements = async (requirementsPath: string) => {
       const args = ['pip', 'install', '--dry-run', '-r', requirementsPath];
       log.info(`Running uv command directly: ${args.join(' ')}`);
@@ -969,7 +974,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
 
     if ((managerOk && upgradeCore) || (coreOk && upgradeManager) || (upgradeCore && upgradeManager)) {
       log.info('Package update of known packages required. Core:', upgradeCore, 'Manager:', upgradeManager);
-      return 'package-upgrade';
+      return { status: 'upgrade', reason: 'known-packages' };
     }
 
     if (!coreOk || !managerOk) {
@@ -979,16 +984,16 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
         upgradeCore,
         upgradeManager,
       });
-      return 'error';
+      return { status: 'missing', reason: 'unknown-packages' };
     }
 
     if (await this.needsNvidiaTorchUpgrade()) {
       log.info('NVIDIA PyTorch version out of date. Treating as package upgrade.');
-      return 'package-upgrade';
+      return { status: 'upgrade', reason: 'nvidia-torch' };
     }
 
     log.debug('hasRequirements result:', 'OK');
-    return 'OK';
+    return { status: 'ok' };
   }
 
   /**

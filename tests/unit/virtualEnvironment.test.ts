@@ -146,8 +146,8 @@ test.for(allCombinations)('hasRequirements', async ({ core, manager }, { virtual
   mockSpawnForPackages(core);
   mockSpawnForPackages(manager);
 
-  const result = core.length + manager.length === 0 ? 'OK' : 'package-upgrade';
-  await expect(virtualEnv.hasRequirements()).resolves.toBe(result);
+  const result = core.length + manager.length === 0 ? 'ok' : 'upgrade';
+  await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: result });
   expect(log.info).toHaveBeenCalledWith(expect.stringContaining('pip install --dry-run -r'));
 });
 
@@ -184,26 +184,26 @@ describe('VirtualEnvironment', () => {
       mockSpawnOutputOnce('Would make no changes\n');
       mockSpawnOutputOnce('Would make no changes\n');
 
-      await expect(virtualEnv.hasRequirements()).resolves.toBe('OK');
+      await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'ok' });
       expect(log.info).toHaveBeenCalledWith(expect.stringContaining('pip install --dry-run -r'));
     });
 
-    test('returns error when packages are missing and not a known upgrade case', async ({ virtualEnv }) => {
+    test('returns missing when packages are missing and not a known upgrade case', async ({ virtualEnv }) => {
       mockSpawnOutputOnce(' + unknown_package==1.0.0\n');
       mockSpawnOutputOnce('Would make no changes\n');
 
-      await expect(virtualEnv.hasRequirements()).resolves.toBe('error');
+      await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'missing' });
       expect(log.info).toHaveBeenCalledWith(
         expect.stringContaining('Requirements missing beyond known upgrade cases.'),
         expect.objectContaining({ coreOk: false, managerOk: true, upgradeCore: false, upgradeManager: false })
       );
     });
 
-    test('returns package-upgrade for manager upgrade case', async ({ virtualEnv }) => {
+    test('returns upgrade for manager upgrade case', async ({ virtualEnv }) => {
       mockSpawnOutputOnce('Would make no changes\n');
       mockSpawnOutputOnce('Would install 1 package \n + chardet==5.2.0\n');
 
-      await expect(virtualEnv.hasRequirements()).resolves.toBe('package-upgrade');
+      await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'upgrade' });
       expect(log.info).toHaveBeenCalledWith(
         'Package update of known packages required. Core:',
         false,
@@ -212,11 +212,11 @@ describe('VirtualEnvironment', () => {
       );
     });
 
-    test('returns package-upgrade for manager upgrade case', async ({ virtualEnv }) => {
+    test('returns upgrade for manager upgrade case', async ({ virtualEnv }) => {
       mockSpawnOutputOnce('Would make no changes\n');
       mockSpawnOutputOnce('Would install 2 packages \n + uv==1.0.0 \n + toml==1.0.0\n');
 
-      await expect(virtualEnv.hasRequirements()).resolves.toBe('package-upgrade');
+      await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'upgrade' });
       expect(log.info).toHaveBeenCalledWith(
         'Package update of known packages required. Core:',
         false,
@@ -225,19 +225,19 @@ describe('VirtualEnvironment', () => {
       );
     });
 
-    test('returns package-upgrade for core + manager upgrade case', async ({ virtualEnv }) => {
+    test('returns upgrade for core + manager upgrade case', async ({ virtualEnv }) => {
       mockSpawnOutputOnce('Would install 3 packages \n + av==1.0.0 \n + yarl==12.0.8 \n + aiohttp==3.9.0\n');
       mockSpawnOutputOnce('Would install 2 packages \n + uv==1.0.0 \n + toml==1.0.0\n');
 
-      await expect(virtualEnv.hasRequirements()).resolves.toBe('package-upgrade');
+      await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'upgrade' });
       expect(log.info).toHaveBeenCalledWith('Package update of known packages required. Core:', true, 'Manager:', true);
     });
 
-    test('returns package-upgrade for core upgrade case', async ({ virtualEnv }) => {
+    test('returns upgrade for core upgrade case', async ({ virtualEnv }) => {
       mockSpawnOutputOnce('Would install 1 package \n + av==1.0.0\n');
       mockSpawnOutputOnce('Would make no changes\n');
 
-      await expect(virtualEnv.hasRequirements()).resolves.toBe('package-upgrade');
+      await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'upgrade' });
     });
 
     test('throws error when pip command fails', async ({ virtualEnv }) => {
@@ -256,14 +256,14 @@ describe('VirtualEnvironment', () => {
       mockSpawnOutputOnce('', 0, null, 'Would make no changes\n');
       mockSpawnOutputOnce('', 0, null, 'Would make no changes\n');
 
-      await expect(virtualEnv.hasRequirements()).resolves.toBe('OK');
+      await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'ok' });
     });
 
     test('rejects core upgrade with unrecognized package removal', async ({ virtualEnv }) => {
       mockSpawnOutputOnce(' - unknown-package==1.0.0\n + aiohttp==3.9.0\n', 0, null);
       mockSpawnOutputOnce('Would make no changes\n', 0, null);
 
-      await expect(virtualEnv.hasRequirements()).resolves.toBe('error');
+      await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'missing' });
     });
   });
 
