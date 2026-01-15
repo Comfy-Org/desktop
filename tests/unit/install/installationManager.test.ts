@@ -39,11 +39,10 @@ const config = {
     return undefined;
   }),
   set: vi.fn((key: string, value: unknown) => {
-    const allowedKeys = new Set(['basePath', 'suppressNvidiaDriverWarning', 'suppressNvidiaDriverWarningFor']);
+    const allowedKeys = new Set(['basePath', 'suppressNvidiaDriverWarningFor']);
     if (!allowedKeys.has(key)) throw new Error(`Unexpected key: ${key}`);
     if (key === 'basePath' && !value) throw new Error(`Unexpected value: [${value}]`);
   }),
-  delete: vi.fn(),
 };
 vi.mock('@/store/desktopConfig', () => ({
   useDesktopConfig: vi.fn(() => config),
@@ -274,7 +273,6 @@ describe('InstallationManager', () => {
         return undefined;
       });
       vi.mocked(config.set).mockClear();
-      vi.mocked(config.delete).mockClear();
       vi.mocked(mockAppWindow.showMessageBox).mockClear();
     });
 
