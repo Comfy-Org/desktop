@@ -23,7 +23,7 @@ import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
 
 const execAsync = promisify(exec);
-const NVIDIA_DRIVER_MIN_VERSION = '580';
+export const NVIDIA_DRIVER_MIN_VERSION = '580';
 
 /**
  * Extracts the NVIDIA driver version from `nvidia-smi` output.

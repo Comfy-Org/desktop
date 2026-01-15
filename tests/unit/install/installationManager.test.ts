@@ -7,6 +7,7 @@ import { ComfySettings } from '@/config/comfySettings';
 import { IPC_CHANNELS } from '@/constants';
 import {
   InstallationManager,
+  NVIDIA_DRIVER_MIN_VERSION,
   isNvidiaDriverBelowMinimum,
   parseNvidiaDriverVersionFromSmiOutput,
 } from '@/install/installationManager';
@@ -288,7 +289,7 @@ describe('InstallationManager', () => {
         vi.mocked(config.get).mockImplementation((key: string) => {
           if (key === 'installState') return 'installed';
           if (key === 'basePath') return 'valid/base';
-          if (key === 'suppressNvidiaDriverWarningFor') return '580';
+          if (key === 'suppressNvidiaDriverWarningFor') return NVIDIA_DRIVER_MIN_VERSION;
           return undefined;
         });
 
@@ -317,7 +318,7 @@ describe('InstallationManager', () => {
 
         await managerMethods.warnIfNvidiaDriverTooOld(createInstallation('nvidia'));
 
-        expect(config.set).toHaveBeenCalledWith('suppressNvidiaDriverWarningFor', '580');
+        expect(config.set).toHaveBeenCalledWith('suppressNvidiaDriverWarningFor', NVIDIA_DRIVER_MIN_VERSION);
       } finally {
         smiSpy.mockRestore();
         smiFallbackSpy.mockRestore();
