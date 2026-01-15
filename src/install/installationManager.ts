@@ -399,7 +399,12 @@ export class InstallationManager implements HasTelemetry {
     if (installation.virtualEnvironment.selectedDevice !== 'nvidia') return;
 
     const config = useDesktopConfig();
-    if (config.get('suppressNvidiaDriverWarning')) return;
+    if (config.get('suppressNvidiaDriverWarningFor') === NVIDIA_DRIVER_MIN_VERSION) return;
+    if (config.get('suppressNvidiaDriverWarning')) {
+      config.set('suppressNvidiaDriverWarningFor', NVIDIA_DRIVER_MIN_VERSION);
+      config.delete('suppressNvidiaDriverWarning');
+      return;
+    }
 
     const driverVersion =
       (await this.getNvidiaDriverVersionFromSmi()) ?? (await this.getNvidiaDriverVersionFromSmiFallback());
@@ -418,7 +423,7 @@ export class InstallationManager implements HasTelemetry {
     });
 
     if (checkboxChecked) {
-      config.set('suppressNvidiaDriverWarning', true);
+      config.set('suppressNvidiaDriverWarningFor', NVIDIA_DRIVER_MIN_VERSION);
     }
   }
 

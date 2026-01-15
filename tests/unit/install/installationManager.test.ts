@@ -33,14 +33,17 @@ vi.mock('node:fs/promises', () => ({
 }));
 
 const config = {
-  get: vi.fn((key: string) => {
+  get: vi.fn((key: string): string | undefined => {
     if (key === 'installState') return 'installed';
     if (key === 'basePath') return 'valid/base';
+    return undefined;
   }),
-  set: vi.fn((key: string, value: string) => {
-    if (key !== 'basePath') throw new Error(`Unexpected key: ${key}`);
-    if (!value) throw new Error(`Unexpected value: [${value}]`);
+  set: vi.fn((key: string, value: unknown) => {
+    const allowedKeys = new Set(['basePath', 'suppressNvidiaDriverWarning', 'suppressNvidiaDriverWarningFor']);
+    if (!allowedKeys.has(key)) throw new Error(`Unexpected key: ${key}`);
+    if (key === 'basePath' && !value) throw new Error(`Unexpected value: [${value}]`);
   }),
+  delete: vi.fn(),
 };
 vi.mock('@/store/desktopConfig', () => ({
   useDesktopConfig: vi.fn(() => config),
@@ -110,6 +113,7 @@ const createMockAppWindow = () => {
     send: vi.fn(),
     loadPage: vi.fn(() => Promise.resolve(null)),
     showOpenDialog: vi.fn(),
+    showMessageBox: vi.fn(() => Promise.resolve({ response: 0, checkboxChecked: false })),
     maximize: vi.fn(),
   };
   return mock as unknown as AppWindow;
@@ -249,6 +253,78 @@ describe('InstallationManager', () => {
       expect(mockAppWindow.loadPage).toHaveBeenCalledWith('maintenance');
 
       cleanup?.();
+    });
+  });
+
+  describe('warnIfNvidiaDriverTooOld', () => {
+    const createInstallation = (device: string) =>
+      ({ virtualEnvironment: { selectedDevice: device } }) as ComfyInstallation;
+
+    const getManagerMethods = () =>
+      manager as unknown as {
+        warnIfNvidiaDriverTooOld: (installation: ComfyInstallation) => Promise<void>;
+        getNvidiaDriverVersionFromSmi: () => Promise<string | undefined>;
+        getNvidiaDriverVersionFromSmiFallback: () => Promise<string | undefined>;
+      };
+
+    beforeEach(() => {
+      vi.mocked(config.get).mockImplementation((key: string) => {
+        if (key === 'installState') return 'installed';
+        if (key === 'basePath') return 'valid/base';
+        return undefined;
+      });
+      vi.mocked(config.set).mockClear();
+      vi.mocked(config.delete).mockClear();
+      vi.mocked(mockAppWindow.showMessageBox).mockClear();
+    });
+
+    it('skips dialog when warning is suppressed for the current minimum version', async () => {
+      const platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
+      const managerMethods = getManagerMethods();
+      const smiSpy = vi.spyOn(managerMethods, 'getNvidiaDriverVersionFromSmi').mockResolvedValue('570.0');
+      const smiFallbackSpy = vi
+        .spyOn(managerMethods, 'getNvidiaDriverVersionFromSmiFallback')
+        .mockResolvedValue(undefined);
+
+      try {
+        vi.mocked(config.get).mockImplementation((key: string) => {
+          if (key === 'installState') return 'installed';
+          if (key === 'basePath') return 'valid/base';
+          if (key === 'suppressNvidiaDriverWarningFor') return '580';
+          return undefined;
+        });
+
+        await managerMethods.warnIfNvidiaDriverTooOld(createInstallation('nvidia'));
+
+        expect(smiSpy).not.toHaveBeenCalled();
+        expect(smiFallbackSpy).not.toHaveBeenCalled();
+        expect(mockAppWindow.showMessageBox).not.toHaveBeenCalled();
+      } finally {
+        smiSpy.mockRestore();
+        smiFallbackSpy.mockRestore();
+        platformSpy.mockRestore();
+      }
+    });
+
+    it('stores the current minimum version when dismissed', async () => {
+      const platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
+      const managerMethods = getManagerMethods();
+      const smiSpy = vi.spyOn(managerMethods, 'getNvidiaDriverVersionFromSmi').mockResolvedValue('570.0');
+      const smiFallbackSpy = vi
+        .spyOn(managerMethods, 'getNvidiaDriverVersionFromSmiFallback')
+        .mockResolvedValue(undefined);
+
+      try {
+        vi.mocked(mockAppWindow.showMessageBox).mockResolvedValue({ response: 0, checkboxChecked: true });
+
+        await managerMethods.warnIfNvidiaDriverTooOld(createInstallation('nvidia'));
+
+        expect(config.set).toHaveBeenCalledWith('suppressNvidiaDriverWarningFor', '580');
+      } finally {
+        smiSpy.mockRestore();
+        smiFallbackSpy.mockRestore();
+        platformSpy.mockRestore();
+      }
     });
   });
 });
