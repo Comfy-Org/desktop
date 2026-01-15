@@ -103,16 +103,6 @@ function getDeviceDefaultTorchMirror(device: TorchDeviceType): string {
   }
 }
 
-/**
- * Returns the default torch mirror for the given device.
- * @param device The device type
- * @returns The default torch mirror
- */
-function getDefaultTorchMirror(device: TorchDeviceType): string {
-  log.info('Falling back to default torch mirror');
-  return getDeviceDefaultTorchMirror(device);
-}
-
 /** Disallows using the default mirror (CPU torch) when the selected device is not CPU. */
 function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undefined) {
   if (mirror === TorchMirrorUrl.Default) {
@@ -676,7 +666,11 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return;
     }
 
-    const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
+    let torchMirror = this.torchMirror;
+    if (!torchMirror) {
+      log.info('Falling back to default torch mirror');
+      torchMirror = getDeviceDefaultTorchMirror(this.selectedDevice);
+    }
     const config: PipInstallConfig = {
       packages: ['torch', 'torchvision', 'torchaudio'],
       indexUrl: torchMirror,
@@ -710,7 +704,11 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return;
     }
 
-    const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
+    let torchMirror = this.torchMirror;
+    if (!torchMirror) {
+      log.info('Falling back to default torch mirror');
+      torchMirror = getDeviceDefaultTorchMirror(this.selectedDevice);
+    }
     const config: PipInstallConfig = {
       packages: NVIDIA_TORCH_PACKAGES,
       indexUrl: torchMirror,
