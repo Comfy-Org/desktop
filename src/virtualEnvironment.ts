@@ -889,7 +889,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    *
    * Parses the text output of `uv pip install --dry-run -r requirements.txt`.
    * @returns `'OK'` if pip install does not detect any missing packages,
-   * `'manager-upgrade'` if `uv` and `toml` are missing,
+   * `'package-upgrade'` if only known upgrade packages are missing,
    * or `'error'` when any other combination of packages are missing.
    */
   async hasRequirements(): Promise<'OK' | 'error' | 'package-upgrade'> {
@@ -973,13 +973,13 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     }
 
     if (!coreOk || !managerOk) {
-      log.info('Requirements are out of date. Treating as package upgrade.', {
+      log.info('Requirements missing beyond known upgrade cases.', {
         coreOk,
         managerOk,
         upgradeCore,
         upgradeManager,
       });
-      return 'package-upgrade';
+      return 'error';
     }
 
     if (await this.needsNvidiaTorchUpgrade()) {
