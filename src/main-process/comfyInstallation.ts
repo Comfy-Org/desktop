@@ -74,6 +74,7 @@ export class ComfyInstallation {
       torchMirror: useComfySettings().get('Comfy-Desktop.UV.TorchInstallMirror'),
       torchUpdatePolicy: useDesktopConfig().get('torchUpdatePolicy'),
       torchPinnedPackages: useDesktopConfig().get('torchPinnedPackages'),
+      torchUpdateDecisionVersion: useDesktopConfig().get('torchLastPromptedVersion'),
     });
   }
 

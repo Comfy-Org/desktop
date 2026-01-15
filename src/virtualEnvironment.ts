@@ -14,6 +14,7 @@ import {
   LEGACY_NVIDIA_TORCH_MIRROR,
   NVIDIA_TORCHVISION_VERSION,
   NVIDIA_TORCH_PACKAGES,
+  NVIDIA_TORCH_RECOMMENDED_VERSION,
   NVIDIA_TORCH_VERSION,
   TorchMirrorUrl,
   TorchPinnedPackages,
@@ -148,6 +149,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   readonly torchMirror?: string;
   torchUpdatePolicy?: TorchUpdatePolicy;
   torchPinnedPackages?: TorchPinnedPackages;
+  torchUpdateDecisionVersion?: string;
   uvPty: pty.IPty | undefined;
 
   /** The environment variables to set for uv. */
@@ -194,6 +196,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       torchMirror,
       torchUpdatePolicy,
       torchPinnedPackages,
+      torchUpdateDecisionVersion,
     }: {
       telemetry: ITelemetry;
       selectedDevice?: TorchDeviceType;
@@ -203,6 +206,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       torchMirror?: string;
       torchUpdatePolicy?: TorchUpdatePolicy;
       torchPinnedPackages?: TorchPinnedPackages;
+      torchUpdateDecisionVersion?: string;
     }
   ) {
     this.basePath = basePath;
@@ -214,6 +218,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     this.torchMirror = fixDeviceMirrorMismatch(selectedDevice!, torchMirror);
     this.torchUpdatePolicy = torchUpdatePolicy;
     this.torchPinnedPackages = torchPinnedPackages;
+    this.torchUpdateDecisionVersion = torchUpdateDecisionVersion;
 
     // uv defaults to .venv
     this.venvPath = path.join(basePath, '.venv');
@@ -277,12 +282,19 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     return primary;
   }
 
-  updateTorchUpdatePolicy(policy: TorchUpdatePolicy | undefined, pinnedPackages?: TorchPinnedPackages) {
+  updateTorchUpdatePolicy(
+    policy: TorchUpdatePolicy | undefined,
+    pinnedPackages?: TorchPinnedPackages,
+    decisionVersion?: string
+  ) {
     this.torchUpdatePolicy = policy;
     if (pinnedPackages !== undefined) {
       this.torchPinnedPackages = pinnedPackages;
-    } else if (policy === 'auto') {
+    } else if (policy !== 'pinned') {
       this.torchPinnedPackages = undefined;
+    }
+    if (decisionVersion !== undefined) {
+      this.torchUpdateDecisionVersion = decisionVersion;
     }
   }
 
@@ -293,7 +305,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
 
   private shouldSkipNvidiaTorchUpgrade(): boolean {
     if (this.torchUpdatePolicy === 'pinned') return true;
-    return this.isUsingCustomTorchMirror();
+    if (this.torchUpdatePolicy === 'defer' && this.torchUpdateDecisionVersion === NVIDIA_TORCH_RECOMMENDED_VERSION)
+      return true;
+    return false;
   }
 
   public async create(callbacks?: ProcessCallbacks): Promise<void> {
@@ -686,7 +700,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   async ensureRecommendedNvidiaTorch(callbacks?: ProcessCallbacks): Promise<void> {
     if (this.selectedDevice !== 'nvidia') return;
     if (this.shouldSkipNvidiaTorchUpgrade()) {
-      log.info('Skipping NVIDIA PyTorch upgrade due to pinned policy or custom mirror.');
+      log.info('Skipping NVIDIA PyTorch upgrade due to pinned policy or deferred updates.');
       return;
     }
 

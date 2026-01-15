@@ -181,7 +181,7 @@ export enum TorchMirrorUrl {
   NightlyCpu = 'https://download.pytorch.org/whl/nightly/cpu',
 }
 
-export type TorchUpdatePolicy = 'auto' | 'pinned';
+export type TorchUpdatePolicy = 'auto' | 'defer' | 'pinned';
 
 export type TorchPinnedPackages = {
   torch?: string;
