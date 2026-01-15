@@ -427,7 +427,6 @@ export class InstallationManager implements HasTelemetry {
 
     if (updatePolicy === 'defer' && lastPromptedVersion === recommendedVersion) {
       log.info('Skipping NVIDIA PyTorch update because updates are deferred for this version.');
-      virtualEnvironment.updateTorchUpdatePolicy('defer', undefined, recommendedVersion);
       return;
     }
 
@@ -443,7 +442,7 @@ export class InstallationManager implements HasTelemetry {
         type: 'question',
         title: 'Update PyTorch?',
         message:
-          'Your NVIDIA PyTorch build is out of date. We can update to the recommended build for performance improvements. This may change compatibility with some drivers or custom nodes.',
+          'Your NVIDIA PyTorch build is out of date. We can update to the recommended build for performance improvements. This may change memory use and/or compatibility with custom nodes',
         detail: [
           `Current: torch ${currentTorch}, torchaudio ${currentTorchaudio}, torchvision ${currentTorchvision}`,
           `Recommended: torch ${NVIDIA_TORCH_VERSION}, torchaudio ${NVIDIA_TORCH_VERSION}, torchvision ${NVIDIA_TORCHVISION_VERSION}`,
@@ -453,32 +452,29 @@ export class InstallationManager implements HasTelemetry {
         cancelId: 1,
       });
 
-      if (response === 1) {
-        log.info('Deferring NVIDIA PyTorch update prompt.');
-        return;
+      switch (response) {
+        case 1:
+          log.info('Deferring NVIDIA PyTorch update prompt.');
+          return;
+        case 2:
+          config.set('torchLastPromptedVersion', recommendedVersion);
+          config.set('torchUpdatePolicy', 'defer');
+          config.delete('torchPinnedPackages');
+          virtualEnvironment.updateTorchUpdatePolicy('defer', undefined, recommendedVersion);
+          return;
+        case 3:
+          config.set('torchLastPromptedVersion', recommendedVersion);
+          config.set('torchUpdatePolicy', 'pinned');
+          config.set('torchPinnedPackages', installedVersions);
+          virtualEnvironment.updateTorchUpdatePolicy('pinned', installedVersions, recommendedVersion);
+          return;
+        default:
+          config.set('torchLastPromptedVersion', recommendedVersion);
+          config.set('torchUpdatePolicy', 'auto');
+          config.delete('torchPinnedPackages');
+          config.delete('torchUpdateFailureSilencedVersion');
+          virtualEnvironment.updateTorchUpdatePolicy('auto', undefined, recommendedVersion);
       }
-
-      if (response === 2) {
-        config.set('torchLastPromptedVersion', recommendedVersion);
-        config.set('torchUpdatePolicy', 'defer');
-        config.delete('torchPinnedPackages');
-        virtualEnvironment.updateTorchUpdatePolicy('defer', undefined, recommendedVersion);
-        return;
-      }
-
-      if (response === 3) {
-        config.set('torchLastPromptedVersion', recommendedVersion);
-        config.set('torchUpdatePolicy', 'pinned');
-        config.set('torchPinnedPackages', installedVersions);
-        virtualEnvironment.updateTorchUpdatePolicy('pinned', installedVersions, recommendedVersion);
-        return;
-      }
-
-      config.set('torchLastPromptedVersion', recommendedVersion);
-      config.set('torchUpdatePolicy', 'auto');
-      config.delete('torchPinnedPackages');
-      config.delete('torchUpdateFailureSilencedVersion');
-      virtualEnvironment.updateTorchUpdatePolicy('auto', undefined, recommendedVersion);
     } else {
       virtualEnvironment.updateTorchUpdatePolicy('auto', undefined, recommendedVersion);
     }
@@ -496,7 +492,7 @@ export class InstallationManager implements HasTelemetry {
         message:
           'We could not install the recommended NVIDIA PyTorch build. This may be because your configured torch mirror does not provide it.',
         detail: 'We will retry the update on each startup.',
-        buttons: ['OK', "OK and don't show again (for this version)"],
+        buttons: ['OK', "Don't show again"],
         defaultId: 0,
         cancelId: 0,
       });
