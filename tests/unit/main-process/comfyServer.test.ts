@@ -167,7 +167,7 @@ describe('coreLaunchArgs', () => {
     mockTelemetry,
   }) => {
     vi.stubGlobal('process', { ...process, platform: 'win32' });
-    const windowsBasePath = String.raw`/C:\ComfyUI`;
+    const windowsBasePath = String.raw`C:\ComfyUI`;
     const windowsServer = new ComfyServer(
       windowsBasePath,
       mockServerArgs,
@@ -176,8 +176,8 @@ describe('coreLaunchArgs', () => {
       mockTelemetry
     );
     const databaseUrl = windowsServer.coreLaunchArgs['database-url'];
-    expect(databaseUrl.startsWith('sqlite:///')).toBe(true);
-    expect(databaseUrl).toContain('C:/ComfyUI/user/comfyui.db');
+    const expectedPath = path.win32.resolve(windowsBasePath, 'user', 'comfyui.db').replaceAll('\\', '/');
+    expect(databaseUrl).toBe(`sqlite:///${expectedPath}`);
     expect(databaseUrl).not.toContain('\\');
   });
 });

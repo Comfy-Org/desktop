@@ -81,8 +81,16 @@ export class ComfyServer implements HasTelemetry {
     return `http://${this.serverArgs.listen}:${this.serverArgs.port}`;
   }
 
+  private resolveDatabasePath(userDirectoryPath: string): string {
+    if (process.platform === 'win32') {
+      return path.win32.resolve(userDirectoryPath, 'comfyui.db');
+    }
+
+    return path.resolve(userDirectoryPath, 'comfyui.db');
+  }
+
   private get databaseUrl(): string {
-    const dbPath = path.resolve(this.userDirectoryPath, 'comfyui.db');
+    const dbPath = this.resolveDatabasePath(this.userDirectoryPath);
     const normalizedDbPath = process.platform === 'win32' ? dbPath.replaceAll('\\', '/') : dbPath;
     return `sqlite:///${normalizedDbPath}`;
   }
