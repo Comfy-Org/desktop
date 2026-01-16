@@ -432,8 +432,7 @@ export class InstallationManager implements HasTelemetry {
       return;
     }
 
-    const autoPolicy = updatePolicy === undefined || updatePolicy === 'auto';
-    const updateApproved = autoPolicy && lastPromptedVersion === recommendedVersion;
+    const updateApproved = updatePolicy === 'auto' && lastPromptedVersion === recommendedVersion;
     let shouldAttemptUpdate = updateApproved;
 
     if (!updateApproved) {
