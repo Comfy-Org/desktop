@@ -25,7 +25,7 @@
 ```bash
 yarn lint              # Check & auto-fix ESLint issues
 yarn format            # Auto-format code
-yarn typescript        # TypeScript type checking
+yarn typecheck         # TypeScript type checking (all)
 ```
 
 ### Development
@@ -145,7 +145,7 @@ This project must maintain exceptionally high type standards. The `any` type mus
 ## Before Committing
 
 1. Use `yarn format` to ensure consistent formatting
-1. Run `yarn lint` and `yarn typescript` to check code quality
+1. Run `yarn lint` and `yarn typecheck` to check code quality
 1. Run `yarn test:unit` to ensure unit tests pass
 1. Consider running `yarn test:e2e` for UI changes
 
