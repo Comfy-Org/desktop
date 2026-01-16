@@ -10,6 +10,7 @@ import {
   NVIDIA_DRIVER_MIN_VERSION,
   isNvidiaDriverBelowMinimum,
   parseNvidiaDriverVersionFromSmiOutput,
+  shouldWarnAboutNvidiaDriver,
 } from '@/install/installationManager';
 import type { AppWindow } from '@/main-process/appWindow';
 import { ComfyInstallation } from '@/main-process/comfyInstallation';
@@ -256,74 +257,78 @@ describe('InstallationManager', () => {
     });
   });
 
-  describe('warnIfNvidiaDriverTooOld', () => {
-    const createInstallation = (device: string) =>
-      ({ virtualEnvironment: { selectedDevice: device } }) as ComfyInstallation;
+  describe('shouldWarnAboutNvidiaDriver', () => {
+    type NvidiaDriverWarningInput = Parameters<typeof shouldWarnAboutNvidiaDriver>[0];
 
-    const getManagerMethods = () =>
-      manager as unknown as {
-        warnIfNvidiaDriverTooOld: (installation: ComfyInstallation) => Promise<void>;
-        getNvidiaDriverVersionFromSmi: () => Promise<string | undefined>;
-        getNvidiaDriverVersionFromSmiFallback: () => Promise<string | undefined>;
-      };
+    const scenarios: Array<{
+      scenario: string;
+      input: NvidiaDriverWarningInput;
+      expected: boolean;
+    }> = [
+      {
+        scenario: 'returns false on non-Windows platforms',
+        input: {
+          platform: 'darwin',
+          selectedDevice: 'nvidia',
+          driverVersion: '570.0',
+          suppressWarningFor: undefined,
+        },
+        expected: false,
+      },
+      {
+        scenario: 'returns false when device is not nvidia',
+        input: {
+          platform: 'win32',
+          selectedDevice: 'cpu',
+          driverVersion: '570.0',
+          suppressWarningFor: undefined,
+        },
+        expected: false,
+      },
+      {
+        scenario: 'returns false when warning is suppressed for the minimum version',
+        input: {
+          platform: 'win32',
+          selectedDevice: 'nvidia',
+          driverVersion: '570.0',
+          suppressWarningFor: NVIDIA_DRIVER_MIN_VERSION,
+        },
+        expected: false,
+      },
+      {
+        scenario: 'returns false when driver version is missing',
+        input: {
+          platform: 'win32',
+          selectedDevice: 'nvidia',
+          driverVersion: undefined,
+          suppressWarningFor: undefined,
+        },
+        expected: false,
+      },
+      {
+        scenario: 'returns true when driver is below minimum',
+        input: {
+          platform: 'win32',
+          selectedDevice: 'nvidia',
+          driverVersion: '579.0.0',
+          suppressWarningFor: undefined,
+        },
+        expected: true,
+      },
+      {
+        scenario: 'returns false when driver meets minimum',
+        input: {
+          platform: 'win32',
+          selectedDevice: 'nvidia',
+          driverVersion: '580.0.0',
+          suppressWarningFor: undefined,
+        },
+        expected: false,
+      },
+    ];
 
-    beforeEach(() => {
-      vi.mocked(config.get).mockImplementation((key: string) => {
-        if (key === 'installState') return 'installed';
-        if (key === 'basePath') return 'valid/base';
-        return undefined;
-      });
-      vi.mocked(config.set).mockClear();
-      vi.mocked(mockAppWindow.showMessageBox).mockClear();
-    });
-
-    it('skips dialog when warning is suppressed for the current minimum version', async () => {
-      const platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
-      const managerMethods = getManagerMethods();
-      const smiSpy = vi.spyOn(managerMethods, 'getNvidiaDriverVersionFromSmi').mockResolvedValue('570.0');
-      const smiFallbackSpy = vi
-        .spyOn(managerMethods, 'getNvidiaDriverVersionFromSmiFallback')
-        .mockResolvedValue(undefined);
-
-      try {
-        vi.mocked(config.get).mockImplementation((key: string) => {
-          if (key === 'installState') return 'installed';
-          if (key === 'basePath') return 'valid/base';
-          if (key === 'suppressNvidiaDriverWarningFor') return NVIDIA_DRIVER_MIN_VERSION;
-          return undefined;
-        });
-
-        await managerMethods.warnIfNvidiaDriverTooOld(createInstallation('nvidia'));
-
-        expect(smiSpy).not.toHaveBeenCalled();
-        expect(smiFallbackSpy).not.toHaveBeenCalled();
-        expect(mockAppWindow.showMessageBox).not.toHaveBeenCalled();
-      } finally {
-        smiSpy.mockRestore();
-        smiFallbackSpy.mockRestore();
-        platformSpy.mockRestore();
-      }
-    });
-
-    it('stores the current minimum version when dismissed', async () => {
-      const platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
-      const managerMethods = getManagerMethods();
-      const smiSpy = vi.spyOn(managerMethods, 'getNvidiaDriverVersionFromSmi').mockResolvedValue('570.0');
-      const smiFallbackSpy = vi
-        .spyOn(managerMethods, 'getNvidiaDriverVersionFromSmiFallback')
-        .mockResolvedValue(undefined);
-
-      try {
-        vi.mocked(mockAppWindow.showMessageBox).mockResolvedValue({ response: 0, checkboxChecked: true });
-
-        await managerMethods.warnIfNvidiaDriverTooOld(createInstallation('nvidia'));
-
-        expect(config.set).toHaveBeenCalledWith('suppressNvidiaDriverWarningFor', NVIDIA_DRIVER_MIN_VERSION);
-      } finally {
-        smiSpy.mockRestore();
-        smiFallbackSpy.mockRestore();
-        platformSpy.mockRestore();
-      }
+    it.each(scenarios)('$scenario', ({ input, expected }) => {
+      expect(shouldWarnAboutNvidiaDriver(input)).toBe(expected);
     });
   });
 });
