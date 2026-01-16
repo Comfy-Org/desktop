@@ -33,8 +33,8 @@ import { Troubleshooting } from './troubleshooting';
 
 const execAsync = promisify(exec);
 const NVIDIA_DRIVER_MIN_VERSION = '580';
-const TORCH_MIRROR_CUDA_PATH = '/whl/cu130';
-const TORCH_MIRROR_NIGHTLY_CUDA_PATH = '/whl/nightly/cu130';
+const TORCH_MIRROR_CUDA_PATH = new URL(TorchMirrorUrl.Cuda).pathname;
+const TORCH_MIRROR_NIGHTLY_CUDA_PATH = new URL(TorchMirrorUrl.NightlyCuda).pathname;
 
 /**
  * Extracts the NVIDIA driver version from `nvidia-smi` output.
