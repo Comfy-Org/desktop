@@ -64,13 +64,7 @@ const test = baseTest.extend<TestContext>({
       transports: { file: { transforms: [] } },
     } as unknown as MainLogger & { default: MainLogger });
 
-    const server = new ComfyServer(
-      basePath,
-      mockServerArgs,
-      mockVirtualEnvironment as any,
-      mockAppWindow as any,
-      mockTelemetry as any
-    );
+    const server = new ComfyServer(basePath, mockServerArgs, mockVirtualEnvironment, mockAppWindow, mockTelemetry);
     await use(server);
   },
   runningServer: async ({ server, mockProcess }, use) => {
@@ -177,9 +171,9 @@ describe('coreLaunchArgs', () => {
     const windowsServer = new ComfyServer(
       windowsBasePath,
       mockServerArgs,
-      mockVirtualEnvironment as any,
-      mockAppWindow as any,
-      mockTelemetry as any
+      mockVirtualEnvironment,
+      mockAppWindow,
+      mockTelemetry
     );
     const databaseUrl = windowsServer.coreLaunchArgs['database-url'];
     expect(databaseUrl.startsWith('sqlite:///')).toBe(true);
@@ -196,13 +190,7 @@ describe('launchArgs', () => {
       port: '8188',
       'database-url': customDatabaseUrl,
     };
-    const server = new ComfyServer(
-      basePath,
-      serverArgs,
-      mockVirtualEnvironment as any,
-      mockAppWindow as any,
-      mockTelemetry as any
-    );
+    const server = new ComfyServer(basePath, serverArgs, mockVirtualEnvironment, mockAppWindow, mockTelemetry);
     const args = server.launchArgs;
     const coreDatabaseUrl = server.coreLaunchArgs['database-url'];
     expect(coreDatabaseUrl).not.toBe(customDatabaseUrl);
