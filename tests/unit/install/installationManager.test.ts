@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
 import { ComfySettings } from '@/config/comfySettings';
-import { IPC_CHANNELS } from '@/constants';
+import { IPC_CHANNELS, TorchMirrorUrl } from '@/constants';
 import {
   InstallationManager,
   isNvidiaDriverBelowMinimum,
@@ -154,6 +154,37 @@ describe('InstallationManager', () => {
 
     // Wait for any pending promises
     await Promise.resolve();
+  });
+
+  describe('getRecommendedTorchMirror', () => {
+    it('returns the CUDA mirror when the mirror is empty or default', () => {
+      const helper = manager as unknown as { getRecommendedTorchMirror: (mirror?: string) => string | undefined };
+
+      expect(helper.getRecommendedTorchMirror()).toBe(TorchMirrorUrl.Cuda);
+      expect(helper.getRecommendedTorchMirror('')).toBe(TorchMirrorUrl.Cuda);
+      expect(helper.getRecommendedTorchMirror(TorchMirrorUrl.Default)).toBe(TorchMirrorUrl.Cuda);
+    });
+
+    it('normalizes CUDA mirrors to the recommended CUDA path', () => {
+      const helper = manager as unknown as { getRecommendedTorchMirror: (mirror?: string) => string | undefined };
+
+      expect(helper.getRecommendedTorchMirror('https://download.pytorch.org/whl/cu128')).toBe(TorchMirrorUrl.Cuda);
+    });
+
+    it('normalizes nightly CUDA mirrors to the recommended CUDA path', () => {
+      const helper = manager as unknown as { getRecommendedTorchMirror: (mirror?: string) => string | undefined };
+
+      expect(helper.getRecommendedTorchMirror('https://download.pytorch.org/whl/nightly/cu118')).toBe(
+        TorchMirrorUrl.NightlyCuda
+      );
+    });
+
+    it('returns the original mirror when it cannot be normalized', () => {
+      const helper = manager as unknown as { getRecommendedTorchMirror: (mirror?: string) => string | undefined };
+
+      expect(helper.getRecommendedTorchMirror('https://example.com/simple')).toBe('https://example.com/simple');
+      expect(helper.getRecommendedTorchMirror('not a url')).toBe('not a url');
+    });
   });
 
   describe('ensureInstalled', () => {

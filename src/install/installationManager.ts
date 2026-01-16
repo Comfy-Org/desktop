@@ -9,6 +9,7 @@ import { useComfySettings } from '../config/comfySettings';
 import {
   IPC_CHANNELS,
   InstallStage,
+  NVIDIA_DRIVER_MIN_VERSION,
   NVIDIA_TORCHVISION_VERSION,
   NVIDIA_TORCH_RECOMMENDED_VERSION,
   NVIDIA_TORCH_VERSION,
@@ -32,7 +33,6 @@ import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
 
 const execAsync = promisify(exec);
-const NVIDIA_DRIVER_MIN_VERSION = '580';
 const TORCH_MIRROR_CUDA_PATH = new URL(TorchMirrorUrl.Cuda).pathname;
 const TORCH_MIRROR_NIGHTLY_CUDA_PATH = new URL(TorchMirrorUrl.NightlyCuda).pathname;
 
