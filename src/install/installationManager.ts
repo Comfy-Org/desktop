@@ -445,7 +445,7 @@ export class InstallationManager implements HasTelemetry {
         type: 'question',
         title: 'Update PyTorch?',
         message:
-          'Your NVIDIA PyTorch build is out of date. We can update to the recommended build for performance improvements. This may change memory use and/or compatibility with custom nodes',
+          'Your NVIDIA PyTorch build is out of date. We can update to the recommended build for performance improvements. This may change memory use and/or compatibility with custom nodes.',
         detail: [
           `Current: torch ${currentTorch}, torchaudio ${currentTorchaudio}, torchvision ${currentTorchvision}`,
           `Recommended: torch ${NVIDIA_TORCH_VERSION}, torchaudio ${NVIDIA_TORCH_VERSION}, torchvision ${NVIDIA_TORCHVISION_VERSION}`,
