@@ -3,7 +3,12 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import path from 'node:path';
 import { test as baseTest, describe, expect, vi } from 'vitest';
 
-import { TorchMirrorUrl } from '@/constants';
+import {
+  NVIDIA_TORCHVISION_VERSION,
+  NVIDIA_TORCH_RECOMMENDED_VERSION,
+  NVIDIA_TORCH_VERSION,
+  TorchMirrorUrl,
+} from '@/constants';
 import type { ITelemetry } from '@/services/telemetry';
 import { VirtualEnvironment } from '@/virtualEnvironment';
 
@@ -287,8 +292,8 @@ describe('VirtualEnvironment', () => {
     });
   });
 
-  describe('isUsingCustomTorchMirror', () => {
-    test('returns false when using default mirror for NVIDIA', () => {
+  describe('isUsingRecommendedTorchMirror', () => {
+    test('returns true when using default mirror for NVIDIA', () => {
       vi.stubGlobal('process', {
         ...process,
         resourcesPath: '/test/resources',
@@ -301,10 +306,10 @@ describe('VirtualEnvironment', () => {
         torchMirror: TorchMirrorUrl.Cuda,
       });
 
-      expect(env.isUsingCustomTorchMirror()).toBe(false);
+      expect(env.isUsingRecommendedTorchMirror()).toBe(true);
     });
 
-    test('returns true when using a custom mirror', () => {
+    test('returns false when using a custom mirror', () => {
       vi.stubGlobal('process', {
         ...process,
         resourcesPath: '/test/resources',
@@ -317,7 +322,172 @@ describe('VirtualEnvironment', () => {
         torchMirror: 'https://download.pytorch.org/whl/cu128',
       });
 
-      expect(env.isUsingCustomTorchMirror()).toBe(true);
+      expect(env.isUsingRecommendedTorchMirror()).toBe(false);
+    });
+  });
+
+  describe('updateTorchUpdatePolicy', () => {
+    test('clears pinned packages when policy is not pinned', () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+        torchUpdatePolicy: 'pinned',
+        torchPinnedPackages: { torch: '2.8.0+cu130' },
+      });
+
+      env.updateTorchUpdatePolicy('auto');
+
+      expect(env.torchUpdatePolicy).toBe('auto');
+      expect(env.torchPinnedPackages).toBeUndefined();
+    });
+
+    test('stores pinned packages and decision version when provided', () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+      });
+
+      env.updateTorchUpdatePolicy('pinned', { torch: NVIDIA_TORCH_VERSION }, 'decision');
+
+      expect(env.torchUpdatePolicy).toBe('pinned');
+      expect(env.torchPinnedPackages).toEqual({ torch: NVIDIA_TORCH_VERSION });
+      expect(env.torchUpdateDecisionVersion).toBe('decision');
+    });
+  });
+
+  describe('ensureRecommendedNvidiaTorch', () => {
+    test('skips upgrade when updates are pinned for the current recommended version', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+        torchUpdatePolicy: 'pinned',
+        torchUpdateDecisionVersion: NVIDIA_TORCH_RECOMMENDED_VERSION,
+      });
+
+      const versionsSpy = vi.spyOn(env, 'getInstalledTorchPackageVersions');
+
+      await env.ensureRecommendedNvidiaTorch();
+
+      expect(versionsSpy).not.toHaveBeenCalled();
+    });
+
+    test('does not skip upgrade when pinned decision version differs', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+        torchUpdatePolicy: 'pinned',
+        torchUpdateDecisionVersion: '2.8.0+cu130|0.23.0+cu130',
+      });
+
+      const versionsSpy = vi.spyOn(env, 'getInstalledTorchPackageVersions').mockResolvedValue({
+        torch: NVIDIA_TORCH_VERSION,
+        torchaudio: NVIDIA_TORCH_VERSION,
+        torchvision: NVIDIA_TORCHVISION_VERSION,
+      });
+
+      await env.ensureRecommendedNvidiaTorch();
+
+      expect(versionsSpy).toHaveBeenCalled();
+    });
+
+    test('skips upgrade when updates are deferred for the recommended version', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+        torchUpdatePolicy: 'defer',
+        torchUpdateDecisionVersion: NVIDIA_TORCH_RECOMMENDED_VERSION,
+      });
+
+      const versionsSpy = vi.spyOn(env, 'getInstalledTorchPackageVersions');
+
+      await env.ensureRecommendedNvidiaTorch();
+
+      expect(versionsSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('isNvidiaTorchOutOfDate', () => {
+    test('returns false when device is not NVIDIA', async ({ virtualEnv }) => {
+      const versionsSpy = vi.spyOn(virtualEnv, 'getInstalledTorchPackageVersions');
+
+      await expect(virtualEnv.isNvidiaTorchOutOfDate()).resolves.toBe(false);
+      expect(versionsSpy).not.toHaveBeenCalled();
+    });
+
+    test('returns true when installed versions are below recommended', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+      });
+
+      mockSpawnOutputOnce(
+        JSON.stringify([
+          { name: 'torch', version: '2.8.0+cu130' },
+          { name: 'torchaudio', version: '2.8.0+cu130' },
+          { name: 'torchvision', version: '0.23.0+cu130' },
+        ])
+      );
+
+      await expect(env.isNvidiaTorchOutOfDate()).resolves.toBe(true);
+    });
+
+    test('returns false when installed versions meet the recommended minimums', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: '/test/resources',
+      });
+
+      const env = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+      });
+
+      mockSpawnOutputOnce(
+        JSON.stringify([
+          { name: 'torch', version: NVIDIA_TORCH_VERSION },
+          { name: 'torchaudio', version: NVIDIA_TORCH_VERSION },
+          { name: 'torchvision', version: NVIDIA_TORCHVISION_VERSION },
+        ])
+      );
+
+      await expect(env.isNvidiaTorchOutOfDate()).resolves.toBe(false);
     });
   });
 
@@ -337,6 +507,24 @@ describe('VirtualEnvironment', () => {
     test('returns undefined when uv output contains no torch packages', async ({ virtualEnv }) => {
       const output = JSON.stringify([{ name: 'numpy', version: '2.1.0' }]);
       mockSpawnOutputOnce(output);
+
+      await expect(virtualEnv.getInstalledTorchPackageVersions()).resolves.toBeUndefined();
+    });
+
+    test('returns undefined when uv output is not JSON', async ({ virtualEnv }) => {
+      mockSpawnOutputOnce('not json');
+
+      await expect(virtualEnv.getInstalledTorchPackageVersions()).resolves.toBeUndefined();
+    });
+
+    test('returns undefined when uv output is not an array', async ({ virtualEnv }) => {
+      mockSpawnOutputOnce(JSON.stringify({ name: 'torch', version: NVIDIA_TORCH_VERSION }));
+
+      await expect(virtualEnv.getInstalledTorchPackageVersions()).resolves.toBeUndefined();
+    });
+
+    test('returns undefined when uv exits with non-zero code', async ({ virtualEnv }) => {
+      mockSpawnOutputOnce(JSON.stringify([]), 1);
 
       await expect(virtualEnv.getInstalledTorchPackageVersions()).resolves.toBeUndefined();
     });
