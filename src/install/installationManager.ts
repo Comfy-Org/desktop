@@ -1,5 +1,7 @@
 import { Notification, app, dialog, shell } from 'electron';
 import log from 'electron-log/main';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
@@ -14,11 +16,36 @@ import { CmCli } from '../services/cmCli';
 import { captureSentryException } from '../services/sentry';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
-import { canExecuteShellCommand, validateHardware } from '../utils';
+import { canExecuteShellCommand, compareVersions, validateHardware } from '../utils';
 import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { createProcessCallbacks } from './createProcessCallbacks';
 import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
+
+const execAsync = promisify(exec);
+const NVIDIA_DRIVER_MIN_VERSION = '580';
+
+/**
+ * Extracts the NVIDIA driver version from `nvidia-smi` output.
+ * @param output The `nvidia-smi` output to parse.
+ * @returns The driver version, if present.
+ */
+export function parseNvidiaDriverVersionFromSmiOutput(output: string): string | undefined {
+  const match = output.match(/driver version\s*:\s*([\d.]+)/i);
+  return match?.[1];
+}
+
+/**
+ * Returns `true` when the NVIDIA driver version is below the minimum.
+ * @param driverVersion The detected driver version.
+ * @param minimumVersion The minimum required driver version.
+ */
+export function isNvidiaDriverBelowMinimum(
+  driverVersion: string,
+  minimumVersion: string = NVIDIA_DRIVER_MIN_VERSION
+): boolean {
+  return compareVersions(driverVersion, minimumVersion) < 0;
+}
 
 /** High-level / UI control over the installation of ComfyUI server. */
 export class InstallationManager implements HasTelemetry {
@@ -354,10 +381,65 @@ export class InstallationManager implements HasTelemetry {
     try {
       await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
       await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
+      await this.warnIfNvidiaDriverTooOld(installation);
+      await installation.virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
       await installation.validate();
     } catch (error) {
       log.error('Error auto-updating packages:', error);
       await this.appWindow.loadPage('server-start');
+    }
+  }
+
+  /**
+   * Warns the user if their NVIDIA driver is too old for the required CUDA build.
+   * @param installation The current installation.
+   */
+  private async warnIfNvidiaDriverTooOld(installation: ComfyInstallation): Promise<void> {
+    if (process.platform !== 'win32') return;
+    if (installation.virtualEnvironment.selectedDevice !== 'nvidia') return;
+
+    const driverVersion =
+      (await this.getNvidiaDriverVersionFromSmi()) ?? (await this.getNvidiaDriverVersionFromSmiFallback());
+    if (!driverVersion) return;
+
+    if (!isNvidiaDriverBelowMinimum(driverVersion)) return;
+
+    await this.appWindow.showMessageBox({
+      type: 'warning',
+      title: 'Update NVIDIA Driver',
+      message: 'Your NVIDIA driver may be too old for PyTorch 2.9.1 + cu130.',
+      detail: `Detected driver version: ${driverVersion}\nRecommended minimum: ${NVIDIA_DRIVER_MIN_VERSION}\n\nPlease consider updating your NVIDIA drivers and retrying if you run into issues.`,
+      buttons: ['OK'],
+    });
+  }
+
+  /**
+   * Reads the NVIDIA driver version from nvidia-smi query output.
+   */
+  private async getNvidiaDriverVersionFromSmi(): Promise<string | undefined> {
+    try {
+      const { stdout } = await execAsync('nvidia-smi --query-gpu=driver_version --format=csv,noheader');
+      const version = stdout
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .find(Boolean);
+      return version || undefined;
+    } catch (error) {
+      log.debug('Failed to read NVIDIA driver version via nvidia-smi query.', error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Reads the NVIDIA driver version from nvidia-smi standard output.
+   */
+  private async getNvidiaDriverVersionFromSmiFallback(): Promise<string | undefined> {
+    try {
+      const { stdout } = await execAsync('nvidia-smi');
+      return parseNvidiaDriverVersionFromSmiOutput(stdout);
+    } catch (error) {
+      log.debug('Failed to read NVIDIA driver version via nvidia-smi output.', error);
+      return undefined;
     }
   }
 

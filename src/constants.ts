@@ -174,12 +174,15 @@ export enum TorchMirrorUrl {
   /** Regular PyPI index URL. */
   Default = 'https://pypi.org/simple/',
   /** PyTorch CUDA mirror. */
-  Cuda = 'https://download.pytorch.org/whl/cu129',
+  Cuda = 'https://download.pytorch.org/whl/cu130',
   /** PyTorch Nightly CUDA mirror. */
-  NightlyCuda = 'https://download.pytorch.org/whl/nightly/cu129',
+  NightlyCuda = 'https://download.pytorch.org/whl/nightly/cu130',
   /** PyTorch nightly CPU mirror. */
   NightlyCpu = 'https://download.pytorch.org/whl/nightly/cpu',
 }
+
+/** Legacy NVIDIA torch mirror used by older installs (CUDA 12.9). */
+export const LEGACY_NVIDIA_TORCH_MIRROR = 'https://download.pytorch.org/whl/cu129';
 
 /** @deprecated Use {@link TorchMirrorUrl} instead. */
 export const CUDA_TORCH_URL = TorchMirrorUrl.Cuda;
@@ -188,9 +191,14 @@ export const NIGHTLY_CPU_TORCH_URL = TorchMirrorUrl.NightlyCpu;
 /** @deprecated Use {@link TorchMirrorUrl} instead. */
 export const DEFAULT_PYPI_INDEX_URL = TorchMirrorUrl.Default;
 
+export const PYPI_FALLBACK_INDEX_URLS: string[] = [
+  'https://mirrors.aliyun.com/pypi/simple/',
+  'https://mirrors.cloud.tencent.com/pypi/simple/',
+  TorchMirrorUrl.Default,
+];
+
 export const AMD_ROCM_SDK_PACKAGES: string[] = [
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_core-0.1.dev0-py3-none-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_devel-0.1.dev0-py3-none-win_amd64.whl',
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_libraries_custom-0.1.dev0-py3-none-win_amd64.whl',
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm-0.1.dev0.tar.gz',
 ];
@@ -199,6 +207,14 @@ export const AMD_TORCH_PACKAGES: string[] = [
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torch-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchaudio-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchvision-0.24.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
+];
+
+export const NVIDIA_TORCH_VERSION = '2.9.1+cu130';
+export const NVIDIA_TORCHVISION_VERSION = '0.24.1+cu130';
+export const NVIDIA_TORCH_PACKAGES: string[] = [
+  `torch==${NVIDIA_TORCH_VERSION}`,
+  `torchaudio==${NVIDIA_TORCH_VERSION}`,
+  `torchvision==${NVIDIA_TORCHVISION_VERSION}`,
 ];
 
 /** The log files used by the desktop process. */

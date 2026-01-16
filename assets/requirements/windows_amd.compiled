@@ -45,13 +45,13 @@ colorama==0.4.6
     #   click
     #   tqdm
     # from https://pypi.org/simple
-comfyui-embedded-docs==0.3.1
+comfyui-embedded-docs==0.4.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 comfyui-manager==4.0.3b5
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.7.59
+comfyui-workflow-templates==0.8.4
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 comfyui-workflow-templates-core==0.3.43
@@ -235,8 +235,6 @@ rocm-sdk-core @ https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_cor
     # via
     #   -r assets/requirements/amd_requirements.txt
     #   rocm
-rocm-sdk-devel @ https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_devel-0.1.dev0-py3-none-win_amd64.whl
-    # via -r assets/requirements/amd_requirements.txt
 rocm-sdk-libraries-custom @ https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_libraries_custom-0.1.dev0-py3-none-win_amd64.whl
     # via
     #   -r assets/requirements/amd_requirements.txt

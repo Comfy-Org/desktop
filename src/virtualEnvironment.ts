@@ -7,7 +7,17 @@ import { readdir, rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
-import { AMD_ROCM_SDK_PACKAGES, AMD_TORCH_PACKAGES, InstallStage, TorchMirrorUrl } from './constants';
+import {
+  AMD_ROCM_SDK_PACKAGES,
+  AMD_TORCH_PACKAGES,
+  InstallStage,
+  LEGACY_NVIDIA_TORCH_MIRROR,
+  NVIDIA_TORCHVISION_VERSION,
+  NVIDIA_TORCH_PACKAGES,
+  NVIDIA_TORCH_VERSION,
+  PYPI_FALLBACK_INDEX_URLS,
+  TorchMirrorUrl,
+} from './constants';
 import { PythonImportVerificationError } from './infrastructure/pythonImportVerificationError';
 import { useAppState } from './main-process/appState';
 import { createInstallStageInfo } from './main-process/installStages';
@@ -16,7 +26,7 @@ import { runPythonImportVerifyScript } from './services/pythonImportVerifier';
 import { captureSentryException } from './services/sentry';
 import { HasTelemetry, ITelemetry, trackEvent } from './services/telemetry';
 import { getDefaultShell, getDefaultShellArgs } from './shell/util';
-import { pathAccessible } from './utils';
+import { compareVersions, pathAccessible } from './utils';
 
 export type ProcessCallbacks = {
   onStdout?: (data: string) => void;
@@ -36,14 +46,19 @@ export interface PythonExecutor {
 interface PipInstallConfig {
   packages: string[];
   indexUrl?: string;
-  extraIndexUrl?: string;
+  extraIndexUrls?: string[];
   prerelease?: boolean;
   upgradePackages?: boolean;
   requirementsFile?: string;
   indexStrategy?: 'compatible' | 'unsafe-best-match';
 }
 
-function getPipInstallArgs(config: PipInstallConfig): string[] {
+type TorchPackageName = 'torch' | 'torchaudio' | 'torchvision';
+type TorchPackageVersions = Record<TorchPackageName, string | undefined>;
+
+const TORCH_PACKAGE_NAMES: TorchPackageName[] = ['torch', 'torchaudio', 'torchvision'];
+
+export function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
   if (config.upgradePackages) {
@@ -64,8 +79,10 @@ function getPipInstallArgs(config: PipInstallConfig): string[] {
     installArgs.push('--index-url', config.indexUrl);
   }
 
-  if (config.extraIndexUrl) {
-    installArgs.push('--extra-index-url', config.extraIndexUrl);
+  if (config.extraIndexUrls) {
+    for (const extraIndexUrl of config.extraIndexUrls) {
+      installArgs.push('--extra-index-url', extraIndexUrl);
+    }
   }
 
   if (config.indexStrategy) {
@@ -97,6 +114,9 @@ function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undef
   if (mirror === TorchMirrorUrl.Default) {
     if (device === 'nvidia') return TorchMirrorUrl.Cuda;
     else if (device === 'mps') return TorchMirrorUrl.NightlyCpu;
+  }
+  if (device === 'nvidia' && mirror === LEGACY_NVIDIA_TORCH_MIRROR) {
+    return TorchMirrorUrl.Cuda;
   }
   return mirror;
 }
@@ -134,6 +154,15 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       // `node-pty` does not support `undefined`.
       ...(this.pythonMirror ? { UV_PYTHON_INSTALL_MIRROR: this.pythonMirror } : {}),
     };
+  }
+
+  /**
+   * Returns extra index URLs to use for pip installs.
+   * @returns The fallback index URLs, or `undefined` if none are configured.
+   */
+  private getPypiFallbackIndexUrls(): string[] | undefined {
+    const fallbackUrls = PYPI_FALLBACK_INDEX_URLS.filter((url) => url !== this.pypiMirror);
+    return fallbackUrls.length > 0 ? fallbackUrls : undefined;
   }
 
   /** @todo Refactor to `using` */
@@ -384,6 +413,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       indexStrategy: 'unsafe-best-match',
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrls: this.getPypiFallbackIndexUrls(),
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -630,6 +660,118 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   }
 
   /**
+   * Ensures NVIDIA installs use the recommended PyTorch packages.
+   * @param callbacks The callbacks to use for the command.
+   */
+  async ensureRecommendedNvidiaTorch(callbacks?: ProcessCallbacks): Promise<void> {
+    if (this.selectedDevice !== 'nvidia') return;
+
+    const installedVersions = await this.getInstalledTorchPackageVersions();
+    if (installedVersions && this.meetsMinimumNvidiaTorchVersions(installedVersions)) {
+      log.info('NVIDIA PyTorch packages already satisfy minimum recommended versions.', installedVersions);
+      return;
+    }
+
+    const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
+    const config: PipInstallConfig = {
+      packages: NVIDIA_TORCH_PACKAGES,
+      indexUrl: torchMirror,
+      prerelease: torchMirror.includes('nightly'),
+    };
+
+    const installArgs = getPipInstallArgs(config);
+    log.info('Installing recommended NVIDIA PyTorch packages.', { installedVersions });
+    const { exitCode: pinnedExitCode } = await this.runUvCommandAsync(installArgs, callbacks);
+
+    if (pinnedExitCode === 0) return;
+
+    log.warn('Failed to install recommended NVIDIA PyTorch packages. Falling back to unpinned install.', {
+      exitCode: pinnedExitCode,
+    });
+
+    const fallbackConfig: PipInstallConfig = {
+      packages: ['torch', 'torchvision', 'torchaudio'],
+      indexUrl: torchMirror,
+      prerelease: torchMirror.includes('nightly'),
+      upgradePackages: true,
+    };
+    const fallbackArgs = getPipInstallArgs(fallbackConfig);
+    const { exitCode: fallbackExitCode } = await this.runUvCommandAsync(fallbackArgs, callbacks);
+    if (fallbackExitCode !== 0) {
+      throw new Error(
+        `Failed to install NVIDIA PyTorch packages (pinned exit ${pinnedExitCode}, fallback exit ${fallbackExitCode})`
+      );
+    }
+  }
+
+  /**
+   * Reads installed torch package versions using `uv pip list --format=json`.
+   * @returns The torch package versions when available, otherwise `undefined`.
+   */
+  private async getInstalledTorchPackageVersions(): Promise<TorchPackageVersions | undefined> {
+    let stdout = '';
+    let stderr = '';
+    const callbacks: ProcessCallbacks = {
+      onStdout: (data) => {
+        stdout += data;
+      },
+      onStderr: (data) => {
+        stderr += data;
+      },
+    };
+
+    const { exitCode } = await this.runUvAsync(['pip', 'list', '--format=json', '--color=never'], callbacks);
+
+    if (exitCode !== 0) {
+      log.warn('Failed to read torch package versions.', { exitCode, stderr });
+      return undefined;
+    }
+
+    if (!stdout.trim()) {
+      log.warn('Torch package list output was empty.', { stderr });
+      return undefined;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(stdout);
+    } catch (error) {
+      log.warn('Failed to parse torch package list output.', { error, stdout, stderr });
+      return undefined;
+    }
+
+    if (!Array.isArray(parsed)) {
+      log.warn('Torch package list output was not an array.', { stdout, stderr });
+      return undefined;
+    }
+
+    const versions: TorchPackageVersions = {
+      torch: undefined,
+      torchaudio: undefined,
+      torchvision: undefined,
+    };
+    let matched = 0;
+    const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+    for (const entry of parsed) {
+      if (!isRecord(entry)) continue;
+      const name = entry.name;
+      const version = entry.version;
+      if (typeof name !== 'string' || typeof version !== 'string') continue;
+      const packageName = TORCH_PACKAGE_NAMES.find((pkg) => pkg === name.trim().toLowerCase());
+      if (!packageName) continue;
+      matched += 1;
+      versions[packageName] = version.trim() || undefined;
+    }
+    if (matched === 0) {
+      log.warn('Torch package list did not contain expected packages.', { stdout, stderr });
+      return undefined;
+    }
+
+    return versions;
+  }
+
+  /**
    * Installs AMD ROCm SDK packages on Windows.
    * @param callbacks The callbacks to use for the command.
    */
@@ -686,6 +828,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       requirementsFile: this.comfyUIRequirementsPath,
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrls: this.getPypiFallbackIndexUrls(),
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -717,6 +860,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       requirementsFile: this.comfyUIManagerRequirementsPath,
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrls: this.getPypiFallbackIndexUrls(),
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -838,8 +982,50 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return 'package-upgrade';
     }
 
+    if (await this.needsNvidiaTorchUpgrade()) {
+      log.info('NVIDIA PyTorch version out of date. Treating as package upgrade.');
+      return 'package-upgrade';
+    }
+
     log.debug('hasRequirements result:', 'OK');
     return 'OK';
+  }
+
+  /**
+   * Returns `true` when NVIDIA PyTorch should be upgraded to the recommended version.
+   * @returns `true` when NVIDIA PyTorch is out of date, otherwise `false`.
+   */
+  private async needsNvidiaTorchUpgrade(): Promise<boolean> {
+    if (this.selectedDevice !== 'nvidia') return false;
+
+    const installedVersions = await this.getInstalledTorchPackageVersions();
+    if (!installedVersions) {
+      log.warn('Unable to read NVIDIA torch package versions. Skipping NVIDIA torch upgrade check.');
+      return false;
+    }
+
+    return !this.meetsMinimumNvidiaTorchVersions(installedVersions);
+  }
+
+  private meetsMinimumNvidiaTorchVersions(installedVersions: TorchPackageVersions): boolean {
+    const torch = installedVersions.torch;
+    const torchaudio = installedVersions.torchaudio;
+    const torchvision = installedVersions.torchvision;
+    if (!torch || !torchaudio || !torchvision) return false;
+
+    const requiredCudaTag = '+cu130';
+    if (
+      !torch.includes(requiredCudaTag) ||
+      !torchaudio.includes(requiredCudaTag) ||
+      !torchvision.includes(requiredCudaTag)
+    )
+      return false;
+
+    if (compareVersions(torch, NVIDIA_TORCH_VERSION) < 0) return false;
+    if (compareVersions(torchaudio, NVIDIA_TORCH_VERSION) < 0) return false;
+    if (compareVersions(torchvision, NVIDIA_TORCHVISION_VERSION) < 0) return false;
+
+    return true;
   }
 
   /**
