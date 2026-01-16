@@ -5,6 +5,7 @@ import { promisify } from 'node:util';
 
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
+import { useComfySettings } from '../config/comfySettings';
 import {
   IPC_CHANNELS,
   InstallStage,
@@ -12,6 +13,7 @@ import {
   NVIDIA_TORCH_RECOMMENDED_VERSION,
   NVIDIA_TORCH_VERSION,
   ProgressStatus,
+  TorchMirrorUrl,
 } from '../constants';
 import { PythonImportVerificationError } from '../infrastructure/pythonImportVerificationError';
 import { useAppState } from '../main-process/appState';
@@ -432,6 +434,7 @@ export class InstallationManager implements HasTelemetry {
 
     const autoPolicy = updatePolicy === undefined || updatePolicy === 'auto';
     const updateApproved = autoPolicy && lastPromptedVersion === recommendedVersion;
+    let shouldAttemptUpdate = updateApproved;
 
     if (!updateApproved) {
       const currentTorch = installedVersions.torch ?? 'unknown';
@@ -474,13 +477,18 @@ export class InstallationManager implements HasTelemetry {
           config.delete('torchPinnedPackages');
           config.delete('torchUpdateFailureSilencedVersion');
           virtualEnvironment.updateTorchUpdatePolicy('auto', undefined, recommendedVersion);
+          shouldAttemptUpdate = true;
       }
     } else {
       virtualEnvironment.updateTorchUpdatePolicy('auto', undefined, recommendedVersion);
     }
 
+    if (!shouldAttemptUpdate) return;
+
+    const torchMirrorOverride = await this.updateTorchMirrorForRecommendedVersion();
+
     try {
-      await virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
+      await virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks, torchMirrorOverride);
       config.delete('torchUpdateFailureSilencedVersion');
     } catch (error) {
       log.error('Error updating NVIDIA PyTorch packages:', error);
@@ -501,6 +509,61 @@ export class InstallationManager implements HasTelemetry {
         config.set('torchUpdateFailureSilencedVersion', recommendedVersion);
       }
     }
+  }
+
+  private async updateTorchMirrorForRecommendedVersion(): Promise<string | undefined> {
+    let settings;
+    try {
+      settings = useComfySettings();
+    } catch (error) {
+      log.warn('Unable to access Comfy settings to update torch mirror.', error);
+      return undefined;
+    }
+
+    const currentMirror = settings.get('Comfy-Desktop.UV.TorchInstallMirror');
+    const updatedMirror = this.getRecommendedTorchMirror(currentMirror);
+    if (!updatedMirror || updatedMirror === currentMirror) return updatedMirror ?? currentMirror;
+
+    settings.set('Comfy-Desktop.UV.TorchInstallMirror', updatedMirror);
+    try {
+      await settings.saveSettings();
+    } catch (error) {
+      log.warn('Failed to persist torch mirror update.', error);
+    }
+
+    return updatedMirror;
+  }
+
+  private getRecommendedTorchMirror(mirror: string | undefined): string | undefined {
+    const defaultTorchMirror = String(TorchMirrorUrl.Default);
+    if (!mirror?.trim() || mirror === defaultTorchMirror) return TorchMirrorUrl.Cuda;
+
+    let parsedMirror: URL;
+    try {
+      parsedMirror = new URL(mirror);
+    } catch {
+      return mirror;
+    }
+
+    const path = parsedMirror.pathname;
+    if (!path.includes('/whl/')) return mirror;
+
+    let updatedPath = path;
+    const nightlyCudaPattern = /\/whl\/nightly\/cu\d+/i;
+    const cudaPattern = /\/whl\/cu\d+/i;
+
+    if (nightlyCudaPattern.test(updatedPath)) {
+      updatedPath = updatedPath.replace(nightlyCudaPattern, '/whl/nightly/cu130');
+    } else if (cudaPattern.test(updatedPath)) {
+      updatedPath = updatedPath.replace(cudaPattern, '/whl/cu130');
+    } else {
+      return mirror;
+    }
+
+    if (updatedPath === path) return mirror;
+    parsedMirror.pathname = updatedPath;
+
+    return parsedMirror.toString();
   }
 
   /**
