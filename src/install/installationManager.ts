@@ -33,6 +33,8 @@ import { Troubleshooting } from './troubleshooting';
 
 const execAsync = promisify(exec);
 const NVIDIA_DRIVER_MIN_VERSION = '580';
+const TORCH_MIRROR_CUDA_PATH = '/whl/cu130';
+const TORCH_MIRROR_NIGHTLY_CUDA_PATH = '/whl/nightly/cu130';
 
 /**
  * Extracts the NVIDIA driver version from `nvidia-smi` output.
@@ -540,7 +542,8 @@ export class InstallationManager implements HasTelemetry {
     let parsedMirror: URL;
     try {
       parsedMirror = new URL(mirror);
-    } catch {
+    } catch (error) {
+      log.warn('Unable to parse torch mirror URL for normalization.', error);
       return mirror;
     }
 
@@ -552,9 +555,9 @@ export class InstallationManager implements HasTelemetry {
     const cudaPattern = /\/whl\/cu\d+/i;
 
     if (nightlyCudaPattern.test(updatedPath)) {
-      updatedPath = updatedPath.replace(nightlyCudaPattern, '/whl/nightly/cu130');
+      updatedPath = updatedPath.replace(nightlyCudaPattern, TORCH_MIRROR_NIGHTLY_CUDA_PATH);
     } else if (cudaPattern.test(updatedPath)) {
-      updatedPath = updatedPath.replace(cudaPattern, '/whl/cu130');
+      updatedPath = updatedPath.replace(cudaPattern, TORCH_MIRROR_CUDA_PATH);
     } else {
       return mirror;
     }
