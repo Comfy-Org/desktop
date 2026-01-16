@@ -288,13 +288,14 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     }
   }
 
-  isUsingCustomTorchMirror(): boolean {
-    if (!this.torchMirror) return false;
-    return this.torchMirror !== getDeviceDefaultTorchMirror(this.selectedDevice);
+  isUsingRecommendedTorchMirror(): boolean {
+    if (!this.torchMirror) return true;
+    return this.torchMirror === getDeviceDefaultTorchMirror(this.selectedDevice);
   }
 
   private shouldSkipNvidiaTorchUpgrade(): boolean {
-    if (this.torchUpdatePolicy === 'pinned') return true;
+    if (this.torchUpdatePolicy === 'pinned' && this.torchUpdateDecisionVersion === NVIDIA_TORCH_RECOMMENDED_VERSION)
+      return true;
     if (this.torchUpdatePolicy === 'defer' && this.torchUpdateDecisionVersion === NVIDIA_TORCH_RECOMMENDED_VERSION)
       return true;
     return false;
