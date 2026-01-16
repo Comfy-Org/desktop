@@ -3,7 +3,7 @@ import log from 'electron-log/main';
 import { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import path from 'node:path';
-import { test as baseTest, describe, expect, vi } from 'vitest';
+import { afterEach, test as baseTest, describe, expect, vi } from 'vitest';
 import waitOn from 'wait-on';
 
 import { ServerArgs } from '@/constants';
@@ -80,6 +80,10 @@ const test = baseTest.extend<TestContext>({
   },
 });
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe('buildLaunchArgs', () => {
   test('should convert basic arguments correctly', () => {
     const args = {
@@ -145,15 +149,69 @@ describe('baseUrl', () => {
 describe('coreLaunchArgs', () => {
   test('should return the correct core launch arguments', ({ server }) => {
     const args = server.coreLaunchArgs;
+    const databaseUrl = args['database-url'];
+    const normalizedUserDir = server.userDirectoryPath.replaceAll('\\', '/');
     expect(args).toEqual({
       'user-directory': server.userDirectoryPath,
       'input-directory': server.inputDirectoryPath,
       'output-directory': server.outputDirectoryPath,
       'front-end-root': server.webRootPath,
       'base-directory': basePath,
+      'database-url': databaseUrl,
       'extra-model-paths-config': expect.any(String),
       'log-stdout': '',
     });
+    expect(databaseUrl).toMatch(/^sqlite:\/\//);
+    expect(databaseUrl).toContain(normalizedUserDir);
+    expect(databaseUrl).toMatch(/\/comfyui\.db$/);
+  });
+
+  test('normalizes database URL path separators on win32', ({
+    mockServerArgs,
+    mockVirtualEnvironment,
+    mockAppWindow,
+    mockTelemetry,
+  }) => {
+    vi.stubGlobal('process', { ...process, platform: 'win32' });
+    const windowsBasePath = String.raw`/C:\ComfyUI`;
+    const windowsServer = new ComfyServer(
+      windowsBasePath,
+      mockServerArgs,
+      mockVirtualEnvironment as any,
+      mockAppWindow as any,
+      mockTelemetry as any
+    );
+    const databaseUrl = windowsServer.coreLaunchArgs['database-url'];
+    expect(databaseUrl.startsWith('sqlite:///')).toBe(true);
+    expect(databaseUrl).toContain('C:/ComfyUI/user/comfyui.db');
+    expect(databaseUrl).not.toContain('\\');
+  });
+});
+
+describe('launchArgs', () => {
+  test('should allow user override of database-url', ({ mockVirtualEnvironment, mockAppWindow, mockTelemetry }) => {
+    const customDatabaseUrl = 'sqlite:///override.db';
+    const serverArgs: ServerArgs = {
+      listen: 'localhost',
+      port: '8188',
+      'database-url': customDatabaseUrl,
+    };
+    const server = new ComfyServer(
+      basePath,
+      serverArgs,
+      mockVirtualEnvironment as any,
+      mockAppWindow as any,
+      mockTelemetry as any
+    );
+    const args = server.launchArgs;
+    const coreDatabaseUrl = server.coreLaunchArgs['database-url'];
+    expect(coreDatabaseUrl).not.toBe(customDatabaseUrl);
+    const databaseUrlIndices = args
+      .map((value, index) => (value === '--database-url' ? index : -1))
+      .filter((index) => index !== -1);
+    expect(databaseUrlIndices).toHaveLength(1);
+    expect(args[databaseUrlIndices[0] + 1]).toBe(customDatabaseUrl);
+    expect(args).not.toContain(coreDatabaseUrl);
   });
 });
 
