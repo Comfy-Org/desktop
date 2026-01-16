@@ -407,8 +407,10 @@ export class InstallationManager implements HasTelemetry {
 
     const config = useDesktopConfig();
     const updatePolicy = config.get('torchUpdatePolicy');
-    if (updatePolicy === 'pinned') {
-      log.info('Skipping NVIDIA PyTorch update because updates are pinned.');
+    const recommendedVersion = NVIDIA_TORCH_RECOMMENDED_VERSION;
+    const lastPromptedVersion = config.get('torchLastPromptedVersion');
+    if (updatePolicy === 'pinned' && lastPromptedVersion === recommendedVersion) {
+      log.info('Skipping NVIDIA PyTorch update because updates are pinned for this version.');
       return;
     }
 
@@ -420,9 +422,6 @@ export class InstallationManager implements HasTelemetry {
 
     const isOutOfDate = await virtualEnvironment.isNvidiaTorchOutOfDate(installedVersions);
     if (!isOutOfDate) return;
-
-    const recommendedVersion = NVIDIA_TORCH_RECOMMENDED_VERSION;
-    const lastPromptedVersion = config.get('torchLastPromptedVersion');
 
     if (config.get('torchOutOfDateRecommendedVersion') !== recommendedVersion) {
       config.set('torchOutOfDateRecommendedVersion', recommendedVersion);
