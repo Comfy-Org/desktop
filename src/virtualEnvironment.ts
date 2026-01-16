@@ -16,6 +16,7 @@ import {
   NVIDIA_TORCH_PACKAGES,
   NVIDIA_TORCH_RECOMMENDED_VERSION,
   NVIDIA_TORCH_VERSION,
+  PYPI_FALLBACK_INDEX_URLS,
   TorchMirrorUrl,
   TorchPinnedPackages,
   TorchUpdatePolicy,
@@ -48,7 +49,7 @@ export interface PythonExecutor {
 interface PipInstallConfig {
   packages: string[];
   indexUrl?: string;
-  extraIndexUrl?: string;
+  extraIndexUrls?: string[];
   prerelease?: boolean;
   upgradePackages?: boolean;
   requirementsFile?: string;
@@ -60,7 +61,7 @@ type TorchPackageVersions = Record<TorchPackageName, string | undefined>;
 
 const TORCH_PACKAGE_NAMES: TorchPackageName[] = ['torch', 'torchaudio', 'torchvision'];
 
-function getPipInstallArgs(config: PipInstallConfig): string[] {
+export function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
   if (config.upgradePackages) {
@@ -81,8 +82,10 @@ function getPipInstallArgs(config: PipInstallConfig): string[] {
     installArgs.push('--index-url', config.indexUrl);
   }
 
-  if (config.extraIndexUrl) {
-    installArgs.push('--extra-index-url', config.extraIndexUrl);
+  if (config.extraIndexUrls) {
+    for (const extraIndexUrl of config.extraIndexUrls) {
+      installArgs.push('--extra-index-url', extraIndexUrl);
+    }
   }
 
   if (config.indexStrategy) {
@@ -151,6 +154,15 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       // `node-pty` does not support `undefined`.
       ...(this.pythonMirror ? { UV_PYTHON_INSTALL_MIRROR: this.pythonMirror } : {}),
     };
+  }
+
+  /**
+   * Returns extra index URLs to use for pip installs.
+   * @returns The fallback index URLs, or `undefined` if none are configured.
+   */
+  private getPypiFallbackIndexUrls(): string[] | undefined {
+    const fallbackUrls = PYPI_FALLBACK_INDEX_URLS.filter((url) => url !== this.pypiMirror);
+    return fallbackUrls.length > 0 ? fallbackUrls : undefined;
   }
 
   /** @todo Refactor to `using` */
@@ -439,6 +451,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       indexStrategy: 'unsafe-best-match',
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrls: this.getPypiFallbackIndexUrls(),
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -874,6 +887,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       requirementsFile: this.comfyUIRequirementsPath,
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrls: this.getPypiFallbackIndexUrls(),
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {
@@ -905,6 +919,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       requirementsFile: this.comfyUIManagerRequirementsPath,
       packages: [],
       indexUrl: this.pypiMirror,
+      extraIndexUrls: this.getPypiFallbackIndexUrls(),
     });
     const { exitCode } = await this.runUvCommandAsync(installCmd, callbacks);
     if (exitCode !== 0) {

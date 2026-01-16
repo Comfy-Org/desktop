@@ -10,7 +10,7 @@ import {
   TorchMirrorUrl,
 } from '@/constants';
 import type { ITelemetry } from '@/services/telemetry';
-import { VirtualEnvironment } from '@/virtualEnvironment';
+import { VirtualEnvironment, getPipInstallArgs } from '@/virtualEnvironment';
 
 vi.mock('@sentry/electron/main', () => ({
   init: vi.fn(),
@@ -157,6 +157,33 @@ test.for(allCombinations)('hasRequirements', async ({ core, manager }, { virtual
 });
 
 describe('VirtualEnvironment', () => {
+  describe('getPipInstallArgs', () => {
+    test('includes unsafe-best-match and extra index URL args', () => {
+      const args = getPipInstallArgs({
+        requirementsFile: '/tmp/requirements.txt',
+        packages: [],
+        indexUrl: 'https://mirror.example/simple/',
+        extraIndexUrls: ['https://mirror-two.example/simple/', TorchMirrorUrl.Default],
+        indexStrategy: 'unsafe-best-match',
+      });
+
+      expect(args).toEqual([
+        'pip',
+        'install',
+        '-r',
+        '/tmp/requirements.txt',
+        '--index-url',
+        'https://mirror.example/simple/',
+        '--extra-index-url',
+        'https://mirror-two.example/simple/',
+        '--extra-index-url',
+        TorchMirrorUrl.Default,
+        '--index-strategy',
+        'unsafe-best-match',
+      ]);
+    });
+  });
+
   describe('hasRequirements', () => {
     test('returns OK when all packages are installed', async ({ virtualEnv }) => {
       mockSpawnOutputOnce('Would make no changes\n');
