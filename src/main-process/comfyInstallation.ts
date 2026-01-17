@@ -184,14 +184,14 @@ export class ComfyInstallation {
           // Python packages
           try {
             const result = await venv.hasRequirements();
-            if (result.status === 'upgrade') {
-              validation.pythonPackages = 'OK';
-              validation.upgradePackages = 'warning';
-            } else if (result.status === 'ok') {
-              validation.pythonPackages = 'OK';
-            } else {
-              validation.pythonPackages = 'error';
-              log.error('Virtual environment is incomplete.', { reason: result.reason });
+            switch (result.status) {
+              case 'upgrade':
+                validation.pythonPackages = 'OK';
+                validation.upgradePackages = 'warning';
+                break;
+              case 'ok':
+                validation.pythonPackages = 'OK';
+                break;
             }
           } catch (error) {
             log.error('Failed to read venv packages.', error);
