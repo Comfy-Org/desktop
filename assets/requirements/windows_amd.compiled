@@ -48,7 +48,7 @@ colorama==0.4.6
 comfyui-embedded-docs==0.4.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-manager==4.0.3b5
+comfyui-manager==4.0.5
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
 comfyui-workflow-templates==0.8.4
