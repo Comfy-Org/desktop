@@ -264,6 +264,34 @@ describe('VirtualEnvironment', () => {
 
       await expect(virtualEnv.hasRequirements()).resolves.toMatchObject({ status: 'upgrade' });
     });
+
+    test('returns upgrade with nvidia-torch reason when torch packages are outdated', async () => {
+      vi.stubGlobal('process', {
+        ...process,
+        resourcesPath: path.join(__dirname, '../resources'),
+      });
+
+      const nvidiaEnv = new VirtualEnvironment('/mock/venv', {
+        telemetry: mockTelemetry,
+        selectedDevice: 'nvidia',
+        pythonVersion: '3.12',
+      });
+
+      mockSpawnOutputOnce('Would make no changes\n');
+      mockSpawnOutputOnce('Would make no changes\n');
+      mockSpawnOutputOnce(
+        JSON.stringify([
+          { name: 'torch', version: '2.0.0+cu121' },
+          { name: 'torchaudio', version: '2.0.0+cu121' },
+          { name: 'torchvision', version: '0.15.0+cu121' },
+        ])
+      );
+
+      await expect(nvidiaEnv.hasRequirements()).resolves.toMatchObject({
+        status: 'upgrade',
+        reason: 'nvidia-torch',
+      });
+    });
   });
 
   describe('uvEnv', () => {
