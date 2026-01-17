@@ -11,21 +11,20 @@ test.describe('Troubleshooting - broken venv', () => {
     await expect(window).toHaveScreenshot('troubleshooting-venv.png');
   });
 
-  test('Can fix venv', async ({ troubleshooting, installedApp }) => {
+  test('Can fix venv', async ({ troubleshooting, installedApp, window }) => {
     test.slow();
 
     await troubleshooting.expectReady();
-    const { resetVenvCard, installPythonPackagesCard } = troubleshooting;
+    const { resetVenvCard } = troubleshooting;
     await expect(resetVenvCard.rootEl).toBeVisible();
 
     await resetVenvCard.button.click();
     await troubleshooting.confirmRecreateVenvButton.click();
     await expect(resetVenvCard.isRunningIndicator).toBeVisible();
 
-    await expect(installPythonPackagesCard.rootEl).toBeVisible({ timeout: 60 * 1000 });
-    await installPythonPackagesCard.button.click();
-    await troubleshooting.confirmInstallPythonPackagesButton.click();
-    await expect(installPythonPackagesCard.isRunningIndicator).toBeVisible();
+    await expect(window.getByRole('heading', { name: 'Updating ComfyUI Desktop' })).toBeVisible({
+      timeout: 60 * 1000,
+    });
 
     // Venv fixed - server should start
     await installedApp.waitUntilLoaded(3 * 60 * 1000);
