@@ -64,13 +64,7 @@ const test = baseTest.extend<TestContext>({
       transports: { file: { transforms: [] } },
     } as unknown as MainLogger & { default: MainLogger });
 
-    const server = new ComfyServer(
-      basePath,
-      mockServerArgs,
-      mockVirtualEnvironment as any,
-      mockAppWindow as any,
-      mockTelemetry as any
-    );
+    const server = new ComfyServer(basePath, mockServerArgs, mockVirtualEnvironment, mockAppWindow, mockTelemetry);
     await use(server);
   },
   runningServer: async ({ server, mockProcess }, use) => {
