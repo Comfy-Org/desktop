@@ -44,7 +44,7 @@ export class ComfyInstallation {
 
   /** `true` if Manager needs toml and uv to be installed, otherwise `false`. */
   get needsRequirementsUpdate() {
-    return this.validation.upgradePackages === 'warning';
+    return this.validation.needsPackageUpdate === true;
   }
 
   /**
@@ -187,7 +187,7 @@ export class ComfyInstallation {
             switch (result.status) {
               case 'upgrade':
                 validation.pythonPackages = 'OK';
-                validation.upgradePackages = 'warning';
+                validation.needsPackageUpdate = true;
                 break;
               case 'ok':
                 validation.pythonPackages = 'OK';
