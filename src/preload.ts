@@ -118,7 +118,8 @@ export interface InstallValidation {
   uv?: ValidationIssueState;
   git?: ValidationIssueState;
   vcRedist?: ValidationIssueState;
-  upgradePackages?: ValidationIssueState;
+  /** True if packages need updating (not an error, will auto-update) */
+  needsPackageUpdate?: boolean;
 }
 
 const electronAPI = {
