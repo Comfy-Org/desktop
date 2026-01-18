@@ -30,6 +30,7 @@ interface GpuInfo {
   model: string;
   vendor: string;
   vram: number | null;
+  driverVersion: string | null;
 }
 
 interface MixPanelEvent {
@@ -164,6 +165,7 @@ export class MixpanelTelemetry implements ITelemetry {
         model: gpu.model,
         vendor: gpu.vendor,
         vram: gpu.vram,
+        driverVersion: gpu.driverVersion?.trim() || null,
       }));
     } catch (error) {
       log.error('Failed to get GPU information:', error);
