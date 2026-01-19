@@ -1,7 +1,11 @@
+import { stat } from 'node:fs/promises';
+import path from 'node:path';
+import { pathExists } from 'tests/shared/utils';
+
 import { expect, test } from '../testExtensions';
 
 test.describe('Install App', () => {
-  test('Can install app', async ({ installWizard, installedApp, serverStart, testEnvironment }) => {
+  test('Can install app', async ({ installWizard, installedApp, serverStart, testEnvironment, window }) => {
     test.slow();
 
     await installWizard.clickGetStarted();
@@ -34,5 +38,24 @@ test.describe('Install App', () => {
     // Confirm post-install app state is as expected
     await expect(installedApp.firstTimeTemplateWorkflowText).toBeVisible({ timeout: 30 * 1000 });
     await expect(installedApp.templatesGrid).toBeVisible({ timeout: 30 * 1000 });
+
+    const dbPath = path.join(testEnvironment.installLocation.path, 'user', 'comfyui.db');
+    await expect.poll(async () => await pathExists(dbPath), { timeout: 30 * 1000 }).toBe(true);
+    await expect
+      .poll(
+        async () => {
+          try {
+            const fileStat = await stat(dbPath);
+            return fileStat.size;
+          } catch {
+            return 0;
+          }
+        },
+        { timeout: 30 * 1000 }
+      )
+      .toBeGreaterThan(0);
+    const appUrl = new URL(window.url());
+    const response = await window.request.get(`${appUrl.origin}/object_info`);
+    expect(response.ok()).toBe(true);
   });
 });
