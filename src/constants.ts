@@ -181,6 +181,14 @@ export enum TorchMirrorUrl {
   NightlyCpu = 'https://download.pytorch.org/whl/nightly/cpu',
 }
 
+export type TorchUpdatePolicy = 'auto' | 'defer' | 'pinned';
+
+export type TorchPinnedPackages = {
+  torch?: string;
+  torchaudio?: string;
+  torchvision?: string;
+};
+
 /** Legacy NVIDIA torch mirror used by older installs (CUDA 12.9). */
 export const LEGACY_NVIDIA_TORCH_MIRROR = 'https://download.pytorch.org/whl/cu129';
 
@@ -216,6 +224,10 @@ export const NVIDIA_TORCH_PACKAGES: string[] = [
   `torchaudio==${NVIDIA_TORCH_VERSION}`,
   `torchvision==${NVIDIA_TORCHVISION_VERSION}`,
 ];
+/** Minimum NVIDIA driver version recommended for the current CUDA torch build. */
+export const NVIDIA_DRIVER_MIN_VERSION = '580';
+/** Recommended NVIDIA torch package set key (torch/torchaudio/torchvision). */
+export const NVIDIA_TORCH_RECOMMENDED_VERSION = `${NVIDIA_TORCH_VERSION}|${NVIDIA_TORCHVISION_VERSION}`;
 
 /** The log files used by the desktop process. */
 export enum LogFile {

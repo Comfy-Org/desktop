@@ -1,3 +1,4 @@
+import type { TorchPinnedPackages, TorchUpdatePolicy } from '../constants';
 import type { GpuType, TorchDeviceType } from '../preload';
 
 export type DesktopInstallState = 'started' | 'installed' | 'upgraded';
@@ -35,4 +36,16 @@ export type DesktopSettings = {
   versionConsentedMetrics?: string;
   /** Whether the user has generated an image successfully. */
   hasGeneratedSuccessfully?: boolean;
+  /** How to handle NVIDIA PyTorch updates. */
+  torchUpdatePolicy?: TorchUpdatePolicy;
+  /** The pinned NVIDIA torch package versions when updates are disabled. */
+  torchPinnedPackages?: TorchPinnedPackages;
+  /** The recommended NVIDIA torch version tied to the current update decision. */
+  torchLastPromptedVersion?: string;
+  /** The recommended NVIDIA torch version whose update failure prompt is suppressed. */
+  torchUpdateFailureSilencedVersion?: string;
+  /** The recommended NVIDIA torch version recorded when we first detected an out-of-date torch install. */
+  torchOutOfDateRecommendedVersion?: string;
+  /** The torch package versions recorded when we first detected an out-of-date torch install. */
+  torchOutOfDatePackages?: TorchPinnedPackages;
 };

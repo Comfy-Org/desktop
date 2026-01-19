@@ -14,9 +14,12 @@ import {
   LEGACY_NVIDIA_TORCH_MIRROR,
   NVIDIA_TORCHVISION_VERSION,
   NVIDIA_TORCH_PACKAGES,
+  NVIDIA_TORCH_RECOMMENDED_VERSION,
   NVIDIA_TORCH_VERSION,
   PYPI_FALLBACK_INDEX_URLS,
   TorchMirrorUrl,
+  TorchPinnedPackages,
+  TorchUpdatePolicy,
 } from './constants';
 import { PythonImportVerificationError } from './infrastructure/pythonImportVerificationError';
 import { useAppState } from './main-process/appState';
@@ -92,13 +95,7 @@ export function getPipInstallArgs(config: PipInstallConfig): string[] {
   return installArgs;
 }
 
-/**
- * Returns the default torch mirror for the given device.
- * @param device The device type
- * @returns The default torch mirror
- */
-function getDefaultTorchMirror(device: TorchDeviceType): string {
-  log.debug('Falling back to default torch mirror');
+function getDeviceDefaultTorchMirror(device: TorchDeviceType): string {
   switch (device) {
     case 'mps':
       return TorchMirrorUrl.NightlyCpu;
@@ -143,6 +140,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   readonly pythonMirror?: string;
   readonly pypiMirror?: string;
   readonly torchMirror?: string;
+  torchUpdatePolicy?: TorchUpdatePolicy;
+  torchPinnedPackages?: TorchPinnedPackages;
+  torchUpdateDecisionVersion?: string;
   uvPty: pty.IPty | undefined;
 
   /** The environment variables to set for uv. */
@@ -196,6 +196,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       pythonMirror,
       pypiMirror,
       torchMirror,
+      torchUpdatePolicy,
+      torchPinnedPackages,
+      torchUpdateDecisionVersion,
     }: {
       telemetry: ITelemetry;
       selectedDevice?: TorchDeviceType;
@@ -203,6 +206,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       pythonMirror?: string;
       pypiMirror?: string;
       torchMirror?: string;
+      torchUpdatePolicy?: TorchUpdatePolicy;
+      torchPinnedPackages?: TorchPinnedPackages;
+      torchUpdateDecisionVersion?: string;
     }
   ) {
     this.basePath = basePath;
@@ -212,6 +218,9 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     this.pythonMirror = pythonMirror;
     this.pypiMirror = pypiMirror;
     this.torchMirror = fixDeviceMirrorMismatch(selectedDevice!, torchMirror);
+    this.torchUpdatePolicy = torchUpdatePolicy;
+    this.torchPinnedPackages = torchPinnedPackages;
+    this.torchUpdateDecisionVersion = torchUpdateDecisionVersion;
 
     // uv defaults to .venv
     this.venvPath = path.join(basePath, '.venv');
@@ -273,6 +282,35 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     if (existsSync(primary)) return primary;
     if (existsSync(legacy)) return legacy;
     return primary;
+  }
+
+  updateTorchUpdatePolicy(
+    policy: TorchUpdatePolicy | undefined,
+    pinnedPackages?: TorchPinnedPackages,
+    decisionVersion?: string
+  ) {
+    this.torchUpdatePolicy = policy;
+    if (pinnedPackages !== undefined) {
+      this.torchPinnedPackages = pinnedPackages;
+    } else if (policy !== 'pinned') {
+      this.torchPinnedPackages = undefined;
+    }
+    if (decisionVersion !== undefined) {
+      this.torchUpdateDecisionVersion = decisionVersion;
+    }
+  }
+
+  isUsingRecommendedTorchMirror(): boolean {
+    if (!this.torchMirror) return true;
+    return this.torchMirror === getDeviceDefaultTorchMirror(this.selectedDevice);
+  }
+
+  private shouldSkipNvidiaTorchUpgrade(): boolean {
+    if (this.torchUpdatePolicy === 'pinned' && this.torchUpdateDecisionVersion === NVIDIA_TORCH_RECOMMENDED_VERSION)
+      return true;
+    if (this.torchUpdatePolicy === 'defer' && this.torchUpdateDecisionVersion === NVIDIA_TORCH_RECOMMENDED_VERSION)
+      return true;
+    return false;
   }
 
   public async create(callbacks?: ProcessCallbacks): Promise<void> {
@@ -642,7 +680,11 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return;
     }
 
-    const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
+    let torchMirror = this.torchMirror;
+    if (!torchMirror) {
+      log.info('Falling back to default torch mirror');
+      torchMirror = getDeviceDefaultTorchMirror(this.selectedDevice);
+    }
     const config: PipInstallConfig = {
       packages: ['torch', 'torchvision', 'torchaudio'],
       indexUrl: torchMirror,
@@ -663,8 +705,12 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    * Ensures NVIDIA installs use the recommended PyTorch packages.
    * @param callbacks The callbacks to use for the command.
    */
-  async ensureRecommendedNvidiaTorch(callbacks?: ProcessCallbacks): Promise<void> {
+  async ensureRecommendedNvidiaTorch(callbacks?: ProcessCallbacks, torchMirrorOverride?: string): Promise<void> {
     if (this.selectedDevice !== 'nvidia') return;
+    if (this.shouldSkipNvidiaTorchUpgrade()) {
+      log.info('Skipping NVIDIA PyTorch upgrade due to pinned policy or deferred updates.');
+      return;
+    }
 
     const installedVersions = await this.getInstalledTorchPackageVersions();
     if (installedVersions && this.meetsMinimumNvidiaTorchVersions(installedVersions)) {
@@ -672,7 +718,11 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return;
     }
 
-    const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
+    let torchMirror = torchMirrorOverride ?? this.torchMirror;
+    if (!torchMirror) {
+      log.info('Falling back to default torch mirror');
+      torchMirror = getDeviceDefaultTorchMirror(this.selectedDevice);
+    }
     const config: PipInstallConfig = {
       packages: NVIDIA_TORCH_PACKAGES,
       indexUrl: torchMirror,
@@ -708,7 +758,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    * Reads installed torch package versions using `uv pip list --format=json`.
    * @returns The torch package versions when available, otherwise `undefined`.
    */
-  private async getInstalledTorchPackageVersions(): Promise<TorchPackageVersions | undefined> {
+  async getInstalledTorchPackageVersions(): Promise<TorchPackageVersions | undefined> {
     let stdout = '';
     let stderr = '';
     const callbacks: ProcessCallbacks = {
@@ -769,6 +819,15 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     }
 
     return versions;
+  }
+
+  async isNvidiaTorchOutOfDate(installedVersions?: TorchPackageVersions): Promise<boolean> {
+    if (this.selectedDevice !== 'nvidia') return false;
+
+    const resolvedVersions = installedVersions ?? (await this.getInstalledTorchPackageVersions());
+    if (!resolvedVersions) return false;
+
+    return !this.meetsMinimumNvidiaTorchVersions(resolvedVersions);
   }
 
   /**
@@ -997,6 +1056,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    */
   private async needsNvidiaTorchUpgrade(): Promise<boolean> {
     if (this.selectedDevice !== 'nvidia') return false;
+    if (this.shouldSkipNvidiaTorchUpgrade()) return false;
 
     const installedVersions = await this.getInstalledTorchPackageVersions();
     if (!installedVersions) {
