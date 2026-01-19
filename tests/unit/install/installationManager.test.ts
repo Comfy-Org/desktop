@@ -86,7 +86,7 @@ vi.mock('@/virtualEnvironment', () => {
   return {
     VirtualEnvironment: vi.fn(() => ({
       exists: vi.fn(() => Promise.resolve(true)),
-      hasRequirements: vi.fn(() => Promise.resolve(true)),
+      hasRequirements: vi.fn(() => Promise.resolve({ status: 'ok' })),
       pythonInterpreterPath: 'valid/python',
       uvPath: 'valid/uv',
       venvPath: 'valid/venv',
