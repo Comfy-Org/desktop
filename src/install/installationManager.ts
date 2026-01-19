@@ -382,7 +382,8 @@ export class InstallationManager implements HasTelemetry {
       await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
       await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
       await this.warnIfNvidiaDriverTooOld(installation);
-      await installation.virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
+      // Disable automatic NVIDIA torch upgrades so users control large downloads.
+      // await installation.virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
       await installation.validate();
     } catch (error) {
       log.error('Error auto-updating packages:', error);

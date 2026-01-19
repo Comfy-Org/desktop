@@ -978,11 +978,6 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return 'package-upgrade';
     }
 
-    if (await this.needsNvidiaTorchUpgrade()) {
-      log.info('NVIDIA PyTorch version out of date. Treating as package upgrade.');
-      return 'package-upgrade';
-    }
-
     log.debug('hasRequirements result:', 'OK');
     return 'OK';
   }
