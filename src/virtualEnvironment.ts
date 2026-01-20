@@ -57,6 +57,9 @@ type TorchPackageVersions = Record<TorchPackageName, string | undefined>;
 
 const TORCH_PACKAGE_NAMES: TorchPackageName[] = ['torch', 'torchaudio', 'torchvision'];
 
+const TORCH_MIRROR_HOSTNAME = 'download.pytorch.org';
+const TORCH_MIRROR_PATHS = [/^\/whl\/cu\d+$/, /^\/whl\/nightly\/cu\d+$/, /^\/whl\/nightly\/cpu$/];
+
 export function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
 
@@ -115,6 +118,55 @@ function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undef
     else if (device === 'mps') return TorchMirrorUrl.NightlyCpu;
   }
   return mirror;
+}
+
+export function getTorchInstallConfig({
+  packages,
+  torchMirror,
+  pypiMirror,
+  fallbackIndexUrls,
+  upgradePackages,
+}: {
+  packages: string[];
+  torchMirror: string;
+  pypiMirror?: string;
+  fallbackIndexUrls?: string[];
+  upgradePackages?: boolean;
+}): PipInstallConfig {
+  const prerelease = torchMirror.includes('nightly');
+
+  if (!isTorchIndexUrl(torchMirror)) {
+    return {
+      packages,
+      indexUrl: torchMirror,
+      prerelease,
+      upgradePackages,
+    };
+  }
+
+  const primaryIndex = pypiMirror ?? TorchMirrorUrl.Default;
+  const extraIndexUrls = [torchMirror, ...(fallbackIndexUrls ?? [])].filter(
+    (url, index, urls) => url !== primaryIndex && urls.indexOf(url) === index
+  );
+
+  return {
+    packages,
+    indexUrl: primaryIndex,
+    extraIndexUrls: extraIndexUrls.length > 0 ? extraIndexUrls : undefined,
+    prerelease,
+    upgradePackages,
+  };
+}
+
+function isTorchIndexUrl(mirrorUrl: string): boolean {
+  try {
+    const parsed = new URL(mirrorUrl);
+    if (parsed.hostname !== TORCH_MIRROR_HOSTNAME) return false;
+    const normalizedPath = parsed.pathname.replace(/\/+$/, '');
+    return TORCH_MIRROR_PATHS.some((pattern) => pattern.test(normalizedPath));
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -639,11 +691,12 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     }
 
     const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
-    const config: PipInstallConfig = {
+    const config = getTorchInstallConfig({
       packages: ['torch', 'torchvision', 'torchaudio'],
-      indexUrl: torchMirror,
-      prerelease: torchMirror.includes('nightly'),
-    };
+      torchMirror,
+      pypiMirror: this.pypiMirror,
+      fallbackIndexUrls: this.getPypiFallbackIndexUrls(),
+    });
 
     const installArgs = getPipInstallArgs(config);
 
@@ -669,11 +722,12 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     }
 
     const torchMirror = this.torchMirror || getDefaultTorchMirror(this.selectedDevice);
-    const config: PipInstallConfig = {
+    const config = getTorchInstallConfig({
       packages: NVIDIA_TORCH_PACKAGES,
-      indexUrl: torchMirror,
-      prerelease: torchMirror.includes('nightly'),
-    };
+      torchMirror,
+      pypiMirror: this.pypiMirror,
+      fallbackIndexUrls: this.getPypiFallbackIndexUrls(),
+    });
 
     const installArgs = getPipInstallArgs(config);
     log.info('Installing recommended NVIDIA PyTorch packages.', { installedVersions });
@@ -685,12 +739,13 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       exitCode: pinnedExitCode,
     });
 
-    const fallbackConfig: PipInstallConfig = {
+    const fallbackConfig = getTorchInstallConfig({
       packages: ['torch', 'torchvision', 'torchaudio'],
-      indexUrl: torchMirror,
-      prerelease: torchMirror.includes('nightly'),
+      torchMirror,
+      pypiMirror: this.pypiMirror,
+      fallbackIndexUrls: this.getPypiFallbackIndexUrls(),
       upgradePackages: true,
-    };
+    });
     const fallbackArgs = getPipInstallArgs(fallbackConfig);
     const { exitCode: fallbackExitCode } = await this.runUvCommandAsync(fallbackArgs, callbacks);
     if (fallbackExitCode !== 0) {

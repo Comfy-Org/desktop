@@ -5,7 +5,7 @@ import { test as baseTest, describe, expect, vi } from 'vitest';
 
 import { TorchMirrorUrl } from '@/constants';
 import type { ITelemetry } from '@/services/telemetry';
-import { VirtualEnvironment, getPipInstallArgs } from '@/virtualEnvironment';
+import { VirtualEnvironment, getPipInstallArgs, getTorchInstallConfig } from '@/virtualEnvironment';
 
 vi.mock('@sentry/electron/main', () => ({
   init: vi.fn(),
@@ -176,6 +176,76 @@ describe('VirtualEnvironment', () => {
         '--index-strategy',
         'unsafe-best-match',
       ]);
+    });
+  });
+
+  describe('getTorchInstallConfig', () => {
+    test('uses PyPI as the primary index with torch mirrors as extra indexes', () => {
+      const config = getTorchInstallConfig({
+        packages: ['torch'],
+        torchMirror: TorchMirrorUrl.Cuda,
+        pypiMirror: TorchMirrorUrl.Default,
+        fallbackIndexUrls: ['https://mirror.example/simple/', TorchMirrorUrl.Default],
+      });
+
+      expect(config).toEqual({
+        packages: ['torch'],
+        indexUrl: TorchMirrorUrl.Default,
+        extraIndexUrls: [TorchMirrorUrl.Cuda, 'https://mirror.example/simple/'],
+        prerelease: false,
+        upgradePackages: undefined,
+      });
+    });
+
+    test('uses custom mirror as the primary index when it is not a known torch mirror', () => {
+      const config = getTorchInstallConfig({
+        packages: ['torch'],
+        torchMirror: 'https://custom.example/simple/',
+        pypiMirror: TorchMirrorUrl.Default,
+        fallbackIndexUrls: ['https://mirror.example/simple/'],
+      });
+
+      expect(config).toEqual({
+        packages: ['torch'],
+        indexUrl: 'https://custom.example/simple/',
+        extraIndexUrls: undefined,
+        prerelease: false,
+        upgradePackages: undefined,
+      });
+    });
+
+    test('marks nightly mirrors as prerelease and keeps PyPI primary', () => {
+      const config = getTorchInstallConfig({
+        packages: ['torch'],
+        torchMirror: TorchMirrorUrl.NightlyCpu,
+        pypiMirror: 'https://pypi.example/simple/',
+        fallbackIndexUrls: ['https://mirror.example/simple/'],
+      });
+
+      expect(config).toEqual({
+        packages: ['torch'],
+        indexUrl: 'https://pypi.example/simple/',
+        extraIndexUrls: [TorchMirrorUrl.NightlyCpu, 'https://mirror.example/simple/'],
+        prerelease: true,
+        upgradePackages: undefined,
+      });
+    });
+
+    test('treats older CUDA mirrors as torch indexes', () => {
+      const config = getTorchInstallConfig({
+        packages: ['torch'],
+        torchMirror: 'https://download.pytorch.org/whl/cu118',
+        pypiMirror: TorchMirrorUrl.Default,
+        fallbackIndexUrls: ['https://mirror.example/simple/'],
+      });
+
+      expect(config).toEqual({
+        packages: ['torch'],
+        indexUrl: TorchMirrorUrl.Default,
+        extraIndexUrls: ['https://download.pytorch.org/whl/cu118', 'https://mirror.example/simple/'],
+        prerelease: false,
+        upgradePackages: undefined,
+      });
     });
   });
 
