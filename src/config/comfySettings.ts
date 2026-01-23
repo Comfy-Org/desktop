@@ -5,6 +5,7 @@ import path from 'node:path';
 export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.AutoUpdate': true,
   'Comfy-Desktop.SendStatistics': true,
+  'Comfy-Desktop.LaunchOptions': '',
   'Comfy.ColorPalette': 'dark',
   'Comfy.UseNewMenu': 'Top',
   'Comfy.Workflow.WorkflowTabsPosition': 'Topbar',
@@ -23,6 +24,7 @@ export interface ComfySettingsData {
   'Comfy.Workflow.WorkflowTabsPosition': 'Topbar' | 'Sidebar';
   'Comfy.Workflow.ShowMissingModelsWarning': boolean;
   'Comfy.Server.LaunchArgs': Record<string, string>;
+  'Comfy-Desktop.LaunchOptions': string;
   'Comfy-Desktop.UV.PythonInstallMirror': string;
   'Comfy-Desktop.UV.PypiInstallMirror': string;
   'Comfy-Desktop.UV.TorchInstallMirror': string;
