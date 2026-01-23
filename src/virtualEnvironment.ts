@@ -488,7 +488,8 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    * @returns A promise with the exit code.
    */
   private async runUvCommandAsync(args: string[], callbacks?: ProcessCallbacks): Promise<{ exitCode: number | null }> {
-    const uvCommand = os.platform() === 'win32' ? `& "${this.uvPath}"` : this.uvPath;
+    const psPrefix = os.platform() === 'win32' ? '& ' : '';
+    const uvCommand = `${psPrefix}"${this.uvPath}"`;
     const command = `${uvCommand} ${args.map((a) => `"${a}"`).join(' ')}`;
     log.info('Running uv command:', command);
     return this.runPtyCommandAsync(command, callbacks?.onStdout);
