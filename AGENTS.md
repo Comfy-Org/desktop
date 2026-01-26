@@ -119,7 +119,7 @@ The app packages these components:
 
 ## Platform-Specific Paths
 
-- **Windows**: `%APPDATA%\ComfyUI` (config), `%APPDATA%\Local\Programs\comfyui-electron` (app)
+- **Windows**: `%APPDATA%\ComfyUI` (config), `%LOCALAPPDATA%\Programs\ComfyUI` (app)
 - **macOS**: `~/Library/Application Support/ComfyUI`
 - **Linux**: `~/.config/ComfyUI`
 
