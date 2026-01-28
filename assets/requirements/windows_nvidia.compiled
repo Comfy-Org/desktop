@@ -46,28 +46,31 @@ colorama==0.4.6
     #   click
     #   tqdm
     # from https://download.pytorch.org/whl/cu130
+comfy-kitchen==0.2.7
+    # via -r assets/ComfyUI/requirements.txt
+    # from https://pypi.org/simple
 comfyui-embedded-docs==0.4.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-manager==4.0.4
+comfyui-manager==4.0.5
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
 comfyui-workflow-templates==0.8.14
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates-core==0.3.61
+comfyui-workflow-templates-core==0.3.100
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-api==0.3.34
+comfyui-workflow-templates-media-api==0.3.44
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-image==0.3.43
+comfyui-workflow-templates-media-image==0.3.66
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-other==0.3.62
+comfyui-workflow-templates-media-other==0.3.87
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-video==0.3.22
+comfyui-workflow-templates-media-video==0.3.39
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
 cryptography==44.0.0
