@@ -1,6 +1,7 @@
 import log from 'electron-log/main';
 import { rm } from 'node:fs/promises';
 
+import { ComfyConfigManager } from '../config/comfyConfigManager';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings, useComfySettings } from '../config/comfySettings';
 import { evaluatePathRestrictions } from '../handlers/pathHandlers';
@@ -135,7 +136,8 @@ export class ComfyInstallation {
       } else {
         await this.updateBasePathAndVenv(basePath);
 
-        validation.basePath = 'OK';
+        const hasDirectories = this.ensureBaseDirectoryStructure(basePath);
+        validation.basePath = hasDirectories ? 'OK' : 'error';
       }
 
       this.onUpdate?.(validation);
@@ -259,5 +261,24 @@ export class ComfyInstallation {
       await rm(ComfyServerConfig.configPath);
     }
     await useDesktopConfig().permanentlyDeleteConfigFile();
+  }
+
+  /**
+   * Ensure the base path contains the expected ComfyUI directory structure.
+   * Creates missing directories; returns false if the structure is still invalid.
+   */
+  private ensureBaseDirectoryStructure(basePath: string): boolean {
+    try {
+      ComfyConfigManager.createComfyDirectories(basePath);
+    } catch (error) {
+      log.error('Failed to create ComfyUI directories at base path.', error);
+      return false;
+    }
+
+    const isValid = ComfyConfigManager.isComfyUIDirectory(basePath);
+    if (!isValid) {
+      log.error(`Base path is missing required ComfyUI directories after creation attempt. [${basePath}]`);
+    }
+    return isValid;
   }
 }
