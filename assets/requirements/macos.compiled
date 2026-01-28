@@ -265,7 +265,7 @@ tokenizers==0.22.1
 toml==0.10.2
     # via comfyui-manager
     # from https://pypi.org/simple
-torch==2.5.1
+torch==2.10.0
     # via
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt
@@ -275,7 +275,7 @@ torch==2.5.1
     #   torchsde
     #   torchvision
     # from https://pypi.org/simple
-torchaudio==2.5.1
+torchaudio==2.10.0
     # via
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt
@@ -285,7 +285,7 @@ torchsde==0.2.6
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-torchvision==0.20.1
+torchvision==0.25.0
     # via
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt

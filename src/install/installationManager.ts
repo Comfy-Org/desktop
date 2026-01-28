@@ -408,7 +408,7 @@ export class InstallationManager implements HasTelemetry {
     await this.appWindow.showMessageBox({
       type: 'warning',
       title: 'Update NVIDIA Driver',
-      message: 'Your NVIDIA driver may be too old for PyTorch 2.9.1 + cu130.',
+      message: 'Your NVIDIA driver may be too old for PyTorch 2.10.0 + cu130.',
       detail: `Detected driver version: ${driverVersion}\nRecommended minimum: ${NVIDIA_DRIVER_MIN_VERSION}\n\nPlease consider updating your NVIDIA drivers and retrying if you run into issues.`,
       buttons: ['OK'],
     });

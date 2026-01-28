@@ -272,7 +272,7 @@ tokenizers==0.22.1
 toml==0.10.2
     # via comfyui-manager
     # from https://pypi.org/simple
-torch==2.6.0
+torch==2.10.0
     # via
     #   -r assets/ComfyUI/requirements.txt
     #   kornia
@@ -281,13 +281,13 @@ torch==2.6.0
     #   torchsde
     #   torchvision
     # from https://pypi.org/simple
-torchaudio==2.6.0
+torchaudio==2.10.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 torchsde==0.2.6
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-torchvision==0.21.0
+torchvision==0.25.0
     # via
     #   -r assets/ComfyUI/requirements.txt
     #   spandrel
