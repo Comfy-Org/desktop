@@ -405,11 +405,10 @@ export class InstallationManager implements HasTelemetry {
 
     if (!isNvidiaDriverBelowMinimum(driverVersion)) return;
 
-    const displayTorchVersion = NVIDIA_TORCH_VERSION.replace('+', ' + ');
     await this.appWindow.showMessageBox({
       type: 'warning',
       title: 'Update NVIDIA Driver',
-      message: `Your NVIDIA driver may be too old for PyTorch ${displayTorchVersion}.`,
+      message: `Your NVIDIA driver may be too old for PyTorch ${NVIDIA_TORCH_VERSION}.`,
       detail: `Detected driver version: ${driverVersion}\nRecommended minimum: ${NVIDIA_DRIVER_MIN_VERSION}\n\nPlease consider updating your NVIDIA drivers and retrying if you run into issues.`,
       buttons: ['OK'],
     });
