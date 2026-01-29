@@ -45,28 +45,31 @@ colorama==0.4.6
     #   click
     #   tqdm
     # from https://pypi.org/simple
+comfy-kitchen==0.2.7
+    # via -r assets/ComfyUI/requirements.txt
+    # from https://pypi.org/simple
 comfyui-embedded-docs==0.4.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-manager==4.0.3b5
+comfyui-manager==4.0.5
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
 comfyui-workflow-templates==0.8.24
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates-core==0.3.43
+comfyui-workflow-templates-core==0.3.112
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-api==0.3.22
+comfyui-workflow-templates-media-api==0.3.47
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-image==0.3.36
+comfyui-workflow-templates-media-image==0.3.73
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-other==0.3.47
+comfyui-workflow-templates-media-other==0.3.95
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-video==0.3.19
+comfyui-workflow-templates-media-video==0.3.41
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
 cryptography==46.0.3
@@ -218,6 +221,7 @@ regex==2025.11.3
     # from https://pypi.org/simple
 requests==2.32.5
     # via
+    #   -r assets/ComfyUI/requirements.txt
     #   huggingface-hub
     #   pygithub
     #   transformers
