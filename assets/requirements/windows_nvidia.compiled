@@ -46,31 +46,28 @@ colorama==0.4.6
     #   click
     #   tqdm
     # from https://download.pytorch.org/whl/cu130
-comfy-kitchen==0.2.7
-    # via -r assets/ComfyUI/requirements.txt
-    # from https://pypi.org/simple
 comfyui-embedded-docs==0.4.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-manager==4.0.5
+comfyui-manager==4.0.4
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
 comfyui-workflow-templates==0.8.14
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates-core==0.3.100
+comfyui-workflow-templates-core==0.3.61
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-api==0.3.44
+comfyui-workflow-templates-media-api==0.3.34
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-image==0.3.66
+comfyui-workflow-templates-media-image==0.3.43
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-other==0.3.87
+comfyui-workflow-templates-media-other==0.3.62
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-video==0.3.39
+comfyui-workflow-templates-media-video==0.3.22
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
 cryptography==44.0.0
@@ -276,7 +273,7 @@ tokenizers==0.22.1
 toml==0.10.2
     # via comfyui-manager
     # from https://pypi.org/simple
-torch==2.10.0+cu130
+torch==2.9.1+cu130
     # via
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt
@@ -286,7 +283,7 @@ torch==2.10.0+cu130
     #   torchsde
     #   torchvision
     # from https://download.pytorch.org/whl/cu130
-torchaudio==2.10.0+cu130
+torchaudio==2.9.1+cu130
     # via
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt
@@ -296,7 +293,7 @@ torchsde==0.2.6
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-torchvision==0.25.0+cu130
+torchvision==0.24.1+cu130
     # via
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt

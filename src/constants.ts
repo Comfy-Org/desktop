@@ -209,8 +209,8 @@ export const AMD_TORCH_PACKAGES: string[] = [
   'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchvision-0.24.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
 ];
 
-export const NVIDIA_TORCH_VERSION = '2.10.0+cu130';
-export const NVIDIA_TORCHVISION_VERSION = '0.25.0+cu130';
+export const NVIDIA_TORCH_VERSION = '2.9.1+cu130';
+export const NVIDIA_TORCHVISION_VERSION = '0.24.1+cu130';
 export const NVIDIA_TORCH_PACKAGES: string[] = [
   `torch==${NVIDIA_TORCH_VERSION}`,
   `torchaudio==${NVIDIA_TORCH_VERSION}`,
