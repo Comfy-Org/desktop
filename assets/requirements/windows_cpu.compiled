@@ -45,28 +45,31 @@ colorama==0.4.6
     #   click
     #   tqdm
     # from https://pypi.org/simple
+comfy-kitchen==0.2.7
+    # via -r assets/ComfyUI/requirements.txt
+    # from https://pypi.org/simple
 comfyui-embedded-docs==0.4.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-manager==4.0.3b7
+comfyui-manager==4.0.5
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.8.14
+comfyui-workflow-templates==0.8.24
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates-core==0.3.58
+comfyui-workflow-templates-core==0.3.112
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-api==0.3.31
+comfyui-workflow-templates-media-api==0.3.47
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-image==0.3.43
+comfyui-workflow-templates-media-image==0.3.73
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-other==0.3.61
+comfyui-workflow-templates-media-other==0.3.95
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-video==0.3.22
+comfyui-workflow-templates-media-video==0.3.41
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
 cryptography==44.0.0
@@ -221,6 +224,7 @@ regex==2024.11.6
     # from https://pypi.org/simple
 requests==2.32.3
     # via
+    #   -r assets/ComfyUI/requirements.txt
     #   huggingface-hub
     #   pygithub
     #   transformers
@@ -261,7 +265,7 @@ sqlalchemy==2.0.41
     #   -r assets/ComfyUI/requirements.txt
     #   alembic
     # from https://pypi.org/simple
-sympy==1.13.1
+sympy==1.14.0
     # via torch
     # from https://pypi.org/simple
 tokenizers==0.22.1
@@ -272,7 +276,7 @@ tokenizers==0.22.1
 toml==0.10.2
     # via comfyui-manager
     # from https://pypi.org/simple
-torch==2.6.0
+torch==2.10.0
     # via
     #   -r assets/ComfyUI/requirements.txt
     #   kornia
@@ -281,13 +285,13 @@ torch==2.6.0
     #   torchsde
     #   torchvision
     # from https://pypi.org/simple
-torchaudio==2.6.0
+torchaudio==2.10.0
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 torchsde==0.2.6
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-torchvision==0.21.0
+torchvision==0.25.0
     # via
     #   -r assets/ComfyUI/requirements.txt
     #   spandrel

@@ -198,19 +198,19 @@ export const PYPI_FALLBACK_INDEX_URLS: string[] = [
 ];
 
 export const AMD_ROCM_SDK_PACKAGES: string[] = [
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_core-0.1.dev0-py3-none-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm_sdk_libraries_custom-0.1.dev0-py3-none-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/rocm-0.1.dev0.tar.gz',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/rocm_sdk_core-7.2.0.dev0-py3-none-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/rocm_sdk_libraries_custom-7.2.0.dev0-py3-none-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/rocm-7.2.0.dev0.tar.gz',
 ];
 
 export const AMD_TORCH_PACKAGES: string[] = [
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torch-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchaudio-2.9.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.1.1/torchvision-0.24.0+rocmsdk20251116-cp312-cp312-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/torch-2.9.1+rocmsdk20260116-cp312-cp312-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/torchaudio-2.9.1+rocmsdk20260116-cp312-cp312-win_amd64.whl',
+  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/torchvision-0.24.1+rocmsdk20260116-cp312-cp312-win_amd64.whl',
 ];
 
-export const NVIDIA_TORCH_VERSION = '2.9.1+cu130';
-export const NVIDIA_TORCHVISION_VERSION = '0.24.1+cu130';
+export const NVIDIA_TORCH_VERSION = '2.10.0+cu130';
+export const NVIDIA_TORCHVISION_VERSION = '0.25.0+cu130';
 export const NVIDIA_TORCH_PACKAGES: string[] = [
   `torch==${NVIDIA_TORCH_VERSION}`,
   `torchaudio==${NVIDIA_TORCH_VERSION}`,
