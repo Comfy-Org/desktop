@@ -20,9 +20,9 @@ concurrency:
 
 env:
   # Define uv pip compile commands as environment variables for consistency
-  UV_CMD_WINDOWS_CPU: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --python-platform x86_64-pc-windows-msvc --python-version 3.12 --index-url https://pypi.org/simple -o assets/requirements/windows_cpu.compiled'
-  UV_CMD_WINDOWS_NVIDIA: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --python-platform x86_64-pc-windows-msvc --python-version 3.12 --override assets/override.txt --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu130 -o assets/requirements/windows_nvidia.compiled'
-  UV_CMD_MACOS: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --python-platform aarch64-apple-darwin --python-version 3.12 --override assets/override.txt --index-url https://pypi.org/simple -o assets/requirements/macos.compiled'
+  UV_CMD_WINDOWS_CPU: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/manager_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --python-platform x86_64-pc-windows-msvc --python-version 3.12 --index-url https://pypi.org/simple -o assets/requirements/windows_cpu.compiled'
+  UV_CMD_WINDOWS_NVIDIA: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/manager_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --python-platform x86_64-pc-windows-msvc --python-version 3.12 --override assets/override.txt --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu130 -o assets/requirements/windows_nvidia.compiled'
+  UV_CMD_MACOS: 'uv pip compile assets/ComfyUI/requirements.txt assets/ComfyUI/manager_requirements.txt --emit-index-annotation --emit-index-url --index-strategy unsafe-best-match --python-platform aarch64-apple-darwin --python-version 3.12 --override assets/override.txt --index-url https://pypi.org/simple -o assets/requirements/macos.compiled'
   # PR comment messages
   PR_MSG_SUCCESS: '✅ Compiled requirements have been updated successfully!'
   PR_MSG_NO_CHANGES: 'ℹ️ No changes needed - compiled requirements are already up to date.'
