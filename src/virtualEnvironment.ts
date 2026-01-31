@@ -969,13 +969,13 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     }
 
     if (!coreOk || !managerOk) {
-      log.info('Requirements are out of date. Treating as package upgrade.', {
+      log.warn('Requirements are missing or out of date. Treating as error.', {
         coreOk,
         managerOk,
         upgradeCore,
         upgradeManager,
       });
-      return 'package-upgrade';
+      return 'error';
     }
 
     log.debug('hasRequirements result:', 'OK');
