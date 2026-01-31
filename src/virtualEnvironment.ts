@@ -885,8 +885,8 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    *
    * Parses the text output of `uv pip install --dry-run -r requirements.txt`.
    * @returns `'OK'` if pip install does not detect any missing packages,
-   * `'manager-upgrade'` if `uv` and `toml` are missing,
-   * or `'error'` when any other combination of packages are missing.
+   * `'package-upgrade'` if missing packages match known upgrade patterns,
+   * or `'error'` when requirements are missing or unexpected package changes are detected.
    */
   async hasRequirements(): Promise<'OK' | 'error' | 'package-upgrade'> {
     const checkRequirements = async (requirementsPath: string) => {
@@ -969,7 +969,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     }
 
     if (!coreOk || !managerOk) {
-      log.warn('Requirements are missing or out of date. Treating as error.', {
+      log.warn('Requirements check failed with unknown or unexpected package changes. Treating as error.', {
         coreOk,
         managerOk,
         upgradeCore,
