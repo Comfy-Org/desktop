@@ -33,6 +33,7 @@ if (frontend.optionalBranch) {
     execAndLog(`pnpm exec nx build`, frontendDir, {
       COREPACK_ENABLE_STRICT: '0',
       DISTRIBUTION: 'desktop',
+      GENERATE_SOURCEMAP: 'true',
       NODE_OPTIONS: '--max-old-space-size=8192',
     });
     await fs.mkdir('assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
