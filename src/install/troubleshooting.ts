@@ -79,7 +79,7 @@ export class Troubleshooting implements Disposable {
       return await installation.virtualEnvironment.clearUvCache(sendLogIpc);
     });
 
-    // Clear .venv directory
+    // Reset .venv directory and reinstall requirements
     ipcMain.handle(IPC_CHANNELS.UV_RESET_VENV, async (): Promise<boolean> => {
       getTelemetry().track('installation_manager:uv_venv_reset');
       const venv = installation.virtualEnvironment;
