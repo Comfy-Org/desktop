@@ -79,7 +79,7 @@ export class Troubleshooting implements Disposable {
       return await installation.virtualEnvironment.clearUvCache(sendLogIpc);
     });
 
-    // Reset .venv directory and reinstall requirements
+    // Reset .venv directory
     ipcMain.handle(IPC_CHANNELS.UV_RESET_VENV, async (): Promise<boolean> => {
       getTelemetry().track('installation_manager:uv_venv_reset');
       const venv = installation.virtualEnvironment;
@@ -89,12 +89,10 @@ export class Troubleshooting implements Disposable {
       const created = await venv.createVenv(sendLogIpc);
       if (!created) return false;
 
-      const pipUpgraded = await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
-      if (!pipUpgraded) return false;
+      const result = await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
 
-      const installed = await venv.reinstallRequirements(sendLogIpc);
-      if (installed) await this.onInstallFix?.();
-      return installed;
+      if (result) await this.onInstallFix?.();
+      return result;
     });
 
     // Change base path
