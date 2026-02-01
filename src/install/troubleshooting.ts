@@ -89,10 +89,12 @@ export class Troubleshooting implements Disposable {
       const created = await venv.createVenv(sendLogIpc);
       if (!created) return false;
 
-      const result = await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
+      const pipUpgraded = await venv.upgradePip({ onStdout: sendLogIpc, onStderr: sendLogIpc });
+      if (!pipUpgraded) return false;
 
-      if (result) await this.onInstallFix?.();
-      return result;
+      const installed = await venv.reinstallRequirements(sendLogIpc);
+      if (installed) await this.onInstallFix?.();
+      return installed;
     });
 
     // Change base path
