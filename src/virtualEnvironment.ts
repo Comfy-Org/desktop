@@ -885,8 +885,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
    *
    * Parses the text output of `uv pip install --dry-run -r requirements.txt`.
    * @returns `'OK'` if pip install does not detect any missing packages,
-   * `'manager-upgrade'` if `uv` and `toml` are missing,
-   * or `'error'` when any other combination of packages are missing.
+   * or `'package-upgrade'` when requirements are missing or out of date.
    */
   async hasRequirements(): Promise<'OK' | 'error' | 'package-upgrade'> {
     const checkRequirements = async (requirementsPath: string) => {
@@ -914,40 +913,6 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       return venvOk;
     };
 
-    // Manager upgrade in 0.4.18 - uv, toml (exactly)
-    const isManagerUpgrade = (output: string) => {
-      // Match the original case: 2 packages (uv + toml) | Added in https://github.com/ltdrdata/ComfyUI-Manager/commit/816a53a7b1a057af373c458ebf80aaae565b996b
-      // Match the new case: 1 package (chardet) | Added in https://github.com/ltdrdata/ComfyUI-Manager/commit/60a5e4f2614c688b41a1ebaf0694953eb26db38a
-      const anyCombination = /\bWould install [1-3] packages?(\s+\+ (toml|uv|chardet)==[\d.]+){1,3}\s*$/;
-      return anyCombination.test(output);
-    };
-
-    // Package upgrade in 0.4.21 - aiohttp, av, yarl
-    const isCoreUpgrade = (output: string) => {
-      const lines = output.split('\n');
-      let adds = 0;
-      for (const line of lines) {
-        // Reject upgrade if removing an unrecognised package
-        if (
-          line.search(
-            /^\s*- (?!aiohttp|av|yarl|comfyui-workflow-templates|comfyui-embedded-docs|pydantic|pydantic-core|pydantic-settings|annotated-types|typing-inspection|alembic|sqlalchemy|greenlet|mako|python-dotenv).*==/
-          ) !== -1
-        )
-          return false;
-        if (line.search(/^\s*\+ /) !== -1) {
-          if (
-            line.search(
-              /^\s*\+ (aiohttp|av|yarl|comfyui-workflow-templates|comfyui-embedded-docs|pydantic|pydantic-core|pydantic-settings|annotated-types|typing-inspection|alembic|sqlalchemy|greenlet|mako|python-dotenv)==/
-            ) === -1
-          )
-            return false;
-          adds++;
-        }
-        // An unexpected package means this is not a package upgrade
-      }
-      return adds > 0;
-    };
-
     const coreOutput = await checkRequirements(this.comfyUIRequirementsPath);
     if (!(await pathAccessible(this.comfyUIManagerRequirementsPath))) {
       throw new Error(
@@ -960,20 +925,10 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     const coreOk = hasAllPackages(coreOutput);
     const managerOk = hasAllPackages(managerOutput);
 
-    const upgradeCore = !coreOk && isCoreUpgrade(coreOutput);
-    const upgradeManager = !managerOk && isManagerUpgrade(managerOutput);
-
-    if ((managerOk && upgradeCore) || (coreOk && upgradeManager) || (upgradeCore && upgradeManager)) {
-      log.info('Package update of known packages required. Core:', upgradeCore, 'Manager:', upgradeManager);
-      return 'package-upgrade';
-    }
-
     if (!coreOk || !managerOk) {
       log.info('Requirements are out of date. Treating as package upgrade.', {
         coreOk,
         managerOk,
-        upgradeCore,
-        upgradeManager,
       });
       return 'package-upgrade';
     }

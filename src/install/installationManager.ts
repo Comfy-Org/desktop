@@ -353,8 +353,11 @@ export class InstallationManager implements HasTelemetry {
     const isValid = await new Promise<boolean>((resolve) => {
       const onInstallFix = async (): Promise<boolean> => {
         log.verbose('Attempting to close validation window');
-        // Check if issues have been resolved externally
-        if (!installation.isValid) await installation.validate();
+        // Re-check validation state after user actions
+        await installation.validate();
+        if (installation.needsRequirementsUpdate) {
+          await this.updatePackages(installation);
+        }
 
         // Resolve main thread & renderer
         const { isValid } = installation;

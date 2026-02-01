@@ -195,7 +195,7 @@ describe('VirtualEnvironment', () => {
       await expect(virtualEnv.hasRequirements()).resolves.toBe('package-upgrade');
       expect(log.info).toHaveBeenCalledWith(
         expect.stringContaining('Requirements are out of date. Treating as package upgrade.'),
-        expect.objectContaining({ coreOk: false, managerOk: true, upgradeCore: false, upgradeManager: false })
+        expect.objectContaining({ coreOk: false, managerOk: true })
       );
     });
 
@@ -205,10 +205,8 @@ describe('VirtualEnvironment', () => {
 
       await expect(virtualEnv.hasRequirements()).resolves.toBe('package-upgrade');
       expect(log.info).toHaveBeenCalledWith(
-        'Package update of known packages required. Core:',
-        false,
-        'Manager:',
-        true
+        'Requirements are out of date. Treating as package upgrade.',
+        expect.objectContaining({ coreOk: true, managerOk: false })
       );
     });
 
@@ -218,10 +216,8 @@ describe('VirtualEnvironment', () => {
 
       await expect(virtualEnv.hasRequirements()).resolves.toBe('package-upgrade');
       expect(log.info).toHaveBeenCalledWith(
-        'Package update of known packages required. Core:',
-        false,
-        'Manager:',
-        true
+        'Requirements are out of date. Treating as package upgrade.',
+        expect.objectContaining({ coreOk: true, managerOk: false })
       );
     });
 
@@ -230,7 +226,10 @@ describe('VirtualEnvironment', () => {
       mockSpawnOutputOnce('Would install 2 packages \n + uv==1.0.0 \n + toml==1.0.0\n');
 
       await expect(virtualEnv.hasRequirements()).resolves.toBe('package-upgrade');
-      expect(log.info).toHaveBeenCalledWith('Package update of known packages required. Core:', true, 'Manager:', true);
+      expect(log.info).toHaveBeenCalledWith(
+        'Requirements are out of date. Treating as package upgrade.',
+        expect.objectContaining({ coreOk: false, managerOk: false })
+      );
     });
 
     test('returns package-upgrade for core upgrade case', async ({ virtualEnv }) => {
