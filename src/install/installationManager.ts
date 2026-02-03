@@ -213,6 +213,7 @@ export class InstallationManager implements HasTelemetry {
     useDesktopConfig().set('basePath', installOptions.installPath);
     useDesktopConfig().set('versionConsentedMetrics', __COMFYUI_DESKTOP_VERSION__);
     useDesktopConfig().set('selectedDevice', device);
+    await this.warnIfNvidiaDriverTooOld(device);
 
     // Load the next page
     const page = device === 'unsupported' ? 'not-supported' : 'server-start';
@@ -381,7 +382,7 @@ export class InstallationManager implements HasTelemetry {
     try {
       await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
       await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
-      await this.warnIfNvidiaDriverTooOld(installation);
+      await this.warnIfNvidiaDriverTooOld(installation.virtualEnvironment.selectedDevice);
       // Disable automatic NVIDIA torch upgrades so users control large downloads.
       // await installation.virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
       await installation.validate();
@@ -393,11 +394,11 @@ export class InstallationManager implements HasTelemetry {
 
   /**
    * Warns the user if their NVIDIA driver is too old for the required CUDA build.
-   * @param installation The current installation.
+   * @param device The device selected for installation.
    */
-  private async warnIfNvidiaDriverTooOld(installation: ComfyInstallation): Promise<void> {
+  private async warnIfNvidiaDriverTooOld(device: InstallOptions['device'] | undefined): Promise<void> {
     if (process.platform !== 'win32') return;
-    if (installation.virtualEnvironment.selectedDevice !== 'nvidia') return;
+    if (device !== 'nvidia') return;
 
     const driverVersion =
       (await this.getNvidiaDriverVersionFromSmi()) ?? (await this.getNvidiaDriverVersionFromSmiFallback());
