@@ -298,7 +298,7 @@ torch==2.10.0
     #   torchsde
     #   torchvision
     # from https://pypi.org/simple
-torchaudio==2.9.1
+torchaudio==2.10.0
     # via
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt
