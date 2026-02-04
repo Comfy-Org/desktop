@@ -517,6 +517,27 @@ const electronAPI = {
     clickButton: (returnValue: string): Promise<boolean> =>
       ipcRenderer.invoke(IPC_CHANNELS.DIALOG_CLICK_BUTTON, returnValue),
   },
+
+  /**
+   * Listen for app close requests from the main process.
+   * @param callback Called when the main process requests a close confirmation
+   * @returns A function to remove the event listener
+   */
+  onCloseRequested: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on(IPC_CHANNELS.CLOSE_REQUESTED, handler);
+
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.CLOSE_REQUESTED, handler);
+    };
+  },
+
+  /**
+   * Respond to a close request with whether the app should close.
+   * @param allow Whether to allow the app to close
+   */
+  respondToCloseRequest: (allow: boolean): Promise<boolean> =>
+    ipcRenderer.invoke(IPC_CHANNELS.CLOSE_REQUEST_RESPONSE, allow),
 } as const;
 
 export type ElectronAPI = typeof electronAPI;
