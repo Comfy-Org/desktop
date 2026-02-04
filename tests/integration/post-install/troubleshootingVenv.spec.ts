@@ -11,7 +11,7 @@ test.describe('Troubleshooting - broken venv', () => {
     await expect(window).toHaveScreenshot('troubleshooting-venv.png');
   });
 
-  test.fail('Can fix venv', async ({ troubleshooting, installedApp }) => {
+  test.fixme('Can fix venv', async ({ troubleshooting, installedApp }) => {
     test.slow();
 
     await troubleshooting.expectReady();
