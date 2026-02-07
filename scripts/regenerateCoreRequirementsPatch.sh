@@ -14,15 +14,16 @@ trap 'rm -rf "$tmp_dir"' EXIT
 
 original_requirements="$tmp_dir/requirements.original.txt"
 patched_requirements="$tmp_dir/requirements.patched.txt"
+frontend_pattern='^[[:space:]]*comfyui-frontend-package(\[[^]]+\])?([[:space:]]*([<>=!~].*)?)?$'
 
 cp "$requirements_path" "$original_requirements"
 
-if ! grep -q '^comfyui-frontend-package==' "$original_requirements"; then
+if ! grep -Eq "$frontend_pattern" "$original_requirements"; then
   echo "Missing comfyui-frontend-package pin in: $requirements_path" >&2
   exit 1
 fi
 
-grep -v '^comfyui-frontend-package==' "$original_requirements" > "$patched_requirements"
+grep -Ev "$frontend_pattern" "$original_requirements" > "$patched_requirements"
 
 if cmp -s "$original_requirements" "$patched_requirements"; then
   echo "No changes detected after removing comfyui-frontend-package from $requirements_path" >&2

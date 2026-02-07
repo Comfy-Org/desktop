@@ -53,9 +53,47 @@ for compiled_file in "${compiled_files[@]}"; do
     exit 1
   fi
 
-  compile_command="$(sed -n '2s/^#[[:space:]]*//p' "$compiled_file")"
+  compile_command="$(
+    awk '
+      /^#/ {
+        line = $0
+        sub(/^#[[:space:]]*/, "", line)
+        if (line ~ /^uv[[:space:]]+pip[[:space:]]+compile([[:space:]]|$)/) {
+          print line
+          exit
+        }
+      }
+    ' "$compiled_file"
+  )"
   if [[ -z "$compile_command" ]]; then
-    echo "Could not extract compile command from line 2 of $compiled_file" >&2
+    echo "Could not extract uv pip compile command from header comments in $compiled_file" >&2
+    exit 1
+  fi
+
+  output_path="$(printf '%s\n' "$compile_command" | awk '{
+    for (i = 1; i <= NF; i++) {
+      if ($i == "-o" && i < NF) {
+        print $(i + 1)
+        exit
+      }
+    }
+  }')"
+  if [[ -z "$output_path" ]]; then
+    echo "Could not find output path (-o) in compile command for $compiled_file" >&2
+    exit 1
+  fi
+
+  output_path="${output_path%\"}"
+  output_path="${output_path#\"}"
+  output_path="${output_path%\'}"
+  output_path="${output_path#\'}"
+
+  normalized_compiled_file="${compiled_file#./}"
+  normalized_output_path="${output_path#./}"
+  if [[ "$normalized_output_path" != "$normalized_compiled_file" ]]; then
+    echo "Compile command output path mismatch for $compiled_file" >&2
+    echo "Expected: $normalized_compiled_file" >&2
+    echo "Found: $normalized_output_path" >&2
     exit 1
   fi
 

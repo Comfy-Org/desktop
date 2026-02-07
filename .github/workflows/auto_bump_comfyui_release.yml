@@ -38,13 +38,20 @@ jobs:
         run: |
           set -euo pipefail
 
+          normalize_version() {
+            local raw_version="$1"
+            raw_version="${raw_version#refs/tags/}"
+            raw_version="${raw_version#v}"
+            echo "$raw_version"
+          }
+
           if [ "$EVENT_NAME" = "repository_dispatch" ]; then
             if [ -z "${PAYLOAD_TAG:-}" ]; then
               echo "repository_dispatch missing client_payload.release_tag" >&2
               exit 1
             fi
 
-            TARGET_VERSION="${PAYLOAD_TAG#v}"
+            TARGET_VERSION="$(normalize_version "$PAYLOAD_TAG")"
             TARGET_TAG="v${TARGET_VERSION}"
 
             if [ -n "${PAYLOAD_URL:-}" ]; then
@@ -53,7 +60,7 @@ jobs:
               TARGET_RELEASE_URL="https://github.com/Comfy-Org/ComfyUI/releases/tag/${TARGET_TAG}"
             fi
           elif [ -n "${INPUT_COMFYUI_VERSION:-}" ]; then
-            TARGET_VERSION="${INPUT_COMFYUI_VERSION#v}"
+            TARGET_VERSION="$(normalize_version "$INPUT_COMFYUI_VERSION")"
             TARGET_TAG="v${TARGET_VERSION}"
             TARGET_RELEASE_URL="https://github.com/Comfy-Org/ComfyUI/releases/tag/${TARGET_TAG}"
           else
@@ -70,6 +77,20 @@ jobs:
             fi
 
             TARGET_VERSION="${TARGET_TAG#v}"
+          fi
+
+          if [[ -z "$TARGET_VERSION" || ! "$TARGET_VERSION" =~ ^[0-9A-Za-z._-]+$ ]]; then
+            echo "Invalid ComfyUI version: ${TARGET_VERSION}" >&2
+            exit 1
+          fi
+
+          TAG_STATUS="$(curl -fsSL -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/Comfy-Org/ComfyUI/git/ref/tags/${TARGET_TAG}")"
+          if [ "$TAG_STATUS" != "200" ]; then
+            echo "ComfyUI tag not found: ${TARGET_TAG}" >&2
+            exit 1
           fi
 
           CURRENT_VERSION="$(jq -r '.config.comfyUI.version' package.json)"
