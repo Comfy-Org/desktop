@@ -55,6 +55,8 @@ export const IPC_CHANNELS = {
   GET_INSTALL_STAGE: 'get-install-stage',
   INSTALL_STAGE_UPDATE: 'install-stage-update',
   DIALOG_CLICK_BUTTON: 'dialog-click-button',
+  CLOSE_REQUESTED: 'close-requested',
+  CLOSE_REQUEST_RESPONSE: 'close-request-response',
 } as const;
 
 export enum ProgressStatus {

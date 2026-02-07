@@ -47,6 +47,13 @@ export class AppWindow {
   private readonly menu: Electron.Menu | null;
   /** The "edit" menu - cut/copy/paste etc. */
   private editMenu?: Menu;
+  private closeRequestInFlight = false;
+  private closeConfirmed = false;
+  private pendingCloseRequest: {
+    promise: Promise<boolean>;
+    resolve: (allow: boolean) => void;
+    timeout: NodeJS.Timeout;
+  } | null = null;
   /** Whether this window was created with title bar overlay enabled. When `false`, Electron throws when calling {@link BrowserWindow.setTitleBarOverlay}. */
   public readonly customWindowEnabled: boolean =
     process.platform !== 'darwin' && useDesktopConfig().get('windowStyle') === 'custom';
@@ -323,7 +330,7 @@ export class AppWindow {
 
     this.window.on('resize', updateBounds);
     this.window.on('move', updateBounds);
-    this.window.on('close', () => log.info('App window closed.'));
+    this.window.on('close', (event) => this.handleCloseEvent(event));
 
     this.window.webContents.setWindowOpenHandler(({ url }) => {
       if (this.#shouldOpenInPopup(url)) {
@@ -360,6 +367,95 @@ export class AppWindow {
     ipcMain.on(IPC_CHANNELS.OPEN_DEV_TOOLS, () => {
       this.openDevTools();
     });
+    ipcMain.handle(IPC_CHANNELS.CLOSE_REQUEST_RESPONSE, (event, allow: boolean) => {
+      if (event.sender !== this.window.webContents) {
+        log.warn('Ignoring close response from unknown sender.');
+        return false;
+      }
+
+      const handled = this.resolveCloseRequest(allow);
+      if (!handled) {
+        log.warn('Received close response without a pending close request.');
+      }
+      return handled;
+    });
+  }
+
+  private handleCloseEvent(event: Electron.Event): void {
+    if (this.closeConfirmed) {
+      log.info('App window closed.');
+      return;
+    }
+
+    if (this.closeRequestInFlight) {
+      event.preventDefault();
+      return;
+    }
+
+    event.preventDefault();
+    this.closeRequestInFlight = true;
+
+    void this.requestCloseConfirmation()
+      .then((allow) => {
+        this.closeRequestInFlight = false;
+        if (!allow) {
+          log.info('App close cancelled by renderer.');
+          return;
+        }
+        this.closeConfirmed = true;
+        this.window.close();
+      })
+      .catch((error) => {
+        this.closeRequestInFlight = false;
+        log.error('Error handling close confirmation.', error);
+        this.closeConfirmed = true;
+        this.window.close();
+      });
+  }
+
+  private requestCloseConfirmation(): Promise<boolean> {
+    if (!this.rendererReady) return Promise.resolve(true);
+    if (this.window.isDestroyed()) return Promise.resolve(true);
+    if (this.window.webContents.isDestroyed()) return Promise.resolve(true);
+
+    if (this.pendingCloseRequest) {
+      return this.pendingCloseRequest.promise;
+    }
+
+    let resolveClose: (allow: boolean) => void = () => {};
+    const promise = new Promise<boolean>((resolve) => {
+      resolveClose = resolve;
+    });
+
+    const timeout = setTimeout(() => {
+      log.warn('Close confirmation timed out. Allowing close.');
+      this.clearPendingCloseRequest();
+      resolveClose(true);
+    }, 10_000);
+
+    this.pendingCloseRequest = {
+      promise,
+      resolve: resolveClose,
+      timeout,
+    };
+
+    this.window.webContents.send(IPC_CHANNELS.CLOSE_REQUESTED);
+    return promise;
+  }
+
+  private resolveCloseRequest(allow: boolean): boolean {
+    const pending = this.pendingCloseRequest;
+    if (!pending) return false;
+
+    this.clearPendingCloseRequest();
+    pending.resolve(allow);
+    return true;
+  }
+
+  private clearPendingCloseRequest(): void {
+    if (!this.pendingCloseRequest) return;
+    clearTimeout(this.pendingCloseRequest.timeout);
+    this.pendingCloseRequest = null;
   }
 
   private sendQueuedEventsOnReady(): void {
@@ -434,7 +530,7 @@ export class AppWindow {
       {
         label: 'Quit Comfy',
         click: () => {
-          app.quit();
+          this.window.close();
         },
       },
       {
