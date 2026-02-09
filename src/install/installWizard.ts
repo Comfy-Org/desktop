@@ -5,6 +5,12 @@ import path from 'node:path';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
 import { ComfySettings, type ComfySettingsData } from '../config/comfySettings';
+import {
+  getMachineModelConfigPath,
+  readMachineConfig,
+  shouldUseMachineScope,
+  writeMachineConfig,
+} from '../config/machineConfig';
 import { InstallStage } from '../constants';
 import { useAppState } from '../main-process/appState';
 import { createInstallStageInfo } from '../main-process/installStages';
@@ -38,6 +44,7 @@ export class InstallWizard implements HasTelemetry {
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INITIALIZING_CONFIG, { progress: 10 }));
 
     await this.initializeSettings();
+    this.initializeMachineScopeConfig();
     await this.initializeModelPaths();
   }
 
@@ -121,5 +128,29 @@ export class InstallWizard implements HasTelemetry {
     }
 
     await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, yamlContent);
+  }
+
+  /**
+   * Persist machine-scope bootstrap config so newly-created users can reuse
+   * the same base path and model config after sysprep/OOBE.
+   */
+  public initializeMachineScopeConfig() {
+    if (!shouldUseMachineScope(this.basePath)) return;
+
+    const existingMachineConfig = readMachineConfig();
+    const machineModelConfigPath = getMachineModelConfigPath();
+    if (!machineModelConfigPath) return;
+
+    const updated = writeMachineConfig({
+      installState: 'started',
+      basePath: this.basePath,
+      modelConfigPath: machineModelConfigPath,
+      autoUpdate: this.installOptions.autoUpdate,
+      preseedConfigDir: existingMachineConfig?.preseedConfigDir,
+    });
+
+    if (!updated) {
+      log.warn('Unable to write machine scope config. Falling back to user-scoped initialization.');
+    }
   }
 }
