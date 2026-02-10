@@ -14,22 +14,30 @@ Var /GLOBAL cliPreseedConfigDir
 Var /GLOBAL machineConfigPath
 Var /GLOBAL machineModelConfigPath
 Var /GLOBAL machineEffectiveBasePath
+Var /GLOBAL cliInstallScopeOverride
+Var /GLOBAL machineScopeInstallSelected
 
 # Default to per-user install. CLI flags can override this in `ResolveInstallScopeFromCli`.
 !macro customInstallMode
-  Call SetInstallScopeCurrentUser
-  Call ResolveInstallScopeFromCli
-!macroend
-
-Function SetInstallScopeCurrentUser
   StrCpy $isForceMachineInstall "0"
   StrCpy $isForceCurrentInstall "1"
-FunctionEnd
+  Call ResolveInstallScopeFromCli
 
-Function SetInstallScopeMachine
-  StrCpy $isForceCurrentInstall "0"
+  StrCmp $cliInstallScopeOverride "machine" forceMachineInstall
+  StrCmp $cliInstallScopeOverride "user" forceCurrentUserInstall
+  Goto done
+
+forceMachineInstall:
   StrCpy $isForceMachineInstall "1"
-FunctionEnd
+  StrCpy $isForceCurrentInstall "0"
+  Goto done
+
+forceCurrentUserInstall:
+  StrCpy $isForceMachineInstall "0"
+  StrCpy $isForceCurrentInstall "1"
+
+done:
+!macroend
 
 Function ResolveInstallScopeFromCli
   Push $0
@@ -37,6 +45,7 @@ Function ResolveInstallScopeFromCli
   Push $2
 
   StrCpy $2 "0"
+  StrCpy $cliInstallScopeOverride ""
   ${GetParameters} $0
 
   # Explicit scope controls.
@@ -58,26 +67,26 @@ Function ResolveInstallScopeFromCli
   Goto checkAllUsers
 
 setMachineFromScope:
-  Call SetInstallScopeMachine
+  StrCpy $cliInstallScopeOverride "machine"
   StrCpy $2 "1"
   Goto checkAllUsers
 
 setUserFromScope:
-  Call SetInstallScopeCurrentUser
+  StrCpy $cliInstallScopeOverride "user"
   StrCpy $2 "1"
 
 checkAllUsers:
   ClearErrors
   ${GetOptions} "$0" "/ALLUSERS" $1
   IfErrors checkCurrentUser
-  Call SetInstallScopeMachine
+  StrCpy $cliInstallScopeOverride "machine"
   StrCpy $2 "1"
 
 checkCurrentUser:
   ClearErrors
   ${GetOptions} "$0" "/CURRENTUSER" $1
   IfErrors maybeOem
-  Call SetInstallScopeCurrentUser
+  StrCpy $cliInstallScopeOverride "user"
   StrCpy $2 "1"
 
 maybeOem:
@@ -87,14 +96,14 @@ maybeOem:
   ClearErrors
   ${GetOptions} "$0" "/OEM" $1
   IfErrors checkOemValue
-  Call SetInstallScopeMachine
+  StrCpy $cliInstallScopeOverride "machine"
   Goto done
 
 checkOemValue:
   ClearErrors
   ${GetOptions} "$0" "/OEM=" $1
   IfErrors done
-  Call SetInstallScopeMachine
+  StrCpy $cliInstallScopeOverride "machine"
 
 done:
   Pop $2
@@ -201,7 +210,7 @@ Function PersistMachineScopeInstallerOverrides
   Push $3
   Push $4
 
-  ${If} $isForceMachineInstall != "1"
+  ${If} $machineScopeInstallSelected != "1"
     Goto done
   ${EndIf}
 
@@ -275,7 +284,7 @@ Function HardenMachineScopeDataAcl
   Push $0
   Push $1
 
-  ${If} $isForceMachineInstall != "1"
+  ${If} $machineScopeInstallSelected != "1"
     Goto done
   ${EndIf}
 
@@ -303,6 +312,10 @@ done:
 FunctionEnd
 
 !macro customInstall
+  StrCpy $machineScopeInstallSelected "0"
+  ${if} $installMode == "all"
+    StrCpy $machineScopeInstallSelected "1"
+  ${endif}
   Call ResolveBasePathOverrideFromCli
   Call ResolveAutoUpdateFromCli
   Call ResolvePreseedConfigDirFromCli
