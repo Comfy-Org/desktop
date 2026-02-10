@@ -27,6 +27,11 @@ for argument in "$@"; do
       usage
       exit 0
       ;;
+    --*)
+      echo "Unknown option: $argument" >&2
+      usage >&2
+      exit 1
+      ;;
     *)
       compiled_files+=("$argument")
       ;;
@@ -101,6 +106,6 @@ for compiled_file in "${compiled_files[@]}"; do
   echo "$compile_command"
 
   if [[ $dry_run -eq 0 ]]; then
-    bash -lc "$compile_command"
+    bash -c "$compile_command"
   fi
 done

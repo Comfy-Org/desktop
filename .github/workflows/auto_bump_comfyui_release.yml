@@ -1,6 +1,8 @@
 name: Auto Bump ComfyUI Release
 
 on:
+  repository_dispatch:
+    types: [comfyui_release_published]
   workflow_dispatch:
     inputs:
       comfyui_version:
@@ -30,6 +32,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           INPUT_COMFYUI_VERSION: ${{ github.event.inputs.comfyui_version || '' }}
+          EVENT_NAME: ${{ github.event_name }}
+          PAYLOAD_TAG: ${{ github.event.client_payload.release_tag || '' }}
+          PAYLOAD_URL: ${{ github.event.client_payload.release_url || '' }}
         run: |
           set -euo pipefail
 
@@ -40,7 +45,21 @@ jobs:
             echo "$raw_version"
           }
 
-          if [ -n "${INPUT_COMFYUI_VERSION:-}" ]; then
+          if [ "$EVENT_NAME" = "repository_dispatch" ]; then
+            if [ -z "${PAYLOAD_TAG:-}" ]; then
+              echo "repository_dispatch missing client_payload.release_tag" >&2
+              exit 1
+            fi
+
+            TARGET_VERSION="$(normalize_version "$PAYLOAD_TAG")"
+            TARGET_TAG="v${TARGET_VERSION}"
+
+            if [ -n "${PAYLOAD_URL:-}" ]; then
+              TARGET_RELEASE_URL="${PAYLOAD_URL}"
+            else
+              TARGET_RELEASE_URL="https://github.com/Comfy-Org/ComfyUI/releases/tag/${TARGET_TAG}"
+            fi
+          elif [ -n "${INPUT_COMFYUI_VERSION:-}" ]; then
             TARGET_VERSION="$(normalize_version "$INPUT_COMFYUI_VERSION")"
             TARGET_TAG="v${TARGET_VERSION}"
             TARGET_RELEASE_URL="https://github.com/Comfy-Org/ComfyUI/releases/tag/${TARGET_TAG}"
@@ -65,7 +84,7 @@ jobs:
             exit 1
           fi
 
-          TAG_STATUS="$(curl -fsSL -o /dev/null -w '%{http_code}' \
+          TAG_STATUS="$(curl -sSL -o /dev/null -w '%{http_code}' \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/Comfy-Org/ComfyUI/git/ref/tags/${TARGET_TAG}")"
@@ -121,6 +140,12 @@ jobs:
           set -euo pipefail
           cd assets/ComfyUI
           patch -p1 < ../../scripts/core-requirements.patch
+
+      - name: Setup Python
+        if: steps.version.outputs.should_update == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Install uv
         if: steps.version.outputs.should_update == 'true'
