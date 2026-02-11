@@ -221,9 +221,6 @@ Function PersistMachineScopeInstallerOverrides
   # ACL hardening uses this even when no explicit OEM overrides were passed.
   ReadEnvStr $0 "ProgramData"
   ${If} $0 == ""
-    StrCpy $0 "$COMMONAPPDATA"
-  ${EndIf}
-  ${If} $0 == ""
     StrCpy $0 "C:\ProgramData"
   ${EndIf}
 
