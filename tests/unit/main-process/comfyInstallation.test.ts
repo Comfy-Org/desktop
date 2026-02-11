@@ -1,4 +1,5 @@
 import { app } from 'electron';
+import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MachineScopeConfig } from '@/config/machineConfig';
@@ -149,19 +150,21 @@ describe('ComfyInstallation uninstall', () => {
   });
 
   it('does not delete machine config during per-user uninstall', async () => {
+    const userModelConfigPath = path.join('/user/data', 'extra_models_config.yaml');
     mockReadMachineConfig.mockReturnValue(createMachineConfig('/machine/base'));
-    mockPathAccessible.mockImplementation((targetPath: string) => targetPath === '/user/data/extra_models_config.yaml');
+    mockPathAccessible.mockImplementation((targetPath: string) => targetPath === userModelConfigPath);
 
     const installation = new ComfyInstallation('installed', '/users/alice/comfy', createMockTelemetry());
     await installation.uninstall();
 
     expect(mockRm).toHaveBeenCalledTimes(1);
-    expect(mockRm).toHaveBeenCalledWith('/user/data/extra_models_config.yaml');
+    expect(mockRm).toHaveBeenCalledWith(userModelConfigPath);
     expect(mockRm).not.toHaveBeenCalledWith('/machine/machine-config.json');
     expect(mockDesktopConfig.permanentlyDeleteConfigFile).toHaveBeenCalledTimes(1);
   });
 
   it('deletes machine config when uninstalling the machine-scoped install', async () => {
+    const userModelConfigPath = path.join('/user/data', 'extra_models_config.yaml');
     mockReadMachineConfig.mockReturnValue(createMachineConfig('/machine/base'));
     mockPathAccessible.mockImplementation(
       (targetPath: string) =>
@@ -174,7 +177,7 @@ describe('ComfyInstallation uninstall', () => {
     expect(mockRm).toHaveBeenCalledTimes(2);
     expect(mockRm).toHaveBeenCalledWith('/machine/extra_models_config.yaml');
     expect(mockRm).toHaveBeenCalledWith('/machine/machine-config.json');
-    expect(mockRm).not.toHaveBeenCalledWith('/user/data/extra_models_config.yaml');
+    expect(mockRm).not.toHaveBeenCalledWith(userModelConfigPath);
     expect(mockDesktopConfig.permanentlyDeleteConfigFile).toHaveBeenCalledTimes(1);
   });
 });
