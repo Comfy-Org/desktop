@@ -169,7 +169,7 @@ jobs:
         if: steps.version.outputs.should_update == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.GH_APP_TOKEN }}
           branch: automated/bump-comfyui-v${{ steps.version.outputs.target_version }}
           delete-branch: true
           commit-message: Bump ComfyUI to v${{ steps.version.outputs.target_version }}
