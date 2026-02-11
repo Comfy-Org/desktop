@@ -329,6 +329,7 @@ done:
 FunctionEnd
 !endif
 
+!ifndef BUILD_UNINSTALLER
 !macro customInstall
   StrCpy $machineScopeInstallSelected "0"
   ${if} $installMode == "all"
@@ -340,6 +341,7 @@ FunctionEnd
   Call PersistMachineScopeInstallerOverrides
   Call HardenMachineScopeDataAcl
 !macroend
+!endif
 
 # Custom finish page that skips when in update mode
 !macro customFinishPage
