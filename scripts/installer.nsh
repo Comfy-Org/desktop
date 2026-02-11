@@ -5,6 +5,9 @@
 !include 'nsDialogs.nsh'
 !include 'WinMessages.nsh'
 
+# Register string helper functions used in installer-scope code.
+${StrRep}
+
 # Define allowToChangeInstallationDirectory to show the directory page
 !define allowToChangeInstallationDirectory
 
@@ -121,7 +124,7 @@ Function ResolveBasePathOverrideFromCli
   ClearErrors
   ${GetOptions} "$0" "/BASE_PATH=" $1
   IfErrors checkLegacyFlag
-  ${UnStrRep} $1 $1 '"' ""
+  ${StrRep} $1 $1 '"' ""
   StrCpy $cliBasePathOverride $1
   Goto done
 
@@ -129,7 +132,7 @@ checkLegacyFlag:
   ClearErrors
   ${GetOptions} "$0" "/BASEPATH=" $1
   IfErrors done
-  ${UnStrRep} $1 $1 '"' ""
+  ${StrRep} $1 $1 '"' ""
   StrCpy $cliBasePathOverride $1
 
 done:
@@ -147,7 +150,7 @@ Function ResolveAutoUpdateFromCli
   ClearErrors
   ${GetOptions} "$0" "/AUTO_UPDATE=" $1
   IfErrors checkDisableFlag
-  ${UnStrRep} $1 $1 '"' ""
+  ${StrRep} $1 $1 '"' ""
 
   StrCmp $1 "1" setTrue
   StrCmp $1 "true" setTrue
@@ -187,7 +190,7 @@ Function ResolvePreseedConfigDirFromCli
   ClearErrors
   ${GetOptions} "$0" "/PRESEED_CONFIG_DIR=" $1
   IfErrors checkLegacyPreseedFlag
-  ${UnStrRep} $1 $1 '"' ""
+  ${StrRep} $1 $1 '"' ""
   StrCpy $cliPreseedConfigDir $1
   Goto done
 
@@ -195,7 +198,7 @@ checkLegacyPreseedFlag:
   ClearErrors
   ${GetOptions} "$0" "/PRESEED=" $1
   IfErrors done
-  ${UnStrRep} $1 $1 '"' ""
+  ${StrRep} $1 $1 '"' ""
   StrCpy $cliPreseedConfigDir $1
 
 done:
