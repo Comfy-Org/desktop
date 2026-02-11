@@ -47,6 +47,7 @@ async function startApp() {
   log.debug('App ready');
   telemetry.registerHandlers();
   telemetry.track('desktop:app_ready');
+  await SentryLogging.setSentryGpuContext();
 
   // Load config or exit
   const config = await DesktopConfig.load(shell);
