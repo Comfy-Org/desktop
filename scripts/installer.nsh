@@ -13,14 +13,17 @@
 # Define allowToChangeInstallationDirectory to show the directory page
 !define allowToChangeInstallationDirectory
 
-Var /GLOBAL cliBasePathOverride
-Var /GLOBAL cliAutoUpdateOverride
-Var /GLOBAL cliPreseedConfigDir
-Var /GLOBAL machineConfigPath
-Var /GLOBAL machineModelConfigPath
-Var /GLOBAL machineEffectiveBasePath
 Var /GLOBAL cliInstallScopeOverride
-Var /GLOBAL machineScopeInstallSelected
+
+!ifndef BUILD_UNINSTALLER
+  Var /GLOBAL cliBasePathOverride
+  Var /GLOBAL cliAutoUpdateOverride
+  Var /GLOBAL cliPreseedConfigDir
+  Var /GLOBAL machineConfigPath
+  Var /GLOBAL machineModelConfigPath
+  Var /GLOBAL machineEffectiveBasePath
+  Var /GLOBAL machineScopeInstallSelected
+!endif
 
 # Default to per-user install. CLI flags can override this in `ResolveInstallScopeFromCli`.
 !macro customInstallMode
