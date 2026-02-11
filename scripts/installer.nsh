@@ -118,16 +118,17 @@ done:
   Pop $0
 !macroend
 
-Function ResolveInstallScopeFromCli
-  !insertmacro ResolveInstallScopeFromCliBody
-FunctionEnd
-
 !ifdef BUILD_UNINSTALLER
 Function un.ResolveInstallScopeFromCli
   !insertmacro ResolveInstallScopeFromCliBody
 FunctionEnd
+!else
+Function ResolveInstallScopeFromCli
+  !insertmacro ResolveInstallScopeFromCliBody
+FunctionEnd
 !endif
 
+!ifndef BUILD_UNINSTALLER
 Function ResolveBasePathOverrideFromCli
   Push $0
   Push $1
@@ -324,6 +325,7 @@ done:
   Pop $1
   Pop $0
 FunctionEnd
+!endif
 
 !macro customInstall
   StrCpy $machineScopeInstallSelected "0"
