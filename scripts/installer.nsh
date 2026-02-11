@@ -712,43 +712,42 @@ FunctionEnd
     ${EndIf}
   FunctionEnd
 
-  # Resolve $basePath from $APPDATA\ComfyUI\config.json (sets empty if not found)
-  Function un.ResolveBasePath
-    StrCpy $basePath ""
+  Function un.ReadBasePathFromJsonFile
+    Pop $0
     ClearErrors
-    FileOpen $0 "$APPDATA\ComfyUI\config.json" r
+    FileOpen $1 "$0" r
     IfErrors done
 
-    StrCpy $1 "basePath"
-    StrLen $2 $1
+    StrCpy $2 "basePath"
+    StrLen $3 $2
 
     loop:
-      FileRead $0 $3
+      FileRead $1 $4
       IfErrors close
 
       # scan for "basePath"
       StrCpy $R2 -1
       scan:
         IntOp $R2 $R2 + 1
-        StrCpy $R3 $3 1 $R2
+        StrCpy $R3 $4 1 $R2
         StrCmp $R3 "" loop
         StrCmp $R3 '"' check_key
         Goto scan
 
       check_key:
         IntOp $R4 $R2 + 1
-        StrCpy $R5 $3 $2 $R4
-        StrCmp $R5 $1 next_quote scan
+        StrCpy $R5 $4 $3 $R4
+        StrCmp $R5 $2 next_quote scan
 
       next_quote:
-        IntOp $R6 $R4 + $2
-        StrCpy $R7 $3 1 $R6
+        IntOp $R6 $R4 + $3
+        StrCpy $R7 $4 1 $R6
         StrCmp $R7 '"' find_colon scan
 
       find_colon:
         IntOp $R8 $R6 + 1
         find_colon_loop:
-          StrCpy $R7 $3 1 $R8
+          StrCpy $R7 $4 1 $R8
           StrCmp $R7 ":" after_colon
           StrCmp $R7 "" loop
           IntOp $R8 $R8 + 1
@@ -757,7 +756,7 @@ FunctionEnd
       after_colon:
         IntOp $R9 $R8 + 1
         find_open_quote:
-          StrCpy $R7 $3 1 $R9
+          StrCpy $R7 $4 1 $R9
           StrCmp $R7 '"' open_ok
           StrCmp $R7 "" loop
           IntOp $R9 $R9 + 1
@@ -766,7 +765,7 @@ FunctionEnd
       open_ok:
         IntOp $R0 $R9 + 1
         find_close_quote:
-          StrCpy $R7 $3 1 $R0
+          StrCpy $R7 $4 1 $R0
           StrCmp $R7 '"' got_value
           StrCmp $R7 "" loop
           IntOp $R0 $R0 + 1
@@ -776,14 +775,34 @@ FunctionEnd
         IntOp $R1 $R0 - $R9
         IntOp $R1 $R1 - 1
         IntOp $R6 $R9 + 1
-        StrCpy $basePath $3 $R1 $R6
+        StrCpy $basePath $4 $R1 $R6
         # Normalize JSON doubled backslashes to single backslashes
         ${UnStrRep} $basePath $basePath "\\" "\"
         Goto close
 
     close:
-      FileClose $0
+      FileClose $1
     done:
+  FunctionEnd
+
+  # Resolve $basePath by preferring the machine config override before falling back to the per-user settings
+  Function un.ResolveBasePath
+    StrCpy $basePath ""
+
+    ReadEnvStr $0 "ProgramData"
+    ${If} $0 == ""
+      StrCpy $0 "C:\ProgramData"
+    ${EndIf}
+
+    StrCpy $R1 "$0\ComfyUI\machine-config.json"
+    Push $R1
+    Call un.ReadBasePathFromJsonFile
+
+    ${If} $basePath == ""
+      StrCpy $R1 "$APPDATA\ComfyUI\config.json"
+      Push $R1
+      Call un.ReadBasePathFromJsonFile
+    ${EndIf}
   FunctionEnd
 !endif
 
