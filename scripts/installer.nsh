@@ -6,7 +6,9 @@
 !include 'WinMessages.nsh'
 
 # Register string helper functions used in installer-scope code.
-${StrRep}
+!ifndef BUILD_UNINSTALLER
+  ${StrRep}
+!endif
 
 # Define allowToChangeInstallationDirectory to show the directory page
 !define allowToChangeInstallationDirectory
