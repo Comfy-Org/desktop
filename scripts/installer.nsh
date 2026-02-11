@@ -24,7 +24,11 @@ Var /GLOBAL machineScopeInstallSelected
 !macro customInstallMode
   StrCpy $isForceMachineInstall "0"
   StrCpy $isForceCurrentInstall "1"
-  Call ResolveInstallScopeFromCli
+  !ifdef BUILD_UNINSTALLER
+    Call un.ResolveInstallScopeFromCli
+  !else
+    Call ResolveInstallScopeFromCli
+  !endif
 
   StrCmp $cliInstallScopeOverride "machine" forceMachineInstall
   StrCmp $cliInstallScopeOverride "user" forceCurrentUserInstall
@@ -42,7 +46,7 @@ forceCurrentUserInstall:
 done:
 !macroend
 
-Function ResolveInstallScopeFromCli
+!macro ResolveInstallScopeFromCliBody
   Push $0
   Push $1
   Push $2
@@ -112,7 +116,17 @@ done:
   Pop $2
   Pop $1
   Pop $0
+!macroend
+
+Function ResolveInstallScopeFromCli
+  !insertmacro ResolveInstallScopeFromCliBody
 FunctionEnd
+
+!ifdef BUILD_UNINSTALLER
+Function un.ResolveInstallScopeFromCli
+  !insertmacro ResolveInstallScopeFromCliBody
+FunctionEnd
+!endif
 
 Function ResolveBasePathOverrideFromCli
   Push $0
