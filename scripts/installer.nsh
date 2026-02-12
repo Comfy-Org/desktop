@@ -1,16 +1,350 @@
 !include 'MUI2.nsh'
+!include 'FileFunc.nsh'
 !include 'StrFunc.nsh'
 !include 'LogicLib.nsh'
 !include 'nsDialogs.nsh'
 !include 'WinMessages.nsh'
 
+# Register string helper functions used in installer-scope code.
+!ifndef BUILD_UNINSTALLER
+  ${StrRep}
+!endif
+
 # Define allowToChangeInstallationDirectory to show the directory page
 !define allowToChangeInstallationDirectory
 
-# Per-user install
+Var /GLOBAL cliInstallScopeOverride
+
+!ifndef BUILD_UNINSTALLER
+  Var /GLOBAL cliBasePathOverride
+  Var /GLOBAL cliAutoUpdateOverride
+  Var /GLOBAL cliPreseedConfigDir
+  Var /GLOBAL machineConfigPath
+  Var /GLOBAL machineModelConfigPath
+  Var /GLOBAL machineEffectiveBasePath
+  Var /GLOBAL machineScopeInstallSelected
+!endif
+
+# Default to per-user install. CLI flags can override this in `ResolveInstallScopeFromCli`.
 !macro customInstallMode
+  StrCpy $isForceMachineInstall "0"
   StrCpy $isForceCurrentInstall "1"
+  !ifdef BUILD_UNINSTALLER
+    Call un.ResolveInstallScopeFromCli
+  !else
+    Call ResolveInstallScopeFromCli
+  !endif
+
+  StrCmp $cliInstallScopeOverride "machine" forceMachineInstall
+  StrCmp $cliInstallScopeOverride "user" forceCurrentUserInstall
+  Goto done
+
+forceMachineInstall:
+  StrCpy $isForceMachineInstall "1"
+  StrCpy $isForceCurrentInstall "0"
+  Goto done
+
+forceCurrentUserInstall:
+  StrCpy $isForceMachineInstall "0"
+  StrCpy $isForceCurrentInstall "1"
+
+done:
 !macroend
+
+!macro ResolveInstallScopeFromCliBody
+  Push $0
+  Push $1
+  Push $2
+
+  StrCpy $2 "0"
+  StrCpy $cliInstallScopeOverride ""
+  ${GetParameters} $0
+
+  # Explicit scope controls.
+  # Supported:
+  #   /INSTALL_SCOPE=user|machine
+  #   /ALLUSERS
+  #   /CURRENTUSER
+  #   /BASE_PATH=<absolute path>
+  #   /AUTO_UPDATE=0|1|true|false
+  #   /PRESEED_CONFIG_DIR=<absolute path>
+  ClearErrors
+  ${GetOptions} "$0" "/INSTALL_SCOPE=" $1
+  IfErrors checkAllUsers
+  StrCmp $1 "machine" setMachineFromScope
+  StrCmp $1 "MACHINE" setMachineFromScope
+  StrCmp $1 "user" setUserFromScope
+  StrCmp $1 "USER" setUserFromScope
+  DetailPrint "[Warn] Ignoring invalid /INSTALL_SCOPE value: $1"
+  Goto checkAllUsers
+
+setMachineFromScope:
+  StrCpy $cliInstallScopeOverride "machine"
+  StrCpy $2 "1"
+  Goto checkAllUsers
+
+setUserFromScope:
+  StrCpy $cliInstallScopeOverride "user"
+  StrCpy $2 "1"
+
+checkAllUsers:
+  ClearErrors
+  ${GetOptions} "$0" "/ALLUSERS" $1
+  IfErrors checkCurrentUser
+  StrCpy $cliInstallScopeOverride "machine"
+  StrCpy $2 "1"
+
+checkCurrentUser:
+  ClearErrors
+  ${GetOptions} "$0" "/CURRENTUSER" $1
+  IfErrors maybeOem
+  StrCpy $cliInstallScopeOverride "user"
+  StrCpy $2 "1"
+
+maybeOem:
+  # OEM flags default to machine mode unless explicit scope was set.
+  StrCmp $2 "1" done
+
+  ClearErrors
+  ${GetOptions} "$0" "/OEM" $1
+  IfErrors checkOemValue
+  StrCpy $cliInstallScopeOverride "machine"
+  Goto done
+
+checkOemValue:
+  ClearErrors
+  ${GetOptions} "$0" "/OEM=" $1
+  IfErrors done
+  StrCpy $cliInstallScopeOverride "machine"
+
+done:
+  Pop $2
+  Pop $1
+  Pop $0
+!macroend
+
+!ifdef BUILD_UNINSTALLER
+Function un.ResolveInstallScopeFromCli
+  !insertmacro ResolveInstallScopeFromCliBody
+FunctionEnd
+!else
+Function ResolveInstallScopeFromCli
+  !insertmacro ResolveInstallScopeFromCliBody
+FunctionEnd
+!endif
+
+!ifndef BUILD_UNINSTALLER
+Function ResolveBasePathOverrideFromCli
+  Push $0
+  Push $1
+
+  StrCpy $cliBasePathOverride ""
+  ${GetParameters} $0
+
+  ClearErrors
+  ${GetOptions} "$0" "/BASE_PATH=" $1
+  IfErrors checkLegacyFlag
+  ${StrRep} $1 $1 '"' ""
+  StrCpy $cliBasePathOverride $1
+  Goto done
+
+checkLegacyFlag:
+  ClearErrors
+  ${GetOptions} "$0" "/BASEPATH=" $1
+  IfErrors done
+  ${StrRep} $1 $1 '"' ""
+  StrCpy $cliBasePathOverride $1
+
+done:
+  Pop $1
+  Pop $0
+FunctionEnd
+
+Function ResolveAutoUpdateFromCli
+  Push $0
+  Push $1
+
+  StrCpy $cliAutoUpdateOverride "true"
+  ${GetParameters} $0
+
+  ClearErrors
+  ${GetOptions} "$0" "/AUTO_UPDATE=" $1
+  IfErrors checkDisableFlag
+  ${StrRep} $1 $1 '"' ""
+
+  StrCmp $1 "1" setTrue
+  StrCmp $1 "true" setTrue
+  StrCmp $1 "TRUE" setTrue
+  StrCmp $1 "0" setFalse
+  StrCmp $1 "false" setFalse
+  StrCmp $1 "FALSE" setFalse
+  DetailPrint "[Warn] Ignoring invalid /AUTO_UPDATE value: $1"
+  Goto checkDisableFlag
+
+setTrue:
+  StrCpy $cliAutoUpdateOverride "true"
+  Goto done
+
+setFalse:
+  StrCpy $cliAutoUpdateOverride "false"
+  Goto done
+
+checkDisableFlag:
+  ClearErrors
+  ${GetOptions} "$0" "/DISABLE_AUTO_UPDATE" $1
+  IfErrors done
+  StrCpy $cliAutoUpdateOverride "false"
+
+done:
+  Pop $1
+  Pop $0
+FunctionEnd
+
+Function ResolvePreseedConfigDirFromCli
+  Push $0
+  Push $1
+
+  StrCpy $cliPreseedConfigDir ""
+  ${GetParameters} $0
+
+  ClearErrors
+  ${GetOptions} "$0" "/PRESEED_CONFIG_DIR=" $1
+  IfErrors checkLegacyPreseedFlag
+  ${StrRep} $1 $1 '"' ""
+  StrCpy $cliPreseedConfigDir $1
+  Goto done
+
+checkLegacyPreseedFlag:
+  ClearErrors
+  ${GetOptions} "$0" "/PRESEED=" $1
+  IfErrors done
+  ${StrRep} $1 $1 '"' ""
+  StrCpy $cliPreseedConfigDir $1
+
+done:
+  Pop $1
+  Pop $0
+FunctionEnd
+
+Function PersistMachineScopeInstallerOverrides
+  Push $0
+  Push $1
+  Push $2
+  Push $3
+  Push $4
+
+  ${If} $machineScopeInstallSelected != "1"
+    Goto done
+  ${EndIf}
+
+  # Resolve ProgramData root and machine default base path for all machine installs.
+  # ACL hardening uses this even when no explicit OEM overrides were passed.
+  ReadEnvStr $0 "ProgramData"
+  ${If} $0 == ""
+    StrCpy $0 "C:\ProgramData"
+  ${EndIf}
+
+  StrCpy $machineEffectiveBasePath "$0\ComfyUI\base"
+  ${If} $cliBasePathOverride != ""
+    StrCpy $machineEffectiveBasePath $cliBasePathOverride
+  ${EndIf}
+
+  ${If} $cliBasePathOverride == ""
+    StrCpy $cliBasePathOverride $machineEffectiveBasePath
+  ${EndIf}
+
+  StrCpy $machineConfigPath "$0\ComfyUI\machine-config.json"
+  StrCpy $machineModelConfigPath "$0\ComfyUI\extra_models_config.yaml"
+  CreateDirectory "$0\ComfyUI"
+
+  StrCpy $1 $cliBasePathOverride
+  ${StrRep} $1 $1 "\" "\\"
+  StrCpy $2 $machineModelConfigPath
+  ${StrRep} $2 $2 "\" "\\"
+  StrCpy $4 $cliPreseedConfigDir
+  ${StrRep} $4 $4 "\" "\\"
+
+  ClearErrors
+  FileOpen $3 "$machineConfigPath" w
+  IfErrors writeFailed
+
+  FileWrite $3 "{$\r$\n"
+  FileWrite $3 "  $\"version$\": 1,$\r$\n"
+  FileWrite $3 "  $\"installState$\": $\"started$\",$\r$\n"
+  FileWrite $3 "  $\"basePath$\": $\"$1$\",$\r$\n"
+  FileWrite $3 "  $\"modelConfigPath$\": $\"$2$\",$\r$\n"
+  FileWrite $3 "  $\"autoUpdate$\": $cliAutoUpdateOverride,$\r$\n"
+  ${If} $cliPreseedConfigDir != ""
+    FileWrite $3 "  $\"preseedConfigDir$\": $\"$4$\",$\r$\n"
+  ${EndIf}
+  FileWrite $3 "  $\"updatedAt$\": $\"1970-01-01T00:00:00.000Z$\"$\r$\n"
+  FileWrite $3 "}$\r$\n"
+  FileClose $3
+
+  DetailPrint "[OEM] Saved machine base path: $cliBasePathOverride"
+  DetailPrint "[OEM] Saved machine auto-update setting: $cliAutoUpdateOverride"
+  ${If} $cliPreseedConfigDir != ""
+    DetailPrint "[OEM] Saved machine preseed config dir: $cliPreseedConfigDir"
+  ${EndIf}
+  DetailPrint "[OEM] Machine config file: $machineConfigPath"
+  Goto done
+
+writeFailed:
+  DetailPrint "[Warn] Could not write machine config file for machine-scope install: $machineConfigPath"
+
+done:
+  Pop $4
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
+FunctionEnd
+
+Function HardenMachineScopeDataAcl
+  Push $0
+  Push $1
+
+  ${If} $machineScopeInstallSelected != "1"
+    Goto done
+  ${EndIf}
+
+  StrCpy $0 $machineEffectiveBasePath
+  ${If} $0 == ""
+    Goto done
+  ${EndIf}
+
+  CreateDirectory "$0"
+  DetailPrint "[OEM] Hardening ACLs for machine base path: $0"
+
+  # Use SID-based grants for locale-independent behavior:
+  #  - SYSTEM (S-1-5-18): Full control
+  #  - BUILTIN\Administrators (S-1-5-32-544): Full control
+  #  - BUILTIN\Users (S-1-5-32-545): Modify
+  nsExec::ExecToLog '"$SYSDIR\icacls.exe" "$0" /inheritance:e /grant *S-1-5-18:(OI)(CI)F /grant *S-1-5-32-544:(OI)(CI)F /grant *S-1-5-32-545:(OI)(CI)M /T /C'
+  Pop $1
+  ${If} $1 != "0"
+    DetailPrint "[Warn] icacls returned non-zero exit code for base path ACL hardening: $1"
+  ${EndIf}
+
+done:
+  Pop $1
+  Pop $0
+FunctionEnd
+!endif
+
+!ifndef BUILD_UNINSTALLER
+!macro customInstall
+  StrCpy $machineScopeInstallSelected "0"
+  ${if} $installMode == "all"
+    StrCpy $machineScopeInstallSelected "1"
+  ${endif}
+  Call ResolveBasePathOverrideFromCli
+  Call ResolveAutoUpdateFromCli
+  Call ResolvePreseedConfigDirFromCli
+  Call PersistMachineScopeInstallerOverrides
+  Call HardenMachineScopeDataAcl
+!macroend
+!endif
 
 # Custom finish page that skips when in update mode
 !macro customFinishPage
@@ -401,43 +735,42 @@
     ${EndIf}
   FunctionEnd
 
-  # Resolve $basePath from $APPDATA\ComfyUI\config.json (sets empty if not found)
-  Function un.ResolveBasePath
-    StrCpy $basePath ""
+  Function un.ReadBasePathFromJsonFile
+    Pop $0
     ClearErrors
-    FileOpen $0 "$APPDATA\ComfyUI\config.json" r
+    FileOpen $1 "$0" r
     IfErrors done
 
-    StrCpy $1 "basePath"
-    StrLen $2 $1
+    StrCpy $2 "basePath"
+    StrLen $3 $2
 
     loop:
-      FileRead $0 $3
+      FileRead $1 $4
       IfErrors close
 
       # scan for "basePath"
       StrCpy $R2 -1
       scan:
         IntOp $R2 $R2 + 1
-        StrCpy $R3 $3 1 $R2
+        StrCpy $R3 $4 1 $R2
         StrCmp $R3 "" loop
         StrCmp $R3 '"' check_key
         Goto scan
 
       check_key:
         IntOp $R4 $R2 + 1
-        StrCpy $R5 $3 $2 $R4
-        StrCmp $R5 $1 next_quote scan
+        StrCpy $R5 $4 $3 $R4
+        StrCmp $R5 $2 next_quote scan
 
       next_quote:
-        IntOp $R6 $R4 + $2
-        StrCpy $R7 $3 1 $R6
+        IntOp $R6 $R4 + $3
+        StrCpy $R7 $4 1 $R6
         StrCmp $R7 '"' find_colon scan
 
       find_colon:
         IntOp $R8 $R6 + 1
         find_colon_loop:
-          StrCpy $R7 $3 1 $R8
+          StrCpy $R7 $4 1 $R8
           StrCmp $R7 ":" after_colon
           StrCmp $R7 "" loop
           IntOp $R8 $R8 + 1
@@ -446,7 +779,7 @@
       after_colon:
         IntOp $R9 $R8 + 1
         find_open_quote:
-          StrCpy $R7 $3 1 $R9
+          StrCpy $R7 $4 1 $R9
           StrCmp $R7 '"' open_ok
           StrCmp $R7 "" loop
           IntOp $R9 $R9 + 1
@@ -455,7 +788,7 @@
       open_ok:
         IntOp $R0 $R9 + 1
         find_close_quote:
-          StrCpy $R7 $3 1 $R0
+          StrCpy $R7 $4 1 $R0
           StrCmp $R7 '"' got_value
           StrCmp $R7 "" loop
           IntOp $R0 $R0 + 1
@@ -465,14 +798,34 @@
         IntOp $R1 $R0 - $R9
         IntOp $R1 $R1 - 1
         IntOp $R6 $R9 + 1
-        StrCpy $basePath $3 $R1 $R6
+        StrCpy $basePath $4 $R1 $R6
         # Normalize JSON doubled backslashes to single backslashes
         ${UnStrRep} $basePath $basePath "\\" "\"
         Goto close
 
     close:
-      FileClose $0
+      FileClose $1
     done:
+  FunctionEnd
+
+  # Resolve $basePath by preferring the machine config override before falling back to the per-user settings
+  Function un.ResolveBasePath
+    StrCpy $basePath ""
+
+    ReadEnvStr $0 "ProgramData"
+    ${If} $0 == ""
+      StrCpy $0 "C:\ProgramData"
+    ${EndIf}
+
+    StrCpy $R1 "$0\ComfyUI\machine-config.json"
+    Push $R1
+    Call un.ReadBasePathFromJsonFile
+
+    ${If} $basePath == ""
+      StrCpy $R1 "$APPDATA\ComfyUI\config.json"
+      Push $R1
+      Call un.ReadBasePathFromJsonFile
+    ${EndIf}
   FunctionEnd
 !endif
 
