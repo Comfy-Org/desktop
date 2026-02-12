@@ -40,11 +40,12 @@ export class InstallWizard implements HasTelemetry {
     // Setup the ComfyUI folder structure.
     ComfyConfigManager.createComfyDirectories(this.basePath);
     this.initializeUserFiles();
+    const effectiveAutoUpdate = this.resolveEffectiveAutoUpdate();
 
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INITIALIZING_CONFIG, { progress: 10 }));
 
-    await this.initializeSettings();
-    this.initializeMachineScopeConfig();
+    await this.initializeSettings(effectiveAutoUpdate);
+    this.initializeMachineScopeConfig(effectiveAutoUpdate);
     await this.initializeModelPaths();
   }
 
@@ -69,13 +70,13 @@ export class InstallWizard implements HasTelemetry {
   /**
    * Setup comfy.settings.json file
    */
-  public async initializeSettings() {
+  public async initializeSettings(autoUpdate: boolean = this.installOptions.autoUpdate) {
     // Load any existing settings if they exist
     const existingSettings = await ComfySettings.load(this.basePath);
 
     // Add install options to settings
     const settings: Partial<ComfySettingsData> = {
-      'Comfy-Desktop.AutoUpdate': this.installOptions.autoUpdate,
+      'Comfy-Desktop.AutoUpdate': autoUpdate,
       'Comfy-Desktop.SendStatistics': this.installOptions.allowMetrics,
       'Comfy-Desktop.UV.PythonInstallMirror': this.installOptions.pythonMirror,
       'Comfy-Desktop.UV.PypiInstallMirror': this.installOptions.pypiMirror,
@@ -134,7 +135,7 @@ export class InstallWizard implements HasTelemetry {
    * Persist machine-scope bootstrap config so newly-created users can reuse
    * the same base path and model config after sysprep/OOBE.
    */
-  public initializeMachineScopeConfig() {
+  public initializeMachineScopeConfig(autoUpdate: boolean = this.installOptions.autoUpdate) {
     if (!shouldUseMachineScope(this.basePath)) return;
 
     const existingMachineConfig = readMachineConfig();
@@ -145,12 +146,37 @@ export class InstallWizard implements HasTelemetry {
       installState: 'started',
       basePath: this.basePath,
       modelConfigPath: machineModelConfigPath,
-      autoUpdate: this.installOptions.autoUpdate,
+      autoUpdate,
       preseedConfigDir: existingMachineConfig?.preseedConfigDir,
     });
 
     if (!updated) {
       log.warn('Unable to write machine scope config. Falling back to user-scoped initialization.');
     }
+  }
+
+  private resolveEffectiveAutoUpdate(): boolean {
+    if (!shouldUseMachineScope(this.basePath)) {
+      return this.installOptions.autoUpdate;
+    }
+
+    const machineConfig = readMachineConfig();
+    if (!machineConfig) {
+      return this.installOptions.autoUpdate;
+    }
+
+    const hasMatchingBasePath = InstallWizard.hasSameBasePath(machineConfig.basePath, this.basePath);
+    if (!hasMatchingBasePath) {
+      return this.installOptions.autoUpdate;
+    }
+
+    return machineConfig.autoUpdate;
+  }
+
+  private static hasSameBasePath(leftPath: string, rightPath: string): boolean {
+    if (process.platform === 'win32') {
+      return path.win32.resolve(leftPath).toLowerCase() === path.win32.resolve(rightPath).toLowerCase();
+    }
+    return path.resolve(leftPath) === path.resolve(rightPath);
   }
 }
