@@ -135,6 +135,9 @@ export class ComfySettings implements IComfySettings {
     }
 
     try {
+      // Machine-scoped first runs can point at a base path that exists
+      // before the full Comfy directory tree is initialized.
+      await fs.mkdir(path.dirname(this.filePath), { recursive: true });
       await fs.writeFile(this.filePath, JSON.stringify(this.settings, null, 2));
     } catch (error) {
       log.error('Failed to save settings:', error);
