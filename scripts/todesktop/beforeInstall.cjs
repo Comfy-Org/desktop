@@ -24,6 +24,55 @@ module.exports = async ({ pkgJsonPath, pkgJson, appDir, hookName }) => {
       shell: true,
       stdio: 'ignore',
     });
+
+    const pythonMajorMinor = '3.12';
+    const expectedPrefix = `Python ${pythonMajorMinor}`;
+
+    const versionMatches = (bin, args = []) => {
+      const result = spawnSync(bin, [...args, '--version'], { shell: true, encoding: 'utf8' });
+      const output = `${result.stdout || ''}${result.stderr || ''}`.trim();
+      return result.status === 0 && output.startsWith(expectedPrefix);
+    };
+
+    const resolvePython312 = () => {
+      const localAppData = process.env.LOCALAPPDATA;
+      const programFiles = process.env.ProgramFiles || 'C:\\Program Files';
+      const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
+      const candidates = [
+        { bin: process.env.PYTHON_3_12 },
+        { bin: process.env.PYTHON },
+        { bin: 'py', args: ['-3.12'] },
+        { bin: path.join(programFiles, 'Python312', 'python.exe') },
+        { bin: path.join(programFilesX86, 'Python312', 'python.exe') },
+        localAppData ? { bin: path.join(localAppData, 'Programs', 'Python', 'Python312', 'python.exe') } : null,
+        { bin: 'python3.12' },
+        { bin: 'python' },
+      ];
+      for (const candidate of candidates) {
+        if (!candidate || !candidate.bin) continue;
+        if (versionMatches(candidate.bin, candidate.args)) return candidate;
+      }
+      return null;
+    };
+
+    const pythonCandidate = resolvePython312();
+
+    if (!pythonCandidate) {
+      console.error(`[ToDesktop Windows] Python ${pythonMajorMinor} not found after installation attempts`);
+      return;
+    }
+
+    const pythonBin = pythonCandidate.bin;
+    const pythonArgs = pythonCandidate.args || [];
+
+    console.log(`[ToDesktop Windows] Using Python at ${pythonBin}`);
+    spawnSync(pythonBin, [...pythonArgs, '--version'], { shell: true, stdio: 'inherit' });
+
+    console.log('[ToDesktop Windows] Installing setuptools and packaging (brings distutils)');
+    spawnSync(pythonBin, [...pythonArgs, '-m', 'pip', 'install', '--upgrade', 'setuptools', 'packaging'], {
+      shell: true,
+      stdio: 'inherit',
+    });
   }
 
   if (os.platform() === 'darwin') {

@@ -12,6 +12,10 @@ import type { DesktopConfig } from '@/store/desktopConfig';
 vi.unmock('@sentry/electron/main');
 vi.unmock('@/services/telemetry');
 
+const { mockGraphics } = vi.hoisted(() => ({
+  mockGraphics: vi.fn().mockResolvedValue({ controllers: [] }),
+}));
+
 vi.mock('@sentry/electron/main', () => ({
   init: vi.fn(),
   captureException: vi.fn(),
@@ -52,6 +56,13 @@ vi.mock('@/config/comfySettings', () => {
 
 vi.mock('mixpanel');
 
+vi.mock('systeminformation', () => ({
+  __esModule: true,
+  default: {
+    graphics: mockGraphics,
+  },
+}));
+
 vi.mock('@/store/desktopConfig', () => ({
   useDesktopConfig: vi.fn(() => ({
     get: vi.fn(() => '/mock/path'),
@@ -75,6 +86,59 @@ describe('MixpanelTelemetry', () => {
   beforeEach(async () => {
     // Initialize settings before each test
     await ComfySettings.load('/mock/path');
+    mockGraphics.mockReset();
+    mockGraphics.mockResolvedValue({ controllers: [] });
+  });
+
+  describe('GPU information caching', () => {
+    it('caches driver versions alongside GPU metadata', async () => {
+      mockGraphics.mockResolvedValue({
+        controllers: [
+          {
+            model: 'NVIDIA RTX 4090',
+            vendor: 'NVIDIA',
+            vram: 24_576,
+            driverVersion: ' 551.61 ',
+          },
+        ],
+      });
+
+      telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
+      await telemetry['fetchAndCacheGpuInformation']();
+
+      expect(telemetry['cachedGpuInfo']).toEqual([
+        {
+          model: 'NVIDIA RTX 4090',
+          vendor: 'NVIDIA',
+          vram: 24_576,
+          driverVersion: '551.61',
+        },
+      ]);
+    });
+
+    it('falls back to null driver version when unavailable', async () => {
+      mockGraphics.mockResolvedValue({
+        controllers: [
+          {
+            model: 'Apple M2',
+            vendor: 'Apple',
+            vram: 8192,
+          },
+        ],
+      });
+
+      telemetry = new MixpanelTelemetry(mockMixpanelClient as any);
+      await telemetry['fetchAndCacheGpuInformation']();
+
+      expect(telemetry['cachedGpuInfo']).toEqual([
+        {
+          model: 'Apple M2',
+          vendor: 'Apple',
+          vram: 8192,
+          driverVersion: null,
+        },
+      ]);
+    });
   });
 
   describe('distinct ID management', () => {

@@ -11,7 +11,6 @@ import {
   AMD_ROCM_SDK_PACKAGES,
   AMD_TORCH_PACKAGES,
   InstallStage,
-  LEGACY_NVIDIA_TORCH_MIRROR,
   NVIDIA_TORCHVISION_VERSION,
   NVIDIA_TORCH_PACKAGES,
   NVIDIA_TORCH_VERSION,
@@ -114,9 +113,6 @@ function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undef
   if (mirror === TorchMirrorUrl.Default) {
     if (device === 'nvidia') return TorchMirrorUrl.Cuda;
     else if (device === 'mps') return TorchMirrorUrl.NightlyCpu;
-  }
-  if (device === 'nvidia' && mirror === LEGACY_NVIDIA_TORCH_MIRROR) {
-    return TorchMirrorUrl.Cuda;
   }
   return mirror;
 }
@@ -979,11 +975,6 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
         upgradeCore,
         upgradeManager,
       });
-      return 'package-upgrade';
-    }
-
-    if (await this.needsNvidiaTorchUpgrade()) {
-      log.info('NVIDIA PyTorch version out of date. Treating as package upgrade.');
       return 'package-upgrade';
     }
 

@@ -3,7 +3,7 @@
   "productName": "ComfyUI",
   "repository": "github:comfy-org/electron",
   "copyright": "Copyright © 2024 Comfy Org",
-  "version": "0.7.3",
+  "version": "0.8.4",
   "homepage": "https://comfy.org",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.cjs",
@@ -11,11 +11,11 @@
   "type": "module",
   "config": {
     "frontend": {
-      "version": "1.36.14",
+      "version": "1.37.11",
       "optionalBranch": ""
     },
     "comfyUI": {
-      "version": "0.9.1",
+      "version": "0.13.0",
       "optionalBranch": ""
     },
     "managerCommit": "d82e1f5d677fec0b85a6be6beb1e32d5627ef6af",
@@ -24,9 +24,9 @@
   "scripts": {
     "clean": "rimraf .vite dist out",
     "clean:uv": "rimraf assets/uv",
-    "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz & yarn run clean:assets:git && yarn run clean:uv",
+    "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz && yarn run clean:assets:git && yarn run clean:uv",
     "clean:assets:git": "rimraf assets/ComfyUI/.git assets/ComfyUI/custom_nodes/ComfyUI-Manager/.git",
-    "clean:slate": "yarn run clean & yarn run clean:assets & rimraf node_modules",
+    "clean:slate": "yarn run clean && yarn run clean:assets && rimraf node_modules",
     "download:uv": "node scripts/downloadUV.js",
     "download-frontend": "node scripts/downloadFrontend.js",
     "make:frontend": "yarn run download-frontend",
@@ -51,10 +51,12 @@
     "test:unit": "vitest run",
     "todesktop:afterPack": "./scripts/todesktop/afterPack.cjs",
     "todesktop:beforeInstall": "./scripts/todesktop/beforeInstall.cjs",
-    "typescript": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "typecheck:build": "tsc -p tsconfig.build.json",
+    "typecheck:tests": "tsc -p tsconfig.tests.json",
     "verify:build": "node scripts/verifyBuild.js",
-    "vite:compile": "yarn run typescript && vite build && vite build --config vite.preload.config.ts",
-    "vite:types": "yarn run typescript && vite build --config vite.types.config.ts && node scripts/prepareTypes.js",
+    "vite:compile": "yarn run typecheck:build && vite build && vite build --config vite.preload.config.ts",
+    "vite:types": "yarn run typecheck:build && vite build --config vite.types.config.ts && node scripts/prepareTypes.js",
     "release:types": "node scripts/releaseTypes.js",
     "update:frontend": "node scripts/updateFrontend.js"
   },

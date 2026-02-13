@@ -5,7 +5,7 @@ import { promisify } from 'node:util';
 
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
-import { IPC_CHANNELS, InstallStage, ProgressStatus } from '../constants';
+import { IPC_CHANNELS, InstallStage, NVIDIA_TORCH_VERSION, ProgressStatus } from '../constants';
 import { PythonImportVerificationError } from '../infrastructure/pythonImportVerificationError';
 import { useAppState } from '../main-process/appState';
 import type { AppWindow } from '../main-process/appWindow';
@@ -213,6 +213,7 @@ export class InstallationManager implements HasTelemetry {
     useDesktopConfig().set('basePath', installOptions.installPath);
     useDesktopConfig().set('versionConsentedMetrics', __COMFYUI_DESKTOP_VERSION__);
     useDesktopConfig().set('selectedDevice', device);
+    await this.warnIfNvidiaDriverTooOld(device);
 
     // Load the next page
     const page = device === 'unsupported' ? 'not-supported' : 'server-start';
@@ -381,8 +382,9 @@ export class InstallationManager implements HasTelemetry {
     try {
       await installation.virtualEnvironment.installComfyUIRequirements(callbacks);
       await installation.virtualEnvironment.installComfyUIManagerRequirements(callbacks);
-      await this.warnIfNvidiaDriverTooOld(installation);
-      await installation.virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
+      await this.warnIfNvidiaDriverTooOld(installation.virtualEnvironment.selectedDevice);
+      // Disable automatic NVIDIA torch upgrades so users control large downloads.
+      // await installation.virtualEnvironment.ensureRecommendedNvidiaTorch(callbacks);
       await installation.validate();
     } catch (error) {
       log.error('Error auto-updating packages:', error);
@@ -392,11 +394,11 @@ export class InstallationManager implements HasTelemetry {
 
   /**
    * Warns the user if their NVIDIA driver is too old for the required CUDA build.
-   * @param installation The current installation.
+   * @param device The device selected for installation.
    */
-  private async warnIfNvidiaDriverTooOld(installation: ComfyInstallation): Promise<void> {
+  private async warnIfNvidiaDriverTooOld(device: InstallOptions['device'] | undefined): Promise<void> {
     if (process.platform !== 'win32') return;
-    if (installation.virtualEnvironment.selectedDevice !== 'nvidia') return;
+    if (device !== 'nvidia') return;
 
     const driverVersion =
       (await this.getNvidiaDriverVersionFromSmi()) ?? (await this.getNvidiaDriverVersionFromSmiFallback());
@@ -407,7 +409,7 @@ export class InstallationManager implements HasTelemetry {
     await this.appWindow.showMessageBox({
       type: 'warning',
       title: 'Update NVIDIA Driver',
-      message: 'Your NVIDIA driver may be too old for PyTorch 2.9.1 + cu130.',
+      message: `Your NVIDIA driver may be too old for PyTorch ${NVIDIA_TORCH_VERSION}.`,
       detail: `Detected driver version: ${driverVersion}\nRecommended minimum: ${NVIDIA_DRIVER_MIN_VERSION}\n\nPlease consider updating your NVIDIA drivers and retrying if you run into issues.`,
       buttons: ['OK'],
     });

@@ -81,6 +81,20 @@ export class ComfyServer implements HasTelemetry {
     return `http://${this.serverArgs.listen}:${this.serverArgs.port}`;
   }
 
+  private resolveDatabasePath(userDirectoryPath: string): string {
+    if (process.platform === 'win32') {
+      return path.win32.resolve(userDirectoryPath, 'comfyui.db');
+    }
+
+    return path.resolve(userDirectoryPath, 'comfyui.db');
+  }
+
+  private get databaseUrl(): string {
+    const dbPath = this.resolveDatabasePath(this.userDirectoryPath);
+    const normalizedDbPath = process.platform === 'win32' ? dbPath.replaceAll('\\', '/') : dbPath;
+    return `sqlite:///${normalizedDbPath}`;
+  }
+
   /**
    * Core arguments to pass to the ComfyUI server to ensure electron app
    * works as expected.
@@ -92,6 +106,7 @@ export class ComfyServer implements HasTelemetry {
       'output-directory': this.outputDirectoryPath,
       'front-end-root': this.webRootPath,
       'base-directory': this.basePath,
+      'database-url': this.databaseUrl,
       'extra-model-paths-config': ComfyServerConfig.configPath,
       'log-stdout': '',
     };
