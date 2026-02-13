@@ -43,7 +43,6 @@
     "patch:core:frontend": "node scripts/patchComfyUI.js requirements",
     "postinstall": "node .husky/install.mjs",
     "publish": "yarn run vite:compile && todesktop build",
-    "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
     "reset-install": "node scripts/resetInstall.js",
     "sign": "node debug/sign.js",
     "start": "vite build --config vite.preload.config.ts && vite build --watch --mode startwatch",
