@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 concurrency:
   group: auto-bump-comfyui-release
@@ -26,6 +25,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: main
 
       - name: Resolve target ComfyUI version
         id: version
@@ -165,28 +165,25 @@ jobs:
         if: steps.version.outputs.should_update == 'true'
         run: rm -rf assets/ComfyUI
 
-      - name: Create pull request
+      - name: Commit and push bump to main
         if: steps.version.outputs.should_update == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GH_APP_TOKEN }}
-          branch: automated/bump-comfyui-v${{ steps.version.outputs.target_version }}
-          delete-branch: true
-          commit-message: Bump ComfyUI to v${{ steps.version.outputs.target_version }}
-          title: Bump ComfyUI to v${{ steps.version.outputs.target_version }}
-          body: |
-            ## Summary
-            - bump `config.comfyUI.version` from `${{ steps.version.outputs.current_version }}` to `${{ steps.version.outputs.target_version }}`
-            - regenerate `scripts/core-requirements.patch` from upstream ComfyUI requirements
-            - recompile pre-shipped requirements in `assets/requirements/*.compiled` using `uv pip compile` commands stored in file headers
+        env:
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+        run: |
+          set -euo pipefail
 
-            ## Upstream Release
-            - ${{ steps.version.outputs.target_release_url }}
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            ## Testing
-            - workflow regenerated compiled requirements and patch artifacts
-          labels: dependencies
-          add-paths: |
-            package.json
-            scripts/core-requirements.patch
+          git add \
+            package.json \
+            scripts/core-requirements.patch \
             assets/requirements/*.compiled
+
+          if git diff --cached --quiet; then
+            echo "No bump changes to commit after regeneration; skipping push."
+            exit 0
+          fi
+
+          git commit -m "Bump ComfyUI to v${TARGET_VERSION}"
+          git push origin HEAD:main
