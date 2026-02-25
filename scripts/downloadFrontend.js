@@ -12,12 +12,13 @@ if (!frontend) {
   process.exit(1);
 }
 
-// Example "v1.3.34"
+// Example "1.3.34" or "v1.3.34"
 const version = process.argv[2] || frontend.version;
 if (!version) {
   console.error('No version specified');
   process.exit(1);
 }
+const releaseTag = version.startsWith('v') ? version : `v${version}`;
 
 const frontendRepo = 'https://github.com/Comfy-Org/ComfyUI_frontend';
 
@@ -90,7 +91,7 @@ if (frontend.optionalBranch) {
   }
 } else {
   // Download desktop-specific release frontend zip.
-  const releaseBaseUrl = `https://github.com/Comfy-Org/ComfyUI_frontend/releases/download/v${version}`;
+  const releaseBaseUrl = `https://github.com/Comfy-Org/ComfyUI_frontend/releases/download/${releaseTag}`;
   const frontendArtifact = 'dist-desktop.zip';
 
   const downloadPath = 'temp_frontend.zip';
@@ -117,7 +118,7 @@ if (frontend.optionalBranch) {
       };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
-        throw new Error(`Frontend artifact "${frontendArtifact}" not found for v${version}.`);
+        throw new Error(`Frontend artifact "${frontendArtifact}" not found for ${releaseTag}.`);
       }
       throw error;
     }
