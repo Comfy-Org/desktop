@@ -12,7 +12,7 @@
   "config": {
     "frontend": {
       "version": "1.39.17",
-      "optionalBranch": ""
+      "optionalBranch": "core/1.39"
     },
     "comfyUI": {
       "version": "0.15.0",
