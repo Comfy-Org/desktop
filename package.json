@@ -11,7 +11,7 @@
   "type": "module",
   "config": {
     "frontend": {
-      "version": "1.39.19",
+      "version": "1.41.6",
       "optionalBranch": ""
     },
     "comfyUI": {
