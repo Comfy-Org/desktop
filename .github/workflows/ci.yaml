@@ -3,26 +3,8 @@ name: Unit Test, Lint, and Format
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '.github/**'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.cursor/**'
-      - '.husky/**'
-      - '.vscode/**'
-      - '.claude/**'
-      - 'CLAUDE.md'
-      - '*_example'
   push:
     branches: [main]
-    paths-ignore:
-      - '.github/**'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.cursor/**'
-      - '.husky/**'
-      - '.vscode/**'
-      - '.claude/**'
-      - 'CLAUDE.md'
-      - '*_example'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
