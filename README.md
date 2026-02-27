@@ -4,6 +4,8 @@
 
 # USER GUIDE
 
+<!-- example change for PR workflow testing -->
+
 Please read the [user guide](https://docs.comfy.org/installation/desktop)
 
 # Download
