@@ -100,13 +100,24 @@ jobs:
         shell: bash
         run: |
           COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
+          COMFYUI_OPTIONAL_BRANCH=$(jq -r '.config.comfyUI.optionalBranch // ""' package.json)
           MANAGER_COMMIT=$(jq -r '.config.managerCommit' package.json)
           {
             echo "comfyui_version=${COMFYUI_VERSION}"
+            echo "comfyui_optional_branch=${COMFYUI_OPTIONAL_BRANCH}"
             echo "manager_commit=${MANAGER_COMMIT}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Checkout ComfyUI
+      - name: Checkout ComfyUI (optional branch)
+        if: steps.versions.outputs.comfyui_optional_branch != ''
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          repository: Comfy-Org/ComfyUI
+          ref: ${{ steps.versions.outputs.comfyui_optional_branch }}
+          path: assets/ComfyUI
+
+      - name: Checkout ComfyUI (version tag)
+        if: steps.versions.outputs.comfyui_optional_branch == ''
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           repository: Comfy-Org/ComfyUI
@@ -176,13 +187,24 @@ jobs:
         id: versions
         run: |
           COMFYUI_VERSION=$(jq -r '.config.comfyUI.version' package.json)
+          COMFYUI_OPTIONAL_BRANCH=$(jq -r '.config.comfyUI.optionalBranch // ""' package.json)
           MANAGER_COMMIT=$(jq -r '.config.managerCommit' package.json)
           {
             echo "comfyui_version=${COMFYUI_VERSION}"
+            echo "comfyui_optional_branch=${COMFYUI_OPTIONAL_BRANCH}"
             echo "manager_commit=${MANAGER_COMMIT}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Checkout ComfyUI
+      - name: Checkout ComfyUI (optional branch)
+        if: steps.versions.outputs.comfyui_optional_branch != ''
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          repository: Comfy-Org/ComfyUI
+          ref: ${{ steps.versions.outputs.comfyui_optional_branch }}
+          path: assets/ComfyUI
+
+      - name: Checkout ComfyUI (version tag)
+        if: steps.versions.outputs.comfyui_optional_branch == ''
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           repository: Comfy-Org/ComfyUI
