@@ -8,6 +8,7 @@ import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 import { ComfyServerConfig } from '../config/comfyServerConfig';
+import { resolvePreferredWindowsInstallPath } from '../config/machineConfig';
 import { IPC_CHANNELS } from '../constants';
 import type { PathValidationResult, SystemPaths } from '../preload';
 
@@ -202,11 +203,12 @@ export function registerPathHandlers() {
     // Remove OneDrive from documents path if present
     if (process.platform === 'win32') {
       documentsPath = documentsPath.replace(/OneDrive\\/, '');
+      const machineInstallPath = resolvePreferredWindowsInstallPath(app.getPath('exe'));
       // We should use path.win32.join for Windows paths
       return {
         appData: app.getPath('appData'),
         appPath: app.getAppPath(),
-        defaultInstallPath: path.join(documentsPath, 'ComfyUI'),
+        defaultInstallPath: machineInstallPath ?? path.join(documentsPath, 'ComfyUI'),
       };
     }
 

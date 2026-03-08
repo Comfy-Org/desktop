@@ -1,8 +1,19 @@
+import { app } from 'electron';
 import log from 'electron-log/main';
-import { rm } from 'node:fs/promises';
+import { copyFile, mkdir, rm } from 'node:fs/promises';
+import path from 'node:path';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings, useComfySettings } from '../config/comfySettings';
+import {
+  MACHINE_MODEL_CONFIG_FILE_NAME,
+  type MachineScopeConfig,
+  getMachineConfigPath,
+  getMachineModelConfigPath,
+  readMachineConfig,
+  shouldUseMachineScope,
+  writeMachineConfig,
+} from '../config/machineConfig';
 import { evaluatePathRestrictions } from '../handlers/pathHandlers';
 import type { DesktopInstallState } from '../main_types';
 import type { InstallValidation } from '../preload';
@@ -81,10 +92,36 @@ export class ComfyInstallation {
    */
   static async fromConfig(): Promise<ComfyInstallation | undefined> {
     const config = useDesktopConfig();
-    const state = config.get('installState');
-    const basePath = config.get('basePath');
+    let state = config.get('installState');
+    let basePath = config.get('basePath');
+    let machineConfig: MachineScopeConfig | undefined;
+
+    if (!state || !basePath) {
+      machineConfig = readMachineConfig();
+      if (machineConfig) {
+        state ??= machineConfig.installState;
+        basePath ??= machineConfig.basePath;
+
+        // Hydrate first-launch user config from machine-scoped config so
+        // sysprep-created users do not need to re-run onboarding.
+        if (state) config.set('installState', state);
+        if (basePath) config.set('basePath', basePath);
+      }
+    }
+
     if (state && basePath) {
-      await ComfySettings.load(basePath);
+      machineConfig ??= readMachineConfig();
+      await this.importPreseedConfigsIfNeeded(basePath, machineConfig);
+
+      const settingsPath = this.resolveSettingsPath(basePath);
+      const settingsExists = await pathAccessible(settingsPath);
+
+      const settings = await ComfySettings.load(basePath);
+      if (machineConfig && !settingsExists) {
+        settings.set('Comfy-Desktop.AutoUpdate', machineConfig.autoUpdate);
+        await settings.saveSettings();
+      }
+
       return new ComfyInstallation(state, basePath, getTelemetry());
     }
   }
@@ -233,6 +270,7 @@ export class ComfyInstallation {
   setState(state: DesktopInstallState) {
     this.state = state;
     useDesktopConfig().set('installState', state);
+    this.syncMachineScopeConfig(state, this.basePath);
   }
 
   /**
@@ -248,6 +286,7 @@ export class ComfyInstallation {
 
     // If settings file exists at new location, load it
     await ComfySettings.load(basePath);
+    this.syncMachineScopeConfig(this.state, basePath);
   }
 
   /**
@@ -255,9 +294,89 @@ export class ComfyInstallation {
    * @todo Allow normal removal of the app and its effects.
    */
   async uninstall(): Promise<void> {
-    if (await pathAccessible(ComfyServerConfig.configPath)) {
-      await rm(ComfyServerConfig.configPath);
+    const machineConfig = readMachineConfig();
+    const isMachineScopedInstall = ComfyInstallation.isMachineScopedInstall(this.basePath, machineConfig);
+    const modelConfigPath = isMachineScopedInstall
+      ? (machineConfig?.modelConfigPath ?? ComfyServerConfig.configPath)
+      : ComfyInstallation.getUserScopedModelConfigPath();
+
+    if (await pathAccessible(modelConfigPath)) {
+      await rm(modelConfigPath);
     }
+
+    const machineConfigPath = getMachineConfigPath();
+    if (isMachineScopedInstall && machineConfigPath && (await pathAccessible(machineConfigPath))) {
+      await rm(machineConfigPath);
+    }
+
     await useDesktopConfig().permanentlyDeleteConfigFile();
+  }
+
+  private syncMachineScopeConfig(state: DesktopInstallState, basePath: string) {
+    if (!shouldUseMachineScope(basePath)) return;
+
+    const currentMachineConfig = readMachineConfig();
+    const modelConfigPath = currentMachineConfig?.modelConfigPath ?? getMachineModelConfigPath();
+    if (!modelConfigPath) return;
+
+    const updated = writeMachineConfig({
+      installState: state,
+      basePath,
+      modelConfigPath,
+      autoUpdate: useComfySettings().get('Comfy-Desktop.AutoUpdate'),
+      preseedConfigDir: currentMachineConfig?.preseedConfigDir,
+    });
+
+    if (!updated) {
+      log.warn('Failed to synchronize machine scope config state.');
+    }
+  }
+
+  private static resolveSettingsPath(basePath: string): string {
+    return path.join(basePath, 'user', 'default', 'comfy.settings.json');
+  }
+
+  private static getUserScopedModelConfigPath(): string {
+    return path.join(app.getPath('userData'), ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH);
+  }
+
+  private static isMachineScopedInstall(basePath: string, machineConfig?: MachineScopeConfig): boolean {
+    if (!machineConfig) return false;
+    return this.normalizePathForComparison(machineConfig.basePath) === this.normalizePathForComparison(basePath);
+  }
+
+  private static normalizePathForComparison(targetPath: string): string {
+    if (process.platform === 'win32') {
+      return path.win32.resolve(targetPath).toLowerCase();
+    }
+    return path.resolve(targetPath);
+  }
+
+  private static async importPreseedConfigsIfNeeded(
+    basePath: string,
+    machineConfig?: MachineScopeConfig
+  ): Promise<void> {
+    if (!machineConfig?.preseedConfigDir) return;
+
+    const settingsPath = this.resolveSettingsPath(basePath);
+    const preseedSettingsPath = path.join(machineConfig.preseedConfigDir, 'comfy.settings.json');
+    const preseedModelConfigPath = path.join(machineConfig.preseedConfigDir, MACHINE_MODEL_CONFIG_FILE_NAME);
+
+    await this.copyFileIfMissing(preseedModelConfigPath, machineConfig.modelConfigPath, 'extra model config');
+    await this.copyFileIfMissing(preseedSettingsPath, settingsPath, 'comfy settings');
+  }
+
+  private static async copyFileIfMissing(sourcePath: string, destinationPath: string, label: string): Promise<void> {
+    if (path.resolve(sourcePath) === path.resolve(destinationPath)) return;
+    if (!(await pathAccessible(sourcePath))) return;
+    if (await pathAccessible(destinationPath)) return;
+
+    try {
+      await mkdir(path.dirname(destinationPath), { recursive: true });
+      await copyFile(sourcePath, destinationPath);
+      log.info(`Imported preseed ${label}.`, { sourcePath, destinationPath });
+    } catch (error) {
+      log.warn(`Failed importing preseed ${label}.`, { sourcePath, destinationPath, error });
+    }
   }
 }
