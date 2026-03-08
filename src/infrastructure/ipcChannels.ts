@@ -307,6 +307,16 @@ export interface IpcChannels {
     return: boolean;
   };
 
+  [IPC_CHANNELS.CLOSE_REQUESTED]: {
+    params: [];
+    return: void;
+  };
+
+  [IPC_CHANNELS.CLOSE_REQUEST_RESPONSE]: {
+    params: [allow: boolean];
+    return: boolean;
+  };
+
   [IPC_CHANNELS.LOADING_PROGRESS]: {
     params: [progress: { status: ProgressStatus; message?: string }];
     return: void;
