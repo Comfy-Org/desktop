@@ -24,6 +24,8 @@ import { ComfyDesktopApp } from './main-process/comfyDesktopApp';
 import type { ComfyInstallation } from './main-process/comfyInstallation';
 import { DevOverrides } from './main-process/devOverrides';
 import { createInstallStageInfo } from './main-process/installStages';
+import type { ComfyProtocolAction } from './protocol/protocolParser';
+import { ComfyManagerService } from './services/comfyManagerService';
 import SentryLogging from './services/sentry';
 import { type HasTelemetry, type ITelemetry, getTelemetry, promptMetricsConsent } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
@@ -35,6 +37,12 @@ export class DesktopApp implements HasTelemetry {
 
   comfyDesktopApp?: ComfyDesktopApp;
   installation?: ComfyInstallation;
+
+  /** Queue of protocol actions to process when ComfyUI is ready */
+  private readonly protocolActionQueue: ComfyProtocolAction[] = [];
+
+  /** Service for interacting with ComfyUI Manager API */
+  private comfyManagerService?: ComfyManagerService;
 
   constructor(
     private readonly overrides: DevOverrides,
@@ -104,6 +112,65 @@ export class DesktopApp implements HasTelemetry {
     // At this point, user has gone through the onboarding flow.
     await this.initializeTelemetry(installation);
 
+    /**
+     * Shows a dialog to the user asking if they want to reinstall the venv.
+     * @returns The result of the dialog.
+     */
+    const getUserApprovalToReinstallVenv = async (): Promise<boolean> => {
+      const { response } = await appWindow.showMessageBox({
+        type: 'error',
+        title: 'Python Environment Issue',
+        message:
+          'Missing Python Module\n\n' +
+          'We were unable to import at least one required Python module.\n\n' +
+          'Would you like to remove and reinstall the venv?',
+        buttons: ['Reset Virtual Environment', 'Ignore'],
+        defaultId: 0,
+        cancelId: 1,
+      });
+      return response === 0;
+    };
+
+    /**
+     * Shows the starting server page and starts the ComfyUI server.
+     * @param comfyDesktopApp The comfy desktop app instance.
+     * @param serverArgs The server args to use to start the server.
+     */
+    const startComfyServer = async (comfyDesktopApp: ComfyDesktopApp, serverArgs: ServerArgs): Promise<void> => {
+      appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
+      await comfyDesktopApp.startComfyServer(serverArgs);
+    };
+
+    /**
+     * Loads the frontend and sets the app state to ready.
+     * @param serverArgs The server args to use to load the frontend.
+     */
+    const loadFrontend = async (serverArgs: ServerArgs): Promise<void> => {
+      appWindow.sendServerStartProgress(ProgressStatus.READY);
+      await appWindow.loadComfyUI(serverArgs);
+
+      appState.setInstallStage(createInstallStageInfo(InstallStage.READY, { progress: 100 }));
+      appState.emitLoaded();
+
+      // Initialize ComfyUI Manager service now that the server is running
+      const comfyServerUrl = `http://${serverArgs.listen}:${serverArgs.port}`;
+      this.comfyManagerService = new ComfyManagerService(comfyServerUrl);
+
+      // Process any queued protocol actions now that ComfyUI is ready
+      await this.processQueuedProtocolActions();
+    };
+
+    /**
+     * Shows the startup error page and sets the app state to error.
+     * @param error The error to show the startup error page for.
+     */
+    const showStartupErrorPage = (error: unknown): void => {
+      log.error('Unhandled exception during server start', error);
+      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
+      appWindow.sendServerStartProgress(ProgressStatus.ERROR);
+      appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { progress: 0, error: String(error) }));
+    };
+
     try {
       // Initialize app
       this.comfyDesktopApp ??= new ComfyDesktopApp(installation, appWindow, telemetry);
@@ -161,58 +228,6 @@ export class DesktopApp implements HasTelemetry {
         );
         app.quit();
       }
-    }
-
-    /**
-     * Shows a dialog to the user asking if they want to reinstall the venv.
-     * @returns The result of the dialog.
-     */
-    async function getUserApprovalToReinstallVenv(): Promise<boolean> {
-      const { response } = await appWindow.showMessageBox({
-        type: 'error',
-        title: 'Python Environment Issue',
-        message:
-          'Missing Python Module\n\n' +
-          'We were unable to import at least one required Python module.\n\n' +
-          'Would you like to remove and reinstall the venv?',
-        buttons: ['Reset Virtual Environment', 'Ignore'],
-        defaultId: 0,
-        cancelId: 1,
-      });
-      return response === 0;
-    }
-
-    /**
-     * Shows the starting server page and starts the ComfyUI server.
-     * @param comfyDesktopApp The comfy desktop app instance.
-     * @param serverArgs The server args to use to start the server.
-     */
-    async function startComfyServer(comfyDesktopApp: ComfyDesktopApp, serverArgs: ServerArgs): Promise<void> {
-      appState.setInstallStage(createInstallStageInfo(InstallStage.STARTING_SERVER));
-      await comfyDesktopApp.startComfyServer(serverArgs);
-    }
-
-    /**
-     * Loads the frontend and sets the app state to ready.
-     * @param serverArgs The server args to use to load the frontend.
-     */
-    async function loadFrontend(serverArgs: ServerArgs): Promise<void> {
-      appWindow.sendServerStartProgress(ProgressStatus.READY);
-      await appWindow.loadComfyUI(serverArgs);
-
-      appState.setInstallStage(createInstallStageInfo(InstallStage.READY, { progress: 100 }));
-      appState.emitLoaded();
-    }
-
-    /**
-     * Shows the startup error page and sets the app state to error.
-     * @param error The error to show the startup error page for.
-     */
-    function showStartupErrorPage(error: unknown): void {
-      log.error('Unhandled exception during server start', error);
-      appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `${error}\n`);
-      appWindow.sendServerStartProgress(ProgressStatus.ERROR);
-      appState.setInstallStage(createInstallStageInfo(InstallStage.ERROR, { progress: 0, error: String(error) }));
     }
   }
 
@@ -277,5 +292,137 @@ export class DesktopApp implements HasTelemetry {
     else app.quit();
     // Unreachable - library type is void instead of never.
     throw _error;
+  }
+
+  /**
+   * Queue a protocol action to be processed when ComfyUI is ready
+   * @param action The protocol action to queue
+   */
+  queueProtocolAction(action: ComfyProtocolAction): void {
+    log.info('Queueing protocol action:', action);
+    this.protocolActionQueue.push(action);
+  }
+
+  /**
+   * Handle a protocol action immediately (if ComfyUI is ready) or queue it
+   * @param action The protocol action to handle
+   */
+  handleProtocolAction(action: ComfyProtocolAction): void {
+    log.info('Handling protocol action:', action);
+
+    // If ComfyUI is not ready yet, queue the action
+    if (!this.appState.loaded || !this.comfyDesktopApp?.serverRunning || !this.comfyManagerService) {
+      this.queueProtocolAction(action);
+      return;
+    }
+
+    // Process the action immediately (fire and forget)
+    this.processProtocolAction(action).catch((error) => {
+      log.error('Error in protocol action processing:', error);
+    });
+  }
+
+  /**
+   * Process all queued protocol actions
+   */
+  private async processQueuedProtocolActions(): Promise<void> {
+    if (this.protocolActionQueue.length === 0) return;
+
+    log.info(`Processing ${this.protocolActionQueue.length} queued protocol actions`);
+
+    while (this.protocolActionQueue.length > 0) {
+      const action = this.protocolActionQueue.shift();
+      if (action) {
+        await this.processProtocolAction(action);
+      }
+    }
+  }
+
+  /**
+   * Process a single protocol action
+   * @param action The action to process
+   */
+  private async processProtocolAction(action: ComfyProtocolAction): Promise<void> {
+    log.info('Processing protocol action:', action);
+
+    if (!this.comfyManagerService) {
+      log.error('ComfyUI Manager service not available');
+      this.showProtocolActionError(action, 'ComfyUI Manager service not available');
+      return;
+    }
+
+    try {
+      this.telemetry.track('desktop:protocol_action', {
+        action: action.action,
+        nodeId: action.params.nodeId,
+      });
+
+      // Show notification that processing has started
+      this.showProtocolActionNotification(action, 'Processing...');
+
+      // Process the action via ComfyUI Manager API
+      const result = await this.comfyManagerService.processProtocolAction(action);
+
+      if (result.success) {
+        log.info('Protocol action completed successfully:', action);
+        this.showProtocolActionNotification(action, result.message || 'Completed successfully');
+      } else {
+        log.warn('Protocol action failed:', { action, message: result.message });
+        this.showProtocolActionError(action, result.message || 'Action failed');
+      }
+    } catch (error) {
+      log.error('Error processing protocol action:', error);
+      this.showProtocolActionError(action, error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+
+  /**
+   * Show an error notification for a failed protocol action
+   * @param action The action that failed
+   * @param errorMessage The error message
+   */
+  private showProtocolActionError(action: ComfyProtocolAction, errorMessage: string): void {
+    const actionNames = {
+      'install-custom-node': 'Installing custom node',
+      import: 'Importing resource',
+    };
+
+    const actionName = actionNames[action.action] || 'Processing action';
+    const message = `${actionName} failed: ${errorMessage}`;
+
+    // Focus the window to bring it to the front
+    if (this.appWindow.isMinimized()) {
+      this.appWindow.restore();
+    }
+    this.appWindow.focus();
+
+    // Show error in logs and as dialog
+    this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `[Protocol Error] ${message}\n`);
+
+    dialog.showErrorBox('Protocol Action Error', message);
+  }
+
+  /**
+   * Show a notification for the protocol action being processed
+   * @param action The action being processed
+   * @param status Optional status message
+   */
+  private showProtocolActionNotification(action: ComfyProtocolAction, status?: string): void {
+    const messages = {
+      'install-custom-node': `Installing custom node: ${action.params.nodeId}`,
+      import: `Importing: ${action.params.nodeId}`,
+    };
+
+    const message = messages[action.action] || `Processing action: ${action.action}`;
+    const fullMessage = status ? `${message} - ${status}` : message;
+
+    // Focus the window to bring it to the front
+    if (this.appWindow.isMinimized()) {
+      this.appWindow.restore();
+    }
+    this.appWindow.focus();
+
+    // Log the action for visibility
+    this.appWindow.send(IPC_CHANNELS.LOG_MESSAGE, `[Protocol] ${fullMessage}\n`);
   }
 }
