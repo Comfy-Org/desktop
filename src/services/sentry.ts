@@ -3,11 +3,11 @@ import { app, dialog } from 'electron';
 import log from 'electron-log/main';
 import fs from 'node:fs';
 import path from 'node:path';
-import { graphics } from 'systeminformation';
 
 import { useComfySettings } from '@/config/comfySettings';
 
 import { LogFile, SENTRY_URL_ENDPOINT } from '../constants';
+import { collectGpuInformation } from './gpuInfo';
 
 const NUM_LOG_LINES_CAPTURED = 64;
 const SENTRY_PROJECT_ID = '4508007940685824';
@@ -64,6 +64,7 @@ export function captureSentryException(error: unknown, eventName: string) {
 class SentryLogging {
   /** Used to redact the base path in the event payload. */
   getBasePath?: () => string | undefined;
+  private hasSetGpuContext = false;
 
   init() {
     Sentry.init({
@@ -101,22 +102,25 @@ class SentryLogging {
   }
 
   async setSentryGpuContext(): Promise<void> {
+    if (this.hasSetGpuContext) return;
+
     log.debug('Setting up GPU context');
     try {
-      const graphicsInfo = await graphics();
-      const gpuInfo = graphicsInfo.controllers.map((gpu, index) => ({
-        [`gpu_${index}`]: {
-          vendor: gpu.vendor,
-          model: gpu.model,
-          vram: gpu.vram,
-          driver: gpu.driverVersion,
-        },
-      }));
-
-      // Combine all GPU info into a single object
-      const allGpuInfo = { ...gpuInfo };
+      const gpus = await collectGpuInformation();
+      const allGpuInfo = Object.fromEntries(
+        gpus.map((gpu, index) => [
+          `gpu_${index}`,
+          {
+            vendor: gpu.vendor,
+            model: gpu.model,
+            vram: gpu.vram,
+            driver: gpu.driverVersion,
+          },
+        ])
+      );
       // Set Sentry context with all GPU information
       Sentry.setContext('gpus', allGpuInfo);
+      this.hasSetGpuContext = true;
     } catch (error) {
       log.error('Error getting GPU info:', error);
     }
