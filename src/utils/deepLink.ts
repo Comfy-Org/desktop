@@ -46,5 +46,6 @@ export function parseDeepLinkUrl(url: string): DeepLinkAction | null {
  * @return The first `comfy://` URL found, or `undefined` if none
  */
 export function findDeepLinkUrl(args: string[]): string | undefined {
-  return args.find((arg) => arg.startsWith(`${PROTOCOL_NAME}://`));
+  const prefix = `${PROTOCOL_NAME}://`;
+  return args.find((arg) => arg.toLowerCase().startsWith(prefix));
 }

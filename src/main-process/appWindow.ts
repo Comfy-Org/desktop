@@ -393,6 +393,8 @@ export class AppWindow {
     });
 
     app.on('open-url', (event, url) => {
+      // Skip if the early startup listener in main.ts already captured this URL.
+      if (event.defaultPrevented) return;
       event.preventDefault();
       void this.handleDeepLink(url);
     });
