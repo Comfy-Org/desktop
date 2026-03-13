@@ -13,7 +13,7 @@ import {
 import log from 'electron-log/main';
 import Store from 'electron-store';
 import { debounce } from 'lodash';
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { URL } from 'node:url';
 
@@ -175,7 +175,7 @@ export class AppWindow {
    * the file path to the renderer via IPC.
    * @param url The deep link URL to handle
    */
-  public handleDeepLink(url: string): void {
+  public async handleDeepLink(url: string): Promise<void> {
     const result = parseDeepLinkUrl(url);
     if (!result) {
       log.warn(`Invalid deep link URL: ${url}`);
@@ -187,8 +187,11 @@ export class AppWindow {
       return;
     }
 
-    if (!fs.existsSync(result.filePath)) {
+    try {
+      await fs.access(result.filePath);
+    } catch {
       log.error(`Deep link file not found: ${result.filePath}`);
+      dialog.showErrorBox('File Not Found', `The workflow file could not be found:\n\n${result.filePath}`);
       return;
     }
 
@@ -377,15 +380,16 @@ export class AppWindow {
 
       const deepLinkUrl = findDeepLinkUrl(commandLine);
       if (deepLinkUrl) {
-        this.handleDeepLink(deepLinkUrl);
+        void this.handleDeepLink(deepLinkUrl);
       } else {
         if (this.isMinimized()) this.restore();
         this.focus();
       }
     });
 
-    app.on('open-url', (_event, url) => {
-      this.handleDeepLink(url);
+    app.on('open-url', (event, url) => {
+      event.preventDefault();
+      void this.handleDeepLink(url);
     });
   }
 
