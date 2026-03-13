@@ -7,7 +7,7 @@ import waitOn from 'wait-on';
 import { removeAnsiCodesTransform } from '@/infrastructure/structuredLogging';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
-import { ComfySettings } from '../config/comfySettings';
+import { ComfySettings, useComfySettings } from '../config/comfySettings';
 import { IPC_CHANNELS, LogFile, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
 import { HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
@@ -129,7 +129,11 @@ export class ComfyServer implements HasTelemetry {
       ...this.coreLaunchArgs,
       ...this.serverArgs,
     });
-    return [this.mainScriptPath, ...args];
+    const settings = useComfySettings();
+    const customArgsString = settings.get('Comfy-Desktop.LaunchOptions');
+    // This regex splits the string by spaces, but keeps quoted sections together.
+    const customArgs = customArgsString ? customArgsString.split(' ').filter(Boolean) : [];
+    return [this.mainScriptPath, ...args, ...customArgs];
   }
 
   /**
