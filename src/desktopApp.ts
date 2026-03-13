@@ -208,7 +208,7 @@ export class DesktopApp implements HasTelemetry {
       appState.emitLoaded();
 
       if (pendingDeepLinkUrl) {
-        appWindow.handleDeepLink(pendingDeepLinkUrl);
+        await appWindow.handleDeepLink(pendingDeepLinkUrl);
       }
     }
 

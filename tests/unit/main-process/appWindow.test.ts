@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { BrowserWindow } from 'electron';
-import fs from 'node:fs';
+import { BrowserWindow, dialog } from 'electron';
+import fs from 'node:fs/promises';
 
 import { AppWindow } from '../../../src/main-process/appWindow';
 import { IPC_CHANNELS } from '../../../src/constants';
@@ -8,16 +8,12 @@ import { IPC_CHANNELS } from '../../../src/constants';
 vi.mock('electron', () => ({
   BrowserWindow: vi.fn(),
   ipcMain: { on: vi.fn(), handle: vi.fn() },
+  dialog: { showErrorBox: vi.fn() },
   screen: {
     getPrimaryDisplay: vi.fn(() => ({
       workAreaSize: { width: 1920, height: 1080 },
     })),
   },
-}));
-
-vi.mock('node:fs', () => ({
-  default: { existsSync: vi.fn() },
-  existsSync: vi.fn(),
 }));
 
 describe('AppWindow', () => {
@@ -118,6 +114,11 @@ describe('AppWindow popup handler', () => {
   });
 });
 
+vi.mock('node:fs/promises', () => ({
+  default: { access: vi.fn() },
+  access: vi.fn(),
+}));
+
 describe('AppWindow.handleDeepLink', () => {
   let appWindow: AppWindow;
   let sendSpy: ReturnType<typeof vi.fn>;
@@ -160,49 +161,53 @@ describe('AppWindow.handleDeepLink', () => {
     vi.spyOn(appWindow, 'send').mockImplementation(sendSpy);
   });
 
-  it('should send DEEP_LINK_OPEN IPC for a valid comfy://open URL with existing file', () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
+  it('should send DEEP_LINK_OPEN IPC for a valid comfy://open URL with existing file', async () => {
+    vi.mocked(fs.access).mockResolvedValue();
 
-    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+    await appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
 
     expect(sendSpy).toHaveBeenCalledWith(IPC_CHANNELS.DEEP_LINK_OPEN, '/path/to/workflow.json');
   });
 
-  it('should not send IPC for an invalid URL', () => {
-    appWindow.handleDeepLink('not-a-valid-url');
+  it('should not send IPC for an invalid URL', async () => {
+    await appWindow.handleDeepLink('not-a-valid-url');
 
-    expect(fs.existsSync).not.toHaveBeenCalled();
+    expect(fs.access).not.toHaveBeenCalled();
     expect(sendSpy).not.toHaveBeenCalled();
   });
 
-  it('should not send IPC for an unsupported action', () => {
-    appWindow.handleDeepLink('comfy://install?file=/path/to/node.json');
+  it('should not send IPC for an unsupported action', async () => {
+    await appWindow.handleDeepLink('comfy://install?file=/path/to/node.json');
 
-    expect(fs.existsSync).not.toHaveBeenCalled();
+    expect(fs.access).not.toHaveBeenCalled();
     expect(sendSpy).not.toHaveBeenCalled();
   });
 
-  it('should not send IPC when file does not exist', () => {
-    vi.mocked(fs.existsSync).mockReturnValue(false);
+  it('should not send IPC when file does not exist', async () => {
+    vi.mocked(fs.access).mockRejectedValue(new Error('ENOENT'));
 
-    appWindow.handleDeepLink('comfy://open?file=/nonexistent/file.json');
+    await appWindow.handleDeepLink('comfy://open?file=/nonexistent/file.json');
 
     expect(sendSpy).not.toHaveBeenCalled();
+    expect(dialog.showErrorBox).toHaveBeenCalledWith(
+      'File Not Found',
+      expect.stringContaining('/nonexistent/file.json')
+    );
   });
 
-  it('should focus the window when handling a valid deep link', () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
+  it('should focus the window when handling a valid deep link', async () => {
+    vi.mocked(fs.access).mockResolvedValue();
 
-    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+    await appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
 
     expect(mockFocus).toHaveBeenCalled();
   });
 
-  it('should restore and focus the window when minimized', () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
+  it('should restore and focus the window when minimized', async () => {
+    vi.mocked(fs.access).mockResolvedValue();
     mockIsMinimized.mockReturnValue(true);
 
-    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+    await appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
 
     expect(mockRestore).toHaveBeenCalled();
     expect(mockFocus).toHaveBeenCalled();
