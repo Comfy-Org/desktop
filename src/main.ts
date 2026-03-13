@@ -13,6 +13,7 @@ import SentryLogging from './services/sentry';
 import { getTelemetry } from './services/telemetry';
 import { DesktopConfig } from './store/desktopConfig';
 import { rotateLogFiles } from './utils';
+import { PROTOCOL_NAME, findDeepLinkUrl } from './utils/deepLink';
 
 // Synchronous pre-start configuration
 dotenv.config();
@@ -26,6 +27,19 @@ const overrides = new DevOverrides();
 quitWhenAllWindowsAreClosed();
 trackAppQuitEvents();
 initializeSentry();
+
+// Register comfy:// protocol handler
+app.setAsDefaultProtocolClient(PROTOCOL_NAME);
+
+// macOS: open-url fires when the OS opens a comfy:// URL (can fire before app.ready).
+// This early listener captures URLs received before AppWindow exists.
+// AppWindow registers its own open-url listener in setupAppEvents() to handle post-startup URLs.
+let pendingDeepLinkUrl: string | undefined;
+const earlyOpenUrlHandler = (_event: Electron.Event, url: string) => {
+  _event.preventDefault();
+  pendingDeepLinkUrl = url;
+};
+app.on('open-url', earlyOpenUrlHandler);
 
 // Async config & app start
 const gotTheLock = app.requestSingleInstanceLock();
@@ -48,6 +62,11 @@ async function startApp() {
   telemetry.registerHandlers();
   telemetry.track('desktop:app_ready');
 
+  // Windows/Linux: deep link URL comes via process.argv on fresh launch
+  if (!pendingDeepLinkUrl) {
+    pendingDeepLinkUrl = findDeepLinkUrl(process.argv);
+  }
+
   // Load config or exit
   const config = await DesktopConfig.load(shell);
   if (!config) {
@@ -69,7 +88,9 @@ async function startApp() {
     }
   }
 
-  const desktopApp = new DesktopApp(overrides, config);
+  const desktopApp = new DesktopApp(overrides, config, pendingDeepLinkUrl);
+  // AppWindow now handles open-url events — remove the early listener to avoid duplication
+  app.removeListener('open-url', earlyOpenUrlHandler);
   await desktopApp.showLoadingPage();
   await desktopApp.start();
 }

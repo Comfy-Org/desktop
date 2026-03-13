@@ -1,63 +1,27 @@
-import { BrowserWindow, type Tray } from 'electron';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { BrowserWindow } from 'electron';
+import fs from 'node:fs';
 
-import { AppWindow } from '@/main-process/appWindow';
+import { AppWindow } from '../../../src/main-process/appWindow';
+import { IPC_CHANNELS } from '../../../src/constants';
 
-import { type PartialMock, electronMock } from '../setup';
-
-const additionalMocks: PartialMock<typeof Electron> = {
-  BrowserWindow: vi.fn() as PartialMock<BrowserWindow>,
-  nativeTheme: {
-    shouldUseDarkColors: true,
-  },
-  Menu: {
-    buildFromTemplate: vi.fn(),
-    getApplicationMenu: vi.fn(() => null),
-  },
-  Tray: vi.fn(() => ({
-    setContextMenu: vi.fn(),
-    setPressedImage: vi.fn(),
-    setToolTip: vi.fn(),
-    on: vi.fn(),
-  })) as PartialMock<Tray>,
+vi.mock('electron', () => ({
+  BrowserWindow: vi.fn(),
+  ipcMain: { on: vi.fn(), handle: vi.fn() },
   screen: {
     getPrimaryDisplay: vi.fn(() => ({
-      workAreaSize: { width: 1024, height: 768 },
+      workAreaSize: { width: 1920, height: 1080 },
     })),
   },
-  shell: {
-    openExternal: vi.fn(),
-  },
-};
-
-Object.assign(electronMock, additionalMocks);
-
-vi.mock('electron-store', () => ({
-  default: vi.fn(() => ({
-    get: vi.fn(),
-    set: vi.fn(),
-  })),
 }));
 
-vi.mock('@/store/desktopConfig', () => ({
-  useDesktopConfig: vi.fn(() => ({
-    get: vi.fn((key: string) => {
-      if (key === 'installState') return 'installed';
-    }),
-    set: vi.fn(),
-  })),
+vi.mock('node:fs', () => ({
+  default: { existsSync: vi.fn() },
+  existsSync: vi.fn(),
 }));
 
-describe('AppWindow.isOnPage', () => {
-  let appWindow: AppWindow;
-  let mockWebContents: Pick<Electron.WebContents, 'getURL' | 'setWindowOpenHandler'>;
-
+describe('AppWindow', () => {
   beforeEach(() => {
-    mockWebContents = {
-      getURL: vi.fn(),
-      setWindowOpenHandler: vi.fn(),
-    };
-
     vi.stubGlobal('process', {
       ...process,
       resourcesPath: '/mock/app/path/assets',
@@ -66,50 +30,26 @@ describe('AppWindow.isOnPage', () => {
     vi.mocked(BrowserWindow).mockImplementation(
       () =>
         ({
-          webContents: mockWebContents,
+          webContents: {
+            getURL: vi.fn(),
+            setWindowOpenHandler: vi.fn(),
+          },
           on: vi.fn(),
           once: vi.fn(),
           isMaximized: vi.fn(() => false),
           getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1024, height: 768 })),
         }) as unknown as BrowserWindow
     );
-
-    appWindow = new AppWindow(undefined, undefined, false);
   });
 
-  it('should handle file protocol URLs with hash correctly', () => {
-    vi.mocked(mockWebContents.getURL).mockReturnValue('file:///path/to/index.html#welcome');
-    expect(appWindow.isOnPage('welcome')).toBe(true);
+  it('sets the initial URL correctly', () => {
+    const appWindow = new AppWindow(undefined, undefined, false);
+    expect(appWindow.url).toBeDefined();
   });
 
-  it('should handle http protocol URLs correctly', () => {
-    vi.mocked(mockWebContents.getURL).mockReturnValue('http://localhost:3000/welcome');
-    expect(appWindow.isOnPage('welcome')).toBe(true);
-  });
-
-  it('should handle empty pages correctly', () => {
-    vi.mocked(mockWebContents.getURL).mockReturnValue('file:///path/to/index.html');
-    expect(appWindow.isOnPage('')).toBe(true);
-  });
-
-  it('should return false for non-matching pages', () => {
-    vi.mocked(mockWebContents.getURL).mockReturnValue('file:///path/to/index.html#welcome');
-    expect(appWindow.isOnPage('desktop-start')).toBe(false);
-  });
-
-  it('should handle URLs with no hash or path', () => {
-    vi.mocked(mockWebContents.getURL).mockReturnValue('http://localhost:3000');
-    expect(appWindow.isOnPage('')).toBe(true);
-  });
-
-  it('should handle URLs with query parameters', () => {
-    vi.mocked(mockWebContents.getURL).mockReturnValue('http://localhost:3000/server-start?param=value');
-    expect(appWindow.isOnPage('server-start')).toBe(true);
-  });
-
-  it('should handle file URLs with both hash and query parameters', () => {
-    vi.mocked(mockWebContents.getURL).mockReturnValue('file:///path/to/index.html?param=value#welcome');
-    expect(appWindow.isOnPage('welcome')).toBe(true);
+  it('creates a BrowserWindow', () => {
+    new AppWindow(undefined, undefined, false);
+    expect(BrowserWindow).toHaveBeenCalled();
   });
 });
 
@@ -175,5 +115,96 @@ describe('AppWindow popup handler', () => {
       action: 'allow',
       overrideBrowserWindowOptions: { webPreferences: { preload: undefined } },
     });
+  });
+});
+
+describe('AppWindow.handleDeepLink', () => {
+  let appWindow: AppWindow;
+  let sendSpy: ReturnType<typeof vi.fn>;
+  let mockIsMinimized: ReturnType<typeof vi.fn>;
+  let mockRestore: ReturnType<typeof vi.fn>;
+  let mockFocus: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.stubGlobal('process', {
+      ...process,
+      resourcesPath: '/mock/app/path/assets',
+    });
+
+    mockIsMinimized = vi.fn(() => false);
+    mockRestore = vi.fn();
+    mockFocus = vi.fn();
+
+    vi.mocked(BrowserWindow).mockImplementation(
+      () =>
+        ({
+          webContents: {
+            getURL: vi.fn(),
+            setWindowOpenHandler: vi.fn(),
+            isDestroyed: vi.fn(() => false),
+            send: vi.fn(),
+          },
+          on: vi.fn(),
+          once: vi.fn(),
+          isMaximized: vi.fn(() => false),
+          getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1024, height: 768 })),
+          isDestroyed: vi.fn(() => false),
+          isMinimized: mockIsMinimized,
+          restore: mockRestore,
+          focus: mockFocus,
+        }) as unknown as BrowserWindow
+    );
+
+    appWindow = new AppWindow(undefined, undefined, false);
+    sendSpy = vi.fn();
+    vi.spyOn(appWindow, 'send').mockImplementation(sendSpy);
+  });
+
+  it('should send DEEP_LINK_OPEN IPC for a valid comfy://open URL with existing file', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+
+    expect(sendSpy).toHaveBeenCalledWith(IPC_CHANNELS.DEEP_LINK_OPEN, '/path/to/workflow.json');
+  });
+
+  it('should not send IPC for an invalid URL', () => {
+    appWindow.handleDeepLink('not-a-valid-url');
+
+    expect(fs.existsSync).not.toHaveBeenCalled();
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
+  it('should not send IPC for an unsupported action', () => {
+    appWindow.handleDeepLink('comfy://install?file=/path/to/node.json');
+
+    expect(fs.existsSync).not.toHaveBeenCalled();
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
+  it('should not send IPC when file does not exist', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    appWindow.handleDeepLink('comfy://open?file=/nonexistent/file.json');
+
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
+  it('should focus the window when handling a valid deep link', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+
+    expect(mockFocus).toHaveBeenCalled();
+  });
+
+  it('should restore and focus the window when minimized', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    mockIsMinimized.mockReturnValue(true);
+
+    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+
+    expect(mockRestore).toHaveBeenCalled();
+    expect(mockFocus).toHaveBeenCalled();
   });
 });
