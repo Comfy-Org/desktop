@@ -1,0 +1,192 @@
+name: Auto Bump ComfyUI Release
+
+on:
+  repository_dispatch:
+    types: [comfyui_release_published]
+  workflow_dispatch:
+    inputs:
+      comfyui_version:
+        description: 'Optional ComfyUI version or tag (e.g. 0.12.3 or v0.12.3)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-bump-comfyui-release
+  cancel-in-progress: true
+
+jobs:
+  bump-comfyui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout desktop repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve target ComfyUI version
+        id: version
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          INPUT_COMFYUI_VERSION: ${{ github.event.inputs.comfyui_version || '' }}
+          EVENT_NAME: ${{ github.event_name }}
+          PAYLOAD_TAG: ${{ github.event.client_payload.release_tag || '' }}
+          PAYLOAD_URL: ${{ github.event.client_payload.release_url || '' }}
+        run: |
+          set -euo pipefail
+
+          normalize_version() {
+            local raw_version="$1"
+            raw_version="${raw_version#refs/tags/}"
+            raw_version="${raw_version#v}"
+            echo "$raw_version"
+          }
+
+          if [ "$EVENT_NAME" = "repository_dispatch" ]; then
+            if [ -z "${PAYLOAD_TAG:-}" ]; then
+              echo "repository_dispatch missing client_payload.release_tag" >&2
+              exit 1
+            fi
+
+            TARGET_VERSION="$(normalize_version "$PAYLOAD_TAG")"
+            TARGET_TAG="v${TARGET_VERSION}"
+
+            if [ -n "${PAYLOAD_URL:-}" ]; then
+              TARGET_RELEASE_URL="${PAYLOAD_URL}"
+            else
+              TARGET_RELEASE_URL="https://github.com/Comfy-Org/ComfyUI/releases/tag/${TARGET_TAG}"
+            fi
+          elif [ -n "${INPUT_COMFYUI_VERSION:-}" ]; then
+            TARGET_VERSION="$(normalize_version "$INPUT_COMFYUI_VERSION")"
+            TARGET_TAG="v${TARGET_VERSION}"
+            TARGET_RELEASE_URL="https://github.com/Comfy-Org/ComfyUI/releases/tag/${TARGET_TAG}"
+          else
+            RELEASE_JSON="$(curl -fsSL \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/Comfy-Org/ComfyUI/releases/latest)"
+
+            TARGET_TAG="$(echo "$RELEASE_JSON" | jq -r '.tag_name')"
+            TARGET_RELEASE_URL="$(echo "$RELEASE_JSON" | jq -r '.html_url')"
+            if [ -z "$TARGET_TAG" ] || [ "$TARGET_TAG" = "null" ]; then
+              echo "Could not resolve ComfyUI latest release tag" >&2
+              exit 1
+            fi
+
+            TARGET_VERSION="${TARGET_TAG#v}"
+          fi
+
+          if [[ -z "$TARGET_VERSION" || ! "$TARGET_VERSION" =~ ^[0-9A-Za-z._-]+$ ]]; then
+            echo "Invalid ComfyUI version: ${TARGET_VERSION}" >&2
+            exit 1
+          fi
+
+          TAG_STATUS="$(curl -sSL -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/Comfy-Org/ComfyUI/git/ref/tags/${TARGET_TAG}")"
+          if [ "$TAG_STATUS" != "200" ]; then
+            echo "ComfyUI tag not found: ${TARGET_TAG}" >&2
+            exit 1
+          fi
+
+          CURRENT_VERSION="$(jq -r '.config.comfyUI.version' package.json)"
+
+          {
+            echo "target_tag=${TARGET_TAG}"
+            echo "target_version=${TARGET_VERSION}"
+            echo "target_release_url=${TARGET_RELEASE_URL}"
+            echo "current_version=${CURRENT_VERSION}"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ "$TARGET_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "should_update=false" >> "$GITHUB_OUTPUT"
+            echo "ComfyUI version already at ${CURRENT_VERSION}; skipping."
+          else
+            echo "should_update=true" >> "$GITHUB_OUTPUT"
+            echo "Will bump ComfyUI from ${CURRENT_VERSION} to ${TARGET_VERSION}."
+          fi
+
+      - name: Update package.json ComfyUI version
+        if: steps.version.outputs.should_update == 'true'
+        env:
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+        run: |
+          set -euo pipefail
+          TMP_FILE="$(mktemp)"
+          jq --arg version "$TARGET_VERSION" '.config.comfyUI.version = $version' package.json > "$TMP_FILE"
+          mv "$TMP_FILE" package.json
+
+      - name: Checkout target ComfyUI release
+        if: steps.version.outputs.should_update == 'true'
+        uses: actions/checkout@v6
+        with:
+          repository: Comfy-Org/ComfyUI
+          ref: ${{ steps.version.outputs.target_tag }}
+          path: assets/ComfyUI
+
+      - name: Regenerate core requirements patch
+        if: steps.version.outputs.should_update == 'true'
+        run: |
+          set -euo pipefail
+          bash scripts/regenerateCoreRequirementsPatch.sh
+
+      - name: Apply core requirements patch
+        if: steps.version.outputs.should_update == 'true'
+        run: |
+          set -euo pipefail
+          cd assets/ComfyUI
+          patch -p1 < ../../scripts/core-requirements.patch
+
+      - name: Setup Python
+        if: steps.version.outputs.should_update == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        if: steps.version.outputs.should_update == 'true'
+        run: |
+          set -euo pipefail
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/uv" --version
+
+      - name: Recompile pre-shipped requirements
+        if: steps.version.outputs.should_update == 'true'
+        run: |
+          set -euo pipefail
+          bash scripts/recompileRequirementsFromHeaders.sh
+
+      - name: Clean generated ComfyUI checkout
+        if: steps.version.outputs.should_update == 'true'
+        run: rm -rf assets/ComfyUI
+
+      - name: Create pull request
+        if: steps.version.outputs.should_update == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GH_APP_TOKEN }}
+          branch: automated/bump-comfyui-v${{ steps.version.outputs.target_version }}
+          delete-branch: true
+          commit-message: Bump ComfyUI to v${{ steps.version.outputs.target_version }}
+          title: Bump ComfyUI to v${{ steps.version.outputs.target_version }}
+          body: |
+            ## Summary
+            - bump `config.comfyUI.version` from `${{ steps.version.outputs.current_version }}` to `${{ steps.version.outputs.target_version }}`
+            - regenerate `scripts/core-requirements.patch` from upstream ComfyUI requirements
+            - recompile pre-shipped requirements in `assets/requirements/*.compiled` using `uv pip compile` commands stored in file headers
+
+            ## Upstream Release
+            - ${{ steps.version.outputs.target_release_url }}
+
+            ## Testing
+            - workflow regenerated compiled requirements and patch artifacts
+          labels: dependencies
+          add-paths: |
+            package.json
+            scripts/core-requirements.patch
+            assets/requirements/*.compiled
