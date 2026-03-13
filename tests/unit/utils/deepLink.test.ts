@@ -77,4 +77,9 @@ describe('findDeepLinkUrl', () => {
   it('should return undefined for an empty array', () => {
     expect(findDeepLinkUrl([])).toBeUndefined();
   });
+
+  it('should match case-insensitive scheme', () => {
+    const result = findDeepLinkUrl(['electron', 'COMFY://open?file=/test.json']);
+    expect(result).toBe('COMFY://open?file=/test.json');
+  });
 });
