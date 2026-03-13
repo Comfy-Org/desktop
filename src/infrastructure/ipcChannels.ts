@@ -386,4 +386,9 @@ export interface IpcChannels {
     params: [stage: InstallStageInfo];
     return: void;
   };
+
+  [IPC_CHANNELS.DEEP_LINK_OPEN]: {
+    params: [filePath: string];
+    return: void;
+  };
 }

@@ -13,6 +13,7 @@ import {
 import log from 'electron-log/main';
 import Store from 'electron-store';
 import { debounce } from 'lodash';
+import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
 
@@ -21,6 +22,7 @@ import type { Page } from '@/infrastructure/interfaces';
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { type IAppState, useAppState } from '@/main-process/appState';
 import { clamp } from '@/utils';
+import { findDeepLinkUrl, parseDeepLinkUrl } from '@/utils/deepLink';
 
 import { IPC_CHANNELS, ProgressStatus, ServerArgs } from '../constants';
 import { getAppResourcesPath } from '../install/resourcePaths';
@@ -166,6 +168,34 @@ export class AppWindow {
     const host = serverArgs.listen === '0.0.0.0' ? 'localhost' : serverArgs.listen;
     const url = this.frontendUrlOverride ?? `http://${host}:${serverArgs.port}`;
     await this.window.loadURL(url);
+  }
+
+  /**
+   * Handles a `comfy://` deep link URL by parsing it, validating the file, and forwarding
+   * the file path to the renderer via IPC.
+   * @param url The deep link URL to handle
+   */
+  public handleDeepLink(url: string): void {
+    const result = parseDeepLinkUrl(url);
+    if (!result) {
+      log.warn(`Invalid deep link URL: ${url}`);
+      return;
+    }
+
+    if (result.action !== 'open') {
+      log.warn(`Unsupported deep link action: ${result.action}`);
+      return;
+    }
+
+    if (!fs.existsSync(result.filePath)) {
+      log.error(`Deep link file not found: ${result.filePath}`);
+      return;
+    }
+
+    this.send(IPC_CHANNELS.DEEP_LINK_OPEN, result.filePath);
+
+    if (this.isMinimized()) this.restore();
+    this.focus();
   }
 
   public openDevTools(): void {
@@ -342,11 +372,20 @@ export class AppWindow {
   }
 
   private setupAppEvents(): void {
-    app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+    app.on('second-instance', (_event, commandLine, _workingDirectory, additionalData) => {
       log.info('Received second instance message!', additionalData);
 
-      if (this.isMinimized()) this.restore();
-      this.focus();
+      const deepLinkUrl = findDeepLinkUrl(commandLine);
+      if (deepLinkUrl) {
+        this.handleDeepLink(deepLinkUrl);
+      } else {
+        if (this.isMinimized()) this.restore();
+        this.focus();
+      }
+    });
+
+    app.on('open-url', (_event, url) => {
+      this.handleDeepLink(url);
     });
   }
 

@@ -1,6 +1,12 @@
 import { Configuration } from 'electron-builder';
 
 const debugConfig: Configuration = {
+  protocols: [
+    {
+      name: 'ComfyUI Protocol',
+      schemes: ['comfy'],
+    },
+  ],
   files: ['node_modules', 'package.json', '.vite/**'],
   extraResources: [
     { from: './assets/ComfyUI', to: 'ComfyUI' },

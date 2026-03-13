@@ -1,6 +1,8 @@
 import { BrowserWindow, type Tray } from 'electron';
+import fs from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { IPC_CHANNELS } from '@/constants';
 import { AppWindow } from '@/main-process/appWindow';
 
 import { type PartialMock, electronMock } from '../setup';
@@ -107,5 +109,101 @@ describe('AppWindow.isOnPage', () => {
   it('should handle file URLs with both hash and query parameters', () => {
     vi.mocked(mockWebContents.getURL).mockReturnValue('file:///path/to/index.html?param=value#welcome');
     expect(appWindow.isOnPage('welcome')).toBe(true);
+  });
+});
+
+vi.mock('node:fs', () => ({
+  default: { existsSync: vi.fn() },
+  existsSync: vi.fn(),
+}));
+
+describe('AppWindow.handleDeepLink', () => {
+  let appWindow: AppWindow;
+  let sendSpy: ReturnType<typeof vi.fn>;
+  let mockIsMinimized: ReturnType<typeof vi.fn>;
+  let mockRestore: ReturnType<typeof vi.fn>;
+  let mockFocus: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.stubGlobal('process', {
+      ...process,
+      resourcesPath: '/mock/app/path/assets',
+    });
+
+    mockIsMinimized = vi.fn(() => false);
+    mockRestore = vi.fn();
+    mockFocus = vi.fn();
+
+    vi.mocked(BrowserWindow).mockImplementation(
+      () =>
+        ({
+          webContents: {
+            getURL: vi.fn(),
+            setWindowOpenHandler: vi.fn(),
+            isDestroyed: vi.fn(() => false),
+            send: vi.fn(),
+          },
+          on: vi.fn(),
+          once: vi.fn(),
+          isMaximized: vi.fn(() => false),
+          getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1024, height: 768 })),
+          isDestroyed: vi.fn(() => false),
+          isMinimized: mockIsMinimized,
+          restore: mockRestore,
+          focus: mockFocus,
+        }) as unknown as BrowserWindow
+    );
+
+    appWindow = new AppWindow(undefined, undefined, false);
+    sendSpy = vi.fn();
+    vi.spyOn(appWindow, 'send').mockImplementation(sendSpy);
+  });
+
+  it('should send DEEP_LINK_OPEN IPC for a valid comfy://open URL with existing file', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+
+    expect(sendSpy).toHaveBeenCalledWith(IPC_CHANNELS.DEEP_LINK_OPEN, '/path/to/workflow.json');
+  });
+
+  it('should not send IPC for an invalid URL', () => {
+    appWindow.handleDeepLink('not-a-valid-url');
+
+    expect(fs.existsSync).not.toHaveBeenCalled();
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
+  it('should not send IPC for an unsupported action', () => {
+    appWindow.handleDeepLink('comfy://install?file=/path/to/node.json');
+
+    expect(fs.existsSync).not.toHaveBeenCalled();
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
+  it('should not send IPC when file does not exist', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    appWindow.handleDeepLink('comfy://open?file=/nonexistent/file.json');
+
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
+  it('should focus the window when handling a valid deep link', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+
+    expect(mockFocus).toHaveBeenCalled();
+  });
+
+  it('should restore and focus the window when minimized', () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    mockIsMinimized.mockReturnValue(true);
+
+    appWindow.handleDeepLink('comfy://open?file=/path/to/workflow.json');
+
+    expect(mockRestore).toHaveBeenCalled();
+    expect(mockFocus).toHaveBeenCalled();
   });
 });
