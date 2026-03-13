@@ -7,6 +7,8 @@ import yaml, { type YAMLParseError } from 'yaml';
 
 import { getAppResourcesPath } from '@/install/resourcePaths';
 
+import { resolveModelConfigPath } from './machineConfig';
+
 const knownModelKeys = [
   'checkpoints',
   'classifiers',
@@ -102,7 +104,8 @@ export class ComfyServerConfig {
    * for models and custom nodes.
    */
   public static get configPath(): string {
-    return path.join(app.getPath('userData'), ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH);
+    const userScopedConfigPath = path.join(app.getPath('userData'), ComfyServerConfig.EXTRA_MODEL_CONFIG_PATH);
+    return resolveModelConfigPath(userScopedConfigPath);
   }
 
   public static exists(): boolean {

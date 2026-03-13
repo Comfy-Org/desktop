@@ -250,6 +250,26 @@ describe('InstallationManager', () => {
 
       cleanup?.();
     });
+
+    it('loads maintenance instead of welcome for installed state with validation errors', async () => {
+      vi.spyOn(ComfyInstallation, 'fromConfig').mockImplementation(() =>
+        Promise.resolve(new ComfyInstallation('installed', 'invalid/base', createMockTelemetry()))
+      );
+      vi.mocked(useDesktopConfig().get).mockImplementation((key: string) => {
+        if (key === 'installState') return 'installed';
+        if (key === 'basePath') return 'invalid/base';
+      });
+
+      vi.spyOn(
+        manager as unknown as { resolveIssues: (installation: ComfyInstallation) => Promise<boolean> },
+        'resolveIssues'
+      ).mockResolvedValueOnce(true);
+
+      await manager.ensureInstalled();
+
+      expect(mockAppWindow.loadPage).toHaveBeenCalledWith('maintenance');
+      expect(mockAppWindow.loadPage).not.toHaveBeenCalledWith('welcome');
+    });
   });
 });
 

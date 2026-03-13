@@ -8,6 +8,7 @@ import path from 'node:path';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ComfyServerConfig } from '@/config/comfyServerConfig';
+import * as machineConfig from '@/config/machineConfig';
 
 vi.mock('@/install/resourcePaths', () => ({
   getAppResourcesPath: vi.fn(() => '/mocked/app_resources'),
@@ -58,6 +59,20 @@ describe('ComfyServerConfig', () => {
       const { configPath } = ComfyServerConfig;
       expect(configPath).toBe(path.join(mockUserDataPath, 'extra_models_config.yaml'));
       expect(getPath).toHaveBeenCalledWith('userData');
+    });
+
+    it('should use machine-scoped model config path when available', () => {
+      vi.mocked(app.getPath).mockImplementation((key: string) => {
+        if (key === 'userData') return mockUserDataPath;
+        throw new Error(`Unexpected getPath key: ${key}`);
+      });
+      vi.spyOn(machineConfig, 'resolveModelConfigPath').mockReturnValue(
+        path.win32.join(String.raw`C:\ProgramData`, 'ComfyUI', 'extra_models_config.yaml')
+      );
+
+      expect(ComfyServerConfig.configPath).toBe(
+        path.win32.join(String.raw`C:\ProgramData`, 'ComfyUI', 'extra_models_config.yaml')
+      );
     });
   });
 
