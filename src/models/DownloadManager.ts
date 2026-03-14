@@ -17,7 +17,7 @@ export interface Download {
   savePath: string;
   item: DownloadItem | null;
   /** Number of times we have auto-resumed after an interrupt (stops interrupt→resume loops). */
-  interruptResumeCount: number;
+  interruptResumeCount?: number;
 }
 
 export interface DownloadState {
@@ -88,7 +88,7 @@ export class DownloadManager {
             setTimeout(() => {
               const entry = this.downloads.get(url);
               if (entry?.item === item && item.getState() === 'interrupted') {
-                entry.interruptResumeCount += 1;
+                entry.interruptResumeCount = (entry.interruptResumeCount ?? 0) + 1;
                 log.info('Auto-resuming interrupted download');
                 item.resume();
               }
@@ -195,14 +195,7 @@ export class DownloadManager {
 
     log.info(`Starting download ${url} to ${localSavePath}`);
     const tempPath = this.getTempPath(filename, savePath);
-    this.downloads.set(url, {
-      url,
-      savePath: localSavePath,
-      tempPath,
-      filename,
-      item: null,
-      interruptResumeCount: 0,
-    });
+    this.downloads.set(url, { url, savePath: localSavePath, tempPath, filename, item: null });
 
     // TODO(robinhuang): Add offset support for resuming downloads.
     // Can use https://www.electronjs.org/docs/latest/api/session#sescreateinterrupteddownloadoptions
