@@ -79,7 +79,8 @@ export class DownloadManager {
           });
           if (item.canResume()) {
             setTimeout(() => {
-              if (download.item === item && item.getState() === 'interrupted') {
+              const liveEntry = this.downloads.get(url);
+              if (liveEntry?.item === item && item.getState() === 'interrupted') {
                 log.info('Auto-resuming interrupted download');
                 item.resume();
               }
@@ -135,6 +136,7 @@ export class DownloadManager {
             status: DownloadStatus.ERROR,
             savePath: download.savePath,
           });
+          this.downloads.delete(url);
         }
       });
     });
@@ -273,7 +275,7 @@ export class DownloadManager {
       case 'cancelled':
         return DownloadStatus.CANCELLED;
       case 'interrupted':
-        return DownloadStatus.ERROR;
+        return DownloadStatus.PAUSED;
       default:
         return DownloadStatus.ERROR;
     }
