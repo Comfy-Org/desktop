@@ -322,8 +322,9 @@ export class DownloadManager {
   private resolveSavePath(savePath: string, filename: string): string {
     const base = path.resolve(this.modelsDirectory);
     const resolved = path.resolve(savePath);
-    if (resolved.startsWith(base)) {
-      const rel = path.relative(base, resolved);
+    const rel = path.relative(base, resolved);
+    const inside = rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
+    if (inside) {
       return rel.endsWith(filename) ? path.dirname(rel) : rel;
     }
     return savePath;
@@ -335,9 +336,10 @@ export class DownloadManager {
   }
 
   private isPathInModelsDirectory(filePath: string): boolean {
-    const absoluteFilePath = path.resolve(filePath);
     const absoluteModelsDir = path.resolve(this.modelsDirectory);
-    return absoluteFilePath.startsWith(absoluteModelsDir);
+    const resolved = path.resolve(filePath);
+    const rel = path.relative(absoluteModelsDir, resolved);
+    return rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
   }
 
   private reportProgress(report: DownloadReport): void {
