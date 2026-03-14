@@ -67,6 +67,24 @@ export class DownloadManager {
       item.on('updated', (event, state) => {
         if (state === 'interrupted') {
           log.info('Download is interrupted but can be resumed');
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
+          this.reportProgress({
+            url,
+            progress,
+            filename: download.filename,
+            savePath: download.savePath,
+            status: DownloadStatus.PAUSED,
+            message: 'Interrupted, resuming…',
+          });
+          if (item.canResume()) {
+            setTimeout(() => {
+              if (download.item === item && item.getState() === 'interrupted') {
+                log.info('Auto-resuming interrupted download');
+                item.resume();
+              }
+            }, 500);
+          }
         } else if (state === 'progressing') {
           const progress = item.getReceivedBytes() / item.getTotalBytes();
           if (item.isPaused()) {
