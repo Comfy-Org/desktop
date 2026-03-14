@@ -144,7 +144,6 @@ export class DownloadManager {
             status: DownloadStatus.ERROR,
             savePath: download.savePath,
           });
-          this.downloads.delete(url);
         }
       });
     });
