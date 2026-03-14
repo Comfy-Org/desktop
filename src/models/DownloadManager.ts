@@ -85,17 +85,19 @@ export class DownloadManager {
             message: willAutoResume ? 'Interrupted, resuming…' : 'Interrupted, can be resumed',
           });
           if (item.canResume() && autoResumesLeft > 0) {
+            if (liveEntry !== undefined) {
+              liveEntry.interruptResumeCount = (liveEntry.interruptResumeCount ?? 0) + 1;
+            }
             setTimeout(() => {
-              const entry = this.downloads.get(url);
-              if (entry?.item === item && item.getState() === 'interrupted') {
-                entry.interruptResumeCount = (entry.interruptResumeCount ?? 0) + 1;
+              if (this.downloads.get(url)?.item === item && item.getState() === 'interrupted') {
                 log.info('Auto-resuming interrupted download');
                 item.resume();
               }
             }, 500);
           }
         } else if (state === 'progressing') {
-          const progress = item.getReceivedBytes() / item.getTotalBytes();
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
           if (item.isPaused()) {
             log.info('Download is paused');
             this.reportProgress({
@@ -136,7 +138,8 @@ export class DownloadManager {
           this.downloads.delete(url);
         } else {
           log.info(`Download failed: ${state}`);
-          const progress = item.getReceivedBytes() / item.getTotalBytes();
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
           this.reportProgress({
             url,
             filename: download.filename,
