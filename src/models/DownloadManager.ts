@@ -8,12 +8,16 @@ import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { DownloadStatus, IPC_CHANNELS } from '../constants';
 import type { AppWindow } from '../main-process/appWindow';
 
+const MAX_AUTO_RESUME_ATTEMPTS = 2;
+
 export interface Download {
   url: string;
   filename: string;
   tempPath: string; // Temporary filename until the download is complete.
   savePath: string;
   item: DownloadItem | null;
+  /** Number of times we have auto-resumed after an interrupt (stops interrupt→resume loops). */
+  interruptResumeCount: number;
 }
 
 export interface DownloadState {
@@ -69,18 +73,22 @@ export class DownloadManager {
           log.info('Download is interrupted but can be resumed');
           const totalBytes = item.getTotalBytes();
           const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
+          const liveEntry = this.downloads.get(url);
+          const autoResumesLeft = MAX_AUTO_RESUME_ATTEMPTS - (liveEntry?.interruptResumeCount ?? 0);
+          const willAutoResume = item.canResume() && autoResumesLeft > 0;
           this.reportProgress({
             url,
             progress,
             filename: download.filename,
             savePath: download.savePath,
             status: DownloadStatus.PAUSED,
-            message: 'Interrupted, resuming…',
+            message: willAutoResume ? 'Interrupted, resuming…' : 'Interrupted, can be resumed',
           });
-          if (item.canResume()) {
+          if (item.canResume() && autoResumesLeft > 0) {
             setTimeout(() => {
-              const liveEntry = this.downloads.get(url);
-              if (liveEntry?.item === item && item.getState() === 'interrupted') {
+              const entry = this.downloads.get(url);
+              if (entry?.item === item && item.getState() === 'interrupted') {
+                entry.interruptResumeCount += 1;
                 log.info('Auto-resuming interrupted download');
                 item.resume();
               }
@@ -187,7 +195,14 @@ export class DownloadManager {
 
     log.info(`Starting download ${url} to ${localSavePath}`);
     const tempPath = this.getTempPath(filename, savePath);
-    this.downloads.set(url, { url, savePath: localSavePath, tempPath, filename, item: null });
+    this.downloads.set(url, {
+      url,
+      savePath: localSavePath,
+      tempPath,
+      filename,
+      item: null,
+      interruptResumeCount: 0,
+    });
 
     // TODO(robinhuang): Add offset support for resuming downloads.
     // Can use https://www.electronjs.org/docs/latest/api/session#sescreateinterrupteddownloadoptions
