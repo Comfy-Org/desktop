@@ -8,12 +8,16 @@ import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { DownloadStatus, IPC_CHANNELS } from '../constants';
 import type { AppWindow } from '../main-process/appWindow';
 
+const MAX_AUTO_RESUME_ATTEMPTS = 2;
+
 export interface Download {
   url: string;
   filename: string;
   tempPath: string; // Temporary filename until the download is complete.
   savePath: string;
   item: DownloadItem | null;
+  /** Number of times we have auto-resumed after an interrupt (stops interrupt→resume loops). */
+  interruptResumeCount?: number;
 }
 
 export interface DownloadState {
@@ -67,8 +71,33 @@ export class DownloadManager {
       item.on('updated', (event, state) => {
         if (state === 'interrupted') {
           log.info('Download is interrupted but can be resumed');
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
+          const liveEntry = this.downloads.get(url);
+          const autoResumesLeft = MAX_AUTO_RESUME_ATTEMPTS - (liveEntry?.interruptResumeCount ?? 0);
+          const willAutoResume = item.canResume() && autoResumesLeft > 0;
+          this.reportProgress({
+            url,
+            progress,
+            filename: download.filename,
+            savePath: download.savePath,
+            status: DownloadStatus.PAUSED,
+            message: willAutoResume ? 'Interrupted, resuming…' : 'Interrupted, can be resumed',
+          });
+          if (item.canResume() && autoResumesLeft > 0) {
+            if (liveEntry !== undefined) {
+              liveEntry.interruptResumeCount = (liveEntry.interruptResumeCount ?? 0) + 1;
+            }
+            setTimeout(() => {
+              if (this.downloads.get(url)?.item === item && item.getState() === 'interrupted') {
+                log.info('Auto-resuming interrupted download');
+                item.resume();
+              }
+            }, 500);
+          }
         } else if (state === 'progressing') {
-          const progress = item.getReceivedBytes() / item.getTotalBytes();
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
           if (item.isPaused()) {
             log.info('Download is paused');
             this.reportProgress({
@@ -109,7 +138,8 @@ export class DownloadManager {
           this.downloads.delete(url);
         } else {
           log.info(`Download failed: ${state}`);
-          const progress = item.getReceivedBytes() / item.getTotalBytes();
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
           this.reportProgress({
             url,
             filename: download.filename,
@@ -255,14 +285,15 @@ export class DownloadManager {
       case 'cancelled':
         return DownloadStatus.CANCELLED;
       case 'interrupted':
-        return DownloadStatus.ERROR;
+        return DownloadStatus.PAUSED;
       default:
         return DownloadStatus.ERROR;
     }
   }
 
   private getTempPath(filename: string, savePath: string): string {
-    return path.join(this.modelsDirectory, savePath, `Unconfirmed ${filename}.tmp`);
+    const subPath = this.resolveSavePath(savePath, filename);
+    return path.join(this.modelsDirectory, subPath, `Unconfirmed ${filename}.tmp`);
   }
 
   // Only allow .safetensors files to be downloaded.
@@ -285,14 +316,32 @@ export class DownloadManager {
     }
   }
 
+  /**
+   * Resolve savePath to a path under modelsDirectory.
+   * If the caller passes an absolute path that is under modelsDirectory (e.g. from the UI),
+   * we use the relative part so path.join does not duplicate the base path.
+   */
+  private resolveSavePath(savePath: string, filename: string): string {
+    const base = path.resolve(this.modelsDirectory);
+    const resolved = path.resolve(savePath);
+    const rel = path.relative(base, resolved);
+    const inside = rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
+    if (inside) {
+      return rel.endsWith(filename) ? path.dirname(rel) : rel;
+    }
+    return savePath;
+  }
+
   private getLocalSavePath(filename: string, savePath: string): string {
-    return path.join(this.modelsDirectory, savePath, filename);
+    const subPath = this.resolveSavePath(savePath, filename);
+    return path.join(this.modelsDirectory, subPath, filename);
   }
 
   private isPathInModelsDirectory(filePath: string): boolean {
-    const absoluteFilePath = path.resolve(filePath);
     const absoluteModelsDir = path.resolve(this.modelsDirectory);
-    return absoluteFilePath.startsWith(absoluteModelsDir);
+    const resolved = path.resolve(filePath);
+    const rel = path.relative(absoluteModelsDir, resolved);
+    return rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
   }
 
   private reportProgress(report: DownloadReport): void {
