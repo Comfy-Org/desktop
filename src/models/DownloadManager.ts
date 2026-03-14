@@ -297,7 +297,8 @@ export class DownloadManager {
   }
 
   private getTempPath(filename: string, savePath: string): string {
-    return path.join(this.modelsDirectory, savePath, `Unconfirmed ${filename}.tmp`);
+    const subPath = this.resolveSavePath(savePath, filename);
+    return path.join(this.modelsDirectory, subPath, `Unconfirmed ${filename}.tmp`);
   }
 
   // Only allow .safetensors files to be downloaded.
@@ -320,8 +321,24 @@ export class DownloadManager {
     }
   }
 
+  /**
+   * Resolve savePath to a path under modelsDirectory.
+   * If the caller passes an absolute path that is under modelsDirectory (e.g. from the UI),
+   * we use the relative part so path.join does not duplicate the base path.
+   */
+  private resolveSavePath(savePath: string, filename: string): string {
+    const base = path.resolve(this.modelsDirectory);
+    const resolved = path.resolve(savePath);
+    if (resolved.startsWith(base)) {
+      const rel = path.relative(base, resolved);
+      return rel.endsWith(filename) ? path.dirname(rel) : rel;
+    }
+    return savePath;
+  }
+
   private getLocalSavePath(filename: string, savePath: string): string {
-    return path.join(this.modelsDirectory, savePath, filename);
+    const subPath = this.resolveSavePath(savePath, filename);
+    return path.join(this.modelsDirectory, subPath, filename);
   }
 
   private isPathInModelsDirectory(filePath: string): boolean {
