@@ -38,7 +38,8 @@ export class DesktopApp implements HasTelemetry {
 
   constructor(
     private readonly overrides: DevOverrides,
-    private readonly config: DesktopConfig
+    private readonly config: DesktopConfig,
+    private pendingDeepLinkUrl?: string
   ) {
     this.appWindow = new AppWindow(
       overrides.DEV_SERVER_URL,
@@ -93,6 +94,9 @@ export class DesktopApp implements HasTelemetry {
 
   async start(): Promise<void> {
     const { appState, appWindow, overrides, telemetry } = this;
+    // Consume and clear the pending deep link URL so it doesn't replay on troubleshooting restart
+    const pendingDeepLinkUrl = this.pendingDeepLinkUrl;
+    this.pendingDeepLinkUrl = undefined;
 
     if (!appState.ipcRegistered) this.registerIpcHandlers();
 
@@ -202,6 +206,10 @@ export class DesktopApp implements HasTelemetry {
 
       appState.setInstallStage(createInstallStageInfo(InstallStage.READY, { progress: 100 }));
       appState.emitLoaded();
+
+      if (pendingDeepLinkUrl) {
+        await appWindow.handleDeepLink(pendingDeepLinkUrl);
+      }
     }
 
     /**

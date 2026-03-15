@@ -138,6 +138,16 @@ const electronAPI = {
       callback(value);
     });
   },
+  onDeepLinkOpen: (callback: (filePath: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, filePath: string) => {
+      callback(filePath);
+    };
+    ipcRenderer.on(IPC_CHANNELS.DEEP_LINK_OPEN, handler);
+
+    return () => {
+      ipcRenderer.off(IPC_CHANNELS.DEEP_LINK_OPEN, handler);
+    };
+  },
   sendReady: () => {
     console.log('Sending ready event to main process');
     ipcRenderer.send(IPC_CHANNELS.RENDERER_READY);
