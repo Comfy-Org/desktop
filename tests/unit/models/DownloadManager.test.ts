@@ -57,19 +57,29 @@ describe('DownloadManager', () => {
     expect(downloads.get(url)?.tempPath).toBe(path.join(savePath, 'Unconfirmed model.safetensors.tmp'));
   });
 
-  it('rejects relative save paths from outdated callers', () => {
+  it('normalizes relative save paths from legacy callers under the models directory', () => {
+    const manager = DownloadManager.getInstance(mainWindow as never, '/mock/models');
+    const url = 'https://example.com/model.safetensors';
+
+    expect(manager.startDownload(url, 'checkpoints', 'model.safetensors')).toBe(true);
+    expect(downloadURL).toHaveBeenCalledWith(url);
+
+    const downloads = (
+      manager as unknown as {
+        downloads: Map<string, { savePath: string; tempPath: string }>;
+      }
+    ).downloads;
+    expect(downloads.get(url)?.savePath).toBe(path.join('/mock/models', 'checkpoints', 'model.safetensors'));
+    expect(downloads.get(url)?.tempPath).toBe(
+      path.join('/mock/models', 'checkpoints', 'Unconfirmed model.safetensors.tmp')
+    );
+  });
+
+  it('rejects relative save paths that escape the models directory', () => {
     const manager = DownloadManager.getInstance(mainWindow as never, '/mock/models');
 
-    expect(manager.startDownload('https://example.com/model.safetensors', 'checkpoints', 'model.safetensors')).toBe(
-      false
-    );
+    expect(manager.startDownload('https://example.com/model.safetensors', '../tmp', 'model.safetensors')).toBe(false);
     expect(downloadURL).not.toHaveBeenCalled();
-    expect(mainWindow.send).toHaveBeenCalledWith(
-      'download-progress',
-      expect.objectContaining({
-        message: 'Save path must be an absolute directory path',
-      })
-    );
   });
 
   it('rejects absolute save paths outside the models directory', () => {

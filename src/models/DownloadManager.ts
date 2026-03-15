@@ -124,25 +124,13 @@ export class DownloadManager {
   }
 
   startDownload(url: string, directoryPath: string, filename: string): boolean {
-    if (!path.isAbsolute(directoryPath)) {
-      log.error(`Download directory path must be absolute: ${directoryPath}`);
-      this.reportProgress({
-        url,
-        savePath: directoryPath,
-        filename,
-        progress: 0,
-        status: DownloadStatus.ERROR,
-        message: 'Save path must be an absolute directory path',
-      });
-      return false;
-    }
-
-    const localSavePath = this.getLocalSavePath(filename, directoryPath);
+    const normalizedDirectoryPath = this.normalizeDirectoryPath(directoryPath);
+    const localSavePath = this.getLocalSavePath(filename, normalizedDirectoryPath);
     if (!this.isPathInModelsDirectory(localSavePath)) {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
       this.reportProgress({
         url,
-        savePath: directoryPath,
+        savePath: normalizedDirectoryPath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
@@ -156,7 +144,7 @@ export class DownloadManager {
       log.error(validationResult.error);
       this.reportProgress({
         url,
-        savePath: directoryPath,
+        savePath: normalizedDirectoryPath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
@@ -180,8 +168,15 @@ export class DownloadManager {
     }
 
     log.info(`Starting download ${url} to ${localSavePath}`);
-    const tempPath = this.getTempPath(filename, directoryPath);
-    this.downloads.set(url, { url, directoryPath, savePath: localSavePath, tempPath, filename, item: null });
+    const tempPath = this.getTempPath(filename, normalizedDirectoryPath);
+    this.downloads.set(url, {
+      url,
+      directoryPath: normalizedDirectoryPath,
+      savePath: localSavePath,
+      tempPath,
+      filename,
+      item: null,
+    });
 
     // TODO(robinhuang): Add offset support for resuming downloads.
     // Can use https://www.electronjs.org/docs/latest/api/session#sescreateinterrupteddownloadoptions
@@ -301,6 +296,12 @@ export class DownloadManager {
 
   private getLocalSavePath(filename: string, directoryPath: string): string {
     return path.join(directoryPath, filename);
+  }
+
+  private normalizeDirectoryPath(directoryPath: string): string {
+    return path.isAbsolute(directoryPath)
+      ? path.resolve(directoryPath)
+      : path.resolve(this.modelsDirectory, directoryPath);
   }
 
   private isPathInModelsDirectory(filePath: string): boolean {
