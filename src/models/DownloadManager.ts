@@ -210,6 +210,7 @@ export class DownloadManager {
       log.info('Resuming download');
       download.item.resume();
     } else {
+      this.downloads.delete(url);
       this.startDownload(download.url, download.directoryPath, download.filename);
     }
   }
@@ -305,9 +306,20 @@ export class DownloadManager {
   }
 
   private isPathInModelsDirectory(filePath: string): boolean {
-    const absoluteFilePath = path.resolve(filePath);
-    const absoluteModelsDir = path.resolve(this.modelsDirectory);
-    return absoluteFilePath === absoluteModelsDir || absoluteFilePath.startsWith(`${absoluteModelsDir}${path.sep}`);
+    try {
+      const realModelsDir = this.getPathForComparison(fs.realpathSync.native(this.modelsDirectory));
+      const realTargetDir = this.getPathForComparison(fs.realpathSync.native(path.dirname(filePath)));
+      const relative = path.relative(realModelsDir, realTargetDir);
+
+      return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+    } catch (error) {
+      log.error(`Failed to validate models directory containment for ${filePath}`, error);
+      return false;
+    }
+  }
+
+  private getPathForComparison(targetPath: string): string {
+    return process.platform === 'win32' ? targetPath.toLowerCase() : targetPath;
   }
 
   private reportProgress(report: DownloadReport): void {
