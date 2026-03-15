@@ -50,9 +50,10 @@ describe('DownloadManager', () => {
   });
 
   it('uses absolute save paths directly instead of nesting them under the models directory again', () => {
-    const manager = DownloadManager.getInstance(mainWindow as never, '/mock/models');
+    const modelsDirectory = path.resolve('/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     const url = 'https://example.com/model.safetensors';
-    const savePath = path.join('/mock/models', 'ipadapter');
+    const savePath = path.join(modelsDirectory, 'ipadapter');
 
     expect(manager.startDownload(url, savePath, 'model.safetensors')).toBe(true);
     expect(downloadURL).toHaveBeenCalledWith(url);
@@ -67,7 +68,8 @@ describe('DownloadManager', () => {
   });
 
   it('normalizes relative save paths from legacy callers under the models directory', () => {
-    const manager = DownloadManager.getInstance(mainWindow as never, '/mock/models');
+    const modelsDirectory = path.resolve('/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     const url = 'https://example.com/model.safetensors';
 
     expect(manager.startDownload(url, 'checkpoints', 'model.safetensors')).toBe(true);
@@ -78,23 +80,25 @@ describe('DownloadManager', () => {
         downloads: Map<string, { savePath: string; tempPath: string }>;
       }
     ).downloads;
-    expect(downloads.get(url)?.savePath).toBe(path.join('/mock/models', 'checkpoints', 'model.safetensors'));
+    expect(downloads.get(url)?.savePath).toBe(path.join(modelsDirectory, 'checkpoints', 'model.safetensors'));
     expect(downloads.get(url)?.tempPath).toBe(
-      path.join('/mock/models', 'checkpoints', 'Unconfirmed model.safetensors.tmp')
+      path.join(modelsDirectory, 'checkpoints', 'Unconfirmed model.safetensors.tmp')
     );
   });
 
   it('rejects relative save paths that escape the models directory', () => {
-    const manager = DownloadManager.getInstance(mainWindow as never, '/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, path.resolve('/mock/models'));
 
     expect(manager.startDownload('https://example.com/model.safetensors', '../tmp', 'model.safetensors')).toBe(false);
     expect(downloadURL).not.toHaveBeenCalled();
   });
 
   it('rejects absolute save paths outside the models directory', () => {
-    const manager = DownloadManager.getInstance(mainWindow as never, '/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, path.resolve('/mock/models'));
 
-    expect(manager.startDownload('https://example.com/model.safetensors', '/tmp', 'model.safetensors')).toBe(false);
+    expect(
+      manager.startDownload('https://example.com/model.safetensors', path.resolve('/tmp'), 'model.safetensors')
+    ).toBe(false);
     expect(downloadURL).not.toHaveBeenCalled();
   });
 
@@ -102,32 +106,42 @@ describe('DownloadManager', () => {
     Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' });
     vi.mocked(fs.realpathSync.native).mockImplementation(String);
 
-    const manager = DownloadManager.getInstance(mainWindow as never, '/Mock/Models');
+    const manager = DownloadManager.getInstance(mainWindow as never, path.resolve('/Mock/Models'));
 
     expect(
-      manager.startDownload('https://example.com/model.safetensors', '/mock/models/ipadapter', 'model.safetensors')
+      manager.startDownload(
+        'https://example.com/model.safetensors',
+        path.resolve('/mock/models/ipadapter'),
+        'model.safetensors'
+      )
     ).toBe(true);
     expect(downloadURL).toHaveBeenCalledWith('https://example.com/model.safetensors');
   });
 
   it('rejects symlinked model directories that resolve outside the models directory', () => {
+    const modelsDirectory = path.resolve('/mock/models');
+    const symlinkPath = path.join(modelsDirectory, 'link');
+    const outsidePath = path.resolve('/outside/models-link');
+
     vi.mocked(fs.realpathSync.native).mockImplementation((targetPath) => {
       const resolvedPath = path.resolve(String(targetPath));
-      if (resolvedPath === '/mock/models/link') {
-        return '/outside/models-link';
+      if (resolvedPath === symlinkPath) {
+        return outsidePath;
       }
       return resolvedPath;
     });
-    const manager = DownloadManager.getInstance(mainWindow as never, '/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
 
-    expect(
-      manager.startDownload('https://example.com/model.safetensors', '/mock/models/link', 'model.safetensors')
-    ).toBe(false);
+    expect(manager.startDownload('https://example.com/model.safetensors', symlinkPath, 'model.safetensors')).toBe(
+      false
+    );
     expect(downloadURL).not.toHaveBeenCalled();
   });
 
   it('restarts interrupted downloads that cannot be resumed', () => {
-    const manager = DownloadManager.getInstance(mainWindow as never, '/mock/models');
+    const modelsDirectory = path.resolve('/mock/models');
+    const checkpointsDirectory = path.join(modelsDirectory, 'checkpoints');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     const downloads = (
       manager as unknown as {
         downloads: Map<
@@ -149,9 +163,9 @@ describe('DownloadManager', () => {
     downloads.set(url, {
       url,
       filename: 'model.safetensors',
-      directoryPath: '/mock/models/checkpoints',
-      savePath: '/mock/models/checkpoints/model.safetensors',
-      tempPath: '/mock/models/checkpoints/Unconfirmed model.safetensors.tmp',
+      directoryPath: checkpointsDirectory,
+      savePath: path.join(checkpointsDirectory, 'model.safetensors'),
+      tempPath: path.join(checkpointsDirectory, 'Unconfirmed model.safetensors.tmp'),
       item: {
         canResume: () => false,
         resume,
