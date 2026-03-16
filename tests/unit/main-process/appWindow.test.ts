@@ -25,6 +25,9 @@ const additionalMocks: PartialMock<typeof Electron> = {
       workAreaSize: { width: 1024, height: 768 },
     })),
   },
+  shell: {
+    openExternal: vi.fn(),
+  },
 };
 
 Object.assign(electronMock, additionalMocks);
