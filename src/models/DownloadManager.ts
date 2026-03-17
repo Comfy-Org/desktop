@@ -12,6 +12,7 @@ export interface Download {
   url: string;
   filename: string;
   tempPath: string; // Temporary filename until the download is complete.
+  directoryPath: string;
   savePath: string;
   item: DownloadItem | null;
 }
@@ -122,13 +123,14 @@ export class DownloadManager {
     });
   }
 
-  startDownload(url: string, savePath: string, filename: string): boolean {
-    const localSavePath = this.getLocalSavePath(filename, savePath);
+  startDownload(url: string, directoryPath: string, filename: string): boolean {
+    const normalizedDirectoryPath = this.normalizeDirectoryPath(directoryPath);
+    const localSavePath = this.getLocalSavePath(filename, normalizedDirectoryPath);
     if (!this.isPathInModelsDirectory(localSavePath)) {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
       this.reportProgress({
         url,
-        savePath,
+        savePath: normalizedDirectoryPath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
@@ -142,7 +144,7 @@ export class DownloadManager {
       log.error(validationResult.error);
       this.reportProgress({
         url,
-        savePath,
+        savePath: normalizedDirectoryPath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
@@ -166,8 +168,15 @@ export class DownloadManager {
     }
 
     log.info(`Starting download ${url} to ${localSavePath}`);
-    const tempPath = this.getTempPath(filename, savePath);
-    this.downloads.set(url, { url, savePath: localSavePath, tempPath, filename, item: null });
+    const tempPath = this.getTempPath(filename, normalizedDirectoryPath);
+    this.downloads.set(url, {
+      url,
+      directoryPath: normalizedDirectoryPath,
+      savePath: localSavePath,
+      tempPath,
+      filename,
+      item: null,
+    });
 
     // TODO(robinhuang): Add offset support for resuming downloads.
     // Can use https://www.electronjs.org/docs/latest/api/session#sescreateinterrupteddownloadoptions
@@ -201,7 +210,8 @@ export class DownloadManager {
       log.info('Resuming download');
       download.item.resume();
     } else {
-      this.startDownload(download.url, download.savePath, download.filename);
+      this.downloads.delete(url);
+      this.startDownload(download.url, download.directoryPath, download.filename);
     }
   }
 
@@ -261,8 +271,8 @@ export class DownloadManager {
     }
   }
 
-  private getTempPath(filename: string, savePath: string): string {
-    return path.join(this.modelsDirectory, savePath, `Unconfirmed ${filename}.tmp`);
+  private getTempPath(filename: string, directoryPath: string): string {
+    return path.join(directoryPath, `Unconfirmed ${filename}.tmp`);
   }
 
   // Only allow .safetensors files to be downloaded.
@@ -285,14 +295,31 @@ export class DownloadManager {
     }
   }
 
-  private getLocalSavePath(filename: string, savePath: string): string {
-    return path.join(this.modelsDirectory, savePath, filename);
+  private getLocalSavePath(filename: string, directoryPath: string): string {
+    return path.join(directoryPath, filename);
+  }
+
+  private normalizeDirectoryPath(directoryPath: string): string {
+    return path.isAbsolute(directoryPath)
+      ? path.resolve(directoryPath)
+      : path.resolve(this.modelsDirectory, directoryPath);
   }
 
   private isPathInModelsDirectory(filePath: string): boolean {
-    const absoluteFilePath = path.resolve(filePath);
-    const absoluteModelsDir = path.resolve(this.modelsDirectory);
-    return absoluteFilePath.startsWith(absoluteModelsDir);
+    try {
+      const realModelsDir = this.getPathForComparison(fs.realpathSync.native(this.modelsDirectory));
+      const realTargetDir = this.getPathForComparison(fs.realpathSync.native(path.dirname(filePath)));
+      const relative = path.relative(realModelsDir, realTargetDir);
+
+      return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+    } catch (error) {
+      log.error(`Failed to validate models directory containment for ${filePath}`, error);
+      return false;
+    }
+  }
+
+  private getPathForComparison(targetPath: string): string {
+    return process.platform === 'win32' ? targetPath.toLowerCase() : targetPath;
   }
 
   private reportProgress(report: DownloadReport): void {
