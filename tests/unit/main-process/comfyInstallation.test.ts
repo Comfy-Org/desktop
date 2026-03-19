@@ -1,5 +1,3 @@
-import { app } from 'electron';
-import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MachineScopeConfig } from '@/config/machineConfig';
@@ -14,6 +12,8 @@ const {
   mockDesktopConfig,
   mockComfySettings,
   mockComfySettingsLoad,
+  mockComfyServerConfigExists,
+  mockSetBasePathInDefaultConfig,
   mockGetTelemetry,
 } = vi.hoisted(() => ({
   mockPathAccessible: vi.fn(),
@@ -27,16 +27,14 @@ const {
   },
   mockComfySettings: {
     get: vi.fn(),
-    set: vi.fn(),
-    saveSettings: vi.fn(() => Promise.resolve()),
   },
   mockComfySettingsLoad: vi.fn(),
+  mockComfyServerConfigExists: vi.fn(),
+  mockSetBasePathInDefaultConfig: vi.fn(),
   mockGetTelemetry: vi.fn(),
 }));
 
 vi.mock('node:fs/promises', () => ({
-  copyFile: vi.fn(),
-  mkdir: vi.fn(),
   rm: mockRm,
 }));
 
@@ -68,16 +66,14 @@ vi.mock('@/virtualEnvironment', () => ({
 
 vi.mock('@/config/comfyServerConfig', () => ({
   ComfyServerConfig: {
-    EXTRA_MODEL_CONFIG_PATH: 'extra_models_config.yaml',
-    configPath: '/machine/extra_models_config.yaml',
-    exists: vi.fn(),
+    configPath: '/user/extra_models_config.yaml',
+    exists: mockComfyServerConfigExists,
+    setBasePathInDefaultConfig: mockSetBasePathInDefaultConfig,
   },
 }));
 
 vi.mock('@/config/machineConfig', () => ({
-  MACHINE_MODEL_CONFIG_FILE_NAME: 'extra_models_config.yaml',
   getMachineConfigPath: mockGetMachineConfigPath,
-  getMachineModelConfigPath: vi.fn(),
   readMachineConfig: mockReadMachineConfig,
   shouldUseMachineScope: vi.fn(),
   writeMachineConfig: vi.fn(),
@@ -99,8 +95,6 @@ const createMachineConfig = (basePath: string): MachineScopeConfig => ({
   version: 1,
   installState: 'installed',
   basePath,
-  modelConfigPath: '/machine/extra_models_config.yaml',
-  autoUpdate: false,
   updatedAt: '2026-02-07T00:00:00.000Z',
 });
 
@@ -108,9 +102,10 @@ describe('ComfyInstallation fromConfig', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockComfySettingsLoad.mockResolvedValue(mockComfySettings);
+    mockComfyServerConfigExists.mockReturnValue(false);
+    mockSetBasePathInDefaultConfig.mockResolvedValue(true);
     mockGetTelemetry.mockReturnValue(createMockTelemetry());
     mockReadMachineConfig.mockReturnValue(undefined);
-    mockPathAccessible.mockResolvedValue(false);
   });
 
   it('hydrates missing per-user config from machine scope config', async () => {
@@ -127,9 +122,8 @@ describe('ComfyInstallation fromConfig', () => {
     expect(installation?.basePath).toBe('/machine/base');
     expect(mockDesktopConfig.set).toHaveBeenCalledWith('installState', 'installed');
     expect(mockDesktopConfig.set).toHaveBeenCalledWith('basePath', '/machine/base');
+    expect(mockSetBasePathInDefaultConfig).toHaveBeenCalledWith('/machine/base');
     expect(mockComfySettingsLoad).toHaveBeenCalledWith('/machine/base');
-    expect(mockComfySettings.set).toHaveBeenCalledWith('Comfy-Desktop.AutoUpdate', false);
-    expect(mockComfySettings.saveSettings).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -138,11 +132,6 @@ describe('ComfyInstallation uninstall', () => {
     vi.clearAllMocks();
     mockComfySettingsLoad.mockResolvedValue(mockComfySettings);
     mockGetTelemetry.mockReturnValue(createMockTelemetry());
-    vi.mocked(app.getPath).mockImplementation((name: string) => {
-      if (name === 'userData') return '/user/data';
-      return `/mock/${name}`;
-    });
-
     mockPathAccessible.mockResolvedValue(false);
     mockGetMachineConfigPath.mockReturnValue('/machine/machine-config.json');
     mockReadMachineConfig.mockReturnValue(undefined);
@@ -150,34 +139,31 @@ describe('ComfyInstallation uninstall', () => {
   });
 
   it('does not delete machine config during per-user uninstall', async () => {
-    const userModelConfigPath = path.join('/user/data', 'extra_models_config.yaml');
     mockReadMachineConfig.mockReturnValue(createMachineConfig('/machine/base'));
-    mockPathAccessible.mockImplementation((targetPath: string) => targetPath === userModelConfigPath);
+    mockPathAccessible.mockImplementation((targetPath: string) => targetPath === '/user/extra_models_config.yaml');
 
     const installation = new ComfyInstallation('installed', '/users/alice/comfy', createMockTelemetry());
     await installation.uninstall();
 
     expect(mockRm).toHaveBeenCalledTimes(1);
-    expect(mockRm).toHaveBeenCalledWith(userModelConfigPath);
+    expect(mockRm).toHaveBeenCalledWith('/user/extra_models_config.yaml');
     expect(mockRm).not.toHaveBeenCalledWith('/machine/machine-config.json');
     expect(mockDesktopConfig.permanentlyDeleteConfigFile).toHaveBeenCalledTimes(1);
   });
 
   it('deletes machine config when uninstalling the machine-scoped install', async () => {
-    const userModelConfigPath = path.join('/user/data', 'extra_models_config.yaml');
     mockReadMachineConfig.mockReturnValue(createMachineConfig('/machine/base'));
     mockPathAccessible.mockImplementation(
       (targetPath: string) =>
-        targetPath === '/machine/extra_models_config.yaml' || targetPath === '/machine/machine-config.json'
+        targetPath === '/user/extra_models_config.yaml' || targetPath === '/machine/machine-config.json'
     );
 
     const installation = new ComfyInstallation('installed', '/machine/base', createMockTelemetry());
     await installation.uninstall();
 
     expect(mockRm).toHaveBeenCalledTimes(2);
-    expect(mockRm).toHaveBeenCalledWith('/machine/extra_models_config.yaml');
+    expect(mockRm).toHaveBeenCalledWith('/user/extra_models_config.yaml');
     expect(mockRm).toHaveBeenCalledWith('/machine/machine-config.json');
-    expect(mockRm).not.toHaveBeenCalledWith(userModelConfigPath);
     expect(mockDesktopConfig.permanentlyDeleteConfigFile).toHaveBeenCalledTimes(1);
   });
 });

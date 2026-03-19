@@ -9,7 +9,6 @@ import {
   getWindowsProgramDataPath,
   isPathUnderWindowsProgramData,
   readMachineConfig,
-  resolveModelConfigPath,
   resolvePreferredWindowsInstallPath,
   shouldUseMachineScope,
   writeMachineConfig,
@@ -60,9 +59,6 @@ describe('machineConfig', () => {
         version: 1,
         installState: 'installed',
         basePath: String.raw`C:\ProgramData\ComfyUI\base`,
-        modelConfigPath: String.raw`C:\ProgramData\ComfyUI\extra_models_config.yaml`,
-        autoUpdate: false,
-        preseedConfigDir: String.raw`D:\OEM\ComfySeed`,
         updatedAt: '2026-02-07T00:00:00.000Z',
       })
     );
@@ -70,8 +66,7 @@ describe('machineConfig', () => {
     const config = readMachineConfig();
     expect(config).toMatchObject({
       installState: 'installed',
-      autoUpdate: false,
-      preseedConfigDir: String.raw`D:\OEM\ComfySeed`,
+      basePath: String.raw`C:\ProgramData\ComfyUI\base`,
     });
   });
 
@@ -83,8 +78,6 @@ describe('machineConfig', () => {
     const result = writeMachineConfig({
       installState: 'started',
       basePath: String.raw`C:\ProgramData\ComfyUI\base`,
-      modelConfigPath: String.raw`C:\ProgramData\ComfyUI\extra_models_config.yaml`,
-      autoUpdate: true,
     });
 
     expect(result).toBe(true);
@@ -92,22 +85,20 @@ describe('machineConfig', () => {
     expect(writeSpy).toHaveBeenCalled();
   });
 
-  it('resolves model config path from machine config when present', () => {
+  it('enables machine scope when machine config matches the base path', () => {
     withWindowsProcess({ ProgramData: String.raw`C:\ProgramData` });
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
     vi.spyOn(fs, 'readFileSync').mockReturnValue(
       JSON.stringify({
         version: 1,
         installState: 'installed',
-        basePath: String.raw`C:\ProgramData\ComfyUI\base`,
-        modelConfigPath: String.raw`C:\ProgramData\ComfyUI\extra_models_config.yaml`,
-        autoUpdate: false,
+        basePath: String.raw`D:\Shared\ComfyUI`,
         updatedAt: '2026-02-07T00:00:00.000Z',
       })
     );
 
-    const resolved = resolveModelConfigPath(String.raw`C:\Users\user\AppData\Roaming\ComfyUI\extra_models_config.yaml`);
-    expect(resolved).toBe(String.raw`C:\ProgramData\ComfyUI\extra_models_config.yaml`);
+    expect(shouldUseMachineScope(String.raw`D:\Shared\ComfyUI`)).toBe(true);
+    expect(shouldUseMachineScope(String.raw`C:\Users\user\AppData\Roaming\ComfyUI`)).toBe(false);
   });
 
   it('enables machine scope when base path is under ProgramData', () => {

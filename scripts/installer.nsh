@@ -17,10 +17,6 @@ Var /GLOBAL cliInstallScopeOverride
 
 !ifndef BUILD_UNINSTALLER
   Var /GLOBAL cliBasePathOverride
-  Var /GLOBAL cliAutoUpdateOverride
-  Var /GLOBAL cliPreseedConfigDir
-  Var /GLOBAL machineConfigPath
-  Var /GLOBAL machineModelConfigPath
   Var /GLOBAL machineEffectiveBasePath
   Var /GLOBAL machineScopeInstallSelected
 !endif
@@ -66,8 +62,6 @@ done:
   #   /ALLUSERS
   #   /CURRENTUSER
   #   /BASE_PATH=<absolute path>
-  #   /AUTO_UPDATE=0|1|true|false
-  #   /PRESEED_CONFIG_DIR=<absolute path>
   ClearErrors
   ${GetOptions} "$0" "/INSTALL_SCOPE=" $1
   IfErrors checkAllUsers
@@ -143,159 +137,11 @@ Function ResolveBasePathOverrideFromCli
 
   ClearErrors
   ${GetOptions} "$0" "/BASE_PATH=" $1
-  IfErrors checkLegacyFlag
-  ${StrRep} $1 $1 '"' ""
-  StrCpy $cliBasePathOverride $1
-  Goto done
-
-checkLegacyFlag:
-  ClearErrors
-  ${GetOptions} "$0" "/BASEPATH=" $1
   IfErrors done
   ${StrRep} $1 $1 '"' ""
   StrCpy $cliBasePathOverride $1
 
 done:
-  Pop $1
-  Pop $0
-FunctionEnd
-
-Function ResolveAutoUpdateFromCli
-  Push $0
-  Push $1
-
-  StrCpy $cliAutoUpdateOverride "true"
-  ${GetParameters} $0
-
-  ClearErrors
-  ${GetOptions} "$0" "/AUTO_UPDATE=" $1
-  IfErrors checkDisableFlag
-  ${StrRep} $1 $1 '"' ""
-
-  StrCmp $1 "1" setTrue
-  StrCmp $1 "true" setTrue
-  StrCmp $1 "TRUE" setTrue
-  StrCmp $1 "0" setFalse
-  StrCmp $1 "false" setFalse
-  StrCmp $1 "FALSE" setFalse
-  DetailPrint "[Warn] Ignoring invalid /AUTO_UPDATE value: $1"
-  Goto checkDisableFlag
-
-setTrue:
-  StrCpy $cliAutoUpdateOverride "true"
-  Goto done
-
-setFalse:
-  StrCpy $cliAutoUpdateOverride "false"
-  Goto done
-
-checkDisableFlag:
-  ClearErrors
-  ${GetOptions} "$0" "/DISABLE_AUTO_UPDATE" $1
-  IfErrors done
-  StrCpy $cliAutoUpdateOverride "false"
-
-done:
-  Pop $1
-  Pop $0
-FunctionEnd
-
-Function ResolvePreseedConfigDirFromCli
-  Push $0
-  Push $1
-
-  StrCpy $cliPreseedConfigDir ""
-  ${GetParameters} $0
-
-  ClearErrors
-  ${GetOptions} "$0" "/PRESEED_CONFIG_DIR=" $1
-  IfErrors checkLegacyPreseedFlag
-  ${StrRep} $1 $1 '"' ""
-  StrCpy $cliPreseedConfigDir $1
-  Goto done
-
-checkLegacyPreseedFlag:
-  ClearErrors
-  ${GetOptions} "$0" "/PRESEED=" $1
-  IfErrors done
-  ${StrRep} $1 $1 '"' ""
-  StrCpy $cliPreseedConfigDir $1
-
-done:
-  Pop $1
-  Pop $0
-FunctionEnd
-
-Function PersistMachineScopeInstallerOverrides
-  Push $0
-  Push $1
-  Push $2
-  Push $3
-  Push $4
-
-  ${If} $machineScopeInstallSelected != "1"
-    Goto done
-  ${EndIf}
-
-  # Resolve ProgramData root and machine default base path for all machine installs.
-  # ACL hardening uses this even when no explicit OEM overrides were passed.
-  ReadEnvStr $0 "ProgramData"
-  ${If} $0 == ""
-    StrCpy $0 "C:\ProgramData"
-  ${EndIf}
-
-  StrCpy $machineEffectiveBasePath "$0\ComfyUI\base"
-  ${If} $cliBasePathOverride != ""
-    StrCpy $machineEffectiveBasePath $cliBasePathOverride
-  ${EndIf}
-
-  ${If} $cliBasePathOverride == ""
-    StrCpy $cliBasePathOverride $machineEffectiveBasePath
-  ${EndIf}
-
-  StrCpy $machineConfigPath "$0\ComfyUI\machine-config.json"
-  StrCpy $machineModelConfigPath "$0\ComfyUI\extra_models_config.yaml"
-  CreateDirectory "$0\ComfyUI"
-
-  StrCpy $1 $cliBasePathOverride
-  ${StrRep} $1 $1 "\" "\\"
-  StrCpy $2 $machineModelConfigPath
-  ${StrRep} $2 $2 "\" "\\"
-  StrCpy $4 $cliPreseedConfigDir
-  ${StrRep} $4 $4 "\" "\\"
-
-  ClearErrors
-  FileOpen $3 "$machineConfigPath" w
-  IfErrors writeFailed
-
-  FileWrite $3 "{$\r$\n"
-  FileWrite $3 "  $\"version$\": 1,$\r$\n"
-  FileWrite $3 "  $\"installState$\": $\"started$\",$\r$\n"
-  FileWrite $3 "  $\"basePath$\": $\"$1$\",$\r$\n"
-  FileWrite $3 "  $\"modelConfigPath$\": $\"$2$\",$\r$\n"
-  FileWrite $3 "  $\"autoUpdate$\": $cliAutoUpdateOverride,$\r$\n"
-  ${If} $cliPreseedConfigDir != ""
-    FileWrite $3 "  $\"preseedConfigDir$\": $\"$4$\",$\r$\n"
-  ${EndIf}
-  FileWrite $3 "  $\"updatedAt$\": $\"1970-01-01T00:00:00.000Z$\"$\r$\n"
-  FileWrite $3 "}$\r$\n"
-  FileClose $3
-
-  DetailPrint "[OEM] Saved machine base path: $cliBasePathOverride"
-  DetailPrint "[OEM] Saved machine auto-update setting: $cliAutoUpdateOverride"
-  ${If} $cliPreseedConfigDir != ""
-    DetailPrint "[OEM] Saved machine preseed config dir: $cliPreseedConfigDir"
-  ${EndIf}
-  DetailPrint "[OEM] Machine config file: $machineConfigPath"
-  Goto done
-
-writeFailed:
-  DetailPrint "[Warn] Could not write machine config file for machine-scope install: $machineConfigPath"
-
-done:
-  Pop $4
-  Pop $3
-  Pop $2
   Pop $1
   Pop $0
 FunctionEnd
@@ -308,19 +154,24 @@ Function HardenMachineScopeDataAcl
     Goto done
   ${EndIf}
 
-  StrCpy $0 $machineEffectiveBasePath
+  ReadEnvStr $0 "ProgramData"
   ${If} $0 == ""
-    Goto done
+    StrCpy $0 "C:\ProgramData"
   ${EndIf}
 
-  CreateDirectory "$0"
-  DetailPrint "[OEM] Hardening ACLs for machine base path: $0"
+  StrCpy $machineEffectiveBasePath "$0\ComfyUI\base"
+  ${If} $cliBasePathOverride != ""
+    StrCpy $machineEffectiveBasePath $cliBasePathOverride
+  ${EndIf}
+
+  CreateDirectory "$machineEffectiveBasePath"
+  DetailPrint "[OEM] Hardening ACLs for machine base path: $machineEffectiveBasePath"
 
   # Use SID-based grants for locale-independent behavior:
   #  - SYSTEM (S-1-5-18): Full control
   #  - BUILTIN\Administrators (S-1-5-32-544): Full control
   #  - BUILTIN\Users (S-1-5-32-545): Modify
-  nsExec::ExecToLog '"$SYSDIR\icacls.exe" "$0" /inheritance:e /grant *S-1-5-18:(OI)(CI)F /grant *S-1-5-32-544:(OI)(CI)F /grant *S-1-5-32-545:(OI)(CI)M /T /C'
+  nsExec::ExecToLog '"$SYSDIR\icacls.exe" "$machineEffectiveBasePath" /inheritance:e /grant *S-1-5-18:(OI)(CI)F /grant *S-1-5-32-544:(OI)(CI)F /grant *S-1-5-32-545:(OI)(CI)M /T /C'
   Pop $1
   ${If} $1 != "0"
     DetailPrint "[Warn] icacls returned non-zero exit code for base path ACL hardening: $1"
@@ -339,9 +190,6 @@ FunctionEnd
     StrCpy $machineScopeInstallSelected "1"
   ${endif}
   Call ResolveBasePathOverrideFromCli
-  Call ResolveAutoUpdateFromCli
-  Call ResolvePreseedConfigDirFromCli
-  Call PersistMachineScopeInstallerOverrides
   Call HardenMachineScopeDataAcl
 !macroend
 !endif

@@ -7,16 +7,12 @@ import type { DesktopInstallState } from '../store/desktopSettings';
 export const MACHINE_CONFIG_VERSION = 1;
 export const MACHINE_ROOT_DIR_NAME = 'ComfyUI';
 export const MACHINE_CONFIG_FILE_NAME = 'machine-config.json';
-export const MACHINE_MODEL_CONFIG_FILE_NAME = 'extra_models_config.yaml';
 const WINDOWS_DEFAULT_SYSTEM_DRIVE = 'C:';
 
 export interface MachineScopeConfig {
   version: number;
   installState: DesktopInstallState;
   basePath: string;
-  modelConfigPath: string;
-  autoUpdate: boolean;
-  preseedConfigDir?: string;
   updatedAt: string;
 }
 
@@ -49,9 +45,6 @@ const isMachineScopeConfig = (value: unknown): value is MachineScopeConfig => {
     candidate.version === MACHINE_CONFIG_VERSION &&
     isDesktopInstallState(candidate.installState) &&
     isNonEmptyString(candidate.basePath) &&
-    isNonEmptyString(candidate.modelConfigPath) &&
-    typeof candidate.autoUpdate === 'boolean' &&
-    (candidate.preseedConfigDir === undefined || isNonEmptyString(candidate.preseedConfigDir)) &&
     isNonEmptyString(candidate.updatedAt)
   );
 };
@@ -79,12 +72,6 @@ export const getMachineConfigPath = (): string | undefined => {
   const rootPath = getMachineRootPath();
   if (!rootPath) return undefined;
   return path.win32.join(rootPath, MACHINE_CONFIG_FILE_NAME);
-};
-
-export const getMachineModelConfigPath = (): string | undefined => {
-  const rootPath = getMachineRootPath();
-  if (!rootPath) return undefined;
-  return path.win32.join(rootPath, MACHINE_MODEL_CONFIG_FILE_NAME);
 };
 
 export const getDefaultWindowsMachineBasePath = (): string | undefined => {
@@ -148,9 +135,6 @@ export const writeMachineConfig = (config: WritableMachineScopeConfig): boolean 
       version: MACHINE_CONFIG_VERSION,
       updatedAt: new Date().toISOString(),
     };
-    if (!payload.preseedConfigDir?.trim()) {
-      delete payload.preseedConfigDir;
-    }
     fs.writeFileSync(configPath, JSON.stringify(payload, null, 2), 'utf8');
     return true;
   } catch (error) {
@@ -162,11 +146,9 @@ export const writeMachineConfig = (config: WritableMachineScopeConfig): boolean 
 export const shouldUseMachineScope = (basePath: string): boolean => {
   if (!isWindows()) return false;
   if (isPathUnderWindowsProgramData(basePath)) return true;
-  return !!readMachineConfig();
-};
-
-export const resolveModelConfigPath = (userScopedConfigPath: string): string => {
-  return readMachineConfig()?.modelConfigPath ?? userScopedConfigPath;
+  const machineConfig = readMachineConfig();
+  if (!machineConfig) return false;
+  return normalizePathForComparison(machineConfig.basePath) === normalizePathForComparison(basePath);
 };
 
 export const resolvePreferredWindowsInstallPath = (exePath: string): string | undefined => {

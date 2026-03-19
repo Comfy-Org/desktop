@@ -6,19 +6,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComfyConfigManager } from '../../../src/config/comfyConfigManager';
 import { ComfyServerConfig, ModelPaths } from '../../../src/config/comfyServerConfig';
 import { ComfySettings } from '../../../src/config/comfySettings';
-import type { MachineScopeConfig } from '../../../src/config/machineConfig';
 import { InstallWizard } from '../../../src/install/installWizard';
 import { InstallOptions } from '../../../src/preload';
 import { getTelemetry } from '../../../src/services/telemetry';
 import { electronMock } from '../setup';
 
-const { mockGetMachineModelConfigPath, mockReadMachineConfig, mockShouldUseMachineScope, mockWriteMachineConfig } =
-  vi.hoisted(() => ({
-    mockShouldUseMachineScope: vi.fn(),
-    mockReadMachineConfig: vi.fn(),
-    mockGetMachineModelConfigPath: vi.fn(),
-    mockWriteMachineConfig: vi.fn(),
-  }));
+const {
+  mockReadMachineConfig,
+  mockResolvePreferredWindowsInstallPath,
+  mockShouldUseMachineScope,
+  mockWriteMachineConfig,
+} = vi.hoisted(() => ({
+  mockShouldUseMachineScope: vi.fn(),
+  mockReadMachineConfig: vi.fn(),
+  mockResolvePreferredWindowsInstallPath: vi.fn(),
+  mockWriteMachineConfig: vi.fn(),
+}));
 
 vi.mock('node:fs', () => ({
   default: {
@@ -48,8 +51,8 @@ vi.mock('../../../src/config/machineConfig', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../src/config/machineConfig')>();
   return {
     ...actual,
-    getMachineModelConfigPath: mockGetMachineModelConfigPath,
     readMachineConfig: mockReadMachineConfig,
+    resolvePreferredWindowsInstallPath: mockResolvePreferredWindowsInstallPath,
     shouldUseMachineScope: mockShouldUseMachineScope,
     writeMachineConfig: mockWriteMachineConfig,
   };
@@ -105,20 +108,11 @@ describe('InstallWizard', () => {
     torchMirror: 'default',
   };
 
-  const createMachineConfig = (basePath: string, autoUpdate: boolean): MachineScopeConfig => ({
-    version: 1,
-    installState: 'started',
-    basePath,
-    modelConfigPath: '/machine/extra_models_config.yaml',
-    autoUpdate,
-    updatedAt: '2026-02-07T00:00:00.000Z',
-  });
-
   beforeEach(async () => {
     vi.clearAllMocks();
     mockShouldUseMachineScope.mockReturnValue(false);
     mockReadMachineConfig.mockReturnValue(undefined);
-    mockGetMachineModelConfigPath.mockReturnValue('/machine/extra_models_config.yaml');
+    mockResolvePreferredWindowsInstallPath.mockReturnValue(undefined);
     mockWriteMachineConfig.mockReturnValue(true);
     await ComfySettings.load('/test/path');
     installWizard = new InstallWizard(defaultInstallOptions, getTelemetry());
@@ -136,36 +130,24 @@ describe('InstallWizard', () => {
       expect(getTelemetry().track).toHaveBeenCalledWith('install_flow:create_comfy_directories_end');
     });
 
-    it('should prefer machine auto-update during machine-scope bootstrap when base paths match', async () => {
-      mockShouldUseMachineScope.mockReturnValue(true);
-      mockReadMachineConfig.mockReturnValue(createMachineConfig('/test/path', false));
+    it('writes machine install state for machine-scoped installs', async () => {
+      mockResolvePreferredWindowsInstallPath.mockReturnValue('/machine/base');
       vi.spyOn(ComfyServerConfig, 'getBaseConfig').mockReturnValue({ test: 'config' });
 
       await installWizard.install();
 
-      const savedSettings = JSON.parse(vi.mocked(fsPromises.writeFile).mock.calls[0][1] as string);
-      expect(savedSettings['Comfy-Desktop.AutoUpdate']).toBe(false);
-      expect(mockWriteMachineConfig).toHaveBeenCalledWith(
-        expect.objectContaining({
-          autoUpdate: false,
-        })
-      );
+      expect(mockWriteMachineConfig).toHaveBeenCalledWith({
+        installState: 'started',
+        basePath: '/test/path',
+      });
     });
 
-    it('should ignore machine auto-update when machine config base path does not match install path', async () => {
-      mockShouldUseMachineScope.mockReturnValue(true);
-      mockReadMachineConfig.mockReturnValue(createMachineConfig('/different/path', false));
+    it('skips machine install state for user-scoped installs', async () => {
       vi.spyOn(ComfyServerConfig, 'getBaseConfig').mockReturnValue({ test: 'config' });
 
       await installWizard.install();
 
-      const savedSettings = JSON.parse(vi.mocked(fsPromises.writeFile).mock.calls[0][1] as string);
-      expect(savedSettings['Comfy-Desktop.AutoUpdate']).toBe(true);
-      expect(mockWriteMachineConfig).toHaveBeenCalledWith(
-        expect.objectContaining({
-          autoUpdate: true,
-        })
-      );
+      expect(mockWriteMachineConfig).not.toHaveBeenCalled();
     });
   });
 

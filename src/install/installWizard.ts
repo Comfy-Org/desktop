@@ -1,3 +1,4 @@
+import { app } from 'electron';
 import log from 'electron-log/main';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -6,8 +7,8 @@ import { ComfyConfigManager } from '../config/comfyConfigManager';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
 import { ComfySettings, type ComfySettingsData } from '../config/comfySettings';
 import {
-  getMachineModelConfigPath,
   readMachineConfig,
+  resolvePreferredWindowsInstallPath,
   shouldUseMachineScope,
   writeMachineConfig,
 } from '../config/machineConfig';
@@ -40,12 +41,11 @@ export class InstallWizard implements HasTelemetry {
     // Setup the ComfyUI folder structure.
     ComfyConfigManager.createComfyDirectories(this.basePath);
     this.initializeUserFiles();
-    const effectiveAutoUpdate = this.resolveEffectiveAutoUpdate();
 
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INITIALIZING_CONFIG, { progress: 10 }));
 
-    await this.initializeSettings(effectiveAutoUpdate);
-    this.initializeMachineScopeConfig(effectiveAutoUpdate);
+    await this.initializeSettings();
+    this.initializeMachineScopeConfig();
     await this.initializeModelPaths();
   }
 
@@ -70,13 +70,13 @@ export class InstallWizard implements HasTelemetry {
   /**
    * Setup comfy.settings.json file
    */
-  public async initializeSettings(autoUpdate: boolean = this.installOptions.autoUpdate) {
+  public async initializeSettings() {
     // Load any existing settings if they exist
     const existingSettings = await ComfySettings.load(this.basePath);
 
     // Add install options to settings
     const settings: Partial<ComfySettingsData> = {
-      'Comfy-Desktop.AutoUpdate': autoUpdate,
+      'Comfy-Desktop.AutoUpdate': this.installOptions.autoUpdate,
       'Comfy-Desktop.SendStatistics': this.installOptions.allowMetrics,
       'Comfy-Desktop.UV.PythonInstallMirror': this.installOptions.pythonMirror,
       'Comfy-Desktop.UV.PypiInstallMirror': this.installOptions.pypiMirror,
@@ -133,50 +133,23 @@ export class InstallWizard implements HasTelemetry {
 
   /**
    * Persist machine-scope bootstrap config so newly-created users can reuse
-   * the same base path and model config after sysprep/OOBE.
+   * the same base path and install state after sysprep/OOBE.
    */
-  public initializeMachineScopeConfig(autoUpdate: boolean = this.installOptions.autoUpdate) {
-    if (!shouldUseMachineScope(this.basePath)) return;
-
+  public initializeMachineScopeConfig() {
     const existingMachineConfig = readMachineConfig();
-    const machineModelConfigPath = getMachineModelConfigPath();
-    if (!machineModelConfigPath) return;
+    const isMachineScopedInstall =
+      shouldUseMachineScope(this.basePath) ||
+      !!existingMachineConfig ||
+      !!resolvePreferredWindowsInstallPath(app.getPath('exe'));
+    if (!isMachineScopedInstall) return;
 
     const updated = writeMachineConfig({
       installState: 'started',
       basePath: this.basePath,
-      modelConfigPath: machineModelConfigPath,
-      autoUpdate,
-      preseedConfigDir: existingMachineConfig?.preseedConfigDir,
     });
 
     if (!updated) {
       log.warn('Unable to write machine scope config. Falling back to user-scoped initialization.');
     }
-  }
-
-  private resolveEffectiveAutoUpdate(): boolean {
-    if (!shouldUseMachineScope(this.basePath)) {
-      return this.installOptions.autoUpdate;
-    }
-
-    const machineConfig = readMachineConfig();
-    if (!machineConfig) {
-      return this.installOptions.autoUpdate;
-    }
-
-    const hasMatchingBasePath = InstallWizard.hasSameBasePath(machineConfig.basePath, this.basePath);
-    if (!hasMatchingBasePath) {
-      return this.installOptions.autoUpdate;
-    }
-
-    return machineConfig.autoUpdate;
-  }
-
-  private static hasSameBasePath(leftPath: string, rightPath: string): boolean {
-    if (process.platform === 'win32') {
-      return path.win32.resolve(leftPath).toLowerCase() === path.win32.resolve(rightPath).toLowerCase();
-    }
-    return path.resolve(leftPath) === path.resolve(rightPath);
   }
 }
