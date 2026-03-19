@@ -3,7 +3,7 @@
   "productName": "ComfyUI",
   "repository": "github:comfy-org/electron",
   "copyright": "Copyright © 2024 Comfy Org",
-  "version": "0.8.3",
+  "version": "0.8.23",
   "homepage": "https://comfy.org",
   "description": "The best modular GUI to run AI diffusion models.",
   "main": ".vite/build/main.cjs",
@@ -11,11 +11,11 @@
   "type": "module",
   "config": {
     "frontend": {
-      "version": "1.37.11",
+      "version": "1.41.21",
       "optionalBranch": ""
     },
     "comfyUI": {
-      "version": "0.12.3",
+      "version": "0.17.2",
       "optionalBranch": ""
     },
     "managerCommit": "d82e1f5d677fec0b85a6be6beb1e32d5627ef6af",
@@ -24,9 +24,9 @@
   "scripts": {
     "clean": "rimraf .vite dist out",
     "clean:uv": "rimraf assets/uv",
-    "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz & yarn run clean:assets:git && yarn run clean:uv",
+    "clean:assets": "rimraf assets/.env assets/ComfyUI assets/python.tgz && yarn run clean:assets:git && yarn run clean:uv",
     "clean:assets:git": "rimraf assets/ComfyUI/.git assets/ComfyUI/custom_nodes/ComfyUI-Manager/.git",
-    "clean:slate": "yarn run clean & yarn run clean:assets & rimraf node_modules",
+    "clean:slate": "yarn run clean && yarn run clean:assets && rimraf node_modules",
     "download:uv": "node scripts/downloadUV.js",
     "download-frontend": "node scripts/downloadFrontend.js",
     "make:frontend": "yarn run download-frontend",
@@ -43,7 +43,6 @@
     "patch:core:frontend": "node scripts/patchComfyUI.js requirements",
     "postinstall": "node .husky/install.mjs",
     "publish": "yarn run vite:compile && todesktop build",
-    "publish:staging": "yarn run vite:compile && todesktop build --config=./todesktop.staging.json --async",
     "reset-install": "node scripts/resetInstall.js",
     "sign": "node debug/sign.js",
     "start": "vite build --config vite.preload.config.ts && vite build --watch --mode startwatch",

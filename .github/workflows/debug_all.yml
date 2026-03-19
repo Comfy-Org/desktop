@@ -3,42 +3,8 @@ name: Build - All Platforms
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '.github/**'
-      - '.prettierrc'
-      - '.eslintrc.json'
-      - '.prettierignore'
-      - 'README.md'
-      - '.husky/**'
-      - '.vscode/**'
-      - 'scripts/**'
-      - '.gitignore'
-      - 'todesktop.json'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.cursor/**'
-      - '.claude/**'
-      - 'CLAUDE.md'
-      - '*_example'
-      - 'tests/unit/**'
   push:
     branches: [main]
-    paths-ignore:
-      - '.github/**'
-      - '.prettierrc'
-      - '.eslintrc.json'
-      - '.prettierignore'
-      - 'README.md'
-      - '.husky/**'
-      - '.vscode/**'
-      - 'scripts/**'
-      - '.gitignore'
-      - 'todesktop.json'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.cursor/**'
-      - '.claude/**'
-      - 'CLAUDE.md'
-      - '*_example'
-      - 'tests/unit/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

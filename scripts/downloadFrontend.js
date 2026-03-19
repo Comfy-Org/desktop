@@ -12,12 +12,13 @@ if (!frontend) {
   process.exit(1);
 }
 
-// Example "v1.3.34"
+// Example "1.3.34" or "v1.3.34"
 const version = process.argv[2] || frontend.version;
 if (!version) {
   console.error('No version specified');
   process.exit(1);
 }
+const releaseTag = version.startsWith('v') ? version : `v${version}`;
 
 const frontendRepo = 'https://github.com/Comfy-Org/ComfyUI_frontend';
 
@@ -33,6 +34,7 @@ if (frontend.optionalBranch) {
     execAndLog(`pnpm exec nx build`, frontendDir, {
       COREPACK_ENABLE_STRICT: '0',
       DISTRIBUTION: 'desktop',
+      USE_PROD_CONFIG: 'true',
       NODE_OPTIONS: '--max-old-space-size=8192',
     });
     await fs.mkdir('assets/ComfyUI/web_custom_versions/desktop_app', { recursive: true });
@@ -88,31 +90,54 @@ if (frontend.optionalBranch) {
     }
   }
 } else {
-  // Download normal frontend release zip
-  const url = `https://github.com/Comfy-Org/ComfyUI_frontend/releases/download/v${version}/dist.zip`;
+  // Download desktop-specific release frontend zip.
+  const releaseBaseUrl = `https://github.com/Comfy-Org/ComfyUI_frontend/releases/download/${releaseTag}`;
+  const frontendArtifact = 'dist-desktop.zip';
 
   const downloadPath = 'temp_frontend.zip';
   const extractPath = 'assets/ComfyUI/web_custom_versions/desktop_app';
+
+  /**
+   * Download the desktop frontend artifact for the configured release.
+   * @returns {Promise<{ artifact: string, data: Buffer }>}
+   */
+  async function downloadReleaseArtifact() {
+    const artifactUrl = `${releaseBaseUrl}/${frontendArtifact}`;
+
+    try {
+      console.log(`Downloading frontend artifact "${frontendArtifact}"...`);
+      /** @type {import('axios').AxiosResponse<Buffer>} */
+      const response = await axios({
+        method: 'GET',
+        url: artifactUrl,
+        responseType: 'arraybuffer',
+      });
+      return {
+        artifact: frontendArtifact,
+        data: /** @type {Buffer} */ (response.data),
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw new Error(`Frontend artifact "${frontendArtifact}" not found for ${releaseTag}.`);
+      }
+      throw error;
+    }
+  }
 
   async function downloadAndExtractFrontend() {
     try {
       // Create directories if they don't exist
       await fs.mkdir(extractPath, { recursive: true });
 
-      // Download the file
-      console.log('Downloading frontend...');
-      const response = await axios({
-        method: 'GET',
-        url: url,
-        responseType: 'arraybuffer',
-      });
+      const releaseArtifact = await downloadReleaseArtifact();
+      const artifact = releaseArtifact.artifact;
+      const data = releaseArtifact.data;
 
       // Save to temporary file
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      await fs.writeFile(downloadPath, response.data);
+      await fs.writeFile(downloadPath, data);
 
       // Extract the zip file
-      console.log('Extracting frontend...');
+      console.log(`Extracting frontend artifact "${artifact}"...`);
       await extract(downloadPath, { dir: path.resolve(extractPath) });
 
       // Clean up temporary file
