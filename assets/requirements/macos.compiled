@@ -52,7 +52,7 @@ click==8.3.1
     #   typer
     #   typer-slim
     # from https://pypi.org/simple
-comfy-aimdo==0.2.10
+comfy-aimdo==0.2.12
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
 comfy-kitchen==0.2.8
@@ -61,25 +61,25 @@ comfy-kitchen==0.2.8
 comfyui-embedded-docs==0.4.3
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-manager==4.1b2
+comfyui-manager==4.1b6
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.9.21
+comfyui-workflow-templates==0.9.26
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates-core==0.3.168
+comfyui-workflow-templates-core==0.3.173
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
 comfyui-workflow-templates-media-api==0.3.64
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-image==0.3.104
+comfyui-workflow-templates-media-image==0.3.107
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-other==0.3.141
+comfyui-workflow-templates-media-other==0.3.146
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-video==0.3.60
+comfyui-workflow-templates-media-video==0.3.62
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
 cryptography==46.0.4
@@ -156,11 +156,11 @@ mako==1.3.10
 markdown-it-py==4.0.0
     # via rich
     # from https://pypi.org/simple
-markupsafe==3.0.3
+markupsafe==3.0.2
     # via
     #   jinja2
     #   mako
-    # from https://pypi.org/simple
+    # from https://download.pytorch.org/whl/cu130
 mdurl==0.1.2
     # via markdown-it-py
     # from https://pypi.org/simple
@@ -311,7 +311,7 @@ torch==2.10.0
     #   torchsde
     #   torchvision
     # from https://pypi.org/simple
-torchaudio==2.10.0
+torchaudio==2.9.1
     # via
     #   --override assets/override.txt
     #   -r assets/ComfyUI/requirements.txt
