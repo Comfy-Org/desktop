@@ -53,6 +53,15 @@ export class ComfyDesktopApp implements HasTelemetry {
     if (COMFY_HOST) serverArgs.listen = COMFY_HOST;
     if (COMFY_PORT) serverArgs.port = COMFY_PORT;
 
+    // Inject proxy settings from frontend config into server CLI args.
+    const settings = useComfySettings();
+    const httpProxy = settings.get('Comfy.Network.Proxy.HttpUrl');
+    const httpsProxy = settings.get('Comfy.Network.Proxy.HttpsUrl');
+    const noProxy = settings.get('Comfy.Network.Proxy.NoProxy');
+    if (httpProxy) serverArgs['http-proxy'] = httpProxy;
+    if (httpsProxy) serverArgs['https-proxy'] = httpsProxy;
+    if (noProxy) serverArgs['no-proxy'] = noProxy;
+
     // Find first available port (unless using external server).
     if (!useExternalServer) {
       const targetPort = Number(serverArgs.port);

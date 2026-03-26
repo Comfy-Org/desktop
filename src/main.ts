@@ -58,6 +58,9 @@ async function startApp() {
     });
   }
 
+  // Apply proxy settings from comfy.settings.json to Electron and child processes.
+  await applyProxySettings(config);
+
   telemetry.loadGenerationCount(config);
 
   // Load the Vue DevTools extension
@@ -111,4 +114,56 @@ function trackAppQuitEvents() {
 function initializeSentry() {
   log.verbose('Initializing Sentry');
   SentryLogging.init();
+}
+
+/**
+ * Reads proxy settings from the ComfyUI settings file and applies them to
+ * Electron's Chromium network stack and process environment variables.
+ *
+ * This must be called after config is loaded (to know the basePath) but
+ * before any network requests are made.
+ */
+async function applyProxySettings(config: DesktopConfig): Promise<void> {
+  try {
+    const basePath = config.get('basePath');
+    if (!basePath) return;
+
+    const { ComfySettings } = await import('./config/comfySettings');
+    const settings = await ComfySettings.load(basePath);
+
+    const httpProxy = settings.get('Comfy.Network.Proxy.HttpUrl');
+    const httpsProxy = settings.get('Comfy.Network.Proxy.HttpsUrl');
+    const noProxy = settings.get('Comfy.Network.Proxy.NoProxy');
+
+    const effectiveProxy = httpProxy || httpsProxy;
+    if (!effectiveProxy) return;
+
+    log.info(`Applying proxy settings: HTTP=${httpProxy || '(none)'}, HTTPS=${httpsProxy || '(inherit)'}`);
+
+    // Configure Chromium's network stack (affects Electron's own requests and BrowserWindow).
+    session.defaultSession.setProxy({
+      proxyRules: effectiveProxy,
+      proxyBypassRules: noProxy || undefined,
+    });
+
+    // Set environment variables so child processes (Python, uv, git, pip) inherit them.
+    if (httpProxy) {
+      process.env.HTTP_PROXY = httpProxy;
+      process.env.http_proxy = httpProxy;
+      if (!httpsProxy) {
+        process.env.HTTPS_PROXY = httpProxy;
+        process.env.https_proxy = httpProxy;
+      }
+    }
+    if (httpsProxy) {
+      process.env.HTTPS_PROXY = httpsProxy;
+      process.env.https_proxy = httpsProxy;
+    }
+    if (noProxy) {
+      process.env.NO_PROXY = noProxy;
+      process.env.no_proxy = noProxy;
+    }
+  } catch (error) {
+    log.warn('Failed to apply proxy settings', error);
+  }
 }
