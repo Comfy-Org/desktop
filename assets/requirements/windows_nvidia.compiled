@@ -101,7 +101,7 @@ filelock==3.20.3
     #   huggingface-hub
     #   torch
     #   transformers
-    # from https://download.pytorch.org/whl/cu130
+    # from https://pypi.org/simple
 frozenlist==1.8.0
     # via
     #   aiohttp
@@ -111,7 +111,7 @@ fsspec==2026.1.0
     # via
     #   huggingface-hub
     #   torch
-    # from https://download.pytorch.org/whl/cu130
+    # from https://pypi.org/simple
 gitdb==4.0.12
     # via gitpython
     # from https://pypi.org/simple
@@ -191,7 +191,7 @@ numpy==2.4.1
     #   torchsde
     #   torchvision
     #   transformers
-    # from https://download.pytorch.org/whl/cu130
+    # from https://pypi.org/simple
 packaging==26.0
     # via
     #   huggingface-hub
@@ -202,7 +202,7 @@ pillow==12.1.0
     # via
     #   -r assets/ComfyUI/requirements.txt
     #   torchvision
-    # from https://download.pytorch.org/whl/cu130
+    # from https://pypi.org/simple
 propcache==0.4.1
     # via
     #   aiohttp
