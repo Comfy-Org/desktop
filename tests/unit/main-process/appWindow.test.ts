@@ -25,6 +25,9 @@ const additionalMocks: PartialMock<typeof Electron> = {
       workAreaSize: { width: 1024, height: 768 },
     })),
   },
+  shell: {
+    openExternal: vi.fn(),
+  },
 };
 
 Object.assign(electronMock, additionalMocks);
@@ -107,5 +110,70 @@ describe('AppWindow.isOnPage', () => {
   it('should handle file URLs with both hash and query parameters', () => {
     vi.mocked(mockWebContents.getURL).mockReturnValue('file:///path/to/index.html?param=value#welcome');
     expect(appWindow.isOnPage('welcome')).toBe(true);
+  });
+});
+
+describe('AppWindow popup handler', () => {
+  let mockSetWindowOpenHandler: ReturnType<typeof vi.fn>;
+  let windowOpenHandler: (details: { url: string }) => { action: string };
+
+  beforeEach(() => {
+    mockSetWindowOpenHandler = vi.fn((handler) => {
+      windowOpenHandler = handler;
+    });
+
+    vi.stubGlobal('process', {
+      ...process,
+      resourcesPath: '/mock/app/path/assets',
+    });
+
+    vi.mocked(BrowserWindow).mockImplementation(
+      () =>
+        ({
+          webContents: {
+            getURL: vi.fn(),
+            setWindowOpenHandler: mockSetWindowOpenHandler,
+          },
+          on: vi.fn(),
+          once: vi.fn(),
+          isMaximized: vi.fn(() => false),
+          getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1024, height: 768 })),
+        }) as unknown as BrowserWindow
+    );
+
+    new AppWindow(undefined, undefined, false);
+  });
+
+  it('allows Firebase auth popup', () => {
+    const result = windowOpenHandler({ url: 'https://dreamboothy.firebaseapp.com/__/auth/handler' });
+    expect(result.action).toBe('allow');
+  });
+
+  it('allows checkout popup', () => {
+    const result = windowOpenHandler({ url: 'https://checkout.comfy.org/session/abc123' });
+    expect(result.action).toBe('allow');
+  });
+
+  it('allows Google accounts popup for passkey auth', () => {
+    const result = windowOpenHandler({ url: 'https://accounts.google.com/o/oauth2/auth?client_id=abc' });
+    expect(result.action).toBe('allow');
+  });
+
+  it('allows GitHub OAuth popup', () => {
+    const result = windowOpenHandler({ url: 'https://github.com/login/oauth/authorize?client_id=abc' });
+    expect(result.action).toBe('allow');
+  });
+
+  it('denies unknown URLs', () => {
+    const result = windowOpenHandler({ url: 'https://evil.example.com/' });
+    expect(result.action).toBe('deny');
+  });
+
+  it('strips preload script from allowed popups', () => {
+    const result = windowOpenHandler({ url: 'https://accounts.google.com/o/oauth2/auth?client_id=abc' });
+    expect(result).toEqual({
+      action: 'allow',
+      overrideBrowserWindowOptions: { webPreferences: { preload: undefined } },
+    });
   });
 });

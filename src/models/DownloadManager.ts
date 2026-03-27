@@ -14,6 +14,7 @@ export interface Download {
   url: string;
   filename: string;
   tempPath: string; // Temporary filename until the download is complete.
+  directoryPath: string;
   savePath: string;
   item: DownloadItem | null;
   /** Number of times we have auto-resumed after an interrupt (stops interrupt→resume loops). */
@@ -152,13 +153,14 @@ export class DownloadManager {
     });
   }
 
-  startDownload(url: string, savePath: string, filename: string): boolean {
-    const localSavePath = this.getLocalSavePath(filename, savePath);
+  startDownload(url: string, directoryPath: string, filename: string): boolean {
+    const normalizedDirectoryPath = this.normalizeDirectoryPath(directoryPath);
+    const localSavePath = this.getLocalSavePath(filename, normalizedDirectoryPath);
     if (!this.isPathInModelsDirectory(localSavePath)) {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
       this.reportProgress({
         url,
-        savePath,
+        savePath: normalizedDirectoryPath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
@@ -172,7 +174,7 @@ export class DownloadManager {
       log.error(validationResult.error);
       this.reportProgress({
         url,
-        savePath,
+        savePath: normalizedDirectoryPath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
@@ -196,8 +198,15 @@ export class DownloadManager {
     }
 
     log.info(`Starting download ${url} to ${localSavePath}`);
-    const tempPath = this.getTempPath(filename, savePath);
-    this.downloads.set(url, { url, savePath: localSavePath, tempPath, filename, item: null });
+    const tempPath = this.getTempPath(filename, normalizedDirectoryPath);
+    this.downloads.set(url, {
+      url,
+      directoryPath: normalizedDirectoryPath,
+      savePath: localSavePath,
+      tempPath,
+      filename,
+      item: null,
+    });
 
     // TODO(robinhuang): Add offset support for resuming downloads.
     // Can use https://www.electronjs.org/docs/latest/api/session#sescreateinterrupteddownloadoptions
@@ -231,7 +240,8 @@ export class DownloadManager {
       log.info('Resuming download');
       download.item.resume();
     } else {
-      this.startDownload(download.url, download.savePath, download.filename);
+      this.downloads.delete(url);
+      this.startDownload(download.url, download.directoryPath, download.filename);
     }
   }
 
@@ -291,9 +301,8 @@ export class DownloadManager {
     }
   }
 
-  private getTempPath(filename: string, savePath: string): string {
-    const subPath = this.resolveSavePath(savePath, filename);
-    return path.join(this.modelsDirectory, subPath, `Unconfirmed ${filename}.tmp`);
+  private getTempPath(filename: string, directoryPath: string): string {
+    return path.join(directoryPath, `Unconfirmed ${filename}.tmp`);
   }
 
   // Only allow .safetensors files to be downloaded.
@@ -316,32 +325,31 @@ export class DownloadManager {
     }
   }
 
-  /**
-   * Resolve savePath to a path under modelsDirectory.
-   * If the caller passes an absolute path that is under modelsDirectory (e.g. from the UI),
-   * we use the relative part so path.join does not duplicate the base path.
-   */
-  private resolveSavePath(savePath: string, filename: string): string {
-    const base = path.resolve(this.modelsDirectory);
-    const resolved = path.resolve(savePath);
-    const rel = path.relative(base, resolved);
-    const inside = rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
-    if (inside) {
-      return rel.endsWith(filename) ? path.dirname(rel) : rel;
-    }
-    return savePath;
+  private getLocalSavePath(filename: string, directoryPath: string): string {
+    return path.join(directoryPath, filename);
   }
 
-  private getLocalSavePath(filename: string, savePath: string): string {
-    const subPath = this.resolveSavePath(savePath, filename);
-    return path.join(this.modelsDirectory, subPath, filename);
+  private normalizeDirectoryPath(directoryPath: string): string {
+    return path.isAbsolute(directoryPath)
+      ? path.resolve(directoryPath)
+      : path.resolve(this.modelsDirectory, directoryPath);
   }
 
   private isPathInModelsDirectory(filePath: string): boolean {
-    const absoluteModelsDir = path.resolve(this.modelsDirectory);
-    const resolved = path.resolve(filePath);
-    const rel = path.relative(absoluteModelsDir, resolved);
-    return rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
+    try {
+      const realModelsDir = this.getPathForComparison(fs.realpathSync.native(this.modelsDirectory));
+      const realTargetDir = this.getPathForComparison(fs.realpathSync.native(path.dirname(filePath)));
+      const relative = path.relative(realModelsDir, realTargetDir);
+
+      return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+    } catch (error) {
+      log.error(`Failed to validate models directory containment for ${filePath}`, error);
+      return false;
+    }
+  }
+
+  private getPathForComparison(targetPath: string): string {
+    return process.platform === 'win32' ? targetPath.toLowerCase() : targetPath;
   }
 
   private reportProgress(report: DownloadReport): void {
