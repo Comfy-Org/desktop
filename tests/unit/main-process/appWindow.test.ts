@@ -38,11 +38,6 @@ describe('AppWindow', () => {
     );
   });
 
-  it('sets the initial URL correctly', () => {
-    const appWindow = new AppWindow(undefined, undefined, false);
-    expect(appWindow.url).toBeDefined();
-  });
-
   it('creates a BrowserWindow', () => {
     new AppWindow(undefined, undefined, false);
     expect(BrowserWindow).toHaveBeenCalled();

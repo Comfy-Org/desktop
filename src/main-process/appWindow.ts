@@ -197,6 +197,7 @@ export class AppWindow {
 
     this.send(IPC_CHANNELS.DEEP_LINK_OPEN, result.filePath);
 
+    if (!this.window.isVisible()) this.window.show();
     if (this.isMinimized()) this.restore();
     this.focus();
   }
