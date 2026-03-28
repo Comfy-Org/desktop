@@ -135,14 +135,19 @@ async function applyProxySettings(config: DesktopConfig): Promise<void> {
     const httpsProxy = settings.get('Comfy.Network.Proxy.HttpsUrl');
     const noProxy = settings.get('Comfy.Network.Proxy.NoProxy');
 
-    const effectiveProxy = httpProxy || httpsProxy;
-    if (!effectiveProxy) return;
+    if (!httpProxy && !httpsProxy) return;
 
-    log.info(`Applying proxy settings: HTTP=${httpProxy || '(none)'}, HTTPS=${httpsProxy || '(inherit)'}`);
+    log.info(
+      `Applying proxy settings: HTTP=${redactProxyUrl(httpProxy) || '(none)'}, HTTPS=${redactProxyUrl(httpsProxy) || '(none)'}`
+    );
+
+    // Build Chromium proxy rules that respect separate HTTP/HTTPS proxies.
+    // Format: "http=<proxy>;https=<proxy>" or a single proxy for both.
+    const proxyRules = buildChromiumProxyRules(httpProxy, httpsProxy);
 
     // Configure Chromium's network stack (affects Electron's own requests and BrowserWindow).
     await session.defaultSession.setProxy({
-      proxyRules: effectiveProxy,
+      proxyRules,
       proxyBypassRules: noProxy || undefined,
     });
 
@@ -165,5 +170,35 @@ async function applyProxySettings(config: DesktopConfig): Promise<void> {
     }
   } catch (error) {
     log.warn('Failed to apply proxy settings', error);
+  }
+}
+
+/**
+ * Builds Chromium-format proxy rules from separate HTTP and HTTPS proxy URLs.
+ * When both are set, uses per-scheme syntax: "http=<proxy>;https=<proxy>".
+ * When only one is set, uses it as a catch-all.
+ */
+function buildChromiumProxyRules(httpProxy: string, httpsProxy: string): string {
+  if (httpProxy && httpsProxy) {
+    return `http=${httpProxy};https=${httpsProxy}`;
+  }
+  return httpProxy || httpsProxy;
+}
+
+/**
+ * Redacts embedded credentials from a proxy URL for safe logging.
+ * E.g. "http://user:pass@host:8080" becomes "http://***@host:8080".
+ */
+function redactProxyUrl(url: string): string {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    if (parsed.username || parsed.password) {
+      parsed.username = '***';
+      parsed.password = '';
+    }
+    return parsed.toString();
+  } catch {
+    return '(invalid URL)';
   }
 }
