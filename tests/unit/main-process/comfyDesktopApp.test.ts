@@ -15,7 +15,11 @@ import { findAvailablePort, getModelsDirectory } from '@/utils';
 // Mock dependencies
 vi.mock('@/config/comfySettings', () => {
   const mockSettings = {
-    get: vi.fn(() => true),
+    get: vi.fn((key: string) => {
+      // Proxy settings should default to empty string (no proxy configured).
+      if (key.startsWith('Comfy.Network.Proxy.')) return '';
+      return true;
+    }),
     set: vi.fn(),
     saveSettings: vi.fn(),
   };
