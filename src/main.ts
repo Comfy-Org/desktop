@@ -141,7 +141,7 @@ async function applyProxySettings(config: DesktopConfig): Promise<void> {
     log.info(`Applying proxy settings: HTTP=${httpProxy || '(none)'}, HTTPS=${httpsProxy || '(inherit)'}`);
 
     // Configure Chromium's network stack (affects Electron's own requests and BrowserWindow).
-    session.defaultSession.setProxy({
+    await session.defaultSession.setProxy({
       proxyRules: effectiveProxy,
       proxyBypassRules: noProxy || undefined,
     });
