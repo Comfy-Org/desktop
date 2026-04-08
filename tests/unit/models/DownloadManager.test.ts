@@ -118,6 +118,34 @@ describe('DownloadManager', () => {
     expect(downloadURL).toHaveBeenCalledWith('https://example.com/model.safetensors');
   });
 
+  it('creates missing subdirectory inside models directory before downloading', () => {
+    const modelsDirectory = path.resolve('/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    const url = 'https://example.com/model.safetensors';
+    const newSubdir = path.join(modelsDirectory, 'latent_upscale_models');
+
+    vi.mocked(fs.existsSync).mockImplementation((p) => {
+      // Models directory exists, but the subdirectory and file do not.
+      if (String(p) === modelsDirectory) return true;
+      return false;
+    });
+
+    expect(manager.startDownload(url, newSubdir, 'model.safetensors')).toBe(true);
+    expect(fs.mkdirSync).toHaveBeenCalledWith(newSubdir, { recursive: true });
+    expect(downloadURL).toHaveBeenCalledWith(url);
+  });
+
+  it('does not create directories outside models directory', () => {
+    const modelsDirectory = path.resolve('/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+
+    expect(
+      manager.startDownload('https://example.com/model.safetensors', path.resolve('/tmp/evil'), 'model.safetensors')
+    ).toBe(false);
+    expect(fs.mkdirSync).not.toHaveBeenCalled();
+    expect(downloadURL).not.toHaveBeenCalled();
+  });
+
   it('rejects symlinked model directories that resolve outside the models directory', () => {
     const modelsDirectory = path.resolve('/mock/models');
     const symlinkPath = path.join(modelsDirectory, 'link');

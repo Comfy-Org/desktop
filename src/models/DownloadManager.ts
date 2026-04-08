@@ -307,8 +307,23 @@ export class DownloadManager {
 
   private isPathInModelsDirectory(filePath: string): boolean {
     try {
+      const targetDir = path.dirname(filePath);
+
+      // Pre-check using resolved (but not real) paths to catch traversal before mkdir.
+      const resolvedModelsDir = this.getPathForComparison(path.resolve(this.modelsDirectory));
+      const resolvedTargetDir = this.getPathForComparison(path.resolve(targetDir));
+      const preRelative = path.relative(resolvedModelsDir, resolvedTargetDir);
+      if (preRelative.startsWith('..') || path.isAbsolute(preRelative)) {
+        return false;
+      }
+
+      // Ensure the target directory exists so realpathSync can resolve symlinks.
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
       const realModelsDir = this.getPathForComparison(fs.realpathSync.native(this.modelsDirectory));
-      const realTargetDir = this.getPathForComparison(fs.realpathSync.native(path.dirname(filePath)));
+      const realTargetDir = this.getPathForComparison(fs.realpathSync.native(targetDir));
       const relative = path.relative(realModelsDir, realTargetDir);
 
       return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
