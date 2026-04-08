@@ -126,7 +126,7 @@ export class DownloadManager {
   startDownload(url: string, directoryPath: string, filename: string): boolean {
     const normalizedDirectoryPath = this.normalizeDirectoryPath(directoryPath);
     const localSavePath = this.getLocalSavePath(filename, normalizedDirectoryPath);
-    if (!this.isPathInModelsDirectory(localSavePath)) {
+    if (!this.isPathInModelsDirectory(localSavePath, { ensureTargetDirExists: true })) {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
       this.reportProgress({
         url,
@@ -305,7 +305,7 @@ export class DownloadManager {
       : path.resolve(this.modelsDirectory, directoryPath);
   }
 
-  private isPathInModelsDirectory(filePath: string): boolean {
+  private isPathInModelsDirectory(filePath: string, options?: { ensureTargetDirExists?: boolean }): boolean {
     try {
       const targetDir = path.dirname(filePath);
 
@@ -318,7 +318,7 @@ export class DownloadManager {
       }
 
       // Ensure the target directory exists so realpathSync can resolve symlinks.
-      if (!fs.existsSync(targetDir)) {
+      if (options?.ensureTargetDirExists && !fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }
 
