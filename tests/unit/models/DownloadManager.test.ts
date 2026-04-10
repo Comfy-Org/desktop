@@ -7,6 +7,12 @@ import { electronMock } from '../setup';
 vi.mock('node:fs');
 
 const originalPlatform = process.platform;
+const mockExistingPaths = (...paths: string[]) => {
+  const existingPaths = new Set(paths.map((targetPath) => path.resolve(targetPath)));
+  existingPaths.add(path.parse(path.resolve('/')).root);
+
+  vi.mocked(fs.existsSync).mockImplementation((targetPath) => existingPaths.has(path.resolve(String(targetPath))));
+};
 
 describe('DownloadManager', () => {
   let DownloadManager: typeof import('@/models/DownloadManager').DownloadManager;
@@ -54,6 +60,7 @@ describe('DownloadManager', () => {
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     const url = 'https://example.com/model.safetensors';
     const savePath = path.join(modelsDirectory, 'ipadapter');
+    mockExistingPaths(modelsDirectory, savePath);
 
     expect(manager.startDownload(url, savePath, 'model.safetensors')).toBe(true);
     expect(downloadURL).toHaveBeenCalledWith(url);
@@ -71,6 +78,7 @@ describe('DownloadManager', () => {
     const modelsDirectory = path.resolve('/mock/models');
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     const url = 'https://example.com/model.safetensors';
+    mockExistingPaths(modelsDirectory, path.join(modelsDirectory, 'checkpoints'));
 
     expect(manager.startDownload(url, 'checkpoints', 'model.safetensors')).toBe(true);
     expect(downloadURL).toHaveBeenCalledWith(url);
@@ -87,14 +95,18 @@ describe('DownloadManager', () => {
   });
 
   it('rejects relative save paths that escape the models directory', () => {
-    const manager = DownloadManager.getInstance(mainWindow as never, path.resolve('/mock/models'));
+    const modelsDirectory = path.resolve('/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    mockExistingPaths(modelsDirectory);
 
     expect(manager.startDownload('https://example.com/model.safetensors', '../tmp', 'model.safetensors')).toBe(false);
     expect(downloadURL).not.toHaveBeenCalled();
   });
 
   it('rejects absolute save paths outside the models directory', () => {
-    const manager = DownloadManager.getInstance(mainWindow as never, path.resolve('/mock/models'));
+    const modelsDirectory = path.resolve('/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    mockExistingPaths(modelsDirectory, path.resolve('/tmp'));
 
     expect(
       manager.startDownload('https://example.com/model.safetensors', path.resolve('/tmp'), 'model.safetensors')
@@ -107,6 +119,7 @@ describe('DownloadManager', () => {
     vi.mocked(fs.realpathSync.native).mockImplementation(String);
 
     const manager = DownloadManager.getInstance(mainWindow as never, path.resolve('/Mock/Models'));
+    mockExistingPaths(path.resolve('/Mock/Models'), path.resolve('/mock/models/ipadapter'));
 
     expect(
       manager.startDownload(
@@ -123,12 +136,7 @@ describe('DownloadManager', () => {
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     const url = 'https://example.com/model.safetensors';
     const newSubdir = path.join(modelsDirectory, 'latent_upscale_models');
-
-    vi.mocked(fs.existsSync).mockImplementation((p) => {
-      // Models directory exists, but the subdirectory and file do not.
-      if (String(p) === modelsDirectory) return true;
-      return false;
-    });
+    mockExistingPaths(modelsDirectory);
 
     expect(manager.startDownload(url, newSubdir, 'model.safetensors')).toBe(true);
     expect(fs.mkdirSync).toHaveBeenCalledWith(newSubdir, { recursive: true });
@@ -138,6 +146,7 @@ describe('DownloadManager', () => {
   it('does not create directories outside models directory', () => {
     const modelsDirectory = path.resolve('/mock/models');
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    mockExistingPaths(modelsDirectory, path.resolve('/tmp'));
 
     expect(
       manager.startDownload('https://example.com/model.safetensors', path.resolve('/tmp/evil'), 'model.safetensors')
@@ -150,6 +159,7 @@ describe('DownloadManager', () => {
     const modelsDirectory = path.resolve('/mock/models');
     const symlinkPath = path.join(modelsDirectory, 'link');
     const outsidePath = path.resolve('/outside/models-link');
+    mockExistingPaths(modelsDirectory, symlinkPath);
 
     vi.mocked(fs.realpathSync.native).mockImplementation((targetPath) => {
       const resolvedPath = path.resolve(String(targetPath));
@@ -166,10 +176,32 @@ describe('DownloadManager', () => {
     expect(downloadURL).not.toHaveBeenCalled();
   });
 
+  it('does not create missing directories through symlinked parents that resolve outside models', () => {
+    const modelsDirectory = path.resolve('/mock/models');
+    const symlinkPath = path.join(modelsDirectory, 'link');
+    const outsidePath = path.resolve('/outside/models-link');
+    const nestedPath = path.join(symlinkPath, 'latent_upscale_models');
+    mockExistingPaths(modelsDirectory, symlinkPath);
+
+    vi.mocked(fs.realpathSync.native).mockImplementation((targetPath) => {
+      const resolvedPath = path.resolve(String(targetPath));
+      if (resolvedPath === symlinkPath) {
+        return outsidePath;
+      }
+      return resolvedPath;
+    });
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+
+    expect(manager.startDownload('https://example.com/model.safetensors', nestedPath, 'model.safetensors')).toBe(false);
+    expect(fs.mkdirSync).not.toHaveBeenCalled();
+    expect(downloadURL).not.toHaveBeenCalled();
+  });
+
   it('restarts interrupted downloads that cannot be resumed', () => {
     const modelsDirectory = path.resolve('/mock/models');
     const checkpointsDirectory = path.join(modelsDirectory, 'checkpoints');
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    mockExistingPaths(modelsDirectory, checkpointsDirectory);
     const downloads = (
       manager as unknown as {
         downloads: Map<

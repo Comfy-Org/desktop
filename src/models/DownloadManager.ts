@@ -126,7 +126,7 @@ export class DownloadManager {
   startDownload(url: string, directoryPath: string, filename: string): boolean {
     const normalizedDirectoryPath = this.normalizeDirectoryPath(directoryPath);
     const localSavePath = this.getLocalSavePath(filename, normalizedDirectoryPath);
-    if (!this.isPathInModelsDirectory(localSavePath, { ensureTargetDirExists: true })) {
+    if (!this.ensureDownloadTargetDirectory(localSavePath)) {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
       this.reportProgress({
         url,
@@ -305,32 +305,76 @@ export class DownloadManager {
       : path.resolve(this.modelsDirectory, directoryPath);
   }
 
-  private isPathInModelsDirectory(filePath: string, options?: { ensureTargetDirExists?: boolean }): boolean {
+  /**
+   * Ensure the target download directory exists without allowing symlink escapes
+   * outside the models directory.
+   * @param filePath The final file path to be downloaded.
+   * @return `true` when the target directory exists and remains inside the models directory.
+   */
+  private ensureDownloadTargetDirectory(filePath: string): boolean {
     try {
       const targetDir = path.dirname(filePath);
-
-      // Pre-check using resolved (but not real) paths to catch traversal before mkdir.
-      const resolvedModelsDir = this.getPathForComparison(path.resolve(this.modelsDirectory));
-      const resolvedTargetDir = this.getPathForComparison(path.resolve(targetDir));
-      const preRelative = path.relative(resolvedModelsDir, resolvedTargetDir);
-      if (preRelative.startsWith('..') || path.isAbsolute(preRelative)) {
+      const nearestExistingAncestor = this.findNearestExistingAncestor(targetDir);
+      if (!nearestExistingAncestor) {
         return false;
       }
 
-      // Ensure the target directory exists so realpathSync can resolve symlinks.
-      if (options?.ensureTargetDirExists && !fs.existsSync(targetDir)) {
+      const realModelsDir = this.getPathForComparison(fs.realpathSync.native(this.modelsDirectory));
+      const realAncestorDir = this.getPathForComparison(fs.realpathSync.native(nearestExistingAncestor));
+      if (!this.isPathWithinDirectory(realModelsDir, realAncestorDir)) {
+        return false;
+      }
+
+      if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }
 
-      const realModelsDir = this.getPathForComparison(fs.realpathSync.native(this.modelsDirectory));
-      const realTargetDir = this.getPathForComparison(fs.realpathSync.native(targetDir));
-      const relative = path.relative(realModelsDir, realTargetDir);
+      return this.isPathInModelsDirectory(filePath);
+    } catch (error) {
+      log.error(`Failed to prepare download target directory for ${filePath}`, error);
+      return false;
+    }
+  }
 
-      return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+  /**
+   * Find the closest existing directory in the target path chain.
+   * @param targetPath The path whose nearest existing ancestor should be resolved.
+   * @return The nearest existing ancestor, or `null` when none can be found.
+   */
+  private findNearestExistingAncestor(targetPath: string): string | null {
+    let currentPath = path.resolve(targetPath);
+
+    while (!fs.existsSync(currentPath)) {
+      const parentPath = path.dirname(currentPath);
+      if (parentPath === currentPath) {
+        return null;
+      }
+      currentPath = parentPath;
+    }
+
+    return currentPath;
+  }
+
+  private isPathInModelsDirectory(filePath: string): boolean {
+    try {
+      const realModelsDir = this.getPathForComparison(fs.realpathSync.native(this.modelsDirectory));
+      const realTargetDir = this.getPathForComparison(fs.realpathSync.native(path.dirname(filePath)));
+      return this.isPathWithinDirectory(realModelsDir, realTargetDir);
     } catch (error) {
       log.error(`Failed to validate models directory containment for ${filePath}`, error);
       return false;
     }
+  }
+
+  /**
+   * Check whether `candidatePath` is contained within `parentPath`.
+   * @param parentPath The parent path.
+   * @param candidatePath The path to check.
+   * @return `true` if the candidate is the parent or a descendant of it.
+   */
+  private isPathWithinDirectory(parentPath: string, candidatePath: string): boolean {
+    const relative = path.relative(parentPath, candidatePath);
+    return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
   }
 
   private getPathForComparison(targetPath: string): string {
