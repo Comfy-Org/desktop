@@ -65,25 +65,25 @@ comfy-kitchen==0.2.8
 comfyui-embedded-docs==0.4.3
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-manager==4.1b6
+comfyui-manager==4.1
     # via -r assets/ComfyUI/manager_requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates==0.9.43
+comfyui-workflow-templates==0.9.47
     # via -r assets/ComfyUI/requirements.txt
     # from https://pypi.org/simple
-comfyui-workflow-templates-core==0.3.192
+comfyui-workflow-templates-core==0.3.196
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
 comfyui-workflow-templates-media-api==0.3.68
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-image==0.3.117
+comfyui-workflow-templates-media-image==0.3.118
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-other==0.3.164
+comfyui-workflow-templates-media-other==0.3.168
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
-comfyui-workflow-templates-media-video==0.3.71
+comfyui-workflow-templates-media-video==0.3.74
     # via comfyui-workflow-templates
     # from https://pypi.org/simple
 cryptography==46.0.4
