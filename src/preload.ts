@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { strictIpcRenderer as ipcRenderer } from '@/infrastructure/ipcChannels';
 
-import { DownloadStatus, ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
+import { ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
 import type { RestrictedPathType } from './handlers/pathHandlers';
 import type { InstallStageInfo } from './main-process/installStages';
 import type { DownloadState } from './main_types';
@@ -45,14 +45,7 @@ export interface SystemPaths {
   defaultInstallPath: string;
 }
 
-export interface DownloadProgressUpdate {
-  url: string;
-  filename: string;
-  savePath: string;
-  progress: number;
-  status: DownloadStatus;
-  message?: string;
-}
+export type DownloadProgressUpdate = DownloadState;
 
 /** @todo Type inference chain broken by comfyui-electron-types. This is duplication. */
 export interface ElectronOverlayOptions {

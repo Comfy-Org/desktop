@@ -15,24 +15,28 @@ export interface Download {
   directoryPath: string;
   savePath: string;
   item: DownloadItem | null;
+  progress: number;
+  status: DownloadStatus;
+  message?: string;
+  receivedBytes: number;
+  totalBytes: number;
 }
 
 export interface DownloadState {
   url: string;
   filename: string;
-  state: DownloadStatus;
-  receivedBytes: number;
-  totalBytes: number;
-  isPaused: boolean;
-}
-
-interface DownloadReport {
-  url: string;
+  savePath: string;
   progress: number;
   status: DownloadStatus;
-  filename: string;
-  savePath: string;
   message?: string;
+  /** @deprecated Use `status` instead. */
+  state: DownloadStatus;
+  /** @deprecated Use `progress` instead. */
+  receivedBytes: number;
+  /** @deprecated Use `progress` instead. */
+  totalBytes: number;
+  /** @deprecated Use `status === DownloadStatus.PAUSED` instead. */
+  isPaused: boolean;
 }
 
 /**
@@ -54,44 +58,43 @@ export class DownloadManager {
       const download = this.downloads.get(url);
       if (!download) return;
 
-      this.reportProgress({
-        url,
-        filename: download.filename,
-        savePath: download.savePath,
-        progress: 0,
-        status: DownloadStatus.PENDING,
-      });
       item.setSavePath(download.tempPath);
       download.item = item;
+      download.totalBytes = item.getTotalBytes();
       log.info(`Setting save path to ${item.getSavePath()}`);
 
       item.on('updated', (event, state) => {
         if (state === 'interrupted') {
           log.info('Download is interrupted but can be resumed');
         } else if (state === 'progressing') {
-          const progress = item.getReceivedBytes() / item.getTotalBytes();
+          const receivedBytes = item.getReceivedBytes();
+          const totalBytes = item.getTotalBytes();
+          const progress = this.calculateProgress(receivedBytes, totalBytes);
           if (item.isPaused()) {
             log.info('Download is paused');
-            this.reportProgress({
-              url,
-              progress,
-              filename: download.filename,
-              savePath: download.savePath,
-              status: DownloadStatus.PAUSED,
-            });
+            download.progress = progress;
+            download.status = DownloadStatus.PAUSED;
+            download.message = undefined;
+            download.receivedBytes = receivedBytes;
+            download.totalBytes = totalBytes;
+            this.reportProgress(this.toDownloadState(download));
           } else {
-            this.reportProgress({
-              url,
-              progress,
-              filename: download.filename,
-              savePath: download.savePath,
-              status: DownloadStatus.IN_PROGRESS,
-            });
+            download.progress = progress;
+            download.status = DownloadStatus.IN_PROGRESS;
+            download.message = undefined;
+            download.receivedBytes = receivedBytes;
+            download.totalBytes = totalBytes;
+            this.reportProgress(this.toDownloadState(download));
           }
         }
       });
 
       item.once('done', (event, state) => {
+        const receivedBytes = item.getReceivedBytes();
+        const totalBytes = item.getTotalBytes();
+        download.receivedBytes = receivedBytes;
+        download.totalBytes = totalBytes;
+
         if (state === 'completed') {
           try {
             fs.renameSync(download.tempPath, download.savePath);
@@ -100,24 +103,25 @@ export class DownloadManager {
             log.error('Failed to rename downloaded file. Deleting temp file.', error);
             fs.unlinkSync(download.tempPath);
           }
-          this.reportProgress({
-            url,
-            filename: download.filename,
-            savePath: download.savePath,
-            progress: 1,
-            status: DownloadStatus.COMPLETED,
-          });
-          this.downloads.delete(url);
+          download.item = null;
+          download.progress = 1;
+          download.status = DownloadStatus.COMPLETED;
+          download.message = undefined;
+          this.reportProgress(this.toDownloadState(download));
+        } else if (state === 'cancelled') {
+          log.info('Download cancelled');
+          download.item = null;
+          download.progress = this.calculateProgress(receivedBytes, totalBytes);
+          download.status = DownloadStatus.CANCELLED;
+          download.message = undefined;
+          this.reportProgress(this.toDownloadState(download));
         } else {
           log.info(`Download failed: ${state}`);
-          const progress = item.getReceivedBytes() / item.getTotalBytes();
-          this.reportProgress({
-            url,
-            filename: download.filename,
-            progress,
-            status: DownloadStatus.ERROR,
-            savePath: download.savePath,
-          });
+          download.item = null;
+          download.progress = this.calculateProgress(receivedBytes, totalBytes);
+          download.status = DownloadStatus.ERROR;
+          download.message = 'Download interrupted';
+          this.reportProgress(this.toDownloadState(download));
         }
       });
     });
@@ -130,11 +134,15 @@ export class DownloadManager {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
       this.reportProgress({
         url,
-        savePath: normalizedDirectoryPath,
+        savePath: localSavePath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
         message: 'Save path is not in models directory',
+        state: DownloadStatus.ERROR,
+        receivedBytes: 0,
+        totalBytes: 0,
+        isPaused: false,
       });
       return false;
     }
@@ -144,39 +152,76 @@ export class DownloadManager {
       log.error(validationResult.error);
       this.reportProgress({
         url,
-        savePath: normalizedDirectoryPath,
+        savePath: localSavePath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
         message: validationResult.error,
+        state: DownloadStatus.ERROR,
+        receivedBytes: 0,
+        totalBytes: 0,
+        isPaused: false,
       });
       return false;
     }
 
     if (fs.existsSync(localSavePath)) {
       log.info(`File ${filename} already exists, skipping download`);
+      const existingCompletedDownload = this.downloads.get(url) ?? {
+        url,
+        directoryPath: normalizedDirectoryPath,
+        savePath: localSavePath,
+        tempPath: this.getTempPath(filename, normalizedDirectoryPath),
+        filename,
+        item: null,
+        progress: 1,
+        status: DownloadStatus.COMPLETED,
+        message: undefined,
+        receivedBytes: 0,
+        totalBytes: 0,
+      };
+      existingCompletedDownload.progress = 1;
+      existingCompletedDownload.status = DownloadStatus.COMPLETED;
+      existingCompletedDownload.message = undefined;
+      existingCompletedDownload.item = null;
+      this.downloads.set(url, existingCompletedDownload);
+      this.reportProgress(this.toDownloadState(existingCompletedDownload));
       return true;
     }
 
     const existingDownload = this.downloads.get(url);
     if (existingDownload) {
       log.info('Download already exists');
-      if (existingDownload.item?.isPaused()) {
+      if (existingDownload.status === DownloadStatus.PAUSED) {
         this.resumeDownload(url);
+        return true;
+      } else if (
+        existingDownload.status === DownloadStatus.CANCELLED ||
+        existingDownload.status === DownloadStatus.ERROR
+      ) {
+        this.deleteTempFile(existingDownload.tempPath);
+        this.downloads.delete(url);
+      } else {
+        return true;
       }
-      return true;
     }
 
     log.info(`Starting download ${url} to ${localSavePath}`);
-    const tempPath = this.getTempPath(filename, normalizedDirectoryPath);
-    this.downloads.set(url, {
+    const download: Download = {
       url,
       directoryPath: normalizedDirectoryPath,
       savePath: localSavePath,
-      tempPath,
+      tempPath: this.getTempPath(filename, normalizedDirectoryPath),
       filename,
       item: null,
-    });
+      progress: 0,
+      status: DownloadStatus.PENDING,
+      message: undefined,
+      receivedBytes: 0,
+      totalBytes: 0,
+    };
+    this.downloads.set(url, download);
+    this.reportProgress(this.toDownloadState(download));
 
     // TODO(robinhuang): Add offset support for resuming downloads.
     // Can use https://www.electronjs.org/docs/latest/api/session#sescreateinterrupteddownloadoptions
@@ -186,12 +231,17 @@ export class DownloadManager {
 
   cancelDownload(url: string): void {
     const download = this.downloads.get(url);
-    if (!download?.item) return;
+    if (!download) return;
 
     log.info('Cancelling download');
-    download.item.cancel();
+    if (download.item) {
+      download.item.cancel();
+      return;
+    }
 
-    this.downloads.delete(url);
+    download.status = DownloadStatus.CANCELLED;
+    download.message = undefined;
+    this.reportProgress(this.toDownloadState(download));
   }
 
   pauseDownload(url: string): void {
@@ -243,36 +293,43 @@ export class DownloadManager {
   }
 
   getAllDownloads(): DownloadState[] {
-    return [...this.downloads.values()]
-      .filter((download) => download.item !== null)
-      .map((download) => ({
-        url: download.url,
-        filename: download.filename,
-        tempPath: download.tempPath,
-        state: this.convertDownloadState(download.item?.getState()),
-        receivedBytes: download.item?.getReceivedBytes() || 0,
-        totalBytes: download.item?.getTotalBytes() || 0,
-        isPaused: download.item?.isPaused() || false,
-      }));
-  }
-
-  private convertDownloadState(state?: 'progressing' | 'completed' | 'cancelled' | 'interrupted'): DownloadStatus {
-    switch (state) {
-      case 'progressing':
-        return DownloadStatus.IN_PROGRESS;
-      case 'completed':
-        return DownloadStatus.COMPLETED;
-      case 'cancelled':
-        return DownloadStatus.CANCELLED;
-      case 'interrupted':
-        return DownloadStatus.ERROR;
-      default:
-        return DownloadStatus.ERROR;
-    }
+    return [...this.downloads.values()].map((download) => this.toDownloadState(download));
   }
 
   private getTempPath(filename: string, directoryPath: string): string {
     return path.join(directoryPath, `Unconfirmed ${filename}.tmp`);
+  }
+
+  private calculateProgress(receivedBytes: number, totalBytes: number): number {
+    if (totalBytes <= 0) return 0;
+    return receivedBytes / totalBytes;
+  }
+
+  private toDownloadState(download: Download): DownloadState {
+    const isPaused = download.status === DownloadStatus.PAUSED || download.item?.isPaused() || false;
+
+    return {
+      url: download.url,
+      filename: download.filename,
+      savePath: download.savePath,
+      progress: download.progress,
+      status: download.status,
+      message: download.message,
+      state: download.status,
+      receivedBytes: download.receivedBytes,
+      totalBytes: download.totalBytes,
+      isPaused,
+    };
+  }
+
+  private deleteTempFile(tempPath: string): void {
+    try {
+      if (fs.existsSync(tempPath)) {
+        fs.unlinkSync(tempPath);
+      }
+    } catch (error) {
+      log.error(`Failed to delete temp file ${tempPath}:`, error);
+    }
   }
 
   // Only allow .safetensors files to be downloaded.
@@ -381,7 +438,7 @@ export class DownloadManager {
     return process.platform === 'win32' ? targetPath.toLowerCase() : targetPath;
   }
 
-  private reportProgress(report: DownloadReport): void {
+  private reportProgress(report: DownloadState): void {
     log.info(
       `Download progress [${report.filename}]: ${report.progress}, status: ${report.status}, message: ${report.message}`
     );

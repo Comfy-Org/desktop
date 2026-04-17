@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DownloadStatus, IPC_CHANNELS } from '@/constants';
+
 import { electronMock } from '../setup';
 
 vi.mock('node:fs');
@@ -143,6 +145,85 @@ describe('DownloadManager', () => {
     expect(downloadURL).toHaveBeenCalledWith(url);
   });
 
+  it('emits a canonical pending snapshot as soon as a download starts', () => {
+    const modelsDirectory = path.resolve('/mock/models');
+    const checkpointsDirectory = path.join(modelsDirectory, 'checkpoints');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    const url = 'https://example.com/model.safetensors';
+    mockExistingPaths(modelsDirectory, checkpointsDirectory);
+
+    expect(manager.startDownload(url, checkpointsDirectory, 'model.safetensors')).toBe(true);
+
+    expect(mainWindow.send).toHaveBeenCalledWith(
+      IPC_CHANNELS.DOWNLOAD_PROGRESS,
+      expect.objectContaining({
+        url,
+        filename: 'model.safetensors',
+        savePath: path.join(checkpointsDirectory, 'model.safetensors'),
+        progress: 0,
+        status: DownloadStatus.PENDING,
+        state: DownloadStatus.PENDING,
+        receivedBytes: 0,
+        totalBytes: 0,
+        isPaused: false,
+      })
+    );
+  });
+
+  it('resumes paused downloads without starting a second download', () => {
+    const modelsDirectory = path.resolve('/mock/models');
+    const checkpointsDirectory = path.join(modelsDirectory, 'checkpoints');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    mockExistingPaths(modelsDirectory, checkpointsDirectory);
+    const downloads = (
+      manager as unknown as {
+        downloads: Map<
+          string,
+          {
+            url: string;
+            filename: string;
+            directoryPath: string;
+            savePath: string;
+            tempPath: string;
+            progress: number;
+            status: DownloadStatus;
+            message?: string;
+            receivedBytes: number;
+            totalBytes: number;
+            item: {
+              canResume: () => boolean;
+              resume: () => void;
+            } | null;
+          }
+        >;
+      }
+    ).downloads;
+    const resume = vi.fn();
+    const url = 'https://example.com/model.safetensors';
+
+    downloads.set(url, {
+      url,
+      filename: 'model.safetensors',
+      directoryPath: checkpointsDirectory,
+      savePath: path.join(checkpointsDirectory, 'model.safetensors'),
+      tempPath: path.join(checkpointsDirectory, 'Unconfirmed model.safetensors.tmp'),
+      progress: 0.5,
+      status: DownloadStatus.PAUSED,
+      message: undefined,
+      receivedBytes: 5,
+      totalBytes: 10,
+      item: {
+        canResume: () => true,
+        resume,
+      },
+    });
+
+    expect(manager.startDownload(url, checkpointsDirectory, 'model.safetensors')).toBe(true);
+
+    expect(resume).toHaveBeenCalledOnce();
+    expect(downloadURL).not.toHaveBeenCalled();
+  });
+
   it('does not create directories outside models directory', () => {
     const modelsDirectory = path.resolve('/mock/models');
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
@@ -212,6 +293,11 @@ describe('DownloadManager', () => {
             directoryPath: string;
             savePath: string;
             tempPath: string;
+            progress: number;
+            status: DownloadStatus;
+            message?: string;
+            receivedBytes: number;
+            totalBytes: number;
             item: { canResume: () => boolean; resume: () => void };
           }
         >;
@@ -226,6 +312,11 @@ describe('DownloadManager', () => {
       directoryPath: checkpointsDirectory,
       savePath: path.join(checkpointsDirectory, 'model.safetensors'),
       tempPath: path.join(checkpointsDirectory, 'Unconfirmed model.safetensors.tmp'),
+      progress: 0.5,
+      status: DownloadStatus.PAUSED,
+      message: undefined,
+      receivedBytes: 5,
+      totalBytes: 10,
       item: {
         canResume: () => false,
         resume,
@@ -236,5 +327,71 @@ describe('DownloadManager', () => {
 
     expect(resume).not.toHaveBeenCalled();
     expect(downloadURL).toHaveBeenCalledWith(url);
+  });
+
+  it('returns canonical snapshots from getAllDownloads while preserving legacy fields', () => {
+    const modelsDirectory = path.resolve('/mock/models');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    const url = 'https://example.com/model.safetensors';
+    const savePath = path.join(modelsDirectory, 'checkpoints', 'model.safetensors');
+    const downloads = (
+      manager as unknown as {
+        downloads: Map<
+          string,
+          {
+            url: string;
+            filename: string;
+            directoryPath: string;
+            savePath: string;
+            tempPath: string;
+            progress: number;
+            status: DownloadStatus;
+            message?: string;
+            receivedBytes: number;
+            totalBytes: number;
+            item: {
+              getState: () => 'progressing';
+              getReceivedBytes: () => number;
+              getTotalBytes: () => number;
+              isPaused: () => boolean;
+            } | null;
+          }
+        >;
+      }
+    ).downloads;
+
+    downloads.set(url, {
+      url,
+      filename: 'model.safetensors',
+      directoryPath: path.dirname(savePath),
+      savePath,
+      tempPath: path.join(path.dirname(savePath), 'Unconfirmed model.safetensors.tmp'),
+      progress: 0.5,
+      status: DownloadStatus.IN_PROGRESS,
+      message: undefined,
+      receivedBytes: 5,
+      totalBytes: 10,
+      item: {
+        getState: () => 'progressing',
+        getReceivedBytes: () => 5,
+        getTotalBytes: () => 10,
+        isPaused: () => false,
+      },
+    });
+
+    expect(manager.getAllDownloads()).toEqual([
+      {
+        url,
+        filename: 'model.safetensors',
+        savePath,
+        progress: 0.5,
+        status: DownloadStatus.IN_PROGRESS,
+        message: undefined,
+        state: DownloadStatus.IN_PROGRESS,
+        receivedBytes: 5,
+        totalBytes: 10,
+        isPaused: false,
+      },
+    ]);
   });
 });
