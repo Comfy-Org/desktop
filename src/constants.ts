@@ -203,9 +203,9 @@ export const AMD_PYTORCH_WINDOWS_REQUIRED_DRIVER = '26.2.2';
 const AMD_ROCM_WINDOWS_BASE_URL = `https://repo.radeon.com/rocm/windows/rocm-rel-${AMD_ROCM_WINDOWS_RELEASE}`;
 const getAmdRocmWindowsPackageUrl = (fileName: string): string => `${AMD_ROCM_WINDOWS_BASE_URL}/${fileName}`;
 
+// Desktop only needs the ROCm runtime/inference packages on Windows; omit the devel SDK toolchain.
 export const AMD_ROCM_SDK_PACKAGES: string[] = [
   getAmdRocmWindowsPackageUrl('rocm_sdk_core-7.2.1-py3-none-win_amd64.whl'),
-  getAmdRocmWindowsPackageUrl('rocm_sdk_devel-7.2.1-py3-none-win_amd64.whl'),
   getAmdRocmWindowsPackageUrl('rocm_sdk_libraries_custom-7.2.1-py3-none-win_amd64.whl'),
   getAmdRocmWindowsPackageUrl('rocm-7.2.1.tar.gz'),
 ];
