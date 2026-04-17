@@ -8,7 +8,9 @@ import os, { EOL } from 'node:os';
 import path from 'node:path';
 
 import {
+  AMD_PYTORCH_WINDOWS_REQUIRED_DRIVER,
   AMD_ROCM_SDK_PACKAGES,
+  AMD_ROCM_WINDOWS_RELEASE,
   AMD_TORCH_PACKAGES,
   InstallStage,
   NVIDIA_TORCHVISION_VERSION,
@@ -56,6 +58,8 @@ type TorchPackageName = 'torch' | 'torchaudio' | 'torchvision';
 type TorchPackageVersions = Record<TorchPackageName, string | undefined>;
 
 const TORCH_PACKAGE_NAMES: TorchPackageName[] = ['torch', 'torchaudio', 'torchvision'];
+
+type AmdInstallComponent = 'ROCm SDK' | 'PyTorch';
 
 export function getPipInstallArgs(config: PipInstallConfig): string[] {
   const installArgs = ['pip', 'install'];
@@ -115,6 +119,21 @@ function fixDeviceMirrorMismatch(device: TorchDeviceType, mirror: string | undef
     else if (device === 'mps') return TorchMirrorUrl.NightlyCpu;
   }
   return mirror;
+}
+
+/**
+ * Formats AMD Windows installation failures with the documented driver requirement.
+ * @param component The AMD package set that failed to install.
+ * @param exitCode The `uv pip install` exit code.
+ * @returns The user-facing error message.
+ */
+function formatAmdWindowsInstallError(component: AmdInstallComponent, exitCode: number | null): string {
+  const driverLabel = `AMD Software: Adrenalin Edition ${AMD_PYTORCH_WINDOWS_REQUIRED_DRIVER}`;
+  return [
+    `Failed to install AMD ${component} packages: exit code ${exitCode}.`,
+    `ROCm ${AMD_ROCM_WINDOWS_RELEASE} on Windows requires ${driverLabel}.`,
+    'Update the AMD graphics driver and retry if you are on an older or incompatible release.',
+  ].join('\n');
 }
 
 /**
@@ -783,7 +802,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     log.info('Installing AMD ROCm SDK packages.');
     const { exitCode } = await this.runUvCommandAsync(installArgs, callbacks);
     if (exitCode !== 0) {
-      throw new Error(`Failed to install AMD ROCm SDK packages: exit code ${exitCode}`);
+      throw new Error(formatAmdWindowsInstallError('ROCm SDK', exitCode));
     }
   }
 
@@ -803,7 +822,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     log.info('Installing AMD ROCm PyTorch packages.');
     const { exitCode } = await this.runUvCommandAsync(installArgs, callbacks);
     if (exitCode !== 0) {
-      throw new Error(`Failed to install AMD ROCm PyTorch packages: exit code ${exitCode}`);
+      throw new Error(formatAmdWindowsInstallError('PyTorch', exitCode));
     }
   }
 
