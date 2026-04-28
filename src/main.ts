@@ -135,6 +135,13 @@ async function applyProxySettings(config: DesktopConfig): Promise<void> {
     const httpsProxy = settings.get('Comfy.Network.Proxy.HttpsUrl');
     const noProxy = settings.get('Comfy.Network.Proxy.NoProxy');
 
+    // Export NO_PROXY env vars even when no explicit proxy URL is configured,
+    // so a noProxy-only config works alongside OS-level or externally-provided proxies.
+    if (noProxy) {
+      process.env.NO_PROXY = noProxy;
+      process.env.no_proxy = noProxy;
+    }
+
     if (!httpProxy && !httpsProxy) return;
 
     log.info(
@@ -142,7 +149,6 @@ async function applyProxySettings(config: DesktopConfig): Promise<void> {
     );
 
     // Build Chromium proxy rules that respect separate HTTP/HTTPS proxies.
-    // Format: "http=<proxy>;https=<proxy>" or a single proxy for both.
     const proxyRules = buildChromiumProxyRules(httpProxy, httpsProxy);
 
     // Configure Chromium's network stack (affects Electron's own requests and BrowserWindow).
@@ -164,10 +170,6 @@ async function applyProxySettings(config: DesktopConfig): Promise<void> {
       process.env.HTTPS_PROXY = httpsProxy;
       process.env.https_proxy = httpsProxy;
     }
-    if (noProxy) {
-      process.env.NO_PROXY = noProxy;
-      process.env.no_proxy = noProxy;
-    }
   } catch (error) {
     log.warn('Failed to apply proxy settings', error);
   }
@@ -176,13 +178,15 @@ async function applyProxySettings(config: DesktopConfig): Promise<void> {
 /**
  * Builds Chromium-format proxy rules from separate HTTP and HTTPS proxy URLs.
  * When both are set, uses per-scheme syntax: "http=<proxy>;https=<proxy>".
- * When only one is set, uses it as a catch-all.
+ * When only one is set, uses a scheme-specific prefix to avoid unintended catch-all behaviour.
  */
 function buildChromiumProxyRules(httpProxy: string, httpsProxy: string): string {
   if (httpProxy && httpsProxy) {
     return `http=${httpProxy};https=${httpsProxy}`;
   }
-  return httpProxy || httpsProxy;
+  if (httpProxy) return `http=${httpProxy}`;
+  if (httpsProxy) return `https=${httpsProxy}`;
+  return '';
 }
 
 /**
