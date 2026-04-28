@@ -41,12 +41,39 @@ export async function canExecute(path: string): Promise<boolean> {
 export async function canExecuteShellCommand(command: string, timeout = 5000): Promise<boolean> {
   const proc = exec(command);
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
+    const timeoutHandle = setTimeout(() => {
       proc.kill();
       reject(new Error('Timed out attempting to execute git'));
     }, timeout);
-    proc.on('exit', (code) => resolve(code === 0));
+    proc.on('exit', (code) => {
+      clearTimeout(timeoutHandle);
+      resolve(code === 0);
+    });
   });
+}
+
+const quoteShellPath = (value: string) => `"${value.replaceAll('"', '')}"`;
+
+function getWindowsGitCommands(): string[] {
+  const programFiles = [process.env.ProgramFiles, process.env['ProgramFiles(x86)']].filter(
+    (value): value is string => !!value
+  );
+
+  return programFiles.flatMap((basePath) => [
+    `${quoteShellPath(path.join(basePath, 'Git', 'cmd', 'git.exe'))} --help`,
+    `${quoteShellPath(path.join(basePath, 'Git', 'bin', 'git.exe'))} --help`,
+  ]);
+}
+
+export async function canExecuteGit(): Promise<boolean> {
+  if (await canExecuteShellCommand('git --help')) return true;
+  if (process.platform !== 'win32') return false;
+
+  for (const command of getWindowsGitCommands()) {
+    if (await canExecuteShellCommand(command)) return true;
+  }
+
+  return false;
 }
 
 export async function containsDirectory(path: string, contains: string): Promise<boolean> {

@@ -8,7 +8,7 @@ import type { DesktopInstallState } from '../main_types';
 import type { InstallValidation } from '../preload';
 import { type ITelemetry, getTelemetry } from '../services/telemetry';
 import { useDesktopConfig } from '../store/desktopConfig';
-import { canExecute, canExecuteShellCommand, pathAccessible } from '../utils';
+import { canExecute, canExecuteGit, pathAccessible } from '../utils';
 import { VirtualEnvironment } from '../virtualEnvironment';
 
 /**
@@ -188,7 +188,7 @@ export class ComfyInstallation {
     }
 
     // Git
-    validation.git = (await canExecuteShellCommand('git --help')) ? 'OK' : 'error';
+    validation.git = (await canExecuteGit()) ? 'OK' : 'error';
     if (validation.git !== 'OK') log.warn('git not found in path.');
     this.onUpdate?.(validation);
 

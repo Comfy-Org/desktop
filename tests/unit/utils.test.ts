@@ -4,7 +4,7 @@ import type { Systeminformation } from 'systeminformation';
 import si from 'systeminformation';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { validateHardware } from '@/utils';
+import { canExecuteGit, validateHardware } from '@/utils';
 
 vi.mock('node:child_process', () => ({
   exec: vi.fn(),
@@ -21,6 +21,8 @@ const createChildProcess = (): ChildProcess =>
 
 type ExecResponse = { error?: Error | null; stdout?: string; stderr?: string };
 
+type ExitResponse = { code: number };
+
 const withExecResponses = (responses: Array<[RegExp, ExecResponse]>, fallback: ExecResponse = {}) => {
   execMock.mockImplementation(((
     command: string,
@@ -31,6 +33,20 @@ const withExecResponses = (responses: Array<[RegExp, ExecResponse]>, fallback: E
     setImmediate(() => callback(error ?? null, stdout, stderr));
     return createChildProcess();
   }) as typeof exec);
+};
+
+const withExitResponses = (responses: Array<[RegExp, ExitResponse]>, fallback?: ExitResponse) => {
+  execMock.mockImplementation((command: string) => {
+    const match = responses.find(([pattern]) => pattern.test(command));
+    const { code } = match?.[1] ?? fallback ?? { code: 1 };
+
+    return {
+      kill: vi.fn(),
+      on: vi.fn((event: string, callback: (code: number) => void) => {
+        if (event === 'exit') setImmediate(() => callback(code));
+      }),
+    } as unknown as ChildProcess;
+  });
 };
 
 beforeEach(() => {
@@ -97,5 +113,21 @@ describe('validateHardware', () => {
       isValid: false,
       error: expect.stringContaining('NVIDIA or AMD'),
     });
+  });
+});
+
+describe('canExecuteGit', () => {
+  it('falls back to the standard Git for Windows install path when git is missing from PATH', async () => {
+    vi.stubGlobal('process', {
+      ...process,
+      platform: 'win32',
+      env: { ...process.env, ProgramFiles: String.raw`C:\Program Files` },
+    });
+    withExitResponses([
+      [/^git --help$/, { code: 1 }],
+      [/^"C:\\Program Files\\Git\\cmd\\git\.exe" --help$/, { code: 0 }],
+    ]);
+
+    await expect(canExecuteGit()).resolves.toBe(true);
   });
 });
