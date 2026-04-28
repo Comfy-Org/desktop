@@ -16,9 +16,10 @@ import { findAvailablePort, getModelsDirectory } from '@/utils';
 vi.mock('@/config/comfySettings', () => {
   const mockSettings = {
     get: vi.fn((key: string) => {
-      // Proxy settings should default to empty string (no proxy configured).
+      if (key === 'Comfy-Desktop.AutoUpdate') return true;
+      if (key === 'Comfy.Server.LaunchArgs') return {};
       if (key.startsWith('Comfy.Network.Proxy.')) return '';
-      return true;
+      return undefined;
     }),
     set: vi.fn(),
     saveSettings: vi.fn(),
