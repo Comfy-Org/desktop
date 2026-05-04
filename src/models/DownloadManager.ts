@@ -109,7 +109,13 @@ export class DownloadManager {
             log.info(`Successfully renamed ${download.tempPath} to ${download.savePath}`);
           } catch (error) {
             log.error('Failed to rename downloaded file. Deleting temp file.', error);
-            fs.unlinkSync(download.tempPath);
+            this.deleteTempFile(download.tempPath);
+            download.item = null;
+            download.progress = this.calculateProgress(receivedBytes, totalBytes);
+            download.status = DownloadStatus.ERROR;
+            download.message = `Failed to finalize downloaded file: ${this.getErrorMessage(error)}`;
+            this.reportProgress(this.toDownloadState(download));
+            return;
           }
           download.item = null;
           download.progress = 1;
@@ -203,10 +209,17 @@ export class DownloadManager {
         receivedBytes: 0,
         totalBytes: 0,
       };
+      existingCompletedDownload.url = url;
+      existingCompletedDownload.directoryPath = normalizedDirectoryPath;
+      existingCompletedDownload.savePath = localSavePath;
+      existingCompletedDownload.tempPath = this.getTempPath(filename, normalizedDirectoryPath);
+      existingCompletedDownload.filename = filename;
       existingCompletedDownload.progress = 1;
       existingCompletedDownload.status = DownloadStatus.COMPLETED;
       existingCompletedDownload.message = undefined;
       existingCompletedDownload.item = null;
+      existingCompletedDownload.receivedBytes = 0;
+      existingCompletedDownload.totalBytes = 0;
       this.downloads.set(downloadId, existingCompletedDownload);
       const downloadState = this.toDownloadState(existingCompletedDownload);
       this.reportProgress(downloadState);
@@ -217,10 +230,13 @@ export class DownloadManager {
     if (existingDownload) {
       log.info('Download already exists');
       if (existingDownload.status === DownloadStatus.PAUSED) {
-        this.resumeDownload(downloadId);
-        return { ok: true, download: this.toDownloadState(existingDownload) };
+        const resumedDownload = this.resumeDownloadWithState(downloadId);
+        if (resumedDownload) return resumedDownload;
+        this.deleteTempFile(existingDownload.tempPath);
+        this.downloads.delete(downloadId);
       } else if (
         existingDownload.status === DownloadStatus.CANCELLED ||
+        existingDownload.status === DownloadStatus.COMPLETED ||
         existingDownload.status === DownloadStatus.ERROR
       ) {
         this.deleteTempFile(existingDownload.tempPath);
@@ -280,15 +296,31 @@ export class DownloadManager {
   }
 
   resumeDownload(downloadIdOrUrl: string): void {
+    this.resumeDownloadWithState(downloadIdOrUrl);
+  }
+
+  private resumeDownloadWithState(downloadIdOrUrl: string): StartDownloadResult | undefined {
     const download = this.findDownload(downloadIdOrUrl);
-    if (!download?.item) return;
+    if (!download) return undefined;
+
+    if (!download.item) {
+      this.deleteTempFile(download.tempPath);
+      this.downloads.delete(download.downloadId);
+      return this.startDownload(download.url, download.directoryPath, download.filename);
+    }
 
     if (download.item.canResume()) {
       log.info('Resuming download');
       download.item.resume();
+      download.status = DownloadStatus.IN_PROGRESS;
+      download.message = undefined;
+      const downloadState = this.toDownloadState(download);
+      this.reportProgress(downloadState);
+      return { ok: true, download: downloadState };
     } else {
+      this.deleteTempFile(download.tempPath);
       this.downloads.delete(download.downloadId);
-      this.startDownload(download.url, download.directoryPath, download.filename);
+      return this.startDownload(download.url, download.directoryPath, download.filename);
     }
   }
 
@@ -316,6 +348,7 @@ export class DownloadManager {
     } catch (error) {
       log.error(`Failed to delete file ${tempPath}:`, error);
     }
+    this.downloads.delete(this.createDownloadId(localSavePath));
     return true;
   }
 
@@ -362,14 +395,26 @@ export class DownloadManager {
 
   private takePendingDownload(url: string): Download | undefined {
     const pendingDownloadIds = this.pendingDownloadIdsByUrl.get(url);
-    const downloadId = pendingDownloadIds?.shift();
+    while (pendingDownloadIds?.length) {
+      const downloadId = pendingDownloadIds.shift();
+      const pendingDownload = downloadId ? this.downloads.get(downloadId) : undefined;
+      if (pendingDownload?.status === DownloadStatus.PENDING && pendingDownload.item === null) {
+        if (pendingDownloadIds.length === 0) {
+          this.pendingDownloadIdsByUrl.delete(url);
+        }
+        return pendingDownload;
+      }
+    }
     if (pendingDownloadIds?.length === 0) {
       this.pendingDownloadIdsByUrl.delete(url);
     }
-    if (downloadId) {
-      return this.downloads.get(downloadId);
-    }
-    return [...this.downloads.values()].find((download) => download.url === url && download.item === null);
+    return [...this.downloads.values()].find(
+      (download) => download.url === url && download.status === DownloadStatus.PENDING && download.item === null
+    );
+  }
+
+  private getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
   }
 
   private findDownload(downloadIdOrUrl: string): Download | undefined {
