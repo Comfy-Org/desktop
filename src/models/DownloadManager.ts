@@ -351,7 +351,7 @@ export class DownloadManager {
   }
 
   private createDownloadId(savePath: string): string {
-    return this.getPathForComparison(path.resolve(savePath));
+    return path.resolve(savePath);
   }
 
   private enqueuePendingDownload(url: string, downloadId: string): void {
