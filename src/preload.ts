@@ -6,7 +6,7 @@ import { strictIpcRenderer as ipcRenderer } from '@/infrastructure/ipcChannels';
 import { ELECTRON_BRIDGE_API, IPC_CHANNELS, ProgressStatus } from './constants';
 import type { RestrictedPathType } from './handlers/pathHandlers';
 import type { InstallStageInfo } from './main-process/installStages';
-import type { DownloadState } from './main_types';
+import type { DownloadState, StartDownloadResult } from './main_types';
 import type { DesktopInstallState, DesktopWindowStyle } from './main_types';
 
 /**
@@ -191,18 +191,18 @@ const electronAPI = {
     onDownloadProgress: (callback: (progress: DownloadProgressUpdate) => void) => {
       ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_event, progress) => callback(progress));
     },
-    startDownload: (url: string, path: string, filename: string): Promise<boolean> => {
+    startDownload: (url: string, path: string, filename: string): Promise<StartDownloadResult> => {
       console.log(`Sending start download message to main process`, { url, path, filename });
       return ipcRenderer.invoke(IPC_CHANNELS.START_DOWNLOAD, { url, path, filename });
     },
-    cancelDownload: (url: string): Promise<void> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.CANCEL_DOWNLOAD, url);
+    cancelDownload: (downloadId: string): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.CANCEL_DOWNLOAD, downloadId);
     },
-    pauseDownload: (url: string): Promise<void> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.PAUSE_DOWNLOAD, url);
+    pauseDownload: (downloadId: string): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.PAUSE_DOWNLOAD, downloadId);
     },
-    resumeDownload: (url: string): Promise<void> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.RESUME_DOWNLOAD, url);
+    resumeDownload: (downloadId: string): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.RESUME_DOWNLOAD, downloadId);
     },
     deleteModel: (filename: string, path: string): Promise<boolean> => {
       return ipcRenderer.invoke(IPC_CHANNELS.DELETE_MODEL, { filename, path });

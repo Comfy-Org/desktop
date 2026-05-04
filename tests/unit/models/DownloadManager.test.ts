@@ -3,6 +3,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DownloadStatus, IPC_CHANNELS } from '@/constants';
+import type { Download, StartDownloadResult } from '@/models/DownloadManager';
 
 import { electronMock } from '../setup';
 
@@ -15,6 +16,26 @@ const mockExistingPaths = (...paths: string[]) => {
 
   vi.mocked(fs.existsSync).mockImplementation((targetPath) => existingPaths.has(path.resolve(String(targetPath))));
 };
+
+function expectStartOk(result: StartDownloadResult) {
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+  return result.download;
+}
+
+function expectStartFailed(result: StartDownloadResult) {
+  expect(result.ok).toBe(false);
+  if (result.ok) {
+    throw new Error('Expected download start to fail');
+  }
+  return result;
+}
+
+function getDownloads(manager: unknown): Map<string, Download> {
+  return (manager as { downloads: Map<string, Download> }).downloads;
+}
 
 describe('DownloadManager', () => {
   let DownloadManager: typeof import('@/models/DownloadManager').DownloadManager;
@@ -64,16 +85,13 @@ describe('DownloadManager', () => {
     const savePath = path.join(modelsDirectory, 'ipadapter');
     mockExistingPaths(modelsDirectory, savePath);
 
-    expect(manager.startDownload(url, savePath, 'model.safetensors')).toBe(true);
+    const download = expectStartOk(manager.startDownload(url, savePath, 'model.safetensors'));
     expect(downloadURL).toHaveBeenCalledWith(url);
 
-    const downloads = (
-      manager as unknown as {
-        downloads: Map<string, { savePath: string; tempPath: string }>;
-      }
-    ).downloads;
-    expect(downloads.get(url)?.savePath).toBe(path.join(savePath, 'model.safetensors'));
-    expect(downloads.get(url)?.tempPath).toBe(path.join(savePath, 'Unconfirmed model.safetensors.tmp'));
+    const downloads = getDownloads(manager);
+    expect(download.downloadId).toBe(path.join(savePath, 'model.safetensors'));
+    expect(downloads.get(download.downloadId)?.savePath).toBe(path.join(savePath, 'model.safetensors'));
+    expect(downloads.get(download.downloadId)?.tempPath).toBe(path.join(savePath, 'Unconfirmed model.safetensors.tmp'));
   });
 
   it('normalizes relative save paths from legacy callers under the models directory', () => {
@@ -82,18 +100,70 @@ describe('DownloadManager', () => {
     const url = 'https://example.com/model.safetensors';
     mockExistingPaths(modelsDirectory, path.join(modelsDirectory, 'checkpoints'));
 
-    expect(manager.startDownload(url, 'checkpoints', 'model.safetensors')).toBe(true);
+    const download = expectStartOk(manager.startDownload(url, 'checkpoints', 'model.safetensors'));
     expect(downloadURL).toHaveBeenCalledWith(url);
 
-    const downloads = (
-      manager as unknown as {
-        downloads: Map<string, { savePath: string; tempPath: string }>;
-      }
-    ).downloads;
-    expect(downloads.get(url)?.savePath).toBe(path.join(modelsDirectory, 'checkpoints', 'model.safetensors'));
-    expect(downloads.get(url)?.tempPath).toBe(
+    const downloads = getDownloads(manager);
+    expect(download.downloadId).toBe(path.join(modelsDirectory, 'checkpoints', 'model.safetensors'));
+    expect(downloads.get(download.downloadId)?.savePath).toBe(
+      path.join(modelsDirectory, 'checkpoints', 'model.safetensors')
+    );
+    expect(downloads.get(download.downloadId)?.tempPath).toBe(
       path.join(modelsDirectory, 'checkpoints', 'Unconfirmed model.safetensors.tmp')
     );
+  });
+
+  it('tracks same-source downloads separately by target save path', () => {
+    const modelsDirectory = path.resolve('/mock/models');
+    const checkpointsDirectory = path.join(modelsDirectory, 'checkpoints');
+    const lorasDirectory = path.join(modelsDirectory, 'loras');
+    const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
+    const url = 'https://example.com/model.safetensors';
+    mockExistingPaths(modelsDirectory, checkpointsDirectory, lorasDirectory);
+
+    const checkpointDownload = expectStartOk(manager.startDownload(url, checkpointsDirectory, 'model.safetensors'));
+    const loraDownload = expectStartOk(manager.startDownload(url, lorasDirectory, 'model.safetensors'));
+
+    expect(checkpointDownload.downloadId).toBe(path.join(checkpointsDirectory, 'model.safetensors'));
+    expect(loraDownload.downloadId).toBe(path.join(lorasDirectory, 'model.safetensors'));
+    expect(downloadURL).toHaveBeenCalledTimes(2);
+    expect([...getDownloads(manager).keys()]).toEqual([checkpointDownload.downloadId, loraDownload.downloadId]);
+
+    const willDownload = defaultSessionOn.mock.calls[0][1] as (
+      event: unknown,
+      item: {
+        getURLChain: () => string[];
+        getTotalBytes: () => number;
+        getSavePath: () => string;
+        setSavePath: ReturnType<typeof vi.fn>;
+        on: ReturnType<typeof vi.fn>;
+        once: ReturnType<typeof vi.fn>;
+      }
+    ) => void;
+    const firstItem = {
+      getURLChain: () => [url],
+      getTotalBytes: () => 10,
+      getSavePath: () => '',
+      setSavePath: vi.fn(),
+      on: vi.fn(),
+      once: vi.fn(),
+    };
+    const secondItem = {
+      getURLChain: () => [url],
+      getTotalBytes: () => 10,
+      getSavePath: () => '',
+      setSavePath: vi.fn(),
+      on: vi.fn(),
+      once: vi.fn(),
+    };
+
+    willDownload({}, firstItem);
+    willDownload({}, secondItem);
+
+    expect(firstItem.setSavePath).toHaveBeenCalledWith(
+      path.join(checkpointsDirectory, 'Unconfirmed model.safetensors.tmp')
+    );
+    expect(secondItem.setSavePath).toHaveBeenCalledWith(path.join(lorasDirectory, 'Unconfirmed model.safetensors.tmp'));
   });
 
   it('rejects relative save paths that escape the models directory', () => {
@@ -101,7 +171,7 @@ describe('DownloadManager', () => {
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     mockExistingPaths(modelsDirectory);
 
-    expect(manager.startDownload('https://example.com/model.safetensors', '../tmp', 'model.safetensors')).toBe(false);
+    expectStartFailed(manager.startDownload('https://example.com/model.safetensors', '../tmp', 'model.safetensors'));
     expect(downloadURL).not.toHaveBeenCalled();
   });
 
@@ -110,9 +180,9 @@ describe('DownloadManager', () => {
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     mockExistingPaths(modelsDirectory, path.resolve('/tmp'));
 
-    expect(
+    expectStartFailed(
       manager.startDownload('https://example.com/model.safetensors', path.resolve('/tmp'), 'model.safetensors')
-    ).toBe(false);
+    );
     expect(downloadURL).not.toHaveBeenCalled();
   });
 
@@ -123,13 +193,13 @@ describe('DownloadManager', () => {
     const manager = DownloadManager.getInstance(mainWindow as never, path.resolve('/Mock/Models'));
     mockExistingPaths(path.resolve('/Mock/Models'), path.resolve('/mock/models/ipadapter'));
 
-    expect(
+    expectStartOk(
       manager.startDownload(
         'https://example.com/model.safetensors',
         path.resolve('/mock/models/ipadapter'),
         'model.safetensors'
       )
-    ).toBe(true);
+    );
     expect(downloadURL).toHaveBeenCalledWith('https://example.com/model.safetensors');
   });
 
@@ -140,7 +210,7 @@ describe('DownloadManager', () => {
     const newSubdir = path.join(modelsDirectory, 'latent_upscale_models');
     mockExistingPaths(modelsDirectory);
 
-    expect(manager.startDownload(url, newSubdir, 'model.safetensors')).toBe(true);
+    expectStartOk(manager.startDownload(url, newSubdir, 'model.safetensors'));
     expect(fs.mkdirSync).toHaveBeenCalledWith(newSubdir, { recursive: true });
     expect(downloadURL).toHaveBeenCalledWith(url);
   });
@@ -152,11 +222,12 @@ describe('DownloadManager', () => {
     const url = 'https://example.com/model.safetensors';
     mockExistingPaths(modelsDirectory, checkpointsDirectory);
 
-    expect(manager.startDownload(url, checkpointsDirectory, 'model.safetensors')).toBe(true);
+    const download = expectStartOk(manager.startDownload(url, checkpointsDirectory, 'model.safetensors'));
 
     expect(mainWindow.send).toHaveBeenCalledWith(
       IPC_CHANNELS.DOWNLOAD_PROGRESS,
       expect.objectContaining({
+        downloadId: download.downloadId,
         url,
         filename: 'model.safetensors',
         savePath: path.join(checkpointsDirectory, 'model.safetensors'),
@@ -175,33 +246,13 @@ describe('DownloadManager', () => {
     const checkpointsDirectory = path.join(modelsDirectory, 'checkpoints');
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     mockExistingPaths(modelsDirectory, checkpointsDirectory);
-    const downloads = (
-      manager as unknown as {
-        downloads: Map<
-          string,
-          {
-            url: string;
-            filename: string;
-            directoryPath: string;
-            savePath: string;
-            tempPath: string;
-            progress: number;
-            status: DownloadStatus;
-            message?: string;
-            receivedBytes: number;
-            totalBytes: number;
-            item: {
-              canResume: () => boolean;
-              resume: () => void;
-            } | null;
-          }
-        >;
-      }
-    ).downloads;
+    const downloads = getDownloads(manager);
     const resume = vi.fn();
     const url = 'https://example.com/model.safetensors';
+    const downloadId = path.join(checkpointsDirectory, 'model.safetensors');
 
-    downloads.set(url, {
+    downloads.set(downloadId, {
+      downloadId,
       url,
       filename: 'model.safetensors',
       directoryPath: checkpointsDirectory,
@@ -215,10 +266,10 @@ describe('DownloadManager', () => {
       item: {
         canResume: () => true,
         resume,
-      },
+      } as unknown as Download['item'],
     });
 
-    expect(manager.startDownload(url, checkpointsDirectory, 'model.safetensors')).toBe(true);
+    expectStartOk(manager.startDownload(url, checkpointsDirectory, 'model.safetensors'));
 
     expect(resume).toHaveBeenCalledOnce();
     expect(downloadURL).not.toHaveBeenCalled();
@@ -229,9 +280,9 @@ describe('DownloadManager', () => {
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     mockExistingPaths(modelsDirectory, path.resolve('/tmp'));
 
-    expect(
+    expectStartFailed(
       manager.startDownload('https://example.com/model.safetensors', path.resolve('/tmp/evil'), 'model.safetensors')
-    ).toBe(false);
+    );
     expect(fs.mkdirSync).not.toHaveBeenCalled();
     expect(downloadURL).not.toHaveBeenCalled();
   });
@@ -251,9 +302,7 @@ describe('DownloadManager', () => {
     });
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
 
-    expect(manager.startDownload('https://example.com/model.safetensors', symlinkPath, 'model.safetensors')).toBe(
-      false
-    );
+    expectStartFailed(manager.startDownload('https://example.com/model.safetensors', symlinkPath, 'model.safetensors'));
     expect(downloadURL).not.toHaveBeenCalled();
   });
 
@@ -273,7 +322,7 @@ describe('DownloadManager', () => {
     });
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
 
-    expect(manager.startDownload('https://example.com/model.safetensors', nestedPath, 'model.safetensors')).toBe(false);
+    expectStartFailed(manager.startDownload('https://example.com/model.safetensors', nestedPath, 'model.safetensors'));
     expect(fs.mkdirSync).not.toHaveBeenCalled();
     expect(downloadURL).not.toHaveBeenCalled();
   });
@@ -283,30 +332,13 @@ describe('DownloadManager', () => {
     const checkpointsDirectory = path.join(modelsDirectory, 'checkpoints');
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     mockExistingPaths(modelsDirectory, checkpointsDirectory);
-    const downloads = (
-      manager as unknown as {
-        downloads: Map<
-          string,
-          {
-            url: string;
-            filename: string;
-            directoryPath: string;
-            savePath: string;
-            tempPath: string;
-            progress: number;
-            status: DownloadStatus;
-            message?: string;
-            receivedBytes: number;
-            totalBytes: number;
-            item: { canResume: () => boolean; resume: () => void };
-          }
-        >;
-      }
-    ).downloads;
+    const downloads = getDownloads(manager);
     const resume = vi.fn();
     const url = 'https://example.com/model.safetensors';
+    const downloadId = path.join(checkpointsDirectory, 'model.safetensors');
 
-    downloads.set(url, {
+    downloads.set(downloadId, {
+      downloadId,
       url,
       filename: 'model.safetensors',
       directoryPath: checkpointsDirectory,
@@ -320,10 +352,10 @@ describe('DownloadManager', () => {
       item: {
         canResume: () => false,
         resume,
-      },
+      } as unknown as Download['item'],
     });
 
-    manager.resumeDownload(url);
+    manager.resumeDownload(downloadId);
 
     expect(resume).not.toHaveBeenCalled();
     expect(downloadURL).toHaveBeenCalledWith(url);
@@ -334,33 +366,11 @@ describe('DownloadManager', () => {
     const manager = DownloadManager.getInstance(mainWindow as never, modelsDirectory);
     const url = 'https://example.com/model.safetensors';
     const savePath = path.join(modelsDirectory, 'checkpoints', 'model.safetensors');
-    const downloads = (
-      manager as unknown as {
-        downloads: Map<
-          string,
-          {
-            url: string;
-            filename: string;
-            directoryPath: string;
-            savePath: string;
-            tempPath: string;
-            progress: number;
-            status: DownloadStatus;
-            message?: string;
-            receivedBytes: number;
-            totalBytes: number;
-            item: {
-              getState: () => 'progressing';
-              getReceivedBytes: () => number;
-              getTotalBytes: () => number;
-              isPaused: () => boolean;
-            } | null;
-          }
-        >;
-      }
-    ).downloads;
+    const downloads = getDownloads(manager);
+    const downloadId = savePath;
 
-    downloads.set(url, {
+    downloads.set(downloadId, {
+      downloadId,
       url,
       filename: 'model.safetensors',
       directoryPath: path.dirname(savePath),
@@ -376,11 +386,12 @@ describe('DownloadManager', () => {
         getReceivedBytes: () => 5,
         getTotalBytes: () => 10,
         isPaused: () => false,
-      },
+      } as unknown as Download['item'],
     });
 
     expect(manager.getAllDownloads()).toEqual([
       {
+        downloadId,
         url,
         filename: 'model.safetensors',
         savePath,

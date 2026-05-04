@@ -1,5 +1,5 @@
 export * from './constants';
-export type { DownloadState } from './models/DownloadManager';
+export type { DownloadState, StartDownloadResult } from './models/DownloadManager';
 export type { InstallStageInfo, InstallStageName } from './main-process/installStages';
 export type {
   ElectronAPI,

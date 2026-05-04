@@ -9,6 +9,7 @@ import { DownloadStatus, IPC_CHANNELS } from '../constants';
 import type { AppWindow } from '../main-process/appWindow';
 
 export interface Download {
+  downloadId: string;
   url: string;
   filename: string;
   tempPath: string; // Temporary filename until the download is complete.
@@ -23,6 +24,7 @@ export interface Download {
 }
 
 export interface DownloadState {
+  downloadId: string;
   url: string;
   filename: string;
   savePath: string;
@@ -39,23 +41,29 @@ export interface DownloadState {
   isPaused: boolean;
 }
 
+export type StartDownloadResult =
+  | { ok: true; download: DownloadState }
+  | { ok: false; error: string; download: DownloadState };
+
 /**
  * Singleton class that manages downloading model checkpoints for ComfyUI.
  */
 export class DownloadManager {
   private static instance: DownloadManager;
   private readonly downloads: Map<string, Download>;
+  private readonly pendingDownloadIdsByUrl: Map<string, string[]>;
 
   private constructor(
     private readonly mainWindow: AppWindow,
     private readonly modelsDirectory: string
   ) {
     this.downloads = new Map();
+    this.pendingDownloadIdsByUrl = new Map();
 
     session.defaultSession.on('will-download', (event, item) => {
       const url = item.getURLChain()[0]; // Get the original URL in case of redirects.
       log.info('Will-download event', url);
-      const download = this.downloads.get(url);
+      const download = this.takePendingDownload(url);
       if (!download) return;
 
       item.setSavePath(download.tempPath);
@@ -127,12 +135,14 @@ export class DownloadManager {
     });
   }
 
-  startDownload(url: string, directoryPath: string, filename: string): boolean {
+  startDownload(url: string, directoryPath: string, filename: string): StartDownloadResult {
     const normalizedDirectoryPath = this.normalizeDirectoryPath(directoryPath);
     const localSavePath = this.getLocalSavePath(filename, normalizedDirectoryPath);
+    const downloadId = this.createDownloadId(localSavePath);
     if (!this.ensureDownloadTargetDirectory(localSavePath)) {
       log.error(`Save path ${localSavePath} is not in models directory ${this.modelsDirectory}`);
-      this.reportProgress({
+      const downloadState: DownloadState = {
+        downloadId,
         url,
         savePath: localSavePath,
         filename,
@@ -143,31 +153,44 @@ export class DownloadManager {
         receivedBytes: 0,
         totalBytes: 0,
         isPaused: false,
-      });
-      return false;
+      };
+      this.reportProgress(downloadState);
+      return {
+        ok: false,
+        error: 'Save path is not in models directory',
+        download: downloadState,
+      };
     }
 
     const validationResult = this.validateSafetensorsFile(url, filename);
     if (!validationResult.isValid) {
       log.error(validationResult.error);
-      this.reportProgress({
+      const errorMessage = validationResult.error ?? 'Invalid download';
+      const downloadState: DownloadState = {
+        downloadId,
         url,
         savePath: localSavePath,
         filename,
         progress: 0,
         status: DownloadStatus.ERROR,
-        message: validationResult.error,
+        message: errorMessage,
         state: DownloadStatus.ERROR,
         receivedBytes: 0,
         totalBytes: 0,
         isPaused: false,
-      });
-      return false;
+      };
+      this.reportProgress(downloadState);
+      return {
+        ok: false,
+        error: errorMessage,
+        download: downloadState,
+      };
     }
 
     if (fs.existsSync(localSavePath)) {
       log.info(`File ${filename} already exists, skipping download`);
-      const existingCompletedDownload = this.downloads.get(url) ?? {
+      const existingCompletedDownload = this.downloads.get(downloadId) ?? {
+        downloadId,
         url,
         directoryPath: normalizedDirectoryPath,
         savePath: localSavePath,
@@ -184,30 +207,32 @@ export class DownloadManager {
       existingCompletedDownload.status = DownloadStatus.COMPLETED;
       existingCompletedDownload.message = undefined;
       existingCompletedDownload.item = null;
-      this.downloads.set(url, existingCompletedDownload);
-      this.reportProgress(this.toDownloadState(existingCompletedDownload));
-      return true;
+      this.downloads.set(downloadId, existingCompletedDownload);
+      const downloadState = this.toDownloadState(existingCompletedDownload);
+      this.reportProgress(downloadState);
+      return { ok: true, download: downloadState };
     }
 
-    const existingDownload = this.downloads.get(url);
+    const existingDownload = this.downloads.get(downloadId);
     if (existingDownload) {
       log.info('Download already exists');
       if (existingDownload.status === DownloadStatus.PAUSED) {
-        this.resumeDownload(url);
-        return true;
+        this.resumeDownload(downloadId);
+        return { ok: true, download: this.toDownloadState(existingDownload) };
       } else if (
         existingDownload.status === DownloadStatus.CANCELLED ||
         existingDownload.status === DownloadStatus.ERROR
       ) {
         this.deleteTempFile(existingDownload.tempPath);
-        this.downloads.delete(url);
+        this.downloads.delete(downloadId);
       } else {
-        return true;
+        return { ok: true, download: this.toDownloadState(existingDownload) };
       }
     }
 
     log.info(`Starting download ${url} to ${localSavePath}`);
     const download: Download = {
+      downloadId,
       url,
       directoryPath: normalizedDirectoryPath,
       savePath: localSavePath,
@@ -220,17 +245,19 @@ export class DownloadManager {
       receivedBytes: 0,
       totalBytes: 0,
     };
-    this.downloads.set(url, download);
-    this.reportProgress(this.toDownloadState(download));
+    this.downloads.set(downloadId, download);
+    const downloadState = this.toDownloadState(download);
+    this.reportProgress(downloadState);
 
     // TODO(robinhuang): Add offset support for resuming downloads.
     // Can use https://www.electronjs.org/docs/latest/api/session#sescreateinterrupteddownloadoptions
+    this.enqueuePendingDownload(url, downloadId);
     session.defaultSession.downloadURL(url);
-    return true;
+    return { ok: true, download: downloadState };
   }
 
-  cancelDownload(url: string): void {
-    const download = this.downloads.get(url);
+  cancelDownload(downloadIdOrUrl: string): void {
+    const download = this.findDownload(downloadIdOrUrl);
     if (!download) return;
 
     log.info('Cancelling download');
@@ -244,23 +271,23 @@ export class DownloadManager {
     this.reportProgress(this.toDownloadState(download));
   }
 
-  pauseDownload(url: string): void {
-    const download = this.downloads.get(url);
+  pauseDownload(downloadIdOrUrl: string): void {
+    const download = this.findDownload(downloadIdOrUrl);
     if (!download?.item) return;
 
     log.info('Pausing download');
     download.item.pause();
   }
 
-  resumeDownload(url: string): void {
-    const download = this.downloads.get(url);
+  resumeDownload(downloadIdOrUrl: string): void {
+    const download = this.findDownload(downloadIdOrUrl);
     if (!download?.item) return;
 
     if (download.item.canResume()) {
       log.info('Resuming download');
       download.item.resume();
     } else {
-      this.downloads.delete(url);
+      this.downloads.delete(download.downloadId);
       this.startDownload(download.url, download.directoryPath, download.filename);
     }
   }
@@ -309,6 +336,7 @@ export class DownloadManager {
     const isPaused = download.status === DownloadStatus.PAUSED || download.item?.isPaused() || false;
 
     return {
+      downloadId: download.downloadId,
       url: download.url,
       filename: download.filename,
       savePath: download.savePath,
@@ -320,6 +348,35 @@ export class DownloadManager {
       totalBytes: download.totalBytes,
       isPaused,
     };
+  }
+
+  private createDownloadId(savePath: string): string {
+    return this.getPathForComparison(path.resolve(savePath));
+  }
+
+  private enqueuePendingDownload(url: string, downloadId: string): void {
+    const pendingDownloadIds = this.pendingDownloadIdsByUrl.get(url) ?? [];
+    pendingDownloadIds.push(downloadId);
+    this.pendingDownloadIdsByUrl.set(url, pendingDownloadIds);
+  }
+
+  private takePendingDownload(url: string): Download | undefined {
+    const pendingDownloadIds = this.pendingDownloadIdsByUrl.get(url);
+    const downloadId = pendingDownloadIds?.shift();
+    if (pendingDownloadIds?.length === 0) {
+      this.pendingDownloadIdsByUrl.delete(url);
+    }
+    if (downloadId) {
+      return this.downloads.get(downloadId);
+    }
+    return [...this.downloads.values()].find((download) => download.url === url && download.item === null);
+  }
+
+  private findDownload(downloadIdOrUrl: string): Download | undefined {
+    return (
+      this.downloads.get(downloadIdOrUrl) ??
+      [...this.downloads.values()].find((download) => download.url === downloadIdOrUrl)
+    );
   }
 
   private deleteTempFile(tempPath: string): void {
@@ -465,9 +522,9 @@ export class DownloadManager {
     ipcMain.handle(IPC_CHANNELS.START_DOWNLOAD, (event, { url, path, filename }: DownloadDetails) =>
       this.startDownload(url, path, filename)
     );
-    ipcMain.handle(IPC_CHANNELS.PAUSE_DOWNLOAD, (event, url: string) => this.pauseDownload(url));
-    ipcMain.handle(IPC_CHANNELS.RESUME_DOWNLOAD, (event, url: string) => this.resumeDownload(url));
-    ipcMain.handle(IPC_CHANNELS.CANCEL_DOWNLOAD, (event, url: string) => this.cancelDownload(url));
+    ipcMain.handle(IPC_CHANNELS.PAUSE_DOWNLOAD, (event, downloadId: string) => this.pauseDownload(downloadId));
+    ipcMain.handle(IPC_CHANNELS.RESUME_DOWNLOAD, (event, downloadId: string) => this.resumeDownload(downloadId));
+    ipcMain.handle(IPC_CHANNELS.CANCEL_DOWNLOAD, (event, downloadId: string) => this.cancelDownload(downloadId));
     ipcMain.handle(IPC_CHANNELS.GET_ALL_DOWNLOADS, () => this.getAllDownloads());
 
     ipcMain.handle(IPC_CHANNELS.DELETE_MODEL, (event, { filename, path }: FileAndPath) =>
