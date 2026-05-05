@@ -197,16 +197,23 @@ export const PYPI_FALLBACK_INDEX_URLS: string[] = [
   TorchMirrorUrl.Default,
 ];
 
+export const AMD_ROCM_WINDOWS_RELEASE = '7.2.1';
+export const AMD_PYTORCH_WINDOWS_REQUIRED_DRIVER = '26.2.2';
+
+const AMD_ROCM_WINDOWS_BASE_URL = `https://repo.radeon.com/rocm/windows/rocm-rel-${AMD_ROCM_WINDOWS_RELEASE}`;
+const getAmdRocmWindowsPackageUrl = (fileName: string): string => `${AMD_ROCM_WINDOWS_BASE_URL}/${fileName}`;
+
+// Desktop only needs the ROCm runtime/inference packages on Windows; omit the devel SDK toolchain.
 export const AMD_ROCM_SDK_PACKAGES: string[] = [
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/rocm_sdk_core-7.2.0.dev0-py3-none-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/rocm_sdk_libraries_custom-7.2.0.dev0-py3-none-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/rocm-7.2.0.dev0.tar.gz',
+  getAmdRocmWindowsPackageUrl('rocm_sdk_core-7.2.1-py3-none-win_amd64.whl'),
+  getAmdRocmWindowsPackageUrl('rocm_sdk_libraries_custom-7.2.1-py3-none-win_amd64.whl'),
+  getAmdRocmWindowsPackageUrl('rocm-7.2.1.tar.gz'),
 ];
 
 export const AMD_TORCH_PACKAGES: string[] = [
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/torch-2.9.1+rocmsdk20260116-cp312-cp312-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/torchaudio-2.9.1+rocmsdk20260116-cp312-cp312-win_amd64.whl',
-  'https://repo.radeon.com/rocm/windows/rocm-rel-7.2/torchvision-0.24.1+rocmsdk20260116-cp312-cp312-win_amd64.whl',
+  getAmdRocmWindowsPackageUrl('torch-2.9.1+rocm7.2.1-cp312-cp312-win_amd64.whl'),
+  getAmdRocmWindowsPackageUrl('torchaudio-2.9.1+rocm7.2.1-cp312-cp312-win_amd64.whl'),
+  getAmdRocmWindowsPackageUrl('torchvision-0.24.1+rocm7.2.1-cp312-cp312-win_amd64.whl'),
 ];
 
 export const NVIDIA_TORCH_VERSION = '2.10.0+cu130';
