@@ -9,6 +9,7 @@
   "appFiles": [
     "src/**",
     "scripts/**",
+    "assets/ComfyUI/.comfy_environment",
     "assets/ComfyUI/**",
     "assets/UI/**",
     "assets/requirements/**",

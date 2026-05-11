@@ -18,6 +18,8 @@ if (pkg.config.comfyUI.optionalBranch) {
   execAndLog(`git ${noWarning} clone ${comfyRepo} --depth 1 --branch v${pkg.config.comfyUI.version} assets/ComfyUI`);
 }
 const assetsComfyPath = path.join('assets', 'ComfyUI');
+fs.writeFileSync(path.join(assetsComfyPath, '.comfy_environment'), 'local-desktop\n');
+
 const managerRequirementsPath = path.join(assetsComfyPath, 'manager_requirements.txt');
 
 if (fs.existsSync(managerRequirementsPath)) {
