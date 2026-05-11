@@ -12,13 +12,14 @@ import path from 'node:path';
 const PATHS = /** @type {Record<'mac' | 'windows', VerifyConfig>} */ ({
   mac: {
     base: 'dist/mac-arm64/ComfyUI.app/Contents/Resources',
-    required: ['ComfyUI', 'UI', 'uv/macos/uv', 'uv/macos/uvx'],
+    required: ['ComfyUI', 'ComfyUI/.comfy_environment', 'UI', 'uv/macos/uv', 'uv/macos/uvx'],
   },
   windows: {
     base: 'dist/win-unpacked/resources',
     required: [
       // Add Windows-specific paths here
       'ComfyUI',
+      'ComfyUI/.comfy_environment',
       'UI',
       'uv/win/uv.exe',
       'uv/win/uvx.exe',

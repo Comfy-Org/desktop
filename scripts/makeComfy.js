@@ -20,6 +20,13 @@ if (pkg.config.comfyUI.optionalBranch) {
 const assetsComfyPath = path.join('assets', 'ComfyUI');
 const managerRequirementsPath = path.join(assetsComfyPath, 'manager_requirements.txt');
 
+// Mark this ComfyUI install as the desktop deploy environment. ComfyUI reads
+// `.comfy_environment` from its own install directory (next to main.py) and
+// sends the value as the `X-Comfy-Deploy-Env` header on partner-node API
+// calls. The file is gitignored upstream, so writing it into the freshly
+// cloned ComfyUI repo doesn't dirty the working tree.
+fs.writeFileSync(path.join(assetsComfyPath, '.comfy_environment'), 'local-desktop\n');
+
 if (fs.existsSync(managerRequirementsPath)) {
   console.log('Detected manager_requirements.txt, skipping legacy ComfyUI-Manager clone.');
 } else {
