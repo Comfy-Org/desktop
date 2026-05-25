@@ -164,6 +164,10 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   get uvEnv() {
     return {
       VIRTUAL_ENV: this.venvPath,
+      // The bundled uv must remain hermetic: ignore user/system/project uv config
+      // files (e.g. ~/.config/uv/uv.toml) so settings like `exclude-newer` cannot
+      // interfere with dependency resolution. See issue #1722.
+      UV_NO_CONFIG: '1',
       // Empty strings are not valid values for these env vars,
       // dropping them here to avoid passing them to uv.
       // `node-pty` does not support `undefined`.
