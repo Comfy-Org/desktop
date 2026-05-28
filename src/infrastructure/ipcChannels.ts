@@ -2,7 +2,7 @@ import { ipcMain, ipcRenderer } from 'electron';
 
 import type { IPC_CHANNELS, ProgressStatus } from '@/constants';
 import type { InstallStageInfo } from '@/main-process/installStages';
-import type { DownloadState } from '@/models/DownloadManager';
+import type { DownloadState, StartDownloadResult } from '@/models/DownloadManager';
 import type {
   DownloadProgressUpdate,
   ElectronContextMenuOptions,
@@ -264,21 +264,21 @@ export interface IpcChannels {
 
   [IPC_CHANNELS.START_DOWNLOAD]: {
     params: [details: { url: string; path: string; filename: string }];
-    return: boolean;
+    return: StartDownloadResult;
   };
 
   [IPC_CHANNELS.PAUSE_DOWNLOAD]: {
-    params: [url: string];
+    params: [downloadId: string];
     return: void;
   };
 
   [IPC_CHANNELS.RESUME_DOWNLOAD]: {
-    params: [url: string];
+    params: [downloadId: string];
     return: void;
   };
 
   [IPC_CHANNELS.CANCEL_DOWNLOAD]: {
-    params: [url: string];
+    params: [downloadId: string];
     return: void;
   };
 

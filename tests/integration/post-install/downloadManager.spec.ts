@@ -3,13 +3,15 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 import { addRandomSuffix, pathExists } from 'tests/shared/utils';
 
+import type { StartDownloadResult } from '@/models/DownloadManager';
+
 import { expect, test } from '../testExtensions';
 
 interface RendererElectronApi {
   electronAPI: {
     getBasePath: () => Promise<string>;
     DownloadManager: {
-      startDownload: (url: string, directoryPath: string, filename: string) => Promise<boolean>;
+      startDownload: (url: string, directoryPath: string, filename: string) => Promise<StartDownloadResult>;
     };
   };
 }
@@ -62,7 +64,7 @@ test.describe('DownloadManager', () => {
 
       await rm(expectedFilePath, { force: true });
 
-      const started = await window.evaluate(
+      const startResult = await window.evaluate(
         async ({ directoryPath, filename, url }) => {
           const api = (globalThis as typeof globalThis & RendererElectronApi).electronAPI;
           return await api.DownloadManager.startDownload(url, directoryPath, filename);
@@ -74,7 +76,9 @@ test.describe('DownloadManager', () => {
         }
       );
 
-      expect(started).toBe(true);
+      expect(startResult.ok).toBe(true);
+      expect(startResult.download.downloadId).toBe(expectedFilePath);
+      expect(startResult.download.savePath).toBe(expectedFilePath);
 
       await expect
         .poll(
