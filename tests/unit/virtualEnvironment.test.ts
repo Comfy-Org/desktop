@@ -294,6 +294,13 @@ describe('VirtualEnvironment', () => {
       expect('UV_PYTHON_INSTALL_MIRROR' in uvEnv).toBe(false);
     });
 
+    test('always sets UV_NO_CONFIG=1 so bundled uv ignores user/system uv.toml', ({ virtualEnv }) => {
+      // Regression test for https://github.com/Comfy-Org/desktop/issues/1722.
+      // A user-level uv.toml with settings like `exclude-newer` would otherwise
+      // be applied to the bundled uv and break dependency resolution.
+      expect(virtualEnv.uvEnv.UV_NO_CONFIG).toBe('1');
+    });
+
     test('omits UV_PYTHON_INSTALL_MIRROR when pythonMirror is empty string', () => {
       vi.stubGlobal('process', {
         ...process,
