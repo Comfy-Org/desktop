@@ -13,6 +13,7 @@ import type {
   SystemPaths,
   TorchDeviceType,
 } from '@/preload';
+import type { ComfyProtocolAction } from '@/protocol/protocolParser';
 import type { DesktopWindowStyle } from '@/store/desktopSettings';
 
 /**
@@ -384,6 +385,11 @@ export interface IpcChannels {
 
   [IPC_CHANNELS.INSTALL_STAGE_UPDATE]: {
     params: [stage: InstallStageInfo];
+    return: void;
+  };
+
+  [IPC_CHANNELS.PROTOCOL_ACTION]: {
+    params: [action: ComfyProtocolAction];
     return: void;
   };
 }
