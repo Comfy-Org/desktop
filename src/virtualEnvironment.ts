@@ -168,6 +168,11 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       // dropping them here to avoid passing them to uv.
       // `node-pty` does not support `undefined`.
       ...(this.pythonMirror ? { UV_PYTHON_INSTALL_MIRROR: this.pythonMirror } : {}),
+      // Proxy env vars are inherited from process.env (set in main.ts).
+      // Re-exporting them here ensures they are also available in PTY sessions.
+      ...(process.env.HTTP_PROXY ? { HTTP_PROXY: process.env.HTTP_PROXY } : {}),
+      ...(process.env.HTTPS_PROXY ? { HTTPS_PROXY: process.env.HTTPS_PROXY } : {}),
+      ...(process.env.NO_PROXY ? { NO_PROXY: process.env.NO_PROXY } : {}),
     };
   }
 

@@ -13,6 +13,9 @@ export const DEFAULT_SETTINGS: ComfySettingsData = {
   'Comfy-Desktop.UV.PythonInstallMirror': '',
   'Comfy-Desktop.UV.PypiInstallMirror': '',
   'Comfy-Desktop.UV.TorchInstallMirror': '',
+  'Comfy.Network.Proxy.HttpUrl': '',
+  'Comfy.Network.Proxy.HttpsUrl': '',
+  'Comfy.Network.Proxy.NoProxy': '',
 } as const;
 
 export interface ComfySettingsData {
@@ -26,6 +29,9 @@ export interface ComfySettingsData {
   'Comfy-Desktop.UV.PythonInstallMirror': string;
   'Comfy-Desktop.UV.PypiInstallMirror': string;
   'Comfy-Desktop.UV.TorchInstallMirror': string;
+  'Comfy.Network.Proxy.HttpUrl': string;
+  'Comfy.Network.Proxy.HttpsUrl': string;
+  'Comfy.Network.Proxy.NoProxy': string;
   [key: string]: unknown;
 }
 

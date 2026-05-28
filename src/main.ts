@@ -58,6 +58,9 @@ async function startApp() {
     });
   }
 
+  // Apply proxy settings from comfy.settings.json to Electron and child processes.
+  await applyProxySettings(config);
+
   telemetry.loadGenerationCount(config);
 
   // Load the Vue DevTools extension
@@ -111,4 +114,95 @@ function trackAppQuitEvents() {
 function initializeSentry() {
   log.verbose('Initializing Sentry');
   SentryLogging.init();
+}
+
+/**
+ * Reads proxy settings from the ComfyUI settings file and applies them to
+ * Electron's Chromium network stack and process environment variables.
+ *
+ * This must be called after config is loaded (to know the basePath) but
+ * before any network requests are made.
+ */
+async function applyProxySettings(config: DesktopConfig): Promise<void> {
+  try {
+    const basePath = config.get('basePath');
+    if (!basePath) return;
+
+    const { ComfySettings } = await import('./config/comfySettings');
+    const settings = await ComfySettings.load(basePath);
+
+    const httpProxy = settings.get('Comfy.Network.Proxy.HttpUrl');
+    const httpsProxy = settings.get('Comfy.Network.Proxy.HttpsUrl');
+    const noProxy = settings.get('Comfy.Network.Proxy.NoProxy');
+
+    // Export NO_PROXY env vars even when no explicit proxy URL is configured,
+    // so a noProxy-only config works alongside OS-level or externally-provided proxies.
+    if (noProxy) {
+      process.env.NO_PROXY = noProxy;
+      process.env.no_proxy = noProxy;
+    }
+
+    if (!httpProxy && !httpsProxy) return;
+
+    log.info(
+      `Applying proxy settings: HTTP=${redactProxyUrl(httpProxy) || '(none)'}, HTTPS=${redactProxyUrl(httpsProxy) || '(none)'}`
+    );
+
+    // Build Chromium proxy rules that respect separate HTTP/HTTPS proxies.
+    const proxyRules = buildChromiumProxyRules(httpProxy, httpsProxy);
+
+    // Configure Chromium's network stack (affects Electron's own requests and BrowserWindow).
+    await session.defaultSession.setProxy({
+      proxyRules,
+      proxyBypassRules: noProxy || undefined,
+    });
+
+    // Set environment variables so child processes (Python, uv, git, pip) inherit them.
+    if (httpProxy) {
+      process.env.HTTP_PROXY = httpProxy;
+      process.env.http_proxy = httpProxy;
+      if (!httpsProxy) {
+        process.env.HTTPS_PROXY = httpProxy;
+        process.env.https_proxy = httpProxy;
+      }
+    }
+    if (httpsProxy) {
+      process.env.HTTPS_PROXY = httpsProxy;
+      process.env.https_proxy = httpsProxy;
+    }
+  } catch (error) {
+    log.warn('Failed to apply proxy settings', error);
+  }
+}
+
+/**
+ * Builds Chromium-format proxy rules from separate HTTP and HTTPS proxy URLs.
+ * When both are set, uses per-scheme syntax: "http=<proxy>;https=<proxy>".
+ * When only one is set, uses a scheme-specific prefix to avoid unintended catch-all behaviour.
+ */
+function buildChromiumProxyRules(httpProxy: string, httpsProxy: string): string {
+  if (httpProxy && httpsProxy) {
+    return `http=${httpProxy};https=${httpsProxy}`;
+  }
+  if (httpProxy) return `http=${httpProxy}`;
+  if (httpsProxy) return `https=${httpsProxy}`;
+  return '';
+}
+
+/**
+ * Redacts embedded credentials from a proxy URL for safe logging.
+ * E.g. "http://user:pass@host:8080" becomes "http://***@host:8080".
+ */
+function redactProxyUrl(url: string): string {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    if (parsed.username || parsed.password) {
+      parsed.username = '***';
+      parsed.password = '';
+    }
+    return parsed.toString();
+  } catch {
+    return '(invalid URL)';
+  }
 }

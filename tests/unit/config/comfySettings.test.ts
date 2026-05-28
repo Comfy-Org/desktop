@@ -90,6 +90,9 @@ describe('ComfySettings', () => {
         'Comfy-Desktop.UV.PythonInstallMirror': '',
         'Comfy-Desktop.UV.PypiInstallMirror': '',
         'Comfy-Desktop.UV.TorchInstallMirror': '',
+        'Comfy.Network.Proxy.HttpUrl': '',
+        'Comfy.Network.Proxy.HttpsUrl': '',
+        'Comfy.Network.Proxy.NoProxy': '',
       };
 
       vi.mocked(fsPromises.access).mockResolvedValue(undefined);

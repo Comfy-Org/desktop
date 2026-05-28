@@ -15,7 +15,12 @@ import { findAvailablePort, getModelsDirectory } from '@/utils';
 // Mock dependencies
 vi.mock('@/config/comfySettings', () => {
   const mockSettings = {
-    get: vi.fn(() => true),
+    get: vi.fn((key: string) => {
+      if (key === 'Comfy-Desktop.AutoUpdate') return true;
+      if (key === 'Comfy.Server.LaunchArgs') return {};
+      if (key.startsWith('Comfy.Network.Proxy.')) return '';
+      return undefined;
+    }),
     set: vi.fn(),
     saveSettings: vi.fn(),
   };
