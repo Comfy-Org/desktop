@@ -5,7 +5,6 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import si from 'systeminformation';
 
 import { useComfySettings } from '@/config/comfySettings';
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
@@ -15,6 +14,7 @@ import { IPC_CHANNELS } from '../constants';
 import { AppWindow } from '../main-process/appWindow';
 import { InstallOptions } from '../preload';
 import { compareVersions } from '../utils';
+import { type GpuInfo, collectGpuInformation } from './gpuInfo';
 import { captureSentryException } from './sentry';
 
 let instance: ITelemetry | null = null;
@@ -24,13 +24,6 @@ export interface ITelemetry {
   track(eventName: string, properties?: PropertyDict): void;
   flush(): void;
   registerHandlers(): void;
-}
-
-interface GpuInfo {
-  model: string;
-  vendor: string;
-  vram: number | null;
-  driverVersion: string | null;
 }
 
 interface MixPanelEvent {
@@ -160,13 +153,7 @@ export class MixpanelTelemetry implements ITelemetry {
    */
   private async fetchAndCacheGpuInformation(): Promise<void> {
     try {
-      const gpuData = await si.graphics();
-      this.cachedGpuInfo = gpuData.controllers.map((gpu) => ({
-        model: gpu.model,
-        vendor: gpu.vendor,
-        vram: gpu.vram,
-        driverVersion: gpu.driverVersion?.trim() || null,
-      }));
+      this.cachedGpuInfo = await collectGpuInformation();
     } catch (error) {
       log.error('Failed to get GPU information:', error);
       this.cachedGpuInfo = [];
