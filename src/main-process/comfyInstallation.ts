@@ -1,8 +1,16 @@
 import log from 'electron-log/main';
 import { rm } from 'node:fs/promises';
+import path from 'node:path';
 
 import { ComfyServerConfig } from '../config/comfyServerConfig';
 import { ComfySettings, useComfySettings } from '../config/comfySettings';
+import {
+  type MachineScopeConfig,
+  getMachineConfigPath,
+  readMachineConfig,
+  shouldUseMachineScope,
+  writeMachineConfig,
+} from '../config/machineConfig';
 import { evaluatePathRestrictions } from '../handlers/pathHandlers';
 import type { DesktopInstallState } from '../main_types';
 import type { InstallValidation } from '../preload';
@@ -81,9 +89,31 @@ export class ComfyInstallation {
    */
   static async fromConfig(): Promise<ComfyInstallation | undefined> {
     const config = useDesktopConfig();
-    const state = config.get('installState');
-    const basePath = config.get('basePath');
+    let state = config.get('installState');
+    let basePath = config.get('basePath');
+    let machineConfig: MachineScopeConfig | undefined;
+
+    if (!state || !basePath) {
+      machineConfig = readMachineConfig();
+      if (machineConfig) {
+        state ??= machineConfig.installState;
+        basePath ??= machineConfig.basePath;
+
+        // Hydrate first-launch user config from machine-scoped config so
+        // sysprep-created users do not need to re-run onboarding.
+        if (state) config.set('installState', state);
+        if (basePath) config.set('basePath', basePath);
+      }
+    }
+
     if (state && basePath) {
+      if (machineConfig && !ComfyServerConfig.exists()) {
+        const updated = await ComfyServerConfig.setBasePathInDefaultConfig(basePath);
+        if (!updated) {
+          log.warn('Unable to recreate per-user model config from machine install state.');
+        }
+      }
+
       await ComfySettings.load(basePath);
       return new ComfyInstallation(state, basePath, getTelemetry());
     }
@@ -233,6 +263,7 @@ export class ComfyInstallation {
   setState(state: DesktopInstallState) {
     this.state = state;
     useDesktopConfig().set('installState', state);
+    this.syncMachineScopeConfig(state, this.basePath);
   }
 
   /**
@@ -248,6 +279,7 @@ export class ComfyInstallation {
 
     // If settings file exists at new location, load it
     await ComfySettings.load(basePath);
+    this.syncMachineScopeConfig(this.state, basePath);
   }
 
   /**
@@ -258,6 +290,40 @@ export class ComfyInstallation {
     if (await pathAccessible(ComfyServerConfig.configPath)) {
       await rm(ComfyServerConfig.configPath);
     }
+
+    const machineConfigPath = getMachineConfigPath();
+    const machineConfig = readMachineConfig();
+    const isMachineScopedInstall = ComfyInstallation.isMachineScopedInstall(this.basePath, machineConfig);
+    if (isMachineScopedInstall && machineConfigPath && (await pathAccessible(machineConfigPath))) {
+      await rm(machineConfigPath);
+    }
+
     await useDesktopConfig().permanentlyDeleteConfigFile();
+  }
+
+  private syncMachineScopeConfig(state: DesktopInstallState, basePath: string) {
+    const currentMachineConfig = readMachineConfig();
+    if (!shouldUseMachineScope(basePath) && !currentMachineConfig) return;
+
+    const updated = writeMachineConfig({
+      installState: state,
+      basePath,
+    });
+
+    if (!updated) {
+      log.warn('Failed to synchronize machine scope config state.');
+    }
+  }
+
+  private static isMachineScopedInstall(basePath: string, machineConfig?: MachineScopeConfig): boolean {
+    if (!machineConfig) return false;
+    return this.normalizePathForComparison(machineConfig.basePath) === this.normalizePathForComparison(basePath);
+  }
+
+  private static normalizePathForComparison(targetPath: string): string {
+    if (process.platform === 'win32') {
+      return path.win32.resolve(targetPath).toLowerCase();
+    }
+    return path.resolve(targetPath);
   }
 }

@@ -11,6 +11,18 @@ import { InstallOptions } from '../../../src/preload';
 import { getTelemetry } from '../../../src/services/telemetry';
 import { electronMock } from '../setup';
 
+const {
+  mockReadMachineConfig,
+  mockResolvePreferredWindowsInstallPath,
+  mockShouldUseMachineScope,
+  mockWriteMachineConfig,
+} = vi.hoisted(() => ({
+  mockShouldUseMachineScope: vi.fn(),
+  mockReadMachineConfig: vi.fn(),
+  mockResolvePreferredWindowsInstallPath: vi.fn(),
+  mockWriteMachineConfig: vi.fn(),
+}));
+
 vi.mock('node:fs', () => ({
   default: {
     cpSync: vi.fn(),
@@ -23,16 +35,28 @@ vi.mock('node:fs', () => ({
 vi.mock('node:fs/promises', () => ({
   default: {
     access: vi.fn(),
+    mkdir: vi.fn(),
     readFile: vi.fn(),
     writeFile: vi.fn(),
   },
   access: vi.fn(),
+  mkdir: vi.fn(),
   readFile: vi.fn(),
   writeFile: vi.fn(),
 }));
 
 vi.mock('../../../src/config/comfyConfigManager');
 vi.mock('../../../src/config/comfyServerConfig');
+vi.mock('../../../src/config/machineConfig', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../src/config/machineConfig')>();
+  return {
+    ...actual,
+    readMachineConfig: mockReadMachineConfig,
+    resolvePreferredWindowsInstallPath: mockResolvePreferredWindowsInstallPath,
+    shouldUseMachineScope: mockShouldUseMachineScope,
+    writeMachineConfig: mockWriteMachineConfig,
+  };
+});
 
 vi.mock('../../../src/main-process/appState', () => ({
   useAppState: vi.fn(() => ({
@@ -85,6 +109,11 @@ describe('InstallWizard', () => {
   };
 
   beforeEach(async () => {
+    vi.clearAllMocks();
+    mockShouldUseMachineScope.mockReturnValue(false);
+    mockReadMachineConfig.mockReturnValue(undefined);
+    mockResolvePreferredWindowsInstallPath.mockReturnValue(undefined);
+    mockWriteMachineConfig.mockReturnValue(true);
     await ComfySettings.load('/test/path');
     installWizard = new InstallWizard(defaultInstallOptions, getTelemetry());
   });
@@ -99,6 +128,26 @@ describe('InstallWizard', () => {
       expect(getTelemetry().track).toHaveBeenCalledTimes(2);
       expect(getTelemetry().track).toHaveBeenCalledWith('install_flow:create_comfy_directories_start');
       expect(getTelemetry().track).toHaveBeenCalledWith('install_flow:create_comfy_directories_end');
+    });
+
+    it('writes machine install state for machine-scoped installs', async () => {
+      mockResolvePreferredWindowsInstallPath.mockReturnValue('/machine/base');
+      vi.spyOn(ComfyServerConfig, 'getBaseConfig').mockReturnValue({ test: 'config' });
+
+      await installWizard.install();
+
+      expect(mockWriteMachineConfig).toHaveBeenCalledWith({
+        installState: 'started',
+        basePath: '/test/path',
+      });
+    });
+
+    it('skips machine install state for user-scoped installs', async () => {
+      vi.spyOn(ComfyServerConfig, 'getBaseConfig').mockReturnValue({ test: 'config' });
+
+      await installWizard.install();
+
+      expect(mockWriteMachineConfig).not.toHaveBeenCalled();
     });
   });
 

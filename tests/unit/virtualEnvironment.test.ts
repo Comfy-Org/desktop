@@ -312,5 +312,48 @@ describe('VirtualEnvironment', () => {
       expect('UV_PYTHON_INSTALL_MIRROR' in uvEnv).toBe(false);
       expect(uvEnv.UV_PYTHON_INSTALL_MIRROR).toBeUndefined();
     });
+
+    test('sets UV_PYTHON_INSTALL_DIR for machine-scoped ProgramData base path on Windows', () => {
+      vi.stubGlobal('process', {
+        ...process,
+        platform: 'win32',
+        env: {
+          ...process.env,
+          ProgramData: String.raw`C:\ProgramData`,
+        },
+        resourcesPath: '/test/resources',
+      });
+
+      const envMachineScope = new VirtualEnvironment(String.raw`C:\ProgramData\ComfyUI\base`, {
+        telemetry: mockTelemetry,
+        selectedDevice: 'cpu',
+        pythonVersion: '3.12',
+      });
+
+      const { uvEnv } = envMachineScope;
+      expect(uvEnv.UV_PYTHON_INSTALL_DIR).toBe(String.raw`C:\ProgramData\ComfyUI\base\uv-python`);
+    });
+
+    test('omits UV_PYTHON_INSTALL_DIR for non-ProgramData base path on Windows', () => {
+      vi.stubGlobal('process', {
+        ...process,
+        platform: 'win32',
+        env: {
+          ...process.env,
+          ProgramData: String.raw`C:\ProgramData`,
+        },
+        resourcesPath: '/test/resources',
+      });
+
+      const envUserScope = new VirtualEnvironment(String.raw`C:\Users\Ben\ComfyUI`, {
+        telemetry: mockTelemetry,
+        selectedDevice: 'cpu',
+        pythonVersion: '3.12',
+      });
+
+      const { uvEnv } = envUserScope;
+      expect('UV_PYTHON_INSTALL_DIR' in uvEnv).toBe(false);
+      expect(uvEnv.UV_PYTHON_INSTALL_DIR).toBeUndefined();
+    });
   });
 });

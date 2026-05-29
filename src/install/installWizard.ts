@@ -1,3 +1,4 @@
+import { app } from 'electron';
 import log from 'electron-log/main';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -5,6 +6,12 @@ import path from 'node:path';
 import { ComfyConfigManager } from '../config/comfyConfigManager';
 import { ComfyServerConfig, ModelPaths } from '../config/comfyServerConfig';
 import { ComfySettings, type ComfySettingsData } from '../config/comfySettings';
+import {
+  readMachineConfig,
+  resolvePreferredWindowsInstallPath,
+  shouldUseMachineScope,
+  writeMachineConfig,
+} from '../config/machineConfig';
 import { InstallStage } from '../constants';
 import { useAppState } from '../main-process/appState';
 import { createInstallStageInfo } from '../main-process/installStages';
@@ -38,6 +45,7 @@ export class InstallWizard implements HasTelemetry {
     useAppState().setInstallStage(createInstallStageInfo(InstallStage.INITIALIZING_CONFIG, { progress: 10 }));
 
     await this.initializeSettings();
+    this.initializeMachineScopeConfig();
     await this.initializeModelPaths();
   }
 
@@ -121,5 +129,27 @@ export class InstallWizard implements HasTelemetry {
     }
 
     await ComfyServerConfig.createConfigFile(ComfyServerConfig.configPath, yamlContent);
+  }
+
+  /**
+   * Persist machine-scope bootstrap config so newly-created users can reuse
+   * the same base path and install state after sysprep/OOBE.
+   */
+  public initializeMachineScopeConfig() {
+    const existingMachineConfig = readMachineConfig();
+    const isMachineScopedInstall =
+      shouldUseMachineScope(this.basePath) ||
+      !!existingMachineConfig ||
+      !!resolvePreferredWindowsInstallPath(app.getPath('exe'));
+    if (!isMachineScopedInstall) return;
+
+    const updated = writeMachineConfig({
+      installState: 'started',
+      basePath: this.basePath,
+    });
+
+    if (!updated) {
+      log.warn('Unable to write machine scope config. Falling back to user-scoped initialization.');
+    }
   }
 }

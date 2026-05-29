@@ -7,6 +7,7 @@ import { readdir, rm } from 'node:fs/promises';
 import os, { EOL } from 'node:os';
 import path from 'node:path';
 
+import { isPathUnderWindowsProgramData } from './config/machineConfig';
 import {
   AMD_PYTORCH_WINDOWS_REQUIRED_DRIVER,
   AMD_ROCM_SDK_PACKAGES,
@@ -156,6 +157,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
   readonly selectedDevice: TorchDeviceType;
   readonly telemetry: ITelemetry;
   readonly pythonMirror?: string;
+  readonly uvPythonInstallDir?: string;
   readonly pypiMirror?: string;
   readonly torchMirror?: string;
   uvPty: pty.IPty | undefined;
@@ -168,6 +170,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
       // dropping them here to avoid passing them to uv.
       // `node-pty` does not support `undefined`.
       ...(this.pythonMirror ? { UV_PYTHON_INSTALL_MIRROR: this.pythonMirror } : {}),
+      ...(this.uvPythonInstallDir ? { UV_PYTHON_INSTALL_DIR: this.uvPythonInstallDir } : {}),
     };
   }
 
@@ -225,6 +228,7 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     this.pythonVersion = pythonVersion ?? '3.12';
     this.selectedDevice = selectedDevice ?? 'cpu';
     this.pythonMirror = pythonMirror;
+    this.uvPythonInstallDir = this.resolveUvPythonInstallDir(basePath);
     this.pypiMirror = pypiMirror;
     this.torchMirror = fixDeviceMirrorMismatch(selectedDevice!, torchMirror);
 
@@ -288,6 +292,14 @@ export class VirtualEnvironment implements HasTelemetry, PythonExecutor {
     if (existsSync(primary)) return primary;
     if (existsSync(legacy)) return legacy;
     return primary;
+  }
+
+  private resolveUvPythonInstallDir(basePath: string): string | undefined {
+    if (process.platform !== 'win32') return undefined;
+    if (!isPathUnderWindowsProgramData(basePath)) return undefined;
+
+    // Machine-scoped sysprep images must avoid user-profile-managed Python locations.
+    return path.win32.join(basePath, 'uv-python');
   }
 
   public async create(callbacks?: ProcessCallbacks): Promise<void> {
