@@ -8,6 +8,8 @@ import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
 import { DownloadStatus, IPC_CHANNELS } from '../constants';
 import type { AppWindow } from '../main-process/appWindow';
 
+const MAX_AUTO_RESUME_ATTEMPTS = 2;
+
 export interface Download {
   url: string;
   filename: string;
@@ -15,6 +17,8 @@ export interface Download {
   directoryPath: string;
   savePath: string;
   item: DownloadItem | null;
+  /** Number of times we have auto-resumed after an interrupt (stops interrupt→resume loops). */
+  interruptResumeCount?: number;
 }
 
 export interface DownloadState {
@@ -68,8 +72,33 @@ export class DownloadManager {
       item.on('updated', (event, state) => {
         if (state === 'interrupted') {
           log.info('Download is interrupted but can be resumed');
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
+          const liveEntry = this.downloads.get(url);
+          const autoResumesLeft = MAX_AUTO_RESUME_ATTEMPTS - (liveEntry?.interruptResumeCount ?? 0);
+          const willAutoResume = item.canResume() && autoResumesLeft > 0;
+          this.reportProgress({
+            url,
+            progress,
+            filename: download.filename,
+            savePath: download.savePath,
+            status: DownloadStatus.PAUSED,
+            message: willAutoResume ? 'Interrupted, resuming…' : 'Interrupted, can be resumed',
+          });
+          if (item.canResume() && autoResumesLeft > 0) {
+            if (liveEntry !== undefined) {
+              liveEntry.interruptResumeCount = (liveEntry.interruptResumeCount ?? 0) + 1;
+            }
+            setTimeout(() => {
+              if (this.downloads.get(url)?.item === item && item.getState() === 'interrupted') {
+                log.info('Auto-resuming interrupted download');
+                item.resume();
+              }
+            }, 500);
+          }
         } else if (state === 'progressing') {
-          const progress = item.getReceivedBytes() / item.getTotalBytes();
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
           if (item.isPaused()) {
             log.info('Download is paused');
             this.reportProgress({
@@ -110,7 +139,8 @@ export class DownloadManager {
           this.downloads.delete(url);
         } else {
           log.info(`Download failed: ${state}`);
-          const progress = item.getReceivedBytes() / item.getTotalBytes();
+          const totalBytes = item.getTotalBytes();
+          const progress = totalBytes > 0 ? item.getReceivedBytes() / totalBytes : 0;
           this.reportProgress({
             url,
             filename: download.filename,
@@ -265,7 +295,7 @@ export class DownloadManager {
       case 'cancelled':
         return DownloadStatus.CANCELLED;
       case 'interrupted':
-        return DownloadStatus.ERROR;
+        return DownloadStatus.PAUSED;
       default:
         return DownloadStatus.ERROR;
     }
