@@ -11,7 +11,7 @@ import { useAppState } from '../main-process/appState';
 import type { AppWindow } from '../main-process/appWindow';
 import { ComfyInstallation } from '../main-process/comfyInstallation';
 import { createInstallStageInfo } from '../main-process/installStages';
-import type { InstallOptions, InstallValidation } from '../preload';
+import type { InstallOptions, InstallValidation, TorchDeviceType } from '../preload';
 import { CmCli } from '../services/cmCli';
 import { captureSentryException } from '../services/sentry';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
@@ -23,7 +23,7 @@ import { InstallWizard } from './installWizard';
 import { Troubleshooting } from './troubleshooting';
 
 const execAsync = promisify(exec);
-const NVIDIA_DRIVER_MIN_VERSION = '580';
+export const NVIDIA_DRIVER_MIN_VERSION = '580';
 
 /**
  * Extracts the NVIDIA driver version from `nvidia-smi` output.
@@ -45,6 +45,36 @@ export function isNvidiaDriverBelowMinimum(
   minimumVersion: string = NVIDIA_DRIVER_MIN_VERSION
 ): boolean {
   return compareVersions(driverVersion, minimumVersion) < 0;
+}
+
+type NvidiaDriverWarningContext = {
+  platform: NodeJS.Platform;
+  selectedDevice?: TorchDeviceType;
+  suppressWarningFor?: string;
+  driverVersion?: string;
+  minimumVersion?: string;
+};
+
+/**
+ * Determines whether the NVIDIA driver warning should be shown.
+ * @param context The driver warning context.
+ * @return `true` when the warning should be shown.
+ */
+export function shouldWarnAboutNvidiaDriver(context: NvidiaDriverWarningContext): boolean {
+  const {
+    platform,
+    selectedDevice,
+    suppressWarningFor,
+    driverVersion,
+    minimumVersion = NVIDIA_DRIVER_MIN_VERSION,
+  } = context;
+
+  if (platform !== 'win32') return false;
+  if (selectedDevice !== 'nvidia') return false;
+  if (suppressWarningFor === minimumVersion) return false;
+  if (!driverVersion) return false;
+
+  return isNvidiaDriverBelowMinimum(driverVersion, minimumVersion);
 }
 
 /** High-level / UI control over the installation of ComfyUI server. */
@@ -400,19 +430,36 @@ export class InstallationManager implements HasTelemetry {
     if (process.platform !== 'win32') return;
     if (device !== 'nvidia') return;
 
+    const config = useDesktopConfig();
+    const suppressWarningFor = config.get('suppressNvidiaDriverWarningFor');
+    if (suppressWarningFor === NVIDIA_DRIVER_MIN_VERSION) return;
+
     const driverVersion =
       (await this.getNvidiaDriverVersionFromSmi()) ?? (await this.getNvidiaDriverVersionFromSmiFallback());
-    if (!driverVersion) return;
+    if (
+      !shouldWarnAboutNvidiaDriver({
+        platform: process.platform,
+        selectedDevice: installation.virtualEnvironment.selectedDevice,
+        suppressWarningFor,
+        driverVersion,
+      })
+    ) {
+      return;
+    }
 
-    if (!isNvidiaDriverBelowMinimum(driverVersion)) return;
-
-    await this.appWindow.showMessageBox({
+    const { checkboxChecked } = await this.appWindow.showMessageBox({
       type: 'warning',
       title: 'Update NVIDIA Driver',
       message: `Your NVIDIA driver may be too old for PyTorch ${NVIDIA_TORCH_VERSION}.`,
       detail: `Detected driver version: ${driverVersion}\nRecommended minimum: ${NVIDIA_DRIVER_MIN_VERSION}\n\nPlease consider updating your NVIDIA drivers and retrying if you run into issues.`,
       buttons: ['OK'],
+      checkboxLabel: "Don't show again",
+      checkboxChecked: false,
     });
+
+    if (checkboxChecked) {
+      config.set('suppressNvidiaDriverWarningFor', NVIDIA_DRIVER_MIN_VERSION);
+    }
   }
 
   /**
