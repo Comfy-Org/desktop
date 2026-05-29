@@ -1,5 +1,5 @@
 import todesktop from '@todesktop/runtime';
-import { app, dialog } from 'electron';
+import { BrowserWindow, app, dialog } from 'electron';
 import log from 'electron-log/main';
 
 import { strictIpcMain as ipcMain } from '@/infrastructure/ipcChannels';
@@ -8,8 +8,13 @@ import { IPC_CHANNELS } from '../constants';
 
 export function registerAppHandlers() {
   ipcMain.handle(IPC_CHANNELS.QUIT, () => {
-    log.info('Received quit IPC request. Quitting app...');
-    app.quit();
+    log.info('Received quit IPC request. Closing app window...');
+    const targetWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+    if (!targetWindow) {
+      app.quit();
+      return;
+    }
+    targetWindow.close();
   });
 
   ipcMain.handle(
