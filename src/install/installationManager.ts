@@ -16,7 +16,7 @@ import { CmCli } from '../services/cmCli';
 import { captureSentryException } from '../services/sentry';
 import { type HasTelemetry, ITelemetry, trackEvent } from '../services/telemetry';
 import { type DesktopConfig, useDesktopConfig } from '../store/desktopConfig';
-import { canExecuteShellCommand, compareVersions, validateHardware } from '../utils';
+import { canExecuteGit, compareVersions, validateHardware } from '../utils';
 import type { ProcessCallbacks, VirtualEnvironment } from '../virtualEnvironment';
 import { createProcessCallbacks } from './createProcessCallbacks';
 import { InstallWizard } from './installWizard';
@@ -176,7 +176,7 @@ export class InstallationManager implements HasTelemetry {
     // Check if git is installed
     log.verbose('Checking if git is installed.');
     appState.setInstallStage(createInstallStageInfo(InstallStage.GIT_CHECK, { progress: 5 }));
-    const gitInstalled = await canExecuteShellCommand('git --version');
+    const gitInstalled = await canExecuteGit();
     if (!gitInstalled) {
       log.verbose('git not detected in path, loading download-git page.');
 

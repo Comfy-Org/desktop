@@ -63,6 +63,7 @@ vi.mock('@/utils', async () => {
     }),
     canExecute: vi.fn(() => Promise.resolve(true)),
     canExecuteShellCommand: vi.fn(() => Promise.resolve(true)),
+    canExecuteGit: vi.fn(() => Promise.resolve(true)),
   };
 });
 
@@ -212,7 +213,7 @@ describe('InstallationManager', () => {
       {
         scenario: 'detects missing git',
         mockSetup: () => {
-          vi.mocked(utils.canExecuteShellCommand).mockResolvedValue(false);
+          vi.mocked(utils.canExecuteGit).mockResolvedValue(false);
         },
         expectedErrors: ['git'],
       },
