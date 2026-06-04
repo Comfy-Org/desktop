@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **This repository is no longer the home of Comfy Desktop.** The app has been rewritten and now lives at **[Comfy-Org/Comfy-Desktop](https://github.com/Comfy-Org/Comfy-Desktop)**.
 >
-> - **New downloads:** [dl.comfy.org](https://dl.comfy.org)
+> - **New downloads:** [comfy.org/download](https://comfy.org/download)
 > - **Existing 0.9.x users:** your app will receive an in-app update to the new version as we roll out — no action needed.
 > - **New issues, PRs, discussions:** please file them on the [new repo](https://github.com/Comfy-Org/Comfy-Desktop).
 >
